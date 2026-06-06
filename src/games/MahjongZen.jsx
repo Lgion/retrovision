@@ -1098,6 +1098,33 @@ export default function MahjongZen({ onBack, onScoreSave }) {
         .tile-vibrating {
           animation: shake-vibrate 0.3s ease-in-out;
         }
+
+        :root {
+          --container-padding: 24px;
+          --board-padding: 16px;
+        }
+        @media (max-width: 440px) {
+          :root {
+            --container-padding: 12px;
+            --board-padding: 8px;
+          }
+        }
+        @media (max-width: 395px) {
+          :root {
+            --container-padding: 8px;
+            --board-padding: 4px;
+          }
+          .board-scaler {
+            transform: scale(0.9) !important;
+            transform-origin: center center !important;
+          }
+        }
+        @media (max-width: 360px) {
+          .board-scaler {
+            transform: scale(0.8) !important;
+            transform-origin: center center !important;
+          }
+        }
       `}</style>
       {/* Header styled exactly to match the reference */}
       <div style={headerWrapperStyle}>
@@ -1146,7 +1173,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
         border: mode === 'slide' ? '6px solid #38bdf8' : '2px solid var(--border-color)',
         boxShadow: mode === 'slide' ? 'inset 0 4px 12px rgba(0,0,0,0.4), 0 10px 25px rgba(0,0,0,0.15)' : 'inset 0 2px 8px rgba(0,0,0,0.02)',
       }}>
-        <div style={{ ...boardStyle, width: `${maxBoardWidth}px`, height: `${maxBoardHeight}px` }}>
+        <div className="board-scaler" style={{ ...boardStyle, width: `${maxBoardWidth}px`, height: `${maxBoardHeight}px` }}>
 
           {/* Faint grid guide lines in slider mode */}
           {mode === 'slide' && gridSlots.map(slot => (
@@ -1455,7 +1482,7 @@ const containerStyle = {
   maxWidth: '430px',
   background: 'linear-gradient(180deg, #38bdf8 0%, #0284c7 100%)', // Beautiful water-sky gradient background matching reference
   borderRadius: '28px',
-  padding: '24px',
+  padding: 'var(--container-padding, 24px)',
   boxSizing: 'border-box',
   margin: '0 auto',
   boxShadow: '0 15px 35px rgba(0,0,0,0.25)',
@@ -1561,12 +1588,13 @@ const helperBtnStyle = {
 const boardWrapperStyle = {
   width: '100%',
   borderRadius: '24px',
-  padding: '16px',
+  padding: 'var(--board-padding, 16px)',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
   boxSizing: 'border-box',
   transition: 'background-color 0.3s, border-color 0.3s',
+  overflow: 'hidden',
 };
 
 const boardStyle = {

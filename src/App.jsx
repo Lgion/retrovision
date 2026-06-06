@@ -87,7 +87,6 @@ function App() {
         </h1>
         <div className="brand-subtitle">Espace Rééducation Cognitive & Zen</div>
       </header>
-      <a href="https://pay.wave.com/m/M_ci_hsvjN_ywTw2K/c/ci/?amount=1000">pay wave</a>
 
       <main style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {renderContent()}

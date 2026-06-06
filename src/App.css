@@ -569,16 +569,31 @@ body {
 
 /* Layout centering for Games */
 .game-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-app);
+  z-index: 999;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  overflow: auto;
+}
+
+@media (max-width: 480px) {
+  .game-wrapper {
+    padding: 8px;
+  }
 }
 
 /* Responsive adjustment */
 @media (max-width: 768px) {
   .brand-logo {
-    font-size: 30px;
+    font-size: 28px;
   }
   
   .brand-subtitle {
@@ -587,5 +602,38 @@ body {
   
   #root {
     padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+  
+  .brand-logo {
+    font-size: 24px;
+  }
+  
+  .brand-subtitle {
+    font-size: 11px;
+  }
+  
+  .app-footer {
+    padding-top: 16px;
+    padding-bottom: 8px;
+    font-size: 11px;
+    margin-top: 16px;
+  }
+  
+  #root {
+    padding: 8px;
+  }
+
+  /* Compact retro buttons on mobile */
+  .retro-btn {
+    padding: 6px 12px;
+    font-size: 14px;
+    min-height: 40px;
   }
 }

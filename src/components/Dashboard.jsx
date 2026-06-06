@@ -63,7 +63,8 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       desc: 'Résoudre une grille de Mahjong Zen',
       icon: '☘',
       unlocked: highScores.mahjong > 0,
-      color: '#ffd700'
+      color: '#ffd700',
+      textColor: '#b45309'
     },
     {
       id: 'water_sort',
@@ -71,7 +72,8 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       desc: 'Trier entièrement les éprouvettes d\'eau',
       icon: '🧪',
       unlocked: highScores.water > 0,
-      color: '#00ff7f'
+      color: '#00ff7f',
+      textColor: '#047857'
     },
     {
       id: 'ball_sort',
@@ -79,7 +81,8 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       desc: 'Réussir un tri complet de billes',
       icon: '🔮',
       unlocked: highScores.ball > 0,
-      color: '#ff007f'
+      color: '#ff007f',
+      textColor: '#be123c'
     },
     {
       id: '2048_zen',
@@ -87,7 +90,8 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       desc: 'Dépasser 512 points sur Neon 2048',
       icon: '🧠',
       unlocked: highScores.grid2048 >= 512,
-      color: '#00f0ff'
+      color: '#00f0ff',
+      textColor: '#0369a1'
     }
   ];
 
@@ -98,6 +102,7 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       desc: 'Retrouvez les paires de tuiles identiques libres. Conçu avec des formes colorées claires pour la rééducation visuelle.',
       highscore: highScores.mahjong,
       color: '#ffd700',
+      textColor: '#b45309',
       icon: '🀄'
     },
     {
@@ -106,6 +111,7 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       desc: 'Transférez les liquides colorés d\'une fiole à l\'autre pour séparer les teintes. Idéal pour l\'anticipation cognitive.',
       highscore: highScores.water,
       color: '#00ff7f',
+      textColor: '#047857',
       icon: '🧪'
     },
     {
@@ -114,6 +120,7 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       desc: 'Répartissez les billes de couleur dans les éprouvettes correspondantes. Stimule la motricité fine et la planification.',
       highscore: highScores.ball,
       color: '#ff007f',
+      textColor: '#be123c',
       icon: '🔮'
     },
     {
@@ -122,6 +129,7 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       desc: 'Faites glisser les nombres identiques pour les fusionner. Un exercice calme de calcul et d\'orientation.',
       highscore: highScores.grid2048,
       color: '#00f0ff',
+      textColor: '#0369a1',
       icon: '🧠'
     }
   ];
@@ -211,21 +219,21 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
           >
             <div style={cardHeaderStyle}>
               <span style={cardIconStyle}>{game.icon}</span>
-              <h3 style={{ ...cardTitleStyle, color: game.color, textShadow: `0 0 6px ${game.color}` }}>{game.title}</h3>
+              <h3 style={{ ...cardTitleStyle, color: game.textColor }}>{game.title}</h3>
             </div>
             <p style={cardDescStyle}>{game.desc}</p>
             <div style={cardFooterStyle}>
               <div style={cardScoreStyle}>
-                SUCCÈS: <span style={{ color: game.color, fontWeight: 'bold' }}>{game.highscore > 0 ? 'RÉUSSI' : 'À JOUER'}</span>
+                SUCCÈS: <span style={{ color: game.textColor, fontWeight: 'bold' }}>{game.highscore > 0 ? 'RÉUSSI' : 'À JOUER'}</span>
               </div>
               <button 
                 className="retro-btn"
                 style={{ 
                   ...playBtnStyle, 
                   borderColor: game.color, 
-                  color: '#ffffff',
-                  backgroundColor: `${game.color}22`,
-                  boxShadow: `0 0 10px ${game.color}55`
+                  color: game.textColor,
+                  backgroundColor: 'transparent',
+                  fontWeight: '800'
                 }}
               >
                 ENTRER
@@ -255,7 +263,7 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
               {ach.icon}
             </div>
             <div style={achInfoStyle}>
-              <div style={{ ...achTitleStyle, color: ach.unlocked ? ach.color : '#8e8a9f' }}>
+              <div style={{ ...achTitleStyle, color: ach.unlocked ? ach.textColor : '#8e8a9f' }}>
                 {ach.title}
               </div>
               <div style={achDescStyle}>{ach.desc}</div>
