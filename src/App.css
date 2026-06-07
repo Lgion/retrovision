@@ -2,16 +2,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #0284c7; /* Sky blue */
+  --primary: #0284c7;
+  /* Sky blue */
   --primary-hover: #0369a1;
-  --secondary: #0d9488; /* Teal */
-  --accent: #e11d48; /* Red for alerts/badges */
-  --bg-app: #f1f5f9; /* Light slate grey */
+  --secondary: #0d9488;
+  /* Teal */
+  --accent: #e11d48;
+  /* Red for alerts/badges */
+  --bg-app: #f1f5f9;
+  /* Light slate grey */
   --bg-card: #ffffff;
-  --text-main: #0f172a; /* Dark slate */
+  --text-main: #0f172a;
+  /* Dark slate */
   --text-muted: #475569;
   --border-color: #cbd5e1;
-  
+
   --font-main: 'Outfit', 'Inter', sans-serif;
 }
 
@@ -92,7 +97,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px; /* Safe touch target */
+  min-height: 48px;
+  /* Safe touch target */
 }
 
 .retro-btn:hover:not(:disabled) {
@@ -131,7 +137,7 @@ body {
 }
 
 .settings-btn:hover {
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
   color: var(--primary);
 }
 
@@ -250,6 +256,7 @@ body {
     box-shadow: 0 0 0 0px rgba(2, 132, 199, 0.4);
     transform: scale(1);
   }
+
   100% {
     box-shadow: 0 0 0 12px rgba(2, 132, 199, 0);
     transform: scale(1.02);
@@ -257,9 +264,17 @@ body {
 }
 
 @keyframes float-item {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 @keyframes tile-disappear {
@@ -267,6 +282,7 @@ body {
     transform: scale(1);
     opacity: 1;
   }
+
   100% {
     transform: scale(0);
     opacity: 0;
@@ -274,31 +290,84 @@ body {
 }
 
 @keyframes tube-wiggle {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(-4deg); }
-  75% { transform: rotate(4deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-4deg);
+  }
+
+  75% {
+    transform: rotate(4deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 @keyframes ball-bounce {
-  0% { transform: translateY(-80px); animation-timing-function: ease-in; }
-  40% { transform: translateY(0); animation-timing-function: ease-out; }
-  65% { transform: translateY(-20px); animation-timing-function: ease-in; }
-  82% { transform: translateY(0); animation-timing-function: ease-out; }
-  92% { transform: translateY(-8px); animation-timing-function: ease-in; }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(-80px);
+    animation-timing-function: ease-in;
+  }
+
+  40% {
+    transform: translateY(0);
+    animation-timing-function: ease-out;
+  }
+
+  65% {
+    transform: translateY(-20px);
+    animation-timing-function: ease-in;
+  }
+
+  82% {
+    transform: translateY(0);
+    animation-timing-function: ease-out;
+  }
+
+  92% {
+    transform: translateY(-8px);
+    animation-timing-function: ease-in;
+  }
+
+  100% {
+    transform: translateY(0);
+  }
 }
 
 @keyframes bubble-rise {
-  0% { transform: translateY(110px) translateX(0); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(0px) translateX(var(--bubble-drift, 4px)); opacity: 0; }
+  0% {
+    transform: translateY(110px) translateX(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.6;
+  }
+
+  90% {
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translateY(0px) translateX(var(--bubble-drift, 4px));
+    opacity: 0;
+  }
 }
 
 @keyframes pour-stream-flow {
-  0% { height: 0; opacity: 0.9; }
-  100% { height: 100%; opacity: 0.9; }
+  0% {
+    height: 0;
+    opacity: 0.9;
+  }
+
+  100% {
+    height: 100%;
+    opacity: 0.9;
+  }
 }
 
 @keyframes sparkle-burst {
@@ -306,6 +375,7 @@ body {
     transform: translate(0, 0) scale(1);
     opacity: 1;
   }
+
   100% {
     transform: translate(var(--dx), var(--dy)) scale(0);
     opacity: 0;
@@ -314,8 +384,15 @@ body {
 
 /* Cork Stopper drop animation */
 @keyframes cork-appear {
-  0% { transform: translateY(-30px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+  0% {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Glassmorphic tiles for Mahjong Slide/Zen */
@@ -323,7 +400,7 @@ body {
   background: #ffffff;
   border: 2px solid var(--border-color);
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -336,7 +413,7 @@ body {
 .glass-tile-2d:hover:not(.blocked) {
   transform: translateY(-2px);
   border-color: var(--primary);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   z-index: 100 !important;
 }
 
@@ -362,12 +439,13 @@ body {
 /* Authentic 3D Mahjong Tile */
 .mahjong-tile-3d {
   background: #ffffff;
-  border-radius: 8px;
+  border-radius: 2px;
   border: 1.5px solid #cbd5e1;
-  box-shadow: 
+  box-shadow:
     0 1px 0 #cbd5e1,
     0 2px 0 #b8c2cc,
-    0 3px 0 #0284c7, /* Sky blue plastic backing */
+    0 3px 0 #0284c7,
+    /* Sky blue plastic backing */
     0 4px 0 #0369a1,
     0 5px 0 #075985,
     0 6px 4px rgba(0, 0, 0, 0.2);
@@ -382,7 +460,7 @@ body {
 
 .mahjong-tile-3d:hover:not(.blocked) {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 1px 0 #cbd5e1,
     0 2px 0 #b8c2cc,
     0 3px 0 #0284c7,
@@ -395,7 +473,7 @@ body {
 
 .mahjong-tile-3d.selected {
   border-color: #f59e0b !important;
-  box-shadow: 
+  box-shadow:
     0 0 15px rgba(245, 158, 11, 0.5),
     0 1px 0 #f59e0b,
     0 2px 0 #d97706,
@@ -414,7 +492,7 @@ body {
   opacity: 0.55 !important;
   cursor: not-allowed;
   background: #f1f5f9;
-  box-shadow: 
+  box-shadow:
     0 1px 0 #cbd5e1,
     0 2px 0 #cbd5e1,
     0 3px 0 #0284c7,
@@ -428,14 +506,15 @@ body {
 
 /* Premium 3D Marble Balls (Ball Sort) */
 .marble-ball-3d {
-  width: 42px; /* Increased size for accessibility */
+  width: 42px;
+  /* Increased size for accessibility */
   height: 42px;
   border-radius: 50%;
   position: relative;
-  box-shadow: 
-    inset -4px -4px 10px rgba(0,0,0,0.5),
-    inset 4px 4px 8px rgba(255,255,255,0.4),
-    0 4px 8px rgba(0,0,0,0.15);
+  box-shadow:
+    inset -4px -4px 10px rgba(0, 0, 0, 0.5),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
 }
 
@@ -476,7 +555,7 @@ body {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   background: rgba(255, 255, 255, 0.8);
   border: 2px solid #cbd5e1;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .glass-test-tube::before {
@@ -518,7 +597,7 @@ body {
   background: linear-gradient(90deg, #7c2d12, #ea580c, #7c2d12);
   border: 1px solid #431407;
   border-radius: 4px 4px 2px 2px;
-  box-shadow: inset 0 2px 4px rgba(255,255,255,0.2), 0 3px 6px rgba(0,0,0,0.2);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 3px 6px rgba(0, 0, 0, 0.2);
   z-index: 10;
   animation: cork-appear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
@@ -570,7 +649,7 @@ body {
 /* Layout centering for Games */
 .game-wrapper {
   position: fixed;
-  top: 0;
+  top: 50px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -581,7 +660,6 @@ body {
   align-items: center;
   box-sizing: border-box;
   padding: 16px;
-  overflow: auto;
 }
 
 @media (max-width: 480px) {
@@ -595,11 +673,11 @@ body {
   .brand-logo {
     font-size: 28px;
   }
-  
+
   .brand-subtitle {
     font-size: 13px;
   }
-  
+
   #root {
     padding: 12px;
   }
@@ -610,22 +688,22 @@ body {
     margin-bottom: 12px;
     padding-bottom: 8px;
   }
-  
+
   .brand-logo {
     font-size: 24px;
   }
-  
+
   .brand-subtitle {
     font-size: 11px;
   }
-  
+
   .app-footer {
     padding-top: 16px;
     padding-bottom: 8px;
     font-size: 11px;
     margin-top: 16px;
   }
-  
+
   #root {
     padding: 8px;
   }

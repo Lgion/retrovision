@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 
 function MahjongIcon({ name }) {
-  const size = 34;
+  const size = 50;
   switch (name) {
     case 'fa': // Green Dragon
       return (
         <span style={{
-          fontSize: '32px',
-          color: '#16a34a',
+          fontSize: '40px',
+          color: '#14532d', // Deep Forest Green
           fontWeight: '900',
           fontFamily: '"Microsoft YaHei", "SimHei", "Noto Sans TC", sans-serif',
-          lineHeight: '1'
+          lineHeight: '1',
+          textShadow: '1px 1px 0px rgba(0,0,0,0.1)'
         }}>
           發
         </span>
@@ -19,131 +20,157 @@ function MahjongIcon({ name }) {
     case 'xi': // West Wind
       return (
         <span style={{
-          fontSize: '32px',
-          color: '#1f2937',
+          fontSize: '40px',
+          color: '#1f2937', // Very Dark Grey/Black
           fontWeight: '900',
           fontFamily: '"Microsoft YaHei", "SimHei", "Noto Sans TC", sans-serif',
-          lineHeight: '1'
+          lineHeight: '1',
+          textShadow: '1px 1px 0px rgba(0,0,0,0.1)'
         }}>
           西
         </span>
       );
-    case 'six': // Six Character
+    case 'six': // Six
       return (
         <span style={{
-          fontSize: '32px',
-          color: '#1d4ed8',
+          fontSize: '40px',
+          color: '#1e3a8a', // Dark Navy Blue
           fontWeight: '900',
           fontFamily: '"Microsoft YaHei", "SimHei", "Noto Sans TC", sans-serif',
-          lineHeight: '1'
+          lineHeight: '1',
+          textShadow: '1px 1px 0px rgba(0,0,0,0.1)'
         }}>
           六
         </span>
       );
-    case 'two': // Two Character
-      return (
-        <span style={{
-          fontSize: '32px',
-          color: '#1d4ed8',
-          fontWeight: '900',
-          fontFamily: '"Microsoft YaHei", "SimHei", "Noto Sans TC", sans-serif',
-          lineHeight: '1'
-        }}>
-          二
-        </span>
-      );
-    case 'circles': // 9 Dots
+    case 'two': // Two
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: 'block' }}>
-          <circle cx="5" cy="5" r="2.8" fill="#166534" />
-          <circle cx="12" cy="5" r="2.8" fill="#991b1b" />
-          <circle cx="19" cy="5" r="2.8" fill="#1e40af" />
-          <circle cx="5" cy="12" r="2.8" fill="#991b1b" />
-          <circle cx="12" cy="12" r="2.8" fill="#1e40af" />
-          <circle cx="19" cy="12" r="2.8" fill="#166534" />
-          <circle cx="5" cy="19" r="2.8" fill="#1e40af" />
-          <circle cx="12" cy="19" r="2.8" fill="#166534" />
-          <circle cx="19" cy="19" r="2.8" fill="#991b1b" />
+          <rect x="3" y="6" width="18" height="3" rx="1.5" fill="#1e3a8a" />
+          <rect x="3" y="15" width="18" height="3" rx="1.5" fill="#1e3a8a" />
         </svg>
       );
-    case 'eight_dots': // 8 Blue Dots
+    case 'circles': // 9 Dots (all blue like reference)
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: 'block' }}>
-          <circle cx="7" cy="4" r="2.5" fill="#1d4ed8" />
-          <circle cx="17" cy="4" r="2.5" fill="#1d4ed8" />
-          <circle cx="7" cy="9.5" r="2.5" fill="#1d4ed8" />
-          <circle cx="17" cy="9.5" r="2.5" fill="#1d4ed8" />
-          <circle cx="7" cy="15" r="2.5" fill="#1d4ed8" />
-          <circle cx="17" cy="15" r="2.5" fill="#1d4ed8" />
-          <circle cx="7" cy="20.5" r="2.5" fill="#1d4ed8" />
-          <circle cx="17" cy="20.5" r="2.5" fill="#1d4ed8" />
+          <circle cx="5" cy="5" r="3" fill="#1e3a8a" />
+          <circle cx="5" cy="5" r="1" fill="#ffffff" />
+          <circle cx="12" cy="5" r="3" fill="#1e3a8a" />
+          <circle cx="12" cy="5" r="1" fill="#ffffff" />
+          <circle cx="19" cy="5" r="3" fill="#1e3a8a" />
+          <circle cx="19" cy="5" r="1" fill="#ffffff" />
+
+          <circle cx="5" cy="12" r="3" fill="#1e3a8a" />
+          <circle cx="5" cy="12" r="1" fill="#ffffff" />
+          <circle cx="12" cy="12" r="3" fill="#1e3a8a" />
+          <circle cx="12" cy="12" r="1" fill="#ffffff" />
+          <circle cx="19" cy="12" r="3" fill="#1e3a8a" />
+          <circle cx="19" cy="12" r="1" fill="#ffffff" />
+
+          <circle cx="5" cy="19" r="3" fill="#1e3a8a" />
+          <circle cx="5" cy="19" r="1" fill="#ffffff" />
+          <circle cx="12" cy="19" r="3" fill="#1e3a8a" />
+          <circle cx="12" cy="19" r="1" fill="#ffffff" />
+          <circle cx="19" cy="19" r="3" fill="#1e3a8a" />
+          <circle cx="19" cy="19" r="1" fill="#ffffff" />
         </svg>
       );
-    case 'one_circle': // 1 Dot
+    case 'eight_dots': // 8 Dots (all blue like reference)
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: 'block' }}>
-          <circle cx="12" cy="12" r="10" fill="#15803d" />
-          <circle cx="12" cy="12" r="8" fill="#1d4ed8" />
+          <circle cx="8" cy="3.5" r="2.8" fill="#1e3a8a" />
+          <circle cx="8" cy="3.5" r="1" fill="#ffffff" />
+          <circle cx="16" cy="3.5" r="2.8" fill="#1e3a8a" />
+          <circle cx="16" cy="3.5" r="1" fill="#ffffff" />
+
+          <circle cx="8" cy="9.1" r="2.8" fill="#1e3a8a" />
+          <circle cx="8" cy="9.1" r="1" fill="#ffffff" />
+          <circle cx="16" cy="9.1" r="2.8" fill="#1e3a8a" />
+          <circle cx="16" cy="9.1" r="1" fill="#ffffff" />
+
+          <circle cx="8" cy="14.8" r="2.8" fill="#1e3a8a" />
+          <circle cx="8" cy="14.8" r="1" fill="#ffffff" />
+          <circle cx="16" cy="14.8" r="2.8" fill="#1e3a8a" />
+          <circle cx="16" cy="14.8" r="1" fill="#ffffff" />
+
+          <circle cx="8" cy="20.5" r="2.8" fill="#1e3a8a" />
+          <circle cx="8" cy="20.5" r="1" fill="#ffffff" />
+          <circle cx="16" cy="20.5" r="2.8" fill="#1e3a8a" />
+          <circle cx="16" cy="20.5" r="1" fill="#ffffff" />
+        </svg>
+      );
+    case 'one_circle': // 1 Dot (Rosette)
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: 'block' }}>
+          <circle cx="12" cy="12" r="10" fill="#1e3a8a" />
+          <circle cx="12" cy="12" r="7.5" fill="#16a34a" />
           <circle cx="12" cy="12" r="4.5" fill="#dc2626" />
-          <circle cx="12" cy="12" r="1.8" fill="#ffffff" />
+          <circle cx="12" cy="12" r="1.5" fill="#ffffff" />
         </svg>
       );
-    case 'bamboo_green_3': // 3 Green Sticks
+    case 'bamboo_green_3': // 3 green bamboos
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          <rect x="5" y="4" width="3" height="16" rx="1.2" fill="#166534" />
-          <circle cx="6.5" cy="12" r="1" fill="#ffffff" />
-          <rect x="11" y="4" width="3" height="16" rx="1.2" fill="#166534" />
-          <circle cx="12.5" cy="12" r="1" fill="#ffffff" />
-          <rect x="17" y="4" width="3" height="16" rx="1.2" fill="#166534" />
-          <circle cx="18.5" cy="12" r="1" fill="#ffffff" />
+          <rect x="4" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
+          <rect x="10.25" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
+          <rect x="16.5" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
+          <line x1="4" y1="9" x2="7.5" y2="9" stroke="#ffffff" strokeWidth="1" />
+          <line x1="4" y1="15" x2="7.5" y2="15" stroke="#ffffff" strokeWidth="1" />
+          <line x1="10.25" y1="9" x2="13.75" y2="9" stroke="#ffffff" strokeWidth="1" />
+          <line x1="10.25" y1="15" x2="13.75" y2="15" stroke="#ffffff" strokeWidth="1" />
+          <line x1="16.5" y1="9" x2="20" y2="9" stroke="#ffffff" strokeWidth="1" />
+          <line x1="16.5" y1="15" x2="20" y2="15" stroke="#ffffff" strokeWidth="1" />
         </svg>
       );
-    case 'bamboo_red_3': // 3 Red Sticks
+    case 'bamboo_green_4': // 2 bamboos with a red bar (like the reference's "2 bamboo")
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          <rect x="5" y="4" width="3" height="16" rx="1.2" fill="#b91c1c" />
-          <circle cx="6.5" cy="12" r="1" fill="#ffffff" />
-          <rect x="11" y="4" width="3" height="16" rx="1.2" fill="#b91c1c" />
-          <circle cx="12.5" cy="12" r="1" fill="#ffffff" />
-          <rect x="17" y="4" width="3" height="16" rx="1.2" fill="#b91c1c" />
-          <circle cx="18.5" cy="12" r="1" fill="#ffffff" />
+          <rect x="7" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
+          <rect x="13.5" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
+          <line x1="7" y1="9" x2="10.5" y2="9" stroke="#ffffff" strokeWidth="1" />
+          <line x1="7" y1="15" x2="10.5" y2="15" stroke="#ffffff" strokeWidth="1" />
+          <line x1="13.5" y1="9" x2="17" y2="9" stroke="#ffffff" strokeWidth="1" />
+          <line x1="13.5" y1="15" x2="17" y2="15" stroke="#ffffff" strokeWidth="1" />
+          <rect x="9.5" y="10.5" width="5" height="3" rx="1" fill="#dc2626" />
         </svg>
       );
-    case 'bamboo_green_4': // 4 Green Sticks (H shape)
+    case 'bamboo_red_3': // 3 bamboos with alternating colors
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          <rect x="6" y="3" width="3" height="8" rx="1" fill="#166534" />
-          <rect x="15" y="3" width="3" height="8" rx="1" fill="#166534" />
-          <rect x="6" y="13" width="3" height="8" rx="1" fill="#166534" />
-          <rect x="15" y="13" width="3" height="8" rx="1" fill="#166534" />
-          <rect x="9" y="10.5" width="6" height="3" rx="0.5" fill="#166534" />
+          <rect x="4" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
+          <rect x="10.25" y="3" width="3.5" height="18" rx="1.5" fill="#dc2626" />
+          <rect x="16.5" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
+          <line x1="4" y1="9" x2="7.5" y2="9" stroke="#ffffff" strokeWidth="1" />
+          <line x1="4" y1="15" x2="7.5" y2="15" stroke="#ffffff" strokeWidth="1" />
+          <line x1="10.25" y1="9" x2="13.75" y2="9" stroke="#ffffff" strokeWidth="1" />
+          <line x1="10.25" y1="15" x2="13.75" y2="15" stroke="#ffffff" strokeWidth="1" />
+          <line x1="16.5" y1="9" x2="20" y2="9" stroke="#ffffff" strokeWidth="1" />
+          <line x1="16.5" y1="15" x2="20" y2="15" stroke="#ffffff" strokeWidth="1" />
         </svg>
       );
-    case 'flower': // Pink Cherry Blossom with leaves
+    case 'flower': // Pink Sakura Blossom
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          {/* Green backing leaves */}
-          <path d="M6 15C4 17 4 20 7 19C8 18 8 16 7 15Z" fill="#166534" />
-          <path d="M18 15C20 17 20 20 17 19C16 18 16 16 17 15Z" fill="#166534" />
-          {/* Blossom Petals */}
-          <circle cx="12" cy="7.5" r="4" fill="#f472b6" />
-          <circle cx="7.5" cy="11.5" r="4" fill="#f472b6" />
-          <circle cx="16.5" cy="11.5" r="4" fill="#f472b6" />
-          <circle cx="9.5" cy="16.5" r="4" fill="#f472b6" />
-          <circle cx="14.5" cy="16.5" r="4" fill="#f472b6" />
+          {/* Leaves at bottom */}
+          <path d="M7 17C4 17 2 13 4 11C6 9 9 14 7 17Z" fill="#16a34a" />
+          <path d="M17 17C20 17 22 13 20 11C18 9 15 14 17 17Z" fill="#16a34a" />
+          {/* Flower Petals */}
+          <circle cx="12" cy="7" r="4.5" fill="#f472b6" />
+          <circle cx="7" cy="11" r="4.5" fill="#f472b6" />
+          <circle cx="17" cy="11" r="4.5" fill="#f472b6" />
+          <circle cx="9.5" cy="16" r="4.5" fill="#f472b6" />
+          <circle cx="14.5" cy="16" r="4.5" fill="#f472b6" />
+          <circle cx="12" cy="11" r="5" fill="#fbcfe8" />
           {/* Yellow Center */}
-          <circle cx="12" cy="12.5" r="2.8" fill="#facc15" />
-          <circle cx="12" cy="12.5" r="1.2" fill="#ca8a04" />
+          <circle cx="12" cy="11.5" r="2.5" fill="#eab308" />
         </svg>
       );
-    case 'leaf': // Orange Maple Leaf on Yellow Disk
+    case 'leaf': // Orange Maple Leaf on yellow plate
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          <circle cx="12" cy="12" r="10" fill="#f97316" />
-          <circle cx="12" cy="12" r="8.5" fill="#facc15" />
-          {/* Stylized Leaf */}
-          <path d="M12 5.5L13.5 8.5L16.5 8L15 11L17.5 13L14 13.5L12 17L10 13.5L6.5 13L9 11L7.5 8L10.5 8.5L12 5.5Z" fill="#ea580c" />
+          <circle cx="12" cy="12" r="10" fill="#fde047" />
+          <path d="M12 4L14.5 9H19L16 12L17.5 17L12 14L6.5 17L8 12L5 9H9.5L12 4Z" fill="#f97316" />
+          <path d="M12 14V19" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       );
     default:
@@ -163,6 +190,8 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   const [won, setWon] = useState(false);
   const [lost, setLost] = useState(false);
   const [hintIds, setHintIds] = useState([]);
+  const [hintMove, setHintMove] = useState(null);
+  const [matchEffects, setMatchEffects] = useState([]);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
     return Number(localStorage.getItem('retrovision_mahjong_highscore_val')) || 2147;
@@ -174,6 +203,31 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   const [hintsLeft, setHintsLeft] = useState(3);
   const [dragHasMoved, setDragHasMoved] = useState(false);
   const [vibratingSymbol, setVibratingSymbol] = useState(null);
+  const [confetti, setConfetti] = useState([]);
+  const [matchSelection, setMatchSelection] = useState(null);
+  const lastTouchTime = useRef(0);
+
+  useEffect(() => {
+    if (won) {
+      const colors = ['#f59e0b', '#ef4444', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+      const newConfetti = [];
+      for (let i = 0; i < 80; i++) {
+        newConfetti.push({
+          id: i,
+          x: Math.random() * 100,
+          y: -10 - Math.random() * 30,
+          size: 6 + Math.random() * 8,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          delay: Math.random() * 2.5,
+          duration: 3 + Math.random() * 2,
+          rotation: Math.random() * 360,
+        });
+      }
+      setConfetti(newConfetti);
+    } else {
+      setConfetti([]);
+    }
+  }, [won]);
 
   const symbols = [
     { name: 'fa' },
@@ -202,6 +256,31 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       localStorage.setItem('retrovision_mahjong_highscore_val', score.toString());
     }
   }, [score, highScore]);
+
+  // Ask permission to leave if game is in progress
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      const isGameInProgress = !won && !lost && tiles.some(t => !t.active);
+      if (isGameInProgress) {
+        e.preventDefault();
+        e.returnValue = "Voulez-vous vraiment quitter la partie en cours ?";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [won, lost, tiles]);
+
+  const handleBackWithConfirm = () => {
+    const isGameInProgress = !won && !lost && tiles.some(t => !t.active);
+    if (isGameInProgress) {
+      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+        onBack();
+      }
+    } else {
+      onBack();
+    }
+  };
 
   // Zen layout config (multiple Z-layers)
   const getLayoutPatterns = (size) => {
@@ -349,6 +428,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   const initGame = () => {
     setHintIds([]);
     setSelectedTile(null);
+    setMatchSelection(null);
     setHistory([]);
     setWon(false);
     setLost(false);
@@ -440,17 +520,56 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   const handleZenTileClick = (tile) => {
     if (won || lost) return;
     setHintIds([]);
+    setHintMove(null);
 
     if (!isTileFree(tile)) {
       sound.playClick();
       return;
     }
 
+    if (matchSelection !== null) {
+      if (tile.id === matchSelection.sourceTile.id) {
+        setMatchSelection(null);
+        setSelectedTile(null);
+        sound.playClick();
+      } else {
+        const option = matchSelection.options.find(opt => opt.t.id === tile.id);
+        if (option) {
+          saveToHistory();
+          sound.playScore();
+          setScore(prev => prev + 10);
+
+          const nextTiles = tiles.map(t =>
+            (t.id === tile.id || t.id === matchSelection.sourceTile.id) ? { ...t, active: false } : t
+          );
+          setTiles(nextTiles);
+          setMatchSelection(null);
+          setSelectedTile(null);
+
+          if (nextTiles.every(t => !t.active)) {
+            setWon(true);
+            sound.playPowerup();
+            if (onScoreSave) onScoreSave('Mahjong Zen', score + 100);
+          } else if (checkLostZen(nextTiles)) {
+            setLost(true);
+            sound.playClick();
+          }
+        }
+      }
+      return;
+    }
+
     if (selectedTile === null) {
       // Check if there is any other free tile with the same symbol
-      const active = tiles.filter(t => t.active && t.id !== tile.id && isTileFree(t));
-      const hasMatch = active.some(t => t.sym.name === tile.sym.name);
-      if (hasMatch) {
+      const active = tiles.filter(t => t.active && t.id !== tile.id && isTileFree(t) && t.sym.name === tile.sym.name);
+      if (active.length === 1) {
+        setSelectedTile(tile);
+        sound.playClick();
+      } else if (active.length > 1) {
+        setMatchSelection({
+          sourceTile: tile,
+          options: active.map(t => ({ t, path: null }))
+        });
         setSelectedTile(tile);
         sound.playClick();
       } else {
@@ -483,9 +602,15 @@ export default function MahjongZen({ onBack, onScoreSave }) {
         }
       } else {
         // If clicking a different symbol, check if the new one has free matches
-        const active = tiles.filter(t => t.active && t.id !== tile.id && isTileFree(t));
-        const hasMatch = active.some(t => t.sym.name === tile.sym.name);
-        if (hasMatch) {
+        const active = tiles.filter(t => t.active && t.id !== tile.id && isTileFree(t) && t.sym.name === tile.sym.name);
+        if (active.length === 1) {
+          setSelectedTile(tile);
+          sound.playClick();
+        } else if (active.length > 1) {
+          setMatchSelection({
+            sourceTile: tile,
+            options: active.map(t => ({ t, path: null }))
+          });
           setSelectedTile(tile);
           sound.playClick();
         } else {
@@ -541,9 +666,12 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   };
 
   // Push Block Sliding simulation
-  const canPushTile = (tileId, dx, dy, nextCoords, currentTiles) => {
+  const canPushTile = (tileId, dx, dy, nextCoords, currentTiles, allowedGroup) => {
     const tile = currentTiles.find(t => t.id === tileId);
     if (!tile) return false;
+    
+    if (allowedGroup && !allowedGroup.has(tileId)) return false;
+
     const nextX = tile.x + dx;
     const nextY = tile.y + dy;
 
@@ -553,7 +681,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
 
     const obstacle = currentTiles.find(t => t.active && t.id !== tileId && t.x === nextX && t.y === nextY);
     if (obstacle) {
-      return canPushTile(obstacle.id, dx, dy, nextCoords, currentTiles);
+      return canPushTile(obstacle.id, dx, dy, nextCoords, currentTiles, allowedGroup);
     }
     return true;
   };
@@ -572,7 +700,10 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   };
 
   const handleTileMouseDown = (e, tile) => {
+    if (Date.now() - lastTouchTime.current < 500) return; // Prevent ghost click
     if (mode !== 'slide' || won || lost || matchingLines.length > 0) return;
+    setHintIds([]);
+    setHintMove(null);
     setDragStart({
       tileId: tile.id,
       screenX: e.clientX,
@@ -583,7 +714,13 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   };
 
   const handleTileTouchStart = (e, tile) => {
+    lastTouchTime.current = Date.now();
     if (mode !== 'slide' || won || lost || matchingLines.length > 0) return;
+    setHintIds([]);
+    setHintMove(null);
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     const touch = e.touches[0];
     setDragStart({
       tileId: tile.id,
@@ -610,8 +747,8 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   };
 
   const processDrag = (dx, dy) => {
-    const cellWidth = 58;
-    const cellHeight = 72;
+    const cellWidth = 52;
+    const cellHeight = 64;
 
     let gridDx = 0;
     let gridDy = 0;
@@ -639,11 +776,18 @@ export default function MahjongZen({ onBack, onScoreSave }) {
     const stepY = gridDy > 0 ? 1 : gridDy < 0 ? -1 : 0;
     const totalSteps = Math.max(Math.abs(gridDx), Math.abs(gridDy));
 
+    const allowedGroup = new Set();
+    let currentDrag = dragTile;
+    while (currentDrag) {
+      allowedGroup.add(currentDrag.id);
+      currentDrag = initialTilesForDrag.find(t => t.active && t.x === currentDrag.x + stepX && t.y === currentDrag.y + stepY);
+    }
+
     for (let step = 0; step < totalSteps; step++) {
       const nextCoords = new Map();
       currentLayout.forEach(t => nextCoords.set(t.id, { x: t.x, y: t.y }));
 
-      if (canPushTile(dragTile.id, stepX, stepY, nextCoords, currentLayout)) {
+      if (canPushTile(dragTile.id, stepX, stepY, nextCoords, currentLayout, allowedGroup)) {
         pushTile(dragTile.id, stepX, stepY, nextCoords, currentLayout);
         currentLayout = currentLayout.map(t => {
           const coord = nextCoords.get(t.id);
@@ -674,7 +818,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
         handleSlideTileClick(clickedTile);
       }
     } else {
-      checkForMatchesAndResolve(finalTiles, originalTiles);
+      checkForMatchesAndResolve(finalTiles, originalTiles, clickTileId);
     }
   };
 
@@ -762,6 +906,29 @@ export default function MahjongZen({ onBack, onScoreSave }) {
     setDragStart(null);
     setHintIds([]);
 
+    if (matchSelection !== null) {
+      if (tile.id === matchSelection.sourceTile.id) {
+        if (matchSelection.revertTiles) {
+          setTiles(matchSelection.revertTiles);
+        }
+        setMatchSelection(null);
+        setSelectedTile(null);
+        sound.playClick();
+      } else {
+        const option = matchSelection.options.find(opt => opt.t.id === tile.id);
+        if (option) {
+          saveToHistory();
+          sound.playScore();
+          const newScore = score + 20;
+          setScore(newScore);
+          resolveClickMatch(matchSelection.sourceTile.id, tile.id, option.path, newScore);
+          setMatchSelection(null);
+          setSelectedTile(null);
+        }
+      }
+      return;
+    }
+
     if (selectedTile === null) {
       // Check if there is exactly one aligned match on the board
       const alignedMatches = [];
@@ -784,7 +951,11 @@ export default function MahjongZen({ onBack, onScoreSave }) {
         setScore(newScore);
         resolveClickMatch(tile.id, match.t.id, match.path, newScore);
       } else if (alignedMatches.length > 1) {
-        // Otherwise select it
+        // Multiple matches: enter matchSelection state!
+        setMatchSelection({
+          sourceTile: tile,
+          options: alignedMatches
+        });
         setSelectedTile(tile);
         sound.playClick();
       } else {
@@ -826,7 +997,14 @@ export default function MahjongZen({ onBack, onScoreSave }) {
           }
         }
 
-        if (alignedMatches.length > 0) {
+        if (alignedMatches.length === 1) {
+          setSelectedTile(tile);
+          sound.playClick();
+        } else if (alignedMatches.length > 1) {
+          setMatchSelection({
+            sourceTile: tile,
+            options: alignedMatches
+          });
           setSelectedTile(tile);
           sound.playClick();
         } else {
@@ -840,6 +1018,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   };
 
   const resolveClickMatch = async (tileId1, tileId2, path, newScore) => {
+    // 1. Show connection line first
     setMatchingLines([path]);
 
     const matchedIds = new Set([tileId1, tileId2]);
@@ -848,20 +1027,117 @@ export default function MahjongZen({ onBack, onScoreSave }) {
     );
     setTiles(nextTiles);
 
-    await new Promise(resolve => setTimeout(resolve, 600));
+    // Wait 180ms to show the cyan line
+    await new Promise(resolve => setTimeout(resolve, 180));
 
+    // Get positions for particles
+    const tile1 = tiles.find(t => t.id === tileId1);
+    const tile2 = tiles.find(t => t.id === tileId2);
+
+    if (tile1 && tile2) {
+      const effectId1 = Math.random();
+      const effectId2 = Math.random();
+      const newEffects = [
+        { id: effectId1, x: tile1.x, y: tile1.y, type: 'particles' },
+        { id: effectId2, x: tile2.x, y: tile2.y, type: 'particles' },
+        { id: effectId1 + 10, x: tile1.x, y: tile1.y, type: 'text', text: '+20' },
+        { id: effectId2 + 10, x: tile2.x, y: tile2.y, type: 'text', text: '+20' },
+      ];
+      setMatchEffects(newEffects);
+
+      // Clean up effects after 800ms
+      setTimeout(() => {
+        setMatchEffects(prev => prev.filter(e => e.id !== effectId1 && e.id !== effectId2 && e.id !== effectId1 + 10 && e.id !== effectId2 + 10));
+      }, 800);
+    }
+
+    // 2. Hide tiles and line
     nextTiles = nextTiles.map(t =>
       matchedIds.has(t.id) ? { ...t, active: false, matching: false } : t
     );
-
     setTiles(nextTiles);
     setMatchingLines([]);
+
+    // Wait for the remaining particle animation to finish
+    await new Promise(resolve => setTimeout(resolve, 450));
 
     if (nextTiles.every(t => !t.active)) {
       setWon(true);
       sound.playPowerup();
       if (onScoreSave) onScoreSave('Mahjong Slide', newScore + 100);
+    } else if (mode === 'slide' && !hasAnyPossibleMovesSlider(nextTiles)) {
+      setWon(true);
+      sound.playPowerup();
+      if (onScoreSave) onScoreSave('Mahjong Slide', newScore + 100);
     }
+  };
+
+  const hasAnyPossibleMovesSlider = (currentTiles) => {
+    const active = currentTiles.filter(t => t.active);
+    if (active.length === 0) return false;
+
+    const symbolGroups = new Map();
+    active.forEach(t => {
+      if (!symbolGroups.has(t.sym.name)) {
+        symbolGroups.set(t.sym.name, []);
+      }
+      symbolGroups.get(t.sym.name).push(t);
+    });
+
+    for (const [sym, list] of symbolGroups.entries()) {
+      if (list.length < 2) continue;
+
+      for (let i = 0; i < list.length; i++) {
+        for (let j = i + 1; j < list.length; j++) {
+          const t1 = list[i];
+          const t2 = list[j];
+
+          if (findConnectionPath(t1, t2, active)) {
+            return true;
+          }
+
+          const directions = [
+            { dx: 1, dy: 0 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+            { dx: 0, dy: -1 }
+          ];
+
+          for (const dir of directions) {
+            let currentLayout = active.map(t => ({ ...t }));
+            const allowedGroup = new Set();
+            let currentTest = t1;
+            while (currentTest) {
+              allowedGroup.add(currentTest.id);
+              currentTest = active.find(t => t.active && t.x === currentTest.x + dir.dx && t.y === currentTest.y + dir.dy);
+            }
+
+            for (let step = 1; step <= 6; step++) {
+              const nextCoords = new Map();
+              currentLayout.forEach(t => nextCoords.set(t.id, { x: t.x, y: t.y }));
+
+              if (canPushTile(t1.id, dir.dx, dir.dy, nextCoords, currentLayout, allowedGroup)) {
+                pushTile(t1.id, dir.dx, dir.dy, nextCoords, currentLayout);
+                currentLayout = currentLayout.map(t => {
+                  const coord = nextCoords.get(t.id);
+                  return { ...t, x: coord.x, y: coord.y };
+                });
+
+                const newT1 = currentLayout.find(t => t.id === t1.id);
+                const newT2 = currentLayout.find(t => t.id === t2.id);
+                if (newT1 && newT2 && findConnectionPath(newT1, newT2, currentLayout)) {
+                  return true;
+                }
+              } else {
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return false;
   };
 
   const checkForMatchesAndResolve = async (currentTiles, originalTiles, draggedTileId) => {
@@ -883,14 +1159,28 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       const draggedTile = nextTiles.find(t => t.id === draggedTileId);
       if (draggedTile && draggedTile.active) {
         const active = nextTiles.filter(t => t.active && t.id !== draggedTileId);
+        const possibleMatches = [];
         for (const t2 of active) {
           if (t2.sym.name === draggedTile.sym.name) {
             const path = findConnectionPath(draggedTile, t2, nextTiles);
             if (path) {
-              matchFound = { t1: draggedTile, t2, path };
-              break;
+              possibleMatches.push({ t: t2, path });
             }
           }
+        }
+        
+        if (possibleMatches.length === 1) {
+          matchFound = { t1: draggedTile, t2: possibleMatches[0].t, path: possibleMatches[0].path };
+        } else if (possibleMatches.length > 1) {
+          // Multiple matches found! Enter matchSelection state.
+          setMatchSelection({
+            sourceTile: draggedTile,
+            options: possibleMatches,
+            revertTiles: originalTiles
+          });
+          setSelectedTile(draggedTile);
+          sound.playClick();
+          return; // Stop automatic resolution
         }
       }
     } else {
@@ -930,17 +1220,40 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       );
       setTiles(nextTiles);
 
-      await new Promise(resolve => setTimeout(resolve, 600));
+      // Wait 180ms to show the cyan line
+      await new Promise(resolve => setTimeout(resolve, 180));
 
+      // Spawn particles & score floating text at both tiles
+      const effectId1 = Math.random();
+      const effectId2 = Math.random();
+      const newEffects = [
+        { id: effectId1, x: matchFound.t1.x, y: matchFound.t1.y, type: 'particles' },
+        { id: effectId2, x: matchFound.t2.x, y: matchFound.t2.y, type: 'particles' },
+        { id: effectId1 + 10, x: matchFound.t1.x, y: matchFound.t1.y, type: 'text', text: '+20' },
+        { id: effectId2 + 10, x: matchFound.t2.x, y: matchFound.t2.y, type: 'text', text: '+20' },
+      ];
+      setMatchEffects(newEffects);
+
+      // Clean up effects after 800ms
+      setTimeout(() => {
+        setMatchEffects(prev => prev.filter(e => e.id !== effectId1 && e.id !== effectId2 && e.id !== effectId1 + 10 && e.id !== effectId2 + 10));
+      }, 800);
+
+      // Hide tiles and line
       nextTiles = nextTiles.map(t =>
         matchedIds.has(t.id) ? { ...t, active: false, matching: false } : t
       );
-
-      // Save final tiles state without gravity
       setTiles(nextTiles);
       setMatchingLines([]);
 
+      // Wait for particle animation to finish
+      await new Promise(resolve => setTimeout(resolve, 450));
+
       if (nextTiles.every(t => !t.active)) {
+        setWon(true);
+        sound.playPowerup();
+        if (onScoreSave) onScoreSave('Mahjong Slide', newScore + 100);
+      } else if (mode === 'slide' && !hasAnyPossibleMovesSlider(nextTiles)) {
         setWon(true);
         sound.playPowerup();
         if (onScoreSave) onScoreSave('Mahjong Slide', newScore + 100);
@@ -970,6 +1283,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   const getHint = () => {
     if (hintsLeft <= 0) return;
     setHintIds([]);
+    setHintMove(null);
     const active = tiles.filter(t => t.active);
     if (active.length === 0) return;
 
@@ -1013,14 +1327,56 @@ export default function MahjongZen({ onBack, onScoreSave }) {
         }
       }
 
-      // 2. Fallback: find ANY active identical pair
-      for (let i = 0; i < active.length; i++) {
-        for (let j = i + 1; j < active.length; j++) {
-          if (active[i].sym.name === active[j].sym.name) {
-            setHintIds([active[i].id, active[j].id]);
-            setHintsLeft(prev => prev - 1);
-            sound.playPowerup();
-            return;
+      // 2. Fallback: simulate a slide movement to find a connectable pair
+      const symbolGroups = new Map();
+      active.forEach(t => {
+        if (!symbolGroups.has(t.sym.name)) symbolGroups.set(t.sym.name, []);
+        symbolGroups.get(t.sym.name).push(t);
+      });
+
+      for (const [sym, list] of symbolGroups.entries()) {
+        if (list.length < 2) continue;
+        for (let i = 0; i < list.length; i++) {
+          for (let j = i + 1; j < list.length; j++) {
+            const t1 = list[i];
+            const t2 = list[j];
+            const directions = [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 }];
+            
+            for (const dir of directions) {
+              let currentLayout = active.map(t => ({ ...t }));
+              const allowedGroup = new Set();
+              let currentTest = t1;
+              while (currentTest) {
+                allowedGroup.add(currentTest.id);
+                currentTest = active.find(t => t.active && t.x === currentTest.x + dir.dx && t.y === currentTest.y + dir.dy);
+              }
+
+              for (let step = 1; step <= 6; step++) {
+                const nextCoords = new Map();
+                currentLayout.forEach(t => nextCoords.set(t.id, { x: t.x, y: t.y }));
+                
+                if (canPushTile(t1.id, dir.dx, dir.dy, nextCoords, currentLayout, allowedGroup)) {
+                  pushTile(t1.id, dir.dx, dir.dy, nextCoords, currentLayout);
+                  currentLayout = currentLayout.map(t => {
+                    const coord = nextCoords.get(t.id);
+                    return { ...t, x: coord.x, y: coord.y };
+                  });
+                  const newT1 = currentLayout.find(t => t.id === t1.id);
+                  const newT2 = currentLayout.find(t => t.id === t2.id);
+                  
+                  if (newT1 && newT2 && findConnectionPath(newT1, newT2, currentLayout)) {
+                    // Valid simulation found!
+                    setHintIds([t1.id, t2.id]);
+                    setHintMove({ tileId: t1.id, dx: dir.dx * step, dy: dir.dy * step });
+                    setHintsLeft(prev => prev - 1);
+                    sound.playPowerup();
+                    return;
+                  }
+                } else {
+                  break; // blocked
+                }
+              }
+            }
           }
         }
       }
@@ -1062,13 +1418,13 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   };
 
   // Grid dimensions
-  const cellWidth = 58;
-  const cellHeight = 72;
-  const tileWidth = 54;
-  const tileHeight = 66;
+  const cellWidth = 57;
+  const cellHeight = 67;
+  const tileWidth = 57;
+  const tileHeight = 67;
 
-  const maxBoardWidth = mode === 'zen' ? (boardSize === 'small' ? 220 : boardSize === 'medium' ? 280 : 348) : 6 * cellWidth + 4;
-  const maxBoardHeight = mode === 'zen' ? (boardSize === 'small' ? 260 : boardSize === 'medium' ? 340 : 420) : maxRows * cellHeight + 4;
+  const maxBoardWidth = mode === 'zen' ? (boardSize === 'small' ? 220 : boardSize === 'medium' ? 280 : 348) : 6 * cellWidth;
+  const maxBoardHeight = mode === 'zen' ? (boardSize === 'small' ? 260 : boardSize === 'medium' ? 340 : 420) : maxRows * cellHeight;
 
   const gridSlots = [];
   for (let y = 1; y <= maxRows; y++) {
@@ -1086,17 +1442,104 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       onMouseUp={handleDragRelease}
       onTouchEnd={handleDragRelease}
     >
+      {/* Jungle bottom silhouette overlay */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '110px',
+        pointerEvents: 'none',
+        zIndex: 1,
+        overflow: 'hidden',
+        borderBottomLeftRadius: '25px',
+        borderBottomRightRadius: '25px',
+      }}>
+        <svg viewBox="0 0 430 110" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+          <path d="M 0 110 Q 50 65 100 85 Q 150 55 200 80 Q 250 45 300 75 Q 350 55 400 85 T 430 75 L 430 110 Z" fill="#047857" opacity="0.25" />
+          <path d="M 0 110 Q 60 75 120 90 Q 180 65 240 85 Q 300 60 360 85 T 430 80 L 430 110 Z" fill="#065f46" opacity="0.5" />
+          <path d="M 0 110 Q 70 85 140 95 Q 210 75 280 90 Q 350 70 420 90 T 430 85 L 430 110 Z" fill="#022c22" opacity="0.9" />
+        </svg>
+      </div>
+
       <style>{`
+        @keyframes confetti-fall {
+          0% {
+            transform: translateY(0vh) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(110vh) rotate(720deg);
+            opacity: 0;
+          }
+        }
+        @keyframes leaf-spin-out {
+          0% {
+            transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(0.3);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(1.1);
+            opacity: 0;
+          }
+        }
+        @keyframes sparkle-glow {
+          0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(2.2);
+            opacity: 0;
+          }
+        }
+        @keyframes float-up-fade {
+          0% {
+            transform: translate(-50%, -50%) translateY(0);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-50%, -50%) translateY(-50px);
+            opacity: 0;
+          }
+        }
+        @keyframes victory-bounce {
+          0% { transform: translateY(0) scale(1); }
+          100% { transform: translateY(-15px) scale(1.05); }
+        }
+        @keyframes victory-glow {
+          from { text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.4); }
+          to { text-shadow: 0 0 20px rgba(56, 189, 248, 1), 0 0 30px rgba(56, 189, 248, 0.6); }
+        }
+        @keyframes pulse-glow-anim {
+          0% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.4); }
+          100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.8); }
+        }
+        .pulse-glow {
+          animation: pulse-glow-anim 1s infinite alternate;
+        }
+        @keyframes hint-simulate {
+          0% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(calc(var(--hint-dx) * 1px), calc(var(--hint-dy) * 1px)) scale(1.05); }
+          100% { transform: translate(0, 0) scale(1); }
+        }
+        .hint-simulating {
+          animation: hint-simulate 1.2s infinite ease-in-out;
+          z-index: 100 !important;
+        }
         @keyframes shake-vibrate {
           0% { transform: translate(0, 0) rotate(0deg); }
-          20% { transform: translate(-2px, 1px) rotate(-1deg); }
-          40% { transform: translate(1px, -1px) rotate(1deg); }
-          60% { transform: translate(-1px, 2px) rotate(0deg); }
-          80% { transform: translate(2px, 1px) rotate(1deg); }
+          15% { transform: translate(-6px, 0px) rotate(-4deg); }
+          30% { transform: translate(6px, 0px) rotate(4deg); }
+          45% { transform: translate(-4px, 2px) rotate(-3deg); }
+          60% { transform: translate(4px, -2px) rotate(3deg); }
+          75% { transform: translate(-2px, -1px) rotate(-1deg); }
+          90% { transform: translate(2px, 1px) rotate(1deg); }
           100% { transform: translate(0, 0) rotate(0deg); }
         }
         .tile-vibrating {
-          animation: shake-vibrate 0.3s ease-in-out;
+          animation: shake-vibrate 0.4s cubic-bezier(.36,.07,.19,.97) both;
+          z-index: 999 !important;
         }
 
         :root {
@@ -1128,7 +1571,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       `}</style>
       {/* Header styled exactly to match the reference */}
       <div style={headerWrapperStyle}>
-        <button onClick={onBack} style={blueSquareBtnStyle}>
+        <button onClick={handleBackWithConfirm} style={blueSquareBtnStyle}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
@@ -1169,11 +1612,14 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       {/* Playfield wrapper styled to match screenshots */}
       <div style={{
         ...boardWrapperStyle,
-        background: mode === 'slide' ? '#083c54' : '#f8fafc',
+        background: mode === 'slide' ? 'rgba(8, 60, 84, 0.2)' : '#f8fafc',
+        backdropFilter: mode === 'slide' ? 'blur(8px)' : 'none',
         border: mode === 'slide' ? '6px solid #38bdf8' : '2px solid var(--border-color)',
         boxShadow: mode === 'slide' ? 'inset 0 4px 12px rgba(0,0,0,0.4), 0 10px 25px rgba(0,0,0,0.15)' : 'inset 0 2px 8px rgba(0,0,0,0.02)',
+        position: 'relative',
+        zIndex: 2,
       }}>
-        <div className="board-scaler" style={{ ...boardStyle, width: `${maxBoardWidth}px`, height: `${maxBoardHeight}px` }}>
+        <div className="board-scaler" style={{ ...boardStyle, width: "100%"/*`${maxBoardWidth}px`*/, height: `${maxBoardHeight}px` }}>
 
           {/* Faint grid guide lines in slider mode */}
           {mode === 'slide' && gridSlots.map(slot => (
@@ -1181,21 +1627,120 @@ export default function MahjongZen({ onBack, onScoreSave }) {
               key={`bg-${slot.x}-${slot.y}`}
               style={{
                 position: 'absolute',
-                left: `${(slot.x - 1) * cellWidth + 2}px`,
-                top: `${(slot.y - 1) * cellHeight + 2}px`,
+                left: `${(slot.x - 1) * cellWidth}px`,
+                top: `${(slot.y - 1) * cellHeight}px`,
                 width: `${tileWidth}px`,
                 height: `${tileHeight}px`,
                 borderRadius: '8px',
-                border: '1.5px solid rgba(255, 255, 255, 0.04)',
-                background: 'rgba(255, 255, 255, 0.01)',
+                border: 'none',
+                background: 'rgba(255, 255, 255, 0.15)',
                 pointerEvents: 'none',
                 boxSizing: 'border-box',
               }}
             />
           ))}
 
+          {/* Glowing laser crosshair guides for active drag */}
+          {mode === 'slide' && dragStart && dragHasMoved && (() => {
+            const draggedTile = tiles.find(t => t.id === dragStart.tileId);
+            if (!draggedTile) return null;
+
+            const crosshairX = (draggedTile.x - 0.5) * cellWidth;
+            const crosshairY = (draggedTile.y - 0.5) * cellHeight;
+            const boardW = 6 * cellWidth;
+            const boardH = maxRows * cellHeight;
+
+            return (
+              <>
+                {/* Horizontal crosshair laser */}
+                <div style={{
+                  position: 'absolute',
+                  top: `${crosshairY - 2}px`,
+                  left: 0,
+                  width: `${boardW}px`,
+                  height: '4px',
+                  background: 'linear-gradient(90deg, rgba(0, 240, 255, 0.1), #00f0ff, rgba(0, 240, 255, 0.1))',
+                  boxShadow: '0 0 10px #00f0ff, 0 0 20px #00f0ff',
+                  zIndex: 90,
+                  pointerEvents: 'none',
+                  borderRadius: '2px'
+                }} />
+                {/* Vertical crosshair laser */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: `${crosshairX - 2}px`,
+                  width: '4px',
+                  height: `${boardH}px`,
+                  background: 'linear-gradient(180deg, rgba(0, 240, 255, 0.1), #00f0ff, rgba(0, 240, 255, 0.1))',
+                  boxShadow: '0 0 10px #00f0ff, 0 0 20px #00f0ff',
+                  zIndex: 90,
+                  pointerEvents: 'none',
+                  borderRadius: '2px'
+                }} />
+              </>
+            );
+          })()}
+
+          {/* Golden bands for hint */}
+          {mode === 'slide' && hintIds.length === 2 && (() => {
+            const t1 = tiles.find(t => t.id === hintIds[0]);
+            const t2 = tiles.find(t => t.id === hintIds[1]);
+            if (!t1 || !t2) return null;
+
+            const boardW = 6 * cellWidth;
+            const boardH = maxRows * cellHeight;
+
+            const renderBand = (isHoriz, pos, key) => {
+              const style = isHoriz ? {
+                position: 'absolute',
+                top: `${(pos - 1) * cellHeight}px`,
+                left: 0,
+                width: `${boardW}px`,
+                height: `${cellHeight}px`,
+                background: 'linear-gradient(90deg, rgba(250, 204, 21, 0.0), rgba(250, 204, 21, 0.3), rgba(250, 204, 21, 0.0))',
+                zIndex: 85,
+                pointerEvents: 'none',
+              } : {
+                position: 'absolute',
+                top: 0,
+                left: `${(pos - 1) * cellWidth}px`,
+                width: `${cellWidth}px`,
+                height: `${boardH}px`,
+                background: 'linear-gradient(180deg, rgba(250, 204, 21, 0.0), rgba(250, 204, 21, 0.3), rgba(250, 204, 21, 0.0))',
+                zIndex: 85,
+                pointerEvents: 'none',
+              };
+              return <div key={key} style={style} />;
+            };
+
+            const bands = [];
+            if (hintMove) {
+              if (hintMove.dx !== 0) {
+                bands.push(renderBand(true, t1.y, 'h-t1'));
+                bands.push(renderBand(false, t2.x, 'v-t2'));
+              } else {
+                bands.push(renderBand(false, t1.x, 'v-t1'));
+                bands.push(renderBand(true, t2.y, 'h-t2'));
+              }
+            } else {
+              if (t1.x === t2.x) {
+                bands.push(renderBand(false, t1.x, 'v-shared'));
+              } else if (t1.y === t2.y) {
+                bands.push(renderBand(true, t1.y, 'h-shared'));
+              } else {
+                bands.push(renderBand(true, t1.y, 'h-t1'));
+                bands.push(renderBand(false, t1.x, 'v-t1'));
+                bands.push(renderBand(true, t2.y, 'h-t2'));
+                bands.push(renderBand(false, t2.x, 'v-t2'));
+              }
+            }
+
+            return <>{bands}</>;
+          })()}
+
           {/* Render glowing matching lines */}
-          {mode === 'slide' && matchingLines.length > 0 && (
+          {matchingLines.length > 0 && (
             <svg
               style={{
                 position: 'absolute',
@@ -1209,8 +1754,8 @@ export default function MahjongZen({ onBack, onScoreSave }) {
             >
               {matchingLines.map((path, idx) => {
                 const pointsStr = path.map(p => {
-                  const px = (p.x - 1) * cellWidth + cellWidth / 2 + 2;
-                  const py = (p.y - 1) * cellHeight + cellHeight / 2 + 2;
+                  const px = (p.x - 1) * cellWidth + cellWidth / 2;
+                  const py = (p.y - 1) * cellHeight + cellHeight / 2;
                   return `${px},${py}`;
                 }).join(' ');
 
@@ -1220,17 +1765,100 @@ export default function MahjongZen({ onBack, onScoreSave }) {
                     points={pointsStr}
                     fill="none"
                     stroke="#22d3ee"
-                    strokeWidth="6"
+                    strokeWidth="5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     style={{
-                      filter: 'drop-shadow(0 0 4px #06b6d4) drop-shadow(0 0 10px #22d3ee)',
+                      filter: 'drop-shadow(0 0 3px #06b6d4) drop-shadow(0 0 8px #22d3ee)',
                     }}
                   />
                 );
               })}
             </svg>
           )}
+
+          {/* Render particle explosion & floating score effects */}
+          {matchEffects.map(effect => {
+            if (effect.type === 'particles') {
+              return (
+                <div
+                  key={effect.id}
+                  style={{
+                    position: 'absolute',
+                    left: `${(effect.x - 1) * cellWidth}px`,
+                    top: `${(effect.y - 1) * cellHeight}px`,
+                    width: `${tileWidth}px`,
+                    height: `${tileHeight}px`,
+                    pointerEvents: 'none',
+                    zIndex: 100,
+                  }}
+                >
+                  {/* Central glowing ring */}
+                  <div style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    width: '30px',
+                    height: '30px',
+                    background: 'radial-gradient(circle, rgba(34, 197, 94, 0.8) 0%, rgba(34, 197, 94, 0) 70%)',
+                    transform: 'translate(-50%, -50%)',
+                    borderRadius: '50%',
+                    animation: 'sparkle-glow 0.6s forwards ease-out',
+                  }} />
+                  {/* Floating leaves */}
+                  {Array.from({ length: 8 }).map((_, i) => {
+                    const angle = (i * 360) / 8;
+                    const rad = (angle * Math.PI) / 180;
+                    const tx = Math.cos(rad) * 45;
+                    const ty = Math.sin(rad) * 45;
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          position: 'absolute',
+                          left: '50%',
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          animation: 'leaf-spin-out 0.6s forwards ease-out',
+                          animationDelay: `${i * 0.02}s`,
+                          '--tx': `${tx}px`,
+                          '--ty': `${ty}px`,
+                          '--rot': `${angle + 180}deg`,
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="#22c55e">
+                          <path d="M12 2C8 6 8 10 12 12C16 10 16 6 12 2Z" />
+                        </svg>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            } else if (effect.type === 'text') {
+              return (
+                <div
+                  key={effect.id}
+                  style={{
+                    position: 'absolute',
+                    left: `${(effect.x - 1) * cellWidth + cellWidth / 2}px`,
+                    top: `${(effect.y - 1) * cellHeight + cellHeight / 2}px`,
+                    transform: 'translate(-50%, -50%)',
+                    color: '#facc15', // Gold color
+                    fontWeight: '900',
+                    fontSize: '26px',
+                    fontFamily: 'var(--font-main), sans-serif',
+                    textShadow: '0 0 6px #eab308, 0 1px 3px rgba(0,0,0,0.6)',
+                    animation: 'float-up-fade 0.8s forwards ease-out',
+                    pointerEvents: 'none',
+                    zIndex: 101,
+                  }}
+                >
+                  {effect.text}
+                </div>
+              );
+            }
+            return null;
+          })}
 
           {/* Slider circular shifting arrows (optional, hidden by default) */}
           {mode === 'slide' && showArrows && (
@@ -1241,13 +1869,13 @@ export default function MahjongZen({ onBack, onScoreSave }) {
                   <React.Fragment key={`row-ctrl-${y}`}>
                     <button
                       onClick={() => shiftRow(y, -1)}
-                      style={{ ...rowArrowStyle, left: '-30px', top: `${(y - 1) * cellHeight + 20}px` }}
+                      style={{ ...rowArrowStyle, left: '-30px', top: `${(y - 1) * cellHeight + 16}px` }}
                     >
                       ◀
                     </button>
                     <button
                       onClick={() => shiftRow(y, 1)}
-                      style={{ ...rowArrowStyle, right: '-30px', top: `${(y - 1) * cellHeight + 20}px` }}
+                      style={{ ...rowArrowStyle, right: '-30px', top: `${(y - 1) * cellHeight + 16}px` }}
                     >
                       ▶
                     </button>
@@ -1261,13 +1889,13 @@ export default function MahjongZen({ onBack, onScoreSave }) {
                   <React.Fragment key={`col-ctrl-${x}`}>
                     <button
                       onClick={() => shiftColumn(x, -1)}
-                      style={{ ...colArrowStyle, top: '-30px', left: `${(x - 1) * cellWidth + 12}px` }}
+                      style={{ ...colArrowStyle, top: '-30px', left: `${(x - 1) * cellWidth + 10}px` }}
                     >
                       ▲
                     </button>
                     <button
                       onClick={() => shiftColumn(x, 1)}
-                      style={{ ...colArrowStyle, bottom: '-30px', left: `${(x - 1) * cellWidth + 12}px` }}
+                      style={{ ...colArrowStyle, bottom: '-30px', left: `${(x - 1) * cellWidth + 10}px` }}
                     >
                       ▼
                     </button>
@@ -1285,6 +1913,20 @@ export default function MahjongZen({ onBack, onScoreSave }) {
             const isHint = hintIds.includes(tile.id);
             const isFree = mode === 'zen' ? isTileFree(tile) : true;
 
+            // Determine if this tile is grayed out/unclickable due to matchSelection
+            let isGreyedOut = false;
+            let isMatchOption = false;
+            if (matchSelection !== null) {
+              const isSource = tile.id === matchSelection.sourceTile.id;
+              const isOption = matchSelection.options.some(opt => opt.t.id === tile.id);
+              if (isOption) {
+                isMatchOption = true;
+              }
+              if (!isSource && !isOption) {
+                isGreyedOut = true;
+              }
+            }
+
             let left = 0;
             let top = 0;
             let zIndex = 80;
@@ -1294,9 +1936,9 @@ export default function MahjongZen({ onBack, onScoreSave }) {
               top = (tile.y - 1) * 44 - tile.z * 7;
               zIndex = 80 + tile.z + (isSelected ? 50 : 0);
             } else {
-              left = (tile.x - 1) * cellWidth + 2;
-              top = (tile.y - 1) * cellHeight + 2;
-              zIndex = 80 + (isSelected ? 50 : 0);
+              left = (tile.x - 1) * cellWidth;
+              top = (tile.y - 1) * cellHeight;
+              zIndex = 80 + (isSelected ? 50 : 0) + (isMatchOption ? 40 : 0);
             }
 
             return (
@@ -1305,7 +1947,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
                 onClick={() => mode === 'zen' ? handleZenTileClick(tile) : null}
                 onMouseDown={(e) => handleTileMouseDown(e, tile)}
                 onTouchStart={(e) => handleTileTouchStart(e, tile)}
-                className={`mahjong-tile-3d ${isSelected ? 'selected' : ''} ${isHint ? 'hinted' : ''} ${!isFree && mode === 'zen' ? 'blocked' : ''} ${tile.sym.name === vibratingSymbol ? 'tile-vibrating' : ''}`}
+                className={`mahjong-tile-3d ${isSelected ? 'selected' : ''} ${isHint ? 'hinted' : ''} ${!isFree && mode === 'zen' ? 'blocked' : ''} ${tile.sym.name === vibratingSymbol ? 'tile-vibrating' : ''} ${hintMove && hintMove.tileId === tile.id ? 'hint-simulating' : ''}`}
                 style={{
                   position: 'absolute',
                   left: `${left}px`,
@@ -1314,27 +1956,40 @@ export default function MahjongZen({ onBack, onScoreSave }) {
                   height: `${mode === 'zen' ? 56 : tileHeight}px`,
                   zIndex,
                   transform: isSelected ? 'translate3d(0, -8px, 10px)' : 'none',
-                  cursor: isFree ? 'pointer' : 'not-allowed',
-                  opacity: tile.matching ? 0.7 : isFree ? 1 : 0.6,
-                  filter: isFree ? 'none' : 'brightness(0.8) grayscale(20%)',
+                  cursor: isGreyedOut ? 'not-allowed' : (isFree ? 'pointer' : 'not-allowed'),
+                  opacity: isGreyedOut ? 0.25 : (tile.matching ? 0.7 : isFree ? 1 : 0.6),
+                  filter: isGreyedOut ? 'grayscale(100%) brightness(0.6)' : (isFree ? 'none' : 'brightness(0.8) grayscale(20%)'),
+                  pointerEvents: isGreyedOut ? 'none' : 'auto',
+                  '--hint-dx': hintMove && hintMove.tileId === tile.id ? hintMove.dx * cellWidth : 0,
+                  '--hint-dy': hintMove && hintMove.tileId === tile.id ? hintMove.dy * cellHeight : 0,
                   background: '#ffffff',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxSizing: 'border-box',
-                  borderBottom: '5px solid #16a34a', // Thicker green bottom layer
-                  borderRight: '3px solid #15803d',
-                  boxShadow: isSelected
-                    ? '0 12px 24px rgba(245, 158, 11, 0.4)'
-                    : isHint
-                      ? '0 0 18px rgba(139, 92, 246, 0.8)'
-                      : `0 4px 6px rgba(0, 0, 0, 0.15), ${tile.z * 2}px ${tile.z * 2 + 2}px 6px rgba(0,0,0,0.18)`,
+                  borderBottom: tile.sym.name === vibratingSymbol
+                    ? '5px solid #ef4444'
+                    : '5px solid #16a34a', // Thicker green bottom layer
+                  borderRight: tile.sym.name === vibratingSymbol
+                    ? '3px solid #dc2626'
+                    : '3px solid #15803d',
+                  boxShadow: tile.sym.name === vibratingSymbol
+                    ? '0 0 20px #ef4444'
+                    : isSelected
+                      ? '0 0 20px #00f0ff, inset 0 0 10px #00f0ff'
+                      : isMatchOption
+                        ? '0 0 20px #38bdf8, inset 0 0 10px #38bdf8'
+                        : isHint
+                          ? '0 0 20px #facc15, inset 0 0 10px #facc15'
+                          : `0 4px 6px rgba(0, 0, 0, 0.15), ${tile.z * 2}px ${tile.z * 2 + 2}px 6px rgba(0,0,0,0.18)`,
                   outline: isSelected
-                    ? '3px solid #f59e0b'
-                    : isHint
-                      ? '3px solid #8b5cf6'
-                      : 'none',
+                    ? '3px solid #00f0ff'
+                    : isMatchOption
+                      ? '3px solid #38bdf8'
+                      : isHint
+                        ? '3px dashed #facc15'
+                        : 'none',
                   outlineOffset: '2px',
                   transition: dragStart ? 'none' : 'left 0.2s cubic-bezier(0.25, 1, 0.5, 1), top 0.2s cubic-bezier(0.25, 1, 0.5, 1), transform 0.15s, opacity 0.2s',
                   userSelect: 'none',
@@ -1342,6 +1997,28 @@ export default function MahjongZen({ onBack, onScoreSave }) {
                 }}
               >
                 <MahjongIcon name={tile.sym.name} />
+
+                {isMatchOption && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-15px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: '#ef4444',
+                    color: '#ffffff',
+                    fontSize: '9px',
+                    fontWeight: '900',
+                    padding: '1px 5px',
+                    borderRadius: '6px',
+                    border: '1.5px solid #ffffff',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
+                    whiteSpace: 'nowrap',
+                    zIndex: 100,
+                    animation: 'victory-bounce 0.6s infinite alternate'
+                  }}>
+                    CHOISIR
+                  </div>
+                )}
               </div>
             );
           })}
@@ -1367,12 +2044,105 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       </div>
 
       {won && (
-        <div style={overlayStyle}>
-          <div style={victoryTitleStyle}>VICTOIRE !</div>
-          <div style={descStyle}>Félicitations ! Vous avez complété le plateau.</div>
-          <button onClick={initGame} className="retro-btn" style={restartBtnStyle}>
-            Nouveau Niveau
-          </button>
+        <div style={{
+          ...overlayStyle,
+          background: 'rgba(8, 60, 84, 0.95)',
+          backdropFilter: 'blur(10px)',
+          border: '4px solid #38bdf8',
+          boxShadow: '0 0 40px rgba(56, 189, 248, 0.6), inset 0 0 20px rgba(56, 189, 248, 0.3)',
+          color: '#ffffff',
+          borderRadius: '24px',
+          overflow: 'hidden'
+        }}>
+          {/* Confetti pieces falling */}
+          {confetti.map(c => (
+            <div
+              key={c.id}
+              style={{
+                position: 'absolute',
+                left: `${c.x}%`,
+                top: `${c.y}px`,
+                width: `${c.size}px`,
+                height: `${c.size * 1.5}px`,
+                backgroundColor: c.color,
+                borderRadius: '2px',
+                zIndex: 999,
+                animation: `confetti-fall ${c.duration}s linear ${c.delay}s infinite`,
+                transform: `rotate(${c.rotation}deg)`,
+                pointerEvents: 'none',
+              }}
+            />
+          ))}
+
+          {/* Animated Trophy / Crown Icon */}
+          <div className="victory-crown" style={{ fontSize: '70px', marginBottom: '16px', animation: 'victory-bounce 1s infinite alternate', zIndex: 10 }}>
+            🏆
+          </div>
+
+          <div style={{
+            fontFamily: 'var(--font-main)',
+            fontSize: '32px',
+            color: '#38bdf8',
+            fontWeight: '900',
+            textShadow: '0 0 15px rgba(56, 189, 248, 0.8)',
+            marginBottom: '10px',
+            letterSpacing: '1px',
+            animation: 'victory-glow 1.5s ease-in-out infinite alternate',
+            zIndex: 10
+          }}>
+            FÉLICITATIONS !
+          </div>
+
+          <div style={{
+            color: '#e0f2fe',
+            fontSize: '16px',
+            fontWeight: '600',
+            marginBottom: '28px',
+            maxWidth: '300px',
+            lineHeight: '1.5',
+            textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+            zIndex: 10
+          }}>
+            Vous avez brillamment complété le plateau avec un score de <strong style={{ color: '#f59e0b' }}>{score}</strong> points !
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '240px', zIndex: 10 }}>
+            <button
+              onClick={initGame}
+              className="retro-btn pulse-glow"
+              style={{
+                ...restartBtnStyle,
+                background: '#10b981',
+                borderColor: '#10b981',
+                color: '#ffffff',
+                width: '100%',
+                fontWeight: '800',
+                fontSize: '16px',
+                padding: '12px 0',
+                borderRadius: '12px',
+                boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)',
+              }}
+            >
+              🔄 Nouveau Niveau
+            </button>
+            <button
+              onClick={onBack}
+              className="retro-btn"
+              style={{
+                ...restartBtnStyle,
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                color: '#e0f2fe',
+                width: '100%',
+                fontWeight: '700',
+                fontSize: '15px',
+                padding: '10px 0',
+                borderRadius: '12px',
+              }}
+            >
+              &lt; Retour au Hub
+            </button>
+          </div>
         </div>
       )}
 
@@ -1480,14 +2250,15 @@ const containerStyle = {
   flexDirection: 'column',
   width: '100%',
   maxWidth: '430px',
-  background: 'linear-gradient(180deg, #38bdf8 0%, #0284c7 100%)', // Beautiful water-sky gradient background matching reference
+  background: 'url(/mahjong_bg.png) center bottom / cover no-repeat',
   borderRadius: '28px',
   padding: 'var(--container-padding, 24px)',
   boxSizing: 'border-box',
   margin: '0 auto',
   boxShadow: '0 15px 35px rgba(0,0,0,0.25)',
   border: '3px solid #ffffff',
-  position: 'relative'
+  position: 'relative',
+  overflow: 'hidden'
 };
 
 const headerWrapperStyle = {
@@ -1607,6 +2378,8 @@ const bottomControlsStyle = {
   justifyContent: 'center',
   alignItems: 'center',
   marginTop: '16px',
+  position: 'relative',
+  zIndex: 2,
 };
 
 const hintCircleBtnStyle = {
@@ -1732,3 +2505,6 @@ const colArrowStyle = {
   zIndex: 100,
   boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
 };
+
+// End of file
+

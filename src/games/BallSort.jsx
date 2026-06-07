@@ -1,94 +1,165 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { sound } from '../utils/sound';
-
-const getTopColorGroupCount = (tube) => {
-  if (tube.length === 0) return 0;
-  const topColor = tube[tube.length - 1];
-  let count = 0;
-  for (let i = tube.length - 1; i >= 0; i--) {
-    if (tube[i] === topColor) {
-      count++;
-    } else {
-      break;
-    }
-  }
-  return count;
-};
+import BallSortCollection from './BallSortCollection';
 
 export default function BallSort({ onBack, onScoreSave }) {
-  // Settings states
-  const [colorsCount, setColorsCount] = useState(() => Number(localStorage.getItem('retrovision_ball_colors')) || 5);
-  const [variant, setVariant] = useState(() => localStorage.getItem('retrovision_ball_variant') || 'classique'); // 'classique' (Simple) or 'double' (Double)
-  const [capacity, setCapacity] = useState(() => Number(localStorage.getItem('retrovision_ball_capacity')) || 4);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
+  // Game state
   const [tubes, setTubes] = useState([]);
   const [selectedTube, setSelectedTube] = useState(null);
   const [history, setHistory] = useState([]);
-  const [won, setWon] = useState(false);
+  const [victoryPhase, setVictoryPhase] = useState(0); // 0: playing, 1: stage1, 2: stage2, 3: final
+  const [moves, setMoves] = useState(0);
+  const [startTime, setStartTime] = useState(Date.now());
   const [bouncingTube, setBouncingTube] = useState(null);
   const [extraTubesCount, setExtraTubesCount] = useState(0); // 0 or 1
   const [hintTubes, setHintTubes] = useState(null); // [srcIdx, destIdx]
-  
-  // State for sparkle particles
+  const [completedTubeIndex, setCompletedTubeIndex] = useState(null);
   const [particles, setParticles] = useState([]);
+  const [scale, setScale] = useState(1);
+  const [showCollection, setShowCollection] = useState(false);
+  const [customizations, setCustomizations] = useState({ tube: 't1', theme: 'bg1', ball: 'b1', color: 'c1' });
+  const [shakingTube, setShakingTube] = useState(null);
+  const [bgmOn, setBgmOn] = useState(false);
 
-  // High-contrast colors optimized for visibility
-  const colors = {
-    R: '#ef4444', // Red
-    C: '#06b6d4', // Cyan
-    G: '#10b981', // Green
-    Y: '#f59e0b', // Yellow
-    P: '#8b5cf6', // Purple
-    O: '#f97316', // Orange
-    W: '#64748b', // Slate Grey
-    K: '#78350f', // Brown
+  // Fixed config: 9 full tubes, 2 empty. Extra tube holds 1 ball.
+  const numFilledTubes = 9;
+  const numEmptyTubes = 2;
+  const defaultCap = 4;
+
+  const colorPalettes = {
+    c1: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FF8800', '#FFFFFF', '#888888'],
+    c2: ['#FF9999', '#99FF99', '#9999FF', '#FFFF99', '#FF99FF', '#99FFFF', '#FFCC99', '#E0E0E0', '#B266B2'],
+    c3: ['#800000', '#008000', '#000080', '#808000', '#800080', '#008080', '#D2691E', '#C0C0C0', '#4B0082'],
+    c4: ['#FF1493', '#32CD32', '#1E90FF', '#FFD700', '#8A2BE2', '#00FA9A', '#FF4500', '#20B2AA', '#F5DEB3'],
+    c5: ['#EA3323', '#75FA4C', '#3A3AFA', '#F6FA05', '#F505F1', '#05FAFA', '#FA9E05', '#EFEFEF', '#A9A9A9'],
+    c6: ['#8B0000', '#556B2F', '#00008B', '#B8860B', '#4B0082', '#2F4F4F', '#D2691E', '#778899', '#8B4513'],
+    c7: ['#FF69B4', '#7CFC00', '#4169E1', '#F0E68C', '#9370DB', '#40E0D0', '#FFA07A', '#EE82EE', '#FFDAB9'],
+    c8: ['#DC143C', '#00FF7F', '#191970', '#FFD700', '#9932CC', '#00CED1', '#FF8C00', '#D3D3D3', '#C71585'],
+    c9: ['#E6194B', '#3CB44B', '#4363D8', '#FFE119', '#911EB4', '#42D4F4', '#F58231', '#F032E6', '#BFEEF4']
   };
 
-  useEffect(() => {
-    initGame();
-  }, [colorsCount, variant, capacity]);
+  const currentPalette = colorPalettes[customizations.color] || colorPalettes.c1;
+
+  // Generate gradient from hex
+  const makeGradient = (hex) => `radial-gradient(circle at 35% 35%, ${hex}aa, ${hex}, ${hex}66)`;
+
+  const colors = {
+    R: { hex: currentPalette[0], grad: makeGradient(currentPalette[0]) },
+    B: { hex: currentPalette[1], grad: makeGradient(currentPalette[1]) },
+    G: { hex: currentPalette[2], grad: makeGradient(currentPalette[2]) },
+    Y: { hex: currentPalette[3], grad: makeGradient(currentPalette[3]) },
+    P: { hex: currentPalette[4], grad: makeGradient(currentPalette[4]) },
+    O: { hex: currentPalette[5], grad: makeGradient(currentPalette[5]) },
+    W: { hex: currentPalette[6], grad: makeGradient(currentPalette[6]) },
+    D: { hex: currentPalette[7], grad: makeGradient(currentPalette[7]) },
+    M: { hex: currentPalette[8], grad: makeGradient(currentPalette[8]) }
+  };
 
   const initGame = () => {
-    const activeColorsKeys = ['R', 'C', 'G', 'Y', 'P', 'O', 'W', 'K'].slice(0, colorsCount);
-    const ballsPerColor = variant === 'classique' ? capacity : capacity * 2;
-    
+    const activeColorsKeys = ['R', 'B', 'G', 'Y', 'P', 'O', 'W', 'D', 'M'];
     const ballPool = [];
     activeColorsKeys.forEach(col => {
-      for (let i = 0; i < ballsPerColor; i++) {
+      for (let i = 0; i < defaultCap; i++) {
         ballPool.push(col);
       }
     });
 
-    // Shuffle pool
     for (let i = ballPool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [ballPool[i], ballPool[j]] = [ballPool[j], ballPool[i]];
     }
 
-    const filledTubesCount = variant === 'classique' ? colorsCount : colorsCount * 2;
     const initialTubes = [];
-    for (let i = 0; i < filledTubesCount; i++) {
-      initialTubes.push(ballPool.slice(i * capacity, i * capacity + capacity));
+    for (let i = 0; i < numFilledTubes; i++) {
+      initialTubes.push(ballPool.slice(i * defaultCap, i * defaultCap + defaultCap));
     }
-    
-    // Add 2 empty tubes
-    initialTubes.push([]);
-    initialTubes.push([]);
+
+    for (let i = 0; i < numEmptyTubes; i++) {
+      initialTubes.push([]);
+    }
 
     setTubes(initialTubes);
     setSelectedTube(null);
     setHistory([]);
-    setWon(false);
+    setVictoryPhase(0);
+    setMoves(0);
+    setStartTime(Date.now());
     setBouncingTube(null);
     setParticles([]);
     setExtraTubesCount(0);
     setHintTubes(null);
   };
 
+  useEffect(() => {
+    initGame();
+
+    const handleResize = () => {
+      const availableWidth = window.innerWidth - 60; // 30px padding on sides
+      // 6 tubes of 64px + 5 gaps of 15px = 384 + 75 = 459px
+      const requiredWidth = 6 * 64 + 5 * 15;
+      if (availableWidth < requiredWidth) {
+        setScale(availableWidth / requiredWidth);
+      } else {
+        setScale(1);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      const isGameInProgress = victoryPhase === 0 && history.length > 0;
+      if (isGameInProgress) {
+        e.preventDefault();
+        e.returnValue = "Voulez-vous vraiment quitter la partie en cours ?";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [victoryPhase, history]);
+
+  const handleBackWithConfirm = () => {
+    const isGameInProgress = victoryPhase === 0 && history.length > 0;
+    if (isGameInProgress) {
+      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+        sound.stopBGM();
+        onBack();
+      }
+    } else {
+      sound.stopBGM();
+      onBack();
+    }
+  };
+
+  const getTubeCapacity = (index) => {
+    // Indices 0-10 are default tubes (capacity 4)
+    // Index 11 is the extra tube (capacity 1)
+    return index >= 11 ? 1 : defaultCap;
+  };
+
+  const getTopColorGroupCount = (tube) => {
+    if (tube.length === 0) return 0;
+    const topColor = tube[tube.length - 1];
+    let count = 0;
+    for (let i = tube.length - 1; i >= 0; i--) {
+      if (tube[i] === topColor) count++;
+      else break;
+    }
+    return count;
+  };
+
   const handleTubeClick = (index) => {
-    if (won) return;
+    if (victoryPhase > 0) return;
     setHintTubes(null);
+
+    // Start BGM on first interaction (browser requires user gesture)
+    if (!bgmOn) {
+      sound.startBGM();
+      setBgmOn(true);
+    }
 
     if (selectedTube === null) {
       if (tubes[index].length === 0) return;
@@ -104,12 +175,15 @@ export default function BallSort({ onBack, onScoreSave }) {
       if (canMove(selectedTube, index)) {
         moveBall(selectedTube, index);
       } else {
+        // Invalid move — shake the target tube
+        setShakingTube(index);
+        sound.playShake();
+        setTimeout(() => setShakingTube(null), 400);
+
         if (tubes[index].length > 0) {
           setSelectedTube(index);
-          sound.playClick();
         } else {
           setSelectedTube(null);
-          sound.playClick();
         }
       }
     }
@@ -118,16 +192,17 @@ export default function BallSort({ onBack, onScoreSave }) {
   const canMove = (srcIdx, destIdx) => {
     const src = tubes[srcIdx];
     const dest = tubes[destIdx];
+    const destCap = getTubeCapacity(destIdx);
 
     if (src.length === 0) return false;
-    if (dest.length >= capacity) return false;
+    if (dest.length >= destCap) return false;
 
     const ballToMove = src[src.length - 1];
     const destTopBall = dest[dest.length - 1];
 
     if (dest.length === 0 || destTopBall === ballToMove) {
-      const countToMove = getTopColorGroupCount(src);
-      return dest.length + countToMove <= capacity;
+      const spaceLeft = destCap - dest.length;
+      return spaceLeft >= 1; // Can move at least 1
     }
     return false;
   };
@@ -136,25 +211,36 @@ export default function BallSort({ onBack, onScoreSave }) {
     setHistory([...history, JSON.stringify(tubes)]);
 
     const nextTubes = tubes.map(t => [...t]);
-    const countToMove = getTopColorGroupCount(nextTubes[srcIdx]);
+    const destCap = getTubeCapacity(destIdx);
+    const spaceLeft = destCap - nextTubes[destIdx].length;
+
+    const sameColorCount = getTopColorGroupCount(nextTubes[srcIdx]);
+    const countToMove = Math.min(sameColorCount, spaceLeft);
+
     const ballsToMove = [];
     for (let i = 0; i < countToMove; i++) {
       ballsToMove.push(nextTubes[srcIdx].pop());
     }
-    // Push them onto destIdx in the same order
     for (let i = 0; i < countToMove; i++) {
       nextTubes[destIdx].push(ballsToMove[i]);
     }
 
     setTubes(nextTubes);
     setSelectedTube(null);
-    setBouncingTube(destIdx); // Bounce top ball
-    sound.playScore();
+    setBouncingTube(destIdx);
+    setMoves(m => m + 1);
+    sound.playBallDrop();
 
-    // Check if this action completed a tube
     const targetTube = nextTubes[destIdx];
-    if (targetTube.length === capacity && targetTube.every(b => b === targetTube[0])) {
-      triggerSparkles(destIdx, colors[targetTube[0]]);
+    const isComplete = targetTube.length === destCap && targetTube.every(b => b === targetTube[0]);
+    if (isComplete) {
+      triggerSparkles(destIdx, colors[targetTube[0]].hex);
+      sound.playTubeComplete();
+      setCompletedTubeIndex(destIdx);
+      setTimeout(() => setCompletedTubeIndex(null), 1000);
+    } else if (targetTube.length >= 2 && targetTube.every(b => b === targetTube[0])) {
+      // Progress chime: tube is building up with same color
+      sound.playProgressChime(targetTube.length / destCap);
     }
 
     setTimeout(() => {
@@ -165,7 +251,7 @@ export default function BallSort({ onBack, onScoreSave }) {
   };
 
   const addExtraTube = () => {
-    if (won || extraTubesCount >= 1) return;
+    if (victoryPhase > 0 || extraTubesCount >= 1) return;
     setHistory([...history, JSON.stringify(tubes)]);
     setTubes([...tubes, []]);
     setExtraTubesCount(1);
@@ -181,7 +267,7 @@ export default function BallSort({ onBack, onScoreSave }) {
           const destTube = tubes[dest];
           const isSorted = srcTube.length > 0 && srcTube.every(b => b === srcTube[0]);
           const movingToEmpty = destTube.length === 0;
-          
+
           if (!(isSorted && movingToEmpty)) {
             setHintTubes([src, dest]);
             sound.playPowerup();
@@ -190,7 +276,6 @@ export default function BallSort({ onBack, onScoreSave }) {
         }
       }
     }
-    // Fallback
     for (let src = 0; src < tubes.length; src++) {
       for (let dest = 0; dest < tubes.length; dest++) {
         if (src !== dest && canMove(src, dest)) {
@@ -202,7 +287,7 @@ export default function BallSort({ onBack, onScoreSave }) {
     }
   };
 
-  const triggerSparkles = (tubeIdx, color) => {
+  const triggerSparkles = (tubeIdx, colorHex) => {
     const newParticles = [];
     const timestamp = Date.now();
     for (let i = 0; i < 18; i++) {
@@ -215,7 +300,7 @@ export default function BallSort({ onBack, onScoreSave }) {
         tubeIdx,
         dx: `${dx}px`,
         dy: `${dy}px`,
-        color,
+        colorHex,
       });
     }
     setParticles(prev => [...prev, ...newParticles]);
@@ -226,21 +311,34 @@ export default function BallSort({ onBack, onScoreSave }) {
   };
 
   const checkWin = (currentTubes) => {
-    const isWon = currentTubes.every(tube => {
+    const isWon = currentTubes.every((tube, idx) => {
       if (tube.length === 0) return true;
-      if (tube.length === capacity) {
-        const firstColor = tube[0];
-        return tube.every(ball => ball === firstColor);
+      const cap = getTubeCapacity(idx);
+      if (tube.length === cap) {
+        return tube.every(ball => ball === tube[0]);
       }
       return false;
     });
 
     if (isWon) {
-      setWon(true);
+      setVictoryPhase(1);
+      sound.stopBGM();
       sound.playPowerup();
-      if (onScoreSave) {
-        onScoreSave('Tri Billes', 150);
-      }
+
+      // Stage 1 -> Stage 2
+      setTimeout(() => {
+        setVictoryPhase(2);
+        sound.playExplosion(); // Fireworks sound
+      }, 2000);
+
+      // Stage 2 -> Stage 3 (Final)
+      setTimeout(() => {
+        setVictoryPhase(3);
+        sound.playScore();
+        if (onScoreSave) {
+          onScoreSave('Tri Billes', Math.max(1000 - moves * 10, 100));
+        }
+      }, 4500);
     }
   };
 
@@ -249,9 +347,8 @@ export default function BallSort({ onBack, onScoreSave }) {
     const prev = history[history.length - 1];
     const prevTubes = JSON.parse(prev);
     setTubes(prevTubes);
-    
-    const originalTubesCount = (variant === 'classique' ? colorsCount : colorsCount * 2) + 2;
-    if (prevTubes.length === originalTubesCount) {
+
+    if (prevTubes.length === 11) {
       setExtraTubesCount(0);
     }
 
@@ -261,446 +358,841 @@ export default function BallSort({ onBack, onScoreSave }) {
     sound.playClick();
   };
 
-  const saveSettings = (newColors, newVariant, newCapacity) => {
-    setColorsCount(newColors);
-    setVariant(newVariant);
-    setCapacity(newCapacity);
-    localStorage.setItem('retrovision_ball_colors', newColors);
-    localStorage.setItem('retrovision_ball_variant', newVariant);
-    localStorage.setItem('retrovision_ball_capacity', newCapacity);
-    setIsSettingsOpen(false);
+  if (showCollection) {
+    return (
+      <BallSortCollection
+        onClose={() => setShowCollection(false)}
+        currentSelections={customizations}
+        onSelect={(category, id) => setCustomizations(prev => ({ ...prev, [category]: id }))}
+      />
+    );
+  }
+
+  const getBackground = () => {
+    switch (customizations.theme) {
+      case 'bg1': return '#1A1A1A'; // Sombre
+      case 'bg2': return 'url("https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat'; // Nature
+      case 'bg3': return 'url("https://images.unsplash.com/photo-1513569771920-c9e1d31714cb?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat'; // Zen Galets
+      case 'bg4': return 'url("https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat'; // Rosée
+      case 'bg5': return 'url("https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat'; // Kawaii Art
+      case 'bg6': return 'url("https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat'; // Pastel
+      case 'bg7': return 'url("https://images.unsplash.com/photo-1508739773402-3ce9cef36851?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat'; // Cosmos
+      case 'bg8': return 'url("https://images.unsplash.com/photo-1473448912268-2022ce9509d8?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat'; // Forêt
+      case 'bg9': return 'url("https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=1920&auto=format&fit=crop") center/cover no-repeat'; // Aurore
+      default: return '#1A1A1A'; // Fallback to Dark
+    }
   };
 
-  const renderTube = (tube, realIdx) => {
-    const isSelected = selectedTube === realIdx;
-    const selectedGroupCount = isSelected ? getTopColorGroupCount(tube) : 0;
-    const floatingBall = isSelected && tube.length > 0 ? tube[tube.length - 1] : null;
-
-    const isHintSource = hintTubes && hintTubes[0] === realIdx;
-    const isHintDest = hintTubes && hintTubes[1] === realIdx;
-
-    const tubeParticles = particles.filter(p => p.tubeIdx === realIdx);
-
-    // Increased sizes for stroke recovery accessibility
-    const tubeHeight = capacity * 46 + 24;
-
-    return (
-      <div key={realIdx} style={tubeWrapperStyle}>
-        {/* Sparkles particle container */}
-        {tubeParticles.map(p => (
-          <div 
-            key={p.id}
-            className="sparkle-particle"
-            style={{
-              '--dx': p.dx,
-              '--dy': p.dy,
-              '--sparkle-color': p.color,
-              left: '50%',
-              top: '44px',
-            }}
-          />
-        ))}
-
-        {/* Floating ball slot */}
-        <div style={floatSlotStyle}>
-          {isSelected && floatingBall && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '0',
-                display: 'flex',
-                flexDirection: 'column-reverse',
-                gap: '4px',
-                animation: 'float-item 1.6s infinite ease-in-out',
-                zIndex: 100,
-              }}
-            >
-              {Array.from({ length: selectedGroupCount }).map((_, idx) => (
-                <div 
-                  key={idx}
-                  className="marble-ball-3d"
-                  style={{
-                    backgroundColor: colors[floatingBall],
-                    width: '46px',
-                    height: '46px',
-                    boxShadow: `inset -4px -4px 10px rgba(0,0,0,0.6), inset 4px 4px 8px rgba(255,255,255,0.4), 0 0 15px ${colors[floatingBall]}`,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Glass Test Tube cylinder */}
-        <div 
-          onClick={() => handleTubeClick(realIdx)}
-          className={`glass-test-tube ${isHintSource ? 'wiggling' : ''}`}
-          style={{
-            ...tubeStyle,
-            height: `${tubeHeight}px`,
-            width: '54px',
-            borderRadius: '0 0 28px 28px',
-            borderColor: isSelected 
-              ? 'var(--primary)' 
-              : isHintSource 
-                ? '#f59e0b' 
-                : isHintDest 
-                  ? '#10b981' 
-                  : 'var(--border-color)',
-            borderWidth: '2.5px',
-            boxShadow: isSelected 
-              ? '0 0 20px rgba(2, 132, 199, 0.4)' 
-              : isHintSource || isHintDest
-                ? '0 0 20px rgba(245, 158, 11, 0.4)'
-                : 'inset 0 0 10px rgba(0,0,0,0.02)',
-            transform: isSelected ? 'translateY(-14px)' : 'none',
-          }}
-        >
-          <div style={ballsContainerStyle}>
-            {Array.from({ length: capacity }).map((_, slotIdx) => {
-              const ballIdx = capacity - 1 - slotIdx;
-              const shouldHideBall = isSelected && (ballIdx >= tube.length - selectedGroupCount);
-              const ballColorKey = (!shouldHideBall && ballIdx < tube.length) ? tube[ballIdx] : null;
-              const isBouncing = bouncingTube === realIdx && ballIdx === tube.length - 1;
-
-              return (
-                <div key={slotIdx} style={ballSlotStyle}>
-                  {ballColorKey && (
-                    <div 
-                      className={`marble-ball-3d ${isBouncing ? 'bouncing' : ''}`}
-                      style={{
-                        backgroundColor: colors[ballColorKey],
-                        width: '46px',
-                        height: '46px',
-                        boxShadow: `inset -4px -4px 10px rgba(0,0,0,0.6), inset 4px 4px 8px rgba(255,255,255,0.4), 0 0 12px ${colors[ballColorKey]}66`,
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div style={labelStyle}>{realIdx + 1}</div>
-      </div>
-    );
+  // Ambient particle configuration per theme
+  const getAmbientConfig = () => {
+    switch (customizations.theme) {
+      case 'bg2': // Nature
+      case 'bg8': // Forêt
+        return { emoji: ['🍃', '🌿', '🍂'], count: 12, speed: 'slow', direction: 'fall' };
+      case 'bg3': // Zen Galets
+        return { emoji: ['〰️'], count: 6, speed: 'veryslow', direction: 'horizontal' };
+      case 'bg7': // Cosmos
+      case 'bg9': // Aurore
+        return { emoji: ['✦', '✧', '⋆'], count: 20, speed: 'slow', direction: 'twinkle' };
+      case 'bg5': // Kawaii Art
+      case 'bg6': // Pastel
+        return { emoji: ['♡', '☆', '♪'], count: 10, speed: 'slow', direction: 'float' };
+      case 'bg4': // Rosée
+        return { emoji: ['💧'], count: 8, speed: 'medium', direction: 'fall' };
+      default: // Sombre (bg1)
+        return { emoji: ['·', '•'], count: 15, speed: 'veryslow', direction: 'twinkle' };
+    }
   };
 
   return (
-    <div className="game-container" style={containerStyle}>
+    <div style={{
+      position: 'relative',
+      width: '100vw',
+      height: '100vh',
+      background: getBackground(),
+      display: 'flex',
+      flexDirection: 'column',
+      color: 'white',
+      fontFamily: '"Nunito", "Segoe UI", sans-serif',
+      overflow: 'hidden',
+    }}>
+      {/* Background Overlay to soften image */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+        background: 'rgba(255, 255, 255, 0.1)',
+        zIndex: 0
+      }} />
+
+      {/* Ambient Particles Layer */}
+      <AmbientParticles config={getAmbientConfig()} />
+
       {/* Header */}
-      <div style={headerStyle}>
-        <button onClick={onBack} className="retro-btn" style={backBtnStyle}>
-          &lt; Hub
-        </button>
-        <div style={titleStyle}>TRI DE BILLES</div>
-        <button onClick={() => setIsSettingsOpen(true)} className="settings-btn" title="Règles">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </button>
-      </div>
-
-      {/* Rules Indicator */}
-      <div style={rulesInfoStyle}>
-        Règles : <strong>{colorsCount} couleurs ({variant === 'classique' ? 'Simple' : 'Double'}), capacité {capacity}</strong>
-      </div>
-
-      {/* Helpers Panel */}
-      <div style={helpersContainerStyle}>
-        <button 
-          onClick={undo} 
-          className="retro-btn" 
-          style={{ ...helperBtnStyle, opacity: history.length > 0 ? 1 : 0.5 }}
-          disabled={history.length === 0}
+      <div style={{
+        padding: '20px 30px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        zIndex: 10
+      }}>
+        <button
+          onClick={handleBackWithConfirm}
+          style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
+          }}
+          onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+          onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
         >
-          ↩ Annuler
+          ← Retour
         </button>
-        <button 
-          onClick={getHint} 
-          className="retro-btn" 
-          style={helperBtnStyle}
-        >
-          💡 Indice
-        </button>
-        <button 
-          onClick={addExtraTube} 
-          className="retro-btn" 
-          style={{ ...helperBtnStyle, opacity: extraTubesCount < 1 ? 1 : 0.5 }}
-          disabled={extraTubesCount >= 1}
-        >
-          🧪 +1 Tube
-        </button>
-      </div>
-
-      {/* Board Tubes */}
-      <div style={rowsContainerStyle}>
-        <div style={flexBoardStyle}>
-          {tubes.map((tube, idx) => renderTube(tube, idx))}
-        </div>
-      </div>
-
-      {/* Victory Overlay */}
-      {won && (
-        <div style={overlayStyle}>
-          <div style={victoryTitleStyle}>VICTOIRE !</div>
-          <div style={descStyle}>Félicitations ! Toutes les billes ont été triées.</div>
-          <button onClick={initGame} className="retro-btn" style={restartBtnStyle}>
-            Nouveau Niveau
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {/* BGM Toggle */}
+          <button
+            onClick={() => {
+              const isOn = sound.toggleBGM();
+              setBgmOn(isOn);
+            }}
+            style={{
+              background: bgmOn ? 'rgba(57, 255, 20, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+              border: `1px solid ${bgmOn ? 'rgba(57, 255, 20, 0.5)' : 'rgba(255, 255, 255, 0.2)'}`,
+              color: 'white',
+              padding: '8px 12px',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              transition: 'all 0.3s',
+              fontSize: '1.1rem'
+            }}
+          >
+            {bgmOn ? '🎵' : '🔇'}
+          </button>
+          <button
+            onClick={() => setShowCollection(true)}
+            style={{
+              background: 'linear-gradient(45deg, #FCD34D, #F59E0B)',
+              border: 'none',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '25px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+            }}
+          >
+            📖 Boutique
           </button>
         </div>
-      )}
+      </div>
 
-      {/* Settings Modal */}
-      {isSettingsOpen && (
-        <div className="accessibility-modal-backdrop" onClick={() => setIsSettingsOpen(false)}>
-          <div className="accessibility-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="accessibility-modal-title">Paramètres de Tri</h3>
-            
-            {/* Colors count setting */}
-            <div className="accessibility-setting-row">
-              <span className="accessibility-setting-label">Nombre de Couleurs :</span>
-              <div className="accessibility-setting-options">
-                {[3, 4, 5, 6, 7, 8].map(num => (
-                  <button 
-                    key={num}
-                    className={`accessibility-setting-btn ${colorsCount === num ? 'active' : ''}`}
-                    onClick={() => saveSettings(num, variant, capacity)}
-                  >
-                    {num}
-                  </button>
-                ))}
+      {/* Main Game Area */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '10px',
+        zIndex: 5,
+        gap: '40px'
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '40px',
+          transform: `scale(${scale})`,
+          transformOrigin: 'center center',
+          padding: "1em",
+          background: 'rgba(255, 255, 255, .2)'
+        }}>
+          {/* Row 1: 6 tubes */}
+          <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center' }}>
+            {tubes.slice(0, 6).map((tube, i) => (
+              <div key={i} style={{
+                animation: completedTubeIndex === i ? 'tubeCompletePulse 1s ease-out'
+                  : shakingTube === i ? 'tubeShake 0.4s ease-out' : 'none',
+                transformOrigin: 'bottom center'
+              }}>
+                <TubeRender
+                  tube={tube}
+                  idx={i}
+                  capacity={getTubeCapacity(i)}
+                  selected={selectedTube === i}
+                  hint={hintTubes && (hintTubes[0] === i || hintTubes[1] === i)}
+                  bouncing={bouncingTube === i}
+                  colors={colors}
+                  customization={customizations}
+                  onClick={() => handleTubeClick(i)}
+                  particles={particles.filter(p => p.tubeIdx === i)}
+                />
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* Variant setting */}
-            <div className="accessibility-setting-row">
-              <span className="accessibility-setting-label">Variante (Billes par couleur) :</span>
-              <div className="accessibility-setting-options">
-                <button 
-                  className={`accessibility-setting-btn ${variant === 'classique' ? 'active' : ''}`}
-                  onClick={() => saveSettings(colorsCount, 'classique', capacity)}
-                >
-                  Simple ({capacity} billes)
-                </button>
-                <button 
-                  className={`accessibility-setting-btn ${variant === 'double' ? 'active' : ''}`}
-                  onClick={() => saveSettings(colorsCount, 'double', capacity)}
-                >
-                  Double ({capacity * 2} billes)
-                </button>
+          {/* Row 2: 5 tubes + 1 extra tube if exists */}
+          <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'flex-end' }}>
+            {tubes.slice(6, 11).map((tube, i) => {
+              const idx = i + 6;
+              return (
+                <div key={idx} style={{
+                  animation: completedTubeIndex === idx ? 'tubeCompletePulse 1s ease-out'
+                    : shakingTube === idx ? 'tubeShake 0.4s ease-out' : 'none',
+                  transformOrigin: 'bottom center'
+                }}>
+                  <TubeRender
+                    tube={tube}
+                    idx={idx}
+                    capacity={getTubeCapacity(idx)}
+                    selected={selectedTube === idx}
+                    hint={hintTubes && (hintTubes[0] === idx || hintTubes[1] === idx)}
+                    bouncing={bouncingTube === idx}
+                    colors={colors}
+                    customization={customizations}
+                    onClick={() => handleTubeClick(idx)}
+                    particles={particles.filter(p => p.tubeIdx === idx)}
+                  />
+                </div>
+              );
+            })}
+
+            {/* Extra Tube 1-ball capacity */}
+            {tubes.length > 11 ? (
+              <div style={{ animation: completedTubeIndex === 11 ? 'tubeCompletePulse 1s ease-out' : 'none', transformOrigin: 'bottom center' }}>
+                <TubeRender
+                  tube={tubes[11]}
+                  idx={11}
+                  capacity={getTubeCapacity(11)}
+                  selected={selectedTube === 11}
+                  hint={hintTubes && (hintTubes[0] === 11 || hintTubes[1] === 11)}
+                  bouncing={bouncingTube === 11}
+                  colors={colors}
+                  customization={customizations}
+                  onClick={() => handleTubeClick(11)}
+                  particles={particles.filter(p => p.tubeIdx === 11)}
+                />
               </div>
-            </div>
-
-            {/* Capacity setting */}
-            <div className="accessibility-setting-row">
-              <span className="accessibility-setting-label">Capacité des Tubes :</span>
-              <div className="accessibility-setting-options">
-                {[3, 4, 5].map(num => (
-                  <button 
-                    key={num}
-                    className={`accessibility-setting-btn ${capacity === num ? 'active' : ''}`}
-                    onClick={() => saveSettings(colorsCount, variant, num)}
-                  >
-                    {num}
-                  </button>
-                ))}
+            ) : (
+              <div
+                onClick={addExtraTube}
+                style={{
+                  width: '60px',
+                  height: '60px', // Small height for 1 ball
+                  borderRadius: '10px',
+                  border: '2px dashed rgba(255,255,255,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: 'rgba(255,255,255,0.5)',
+                  fontSize: '24px',
+                  transition: 'all 0.2s',
+                  marginBottom: '10px'
+                }}
+                onMouseOver={e => {
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.8)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.8)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                +
               </div>
-            </div>
-
-            <div className="accessibility-modal-footer">
-              <button className="retro-btn" onClick={() => setIsSettingsOpen(false)}>
-                Fermer
-              </button>
-            </div>
+            )}
           </div>
         </div>
-      )}
 
-      <div style={footerHelpStyle}>
-        Sélectionnez un tube pour attraper toutes les billes identiques du sommet, puis cliquez sur un autre tube pour les y déposer.
+        <div style={{
+          display: 'flex',
+          gap: '30px',
+          marginTop: '10px',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          paddingBottom: '20px'
+        }}>
+          {/* Undo Button */}
+          <button
+            onClick={undo}
+            disabled={history.length === 0}
+            style={{
+              width: '60px',
+              height: '60px',
+              background: history.length === 0 ? 'rgba(255, 255, 255, 0.3)' : 'linear-gradient(135deg, #FF99CC, #FF3366)',
+              border: '3px solid rgba(255,255,255,0.5)',
+              borderRadius: '20px',
+              color: 'white',
+              fontSize: '1.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: history.length === 0 ? 'default' : 'pointer',
+              boxShadow: history.length === 0 ? 'none' : '0 8px 20px rgba(255, 51, 102, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)',
+              transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            }}
+            onMouseOver={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'; }}
+            onMouseOut={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1) translateY(0)'; }}
+          >
+            ↩️
+          </button>
+
+          {/* Hint Button */}
+          <button
+            onClick={getHint}
+            style={{
+              width: '80px',
+              height: '80px',
+              background: 'linear-gradient(135deg, #FFF099, #FFD700)',
+              border: '4px solid rgba(255,255,255,0.8)',
+              borderRadius: '50%',
+              color: 'white',
+              fontSize: '2.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 10px 25px rgba(255, 215, 0, 0.5), inset 0 5px 10px rgba(255,255,255,0.8)',
+              transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              transformOrigin: 'center'
+            }}
+            onMouseOver={e => e.currentTarget.style.transform = 'scale(1.15) rotate(15deg)'}
+            onMouseOut={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
+          >
+            ✨
+          </button>
+
+          {/* New Game Button */}
+          <button
+            onClick={initGame}
+            style={{
+              width: '60px',
+              height: '60px',
+              background: 'linear-gradient(135deg, #99E6FF, #33CCFF)',
+              border: '3px solid rgba(255,255,255,0.5)',
+              borderRadius: '20px',
+              color: 'white',
+              fontSize: '1.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 8px 20px rgba(51, 204, 255, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)',
+              transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            }}
+            onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'}
+            onMouseOut={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}
+          >
+            🔄
+          </button>
+        </div>
       </div>
+
+      {/* Victory Overlays */}
+      {victoryPhase > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 100,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          animation: 'fadeIn 0.5s',
+          overflow: 'hidden'
+        }}>
+          {/* Dynamic Confetti Particles */}
+          {victoryPhase >= 2 && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+              {Array.from({ length: 40 }, (_, i) => {
+                const confettiColors = ['#FFD700', '#FF3366', '#33CCFF', '#39FF14', '#FF00FF', '#FF8800', '#00FFCC'];
+                const color = confettiColors[i % confettiColors.length];
+                const left = Math.random() * 100;
+                const delay = Math.random() * 3;
+                const duration = 2 + Math.random() * 3;
+                const size = 6 + Math.random() * 8;
+                const rotation = Math.random() * 360;
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      position: 'absolute',
+                      left: `${left}%`,
+                      top: '-20px',
+                      width: `${size}px`,
+                      height: `${size * 0.6}px`,
+                      background: color,
+                      borderRadius: i % 3 === 0 ? '50%' : '2px',
+                      animation: `confettiFall ${duration}s linear ${delay}s infinite`,
+                      transform: `rotate(${rotation}deg)`,
+                      opacity: 0.8
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          {/* Stage 1: Initial WOW */}
+          {victoryPhase === 1 && (
+            <div style={{ animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
+              <h2 style={{
+                fontSize: '4rem',
+                color: '#FFD700',
+                textShadow: '0 0 20px rgba(255,215,0,0.8), 2px 2px 0px white',
+                margin: 0,
+                transform: 'rotate(-5deg)'
+              }}>PARFAIT !</h2>
+              <div style={{ fontSize: '6rem', textAlign: 'center', animation: 'bounce 1s infinite' }}>⭐</div>
+            </div>
+          )}
+
+          {/* Stage 2: Stats */}
+          {victoryPhase === 2 && (
+            <div style={{
+              animation: 'slideUpFade 0.6s ease-out',
+              background: 'rgba(255,255,255,0.9)',
+              padding: '40px',
+              borderRadius: '30px',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+              textAlign: 'center',
+              zIndex: 10
+            }}>
+              <h3 style={{ fontSize: '2.5rem', color: '#33CCFF', margin: '0 0 20px 0' }}>Analyse des billes...</h3>
+              <div style={{ fontSize: '1.8rem', color: '#666', margin: '10px 0' }}>
+                Coups : <strong style={{ color: '#FF3366' }}>{moves}</strong>
+              </div>
+            </div>
+          )}
+
+          {/* Stage 3: Final Master Screen */}
+          {victoryPhase === 3 && (
+            <div style={{
+              textAlign: 'center',
+              animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              zIndex: 10
+            }}>
+              <div style={{ fontSize: '5rem', marginBottom: '10px' }}>👑</div>
+              <h2 style={{
+                fontSize: '3.5rem',
+                background: 'linear-gradient(45deg, #FFD700, #FF8C00, #FF1493)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                margin: '0 0 30px 0',
+                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
+              }}>MAÎTRE TRIEUR</h2>
+
+              <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                <button
+                  onClick={initGame}
+                  style={{
+                    background: 'linear-gradient(135deg, #33FF77, #009933)',
+                    border: '4px solid white',
+                    color: 'white',
+                    padding: '15px 40px',
+                    borderRadius: '40px',
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: '0 10px 20px rgba(51,255,119,0.4)',
+                    transition: 'transform 0.2s'
+                  }}
+                  onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  Rejouer 🔄
+                </button>
+                <button
+                  onClick={onBack}
+                  style={{
+                    background: 'rgba(0,0,0,0.1)',
+                    border: 'none',
+                    color: '#666',
+                    padding: '15px 30px',
+                    borderRadius: '40px',
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
+                  onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
+                >
+                  Quitter
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes slideDown { 0% { background-position: 0 -1000px; } 100% { background-position: 0 1000px; } }
+        @keyframes slideUpFade { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes corkSlam {
+          0% { transform: translateY(-100px) scale(1.5); opacity: 0; filter: drop-shadow(0 0 20px white); }
+          60% { transform: translateY(0) scale(1.1); opacity: 1; filter: drop-shadow(0 0 10px white); }
+          80% { transform: scaleY(0.5) scaleX(1.4) translateY(10px); }
+          100% { transform: scale(1) translateY(0); }
+        }
+        @keyframes bounceGlow {
+          0% { transform: translateY(0) scaleX(1) scaleY(1); filter: brightness(1); }
+          30% { transform: translateY(5px) scaleX(1.2) scaleY(0.8); filter: brightness(1.3) drop-shadow(0 0 8px white); }
+          50% { transform: translateY(-8px) scaleX(0.9) scaleY(1.1); filter: brightness(1.5) drop-shadow(0 0 12px white); }
+          70% { transform: translateY(2px) scaleX(1.05) scaleY(0.95); filter: brightness(1.2); }
+          100% { transform: translateY(0) scaleX(1) scaleY(1); filter: brightness(1); }
+        }
+        @keyframes floatIdle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes pulse {
+          from { transform: scale(1); }
+          to { transform: scale(1.1); }
+        }
+        @keyframes tubeCompletePulse {
+          0% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0)); }
+          50% { transform: scale(1.1) translateY(-10px); filter: brightness(1.3) drop-shadow(0 0 20px rgba(255,255,255,0.8)); }
+          100% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
+        }
+        @keyframes tubeShake {
+          0%, 100% { transform: translateX(0); }
+          15% { transform: translateX(-6px) rotate(-1deg); }
+          30% { transform: translateX(5px) rotate(1deg); }
+          45% { transform: translateX(-4px) rotate(-0.5deg); }
+          60% { transform: translateX(3px) rotate(0.5deg); }
+          75% { transform: translateX(-2px); }
+          90% { transform: translateX(1px); }
+        }
+        @keyframes ambientFall {
+          0% { transform: translate(var(--startX), -20px) rotate(0deg); opacity: 0; }
+          10% { opacity: var(--opacity); }
+          90% { opacity: var(--opacity); }
+          100% { transform: translate(calc(var(--startX) + var(--drift)), 105vh) rotate(var(--rot)); opacity: 0; }
+        }
+        @keyframes ambientFloat {
+          0% { transform: translate(var(--startX), 105vh) rotate(0deg); opacity: 0; }
+          10% { opacity: var(--opacity); }
+          90% { opacity: var(--opacity); }
+          100% { transform: translate(calc(var(--startX) + var(--drift)), -20px) rotate(var(--rot)); opacity: 0; }
+        }
+        @keyframes ambientTwinkle {
+          0%, 100% { opacity: 0; transform: translate(var(--startX), var(--startY)) scale(0.5); }
+          50% { opacity: var(--opacity); transform: translate(var(--startX), var(--startY)) scale(1.2); }
+        }
+        @keyframes ambientHorizontal {
+          0% { transform: translate(-20px, var(--startY)); opacity: 0; }
+          10% { opacity: var(--opacity); }
+          90% { opacity: var(--opacity); }
+          100% { transform: translate(105vw, var(--startY)); opacity: 0; }
+        }
+        @keyframes victoryDance {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          25% { transform: translateY(-8px) rotate(-3deg); }
+          50% { transform: translateY(0) rotate(0deg); }
+          75% { transform: translateY(-8px) rotate(3deg); }
+        }
+        @keyframes confettiFall {
+          0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.9; }
+          100% { transform: translateY(110vh) rotate(720deg); opacity: 0.3; }
+        }
+        @keyframes shineSweep {
+          0% { opacity: 0; transform: translateY(-100%); }
+          30% { opacity: 1; }
+          70% { opacity: 1; }
+          100% { opacity: 0; transform: translateY(100%); }
+        }
+        @keyframes shockwave {
+          0% { width: 20px; height: 6px; opacity: 0.8; border-width: 2px; }
+          100% { width: 80px; height: 20px; opacity: 0; border-width: 1px; }
+        }
+        .bouncing-ball {
+          animation: bounceGlow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .idle-ball {
+          animation: floatIdle 3s ease-in-out infinite;
+        }
+      `}} />
     </div>
   );
 }
 
-// Inline Styles updated for high-contrast accessibility
-const containerStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  width: '100%',
-  maxWidth: '560px',
-  background: '#ffffff',
-  borderRadius: '24px',
-  padding: '20px',
-  boxSizing: 'border-box',
-  margin: '0 auto',
-  boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
-  border: '1px solid var(--border-color)',
-};
+// ═══════════════════════════════════════════════════════════════════════
+//  AMBIENT PARTICLES COMPONENT
+// ═══════════════════════════════════════════════════════════════════════
+function AmbientParticles({ config }) {
+  const particles = useMemo(() => {
+    if (!config) return [];
+    return Array.from({ length: config.count }, (_, i) => {
+      const emoji = config.emoji[i % config.emoji.length];
+      const speedMap = { veryslow: 25, slow: 16, medium: 10 };
+      const duration = (speedMap[config.speed] || 16) + Math.random() * 10;
+      const delay = Math.random() * duration;
+      const startX = `${Math.random() * 100}vw`;
+      const startY = `${Math.random() * 100}vh`;
+      const drift = `${(Math.random() - 0.5) * 80}px`;
+      const rot = `${Math.random() * 360}deg`;
+      const opacity = 0.15 + Math.random() * 0.35;
+      const size = 0.6 + Math.random() * 0.8;
 
-const headerStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: '14px',
-};
+      let animName = 'ambientFall';
+      if (config.direction === 'float') animName = 'ambientFloat';
+      if (config.direction === 'twinkle') animName = 'ambientTwinkle';
+      if (config.direction === 'horizontal') animName = 'ambientHorizontal';
 
-const backBtnStyle = {
-  padding: '10px 18px',
-  fontSize: '15px',
-  fontWeight: '700',
-  minHeight: '44px',
-};
+      return { emoji, duration, delay, startX, startY, drift, rot, opacity, size, animName, id: i };
+    });
+  }, [config?.emoji?.join(','), config?.count, config?.speed, config?.direction]);
 
-const titleStyle = {
-  fontFamily: 'var(--font-main)',
-  fontSize: '22px',
-  fontWeight: '800',
-  color: 'var(--text-main)',
-  letterSpacing: '-0.3px',
-};
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none', overflow: 'hidden' }}>
+      {particles.map(p => (
+        <div
+          key={p.id}
+          style={{
+            position: 'absolute',
+            fontSize: `${p.size}rem`,
+            '--startX': p.startX,
+            '--startY': p.startY,
+            '--drift': p.drift,
+            '--rot': p.rot,
+            '--opacity': p.opacity,
+            animation: `${p.animName} ${p.duration}s linear ${p.delay}s infinite`,
+            pointerEvents: 'none',
+            willChange: 'transform, opacity'
+          }}
+        >
+          {p.emoji}
+        </div>
+      ))}
+    </div>
+  );
+}
 
-const rulesInfoStyle = {
-  fontSize: '13px',
-  color: 'var(--text-muted)',
-  textAlign: 'center',
-  marginBottom: '10px',
-};
+// ═══════════════════════════════════════════════════════════════════════
+//  TUBE RENDER COMPONENT
+// ═══════════════════════════════════════════════════════════════════════
+function TubeRender({ tube, capacity, selected, hint, colors, bouncing, customization, onClick, particles }) {
+  const isFull = tube.length === capacity;
+  const isComplete = isFull && capacity >= 1 && tube.every(b => b === tube[0]);
 
-const helpersContainerStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  gap: '12px',
-  marginBottom: '18px',
-};
+  // Height calculated based on capacity
+  const ballSize = 48;
+  const padding = 10;
+  const tubeHeight = (capacity * ballSize) + (capacity * 5) + padding * 2;
 
-const helperBtnStyle = {
-  padding: '8px 16px',
-  fontSize: '14px',
-  fontWeight: '700',
-  color: 'var(--primary)',
-  background: '#ffffff',
-  border: '2px solid var(--primary)',
-  borderRadius: '12px',
-  cursor: 'pointer',
-  minHeight: '44px',
-};
+  const getTubeStyle = () => {
+    const baseColor = selected ? '#00F0FF' : hint ? '#FF00CC' : isComplete && capacity > 1 ? '#39FF14' : 'rgba(255, 255, 255, 0.4)';
+    const bgComplete = isComplete && capacity > 1 ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)';
 
-const rowsContainerStyle = {
-  padding: '20px 12px',
-  background: '#f8fafc',
-  borderRadius: '20px',
-  border: '2px solid var(--border-color)',
-  boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.02)',
-};
+    switch (customization?.tube) {
+      case 't1': // Classique
+        return { border: `3px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 32px 32px', background: bgComplete };
+      case 't2': // Verre
+        return { border: `2px solid ${baseColor}`, borderRadius: '0 0 20px 20px', background: 'rgba(255,255,255,0.02)', boxShadow: 'inset 0 0 15px rgba(255,255,255,0.2)' };
+      case 't3': // Labo (Beaker)
+        return { border: `4px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 10px 10px', background: bgComplete, borderBottomWidth: '8px' };
+      case 't4': // Antique
+        return { border: `4px double ${baseColor}`, borderTop: 'none', borderRadius: '0 0 40px 40px', background: bgComplete };
+      case 't5': // Biologie
+        return { border: `2px dashed ${baseColor}`, borderTop: 'none', borderRadius: '0 0 25px 25px', background: bgComplete };
+      case 't6': // Science
+        return { border: `3px solid ${baseColor}`, borderTop: 'none', borderRadius: '0', background: bgComplete, boxShadow: 'inset 0 -10px 10px rgba(0,0,0,0.5)' };
+      case 't7': // Bébé
+        return { border: `5px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 30px 30px', background: 'rgba(255,192,203,0.1)' };
+      case 't8': // Exotique (Bamboo)
+        return { borderLeft: `5px solid ${baseColor}`, borderRight: `5px solid ${baseColor}`, borderBottom: `8px solid ${baseColor}`, borderRadius: '0 0 5px 5px', background: 'rgba(139,69,19,0.1)' };
+      case 't9': // Soda
+        return { border: `2px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 15px 15px', background: 'rgba(173,216,230,0.1)' };
+      default:
+        return { border: `3px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 32px 32px', background: bgComplete };
+    }
+  };
 
-const flexBoardStyle = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  justifyContent: 'center',
-  gap: '20px 16px',
-  width: '100%',
-};
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        width: '64px',
+        height: `${tubeHeight}px`,
+        display: 'flex',
+        flexDirection: 'column-reverse',
+        alignItems: 'center',
+        paddingBottom: '10px',
+        gap: '5px',
+        cursor: 'pointer',
+        boxShadow: selected ? '0 0 20px rgba(0, 240, 255, 0.5), inset 0 0 20px rgba(0, 240, 255, 0.3)'
+          : hint ? '0 0 20px rgba(255, 0, 204, 0.5)'
+            : isComplete && capacity > 1 ? '0 0 20px rgba(57, 255, 20, 0.4), inset 0 0 15px rgba(57, 255, 20, 0.2)'
+              : 'inset 0 -10px 20px rgba(0,0,0,0.5)',
+        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+        transform: selected ? 'translateY(-15px)' : 'translateY(0)',
+        overflow: 'visible',
+        ...getTubeStyle()
+      }}
+    >
+      {/* Cork (Bouchon) when completed */}
+      {isComplete && capacity > 1 && (
+        <div style={{
+          position: 'absolute',
+          top: -4, left: -4, right: -4, // Slight overlap to fit the tube
+          height: '18px',
+          background: 'linear-gradient(to right, #D2B48C, #8B4513, #D2B48C)',
+          borderBottom: '2px solid rgba(0,0,0,0.5)',
+          borderRadius: '5px 5px 2px 2px',
+          zIndex: 15,
+          boxShadow: 'inset 0 -2px 5px rgba(0,0,0,0.5)',
+          animation: 'corkSlam 0.6s cubic-bezier(0.25, 1.5, 0.5, 1) forwards',
+          transformOrigin: 'bottom center'
+        }} />
+      )}
 
-const tubeWrapperStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  position: 'relative',
-};
+      {/* Glossy highlight on the tube */}
+      <div style={{
+        position: 'absolute',
+        top: 0, left: '5px',
+        width: '10px', height: '100%',
+        background: 'linear-gradient(to right, rgba(255,255,255,0.4), transparent)',
+        borderRadius: '0 0 0 25px',
+        pointerEvents: 'none'
+      }} />
 
-const floatSlotStyle = {
-  height: '56px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '54px',
-  marginBottom: '2px',
-  position: 'relative',
-  overflow: 'visible',
-};
+      {/* Shine sweep overlay on select */}
+      {selected && (
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.3) 100%)',
+          animation: 'shineSweep 1.2s ease-in-out infinite',
+          pointerEvents: 'none',
+          zIndex: 20,
+          borderRadius: 'inherit'
+        }} />
+      )}
 
-const tubeStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'flex-end',
-  cursor: 'pointer',
-  padding: '8px 0',
-  boxSizing: 'border-box',
-};
+      {/* Shockwave ring on bounce */}
+      {bouncing && (
+        <div style={{
+          position: 'absolute',
+          bottom: '5px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '40px',
+          height: '10px',
+          borderRadius: '50%',
+          border: '2px solid rgba(255,255,255,0.6)',
+          animation: 'shockwave 0.6s ease-out forwards',
+          pointerEvents: 'none',
+          zIndex: 0
+        }} />
+      )}
 
-const ballsContainerStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '4px',
-  padding: '2px',
-};
+      {tube.map((ball, i) => {
+        const isTop = i === tube.length - 1;
+        const colorData = colors[ball];
 
-const ballSlotStyle = {
-  height: '46px',
-  width: '50px',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  margin: '0 auto',
-};
+        const getBallStyle = () => {
+          switch (customization?.ball) {
+            case 'b1': // Mat
+              return { background: colorData.hex, boxShadow: 'inset -3px -3px 8px rgba(0,0,0,0.3)' };
+            case 'b2': // Glossy
+              return { background: colorData.grad, boxShadow: 'inset 5px 5px 15px rgba(255,255,255,0.8), inset -5px -5px 15px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.4)' };
+            case 'b3': // Glitter
+              return { backgroundColor: colorData.hex, backgroundImage: 'radial-gradient(white 10%, transparent 20%), radial-gradient(white 10%, transparent 20%)', backgroundSize: '10px 10px', backgroundPosition: '0 0, 5px 5px', boxShadow: '0 0 10px rgba(255,255,255,0.5)' };
+            case 'b4': // Bonbon
+              return { background: `repeating-linear-gradient(45deg, ${colorData.hex}, ${colorData.hex} 10px, rgba(255,255,255,0.8) 10px, rgba(255,255,255,0.8) 20px)`, boxShadow: 'inset -2px -2px 6px rgba(0,0,0,0.4)' };
+            case 'b5': // Sucette
+              return { background: `repeating-conic-gradient(from 0deg, ${colorData.hex} 0deg 20deg, #FFFFFF 20deg 40deg)`, boxShadow: 'inset -5px -5px 10px rgba(0,0,0,0.5)' };
+            case 'b6': // Coeur
+              return { borderRadius: '0', background: colorData.hex, maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E")`, maskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E")`, WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', boxShadow: 'none' };
+            case 'b7': // Fleur
+              return { borderRadius: '0', background: colorData.hex, maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C9.24 2 7 4.24 7 7c0 .58.1 1.13.29 1.65A4.99 4.99 0 002 12c0 2.76 2.24 5 5 5 .58 0 1.13-.1 1.65-.29A4.99 4.99 0 0012 22c2.76 0 5-2.24 5-5 0-.58-.1-1.13-.29-1.65A4.99 4.99 0 0022 12c0-2.76-2.24-5-5-5-.58 0-1.13.1-1.65.29A4.99 4.99 0 0012 2zm0 13a3 3 0 110-6 3 3 0 010 6z'/%3E%3C/svg%3E")`, maskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C9.24 2 7 4.24 7 7c0 .58.1 1.13.29 1.65A4.99 4.99 0 002 12c0 2.76 2.24 5 5 5 .58 0 1.13-.1 1.65-.29A4.99 4.99 0 0012 22c2.76 0 5-2.24 5-5 0-.58-.1-1.13-.29-1.65A4.99 4.99 0 0022 12c0-2.76-2.24-5-5-5-.58 0-1.13.1-1.65.29A4.99 4.99 0 0012 2zm0 13a3 3 0 110-6 3 3 0 010 6z'/%3E%3C/svg%3E")`, WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', boxShadow: 'none' };
+            case 'b8': // Ourson
+              return { borderRadius: '0', background: colorData.hex, maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17.5 2C19.43 2 21 3.57 21 5.5c0 1.34-.76 2.5-1.88 3.1 1.25 1.54 1.88 3.44 1.88 5.4 0 4.42-3.58 8-8 8s-8-3.58-8-8c0-1.96.63-3.86 1.88-5.4C5.76 8 5 6.84 5 5.5 5 3.57 6.57 2 8.5 2c1.23 0 2.3.64 2.92 1.6.84-.39 1.77-.6 2.58-.6s1.74.21 2.58.6C17.2 2.64 18.27 2 19.5 2zM12 17c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z'/%3E%3C/svg%3E")`, maskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17.5 2C19.43 2 21 3.57 21 5.5c0 1.34-.76 2.5-1.88 3.1 1.25 1.54 1.88 3.44 1.88 5.4 0 4.42-3.58 8-8 8s-8-3.58-8-8c0-1.96.63-3.86 1.88-5.4C5.76 8 5 6.84 5 5.5 5 3.57 6.57 2 8.5 2c1.23 0 2.3.64 2.92 1.6.84-.39 1.77-.6 2.58-.6s1.74.21 2.58.6C17.2 2.64 18.27 2 19.5 2zM12 17c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z'/%3E%3C/svg%3E")`, WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', boxShadow: 'none' };
+            case 'b9': // Oeuf
+              return { borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%', background: colorData.hex, boxShadow: 'inset -3px -5px 10px rgba(0,0,0,0.4)' };
+            default:
+              return { background: colorData.hex, boxShadow: 'inset -3px -3px 8px rgba(0,0,0,0.3)' };
+          }
+        };
 
-const labelStyle = {
-  marginTop: '6px',
-  fontSize: '12px',
-  color: 'var(--text-muted)',
-  fontWeight: '700',
-};
+        const isMaskedShape = ['b6', 'b7', 'b8'].includes(customization?.ball);
 
-const overlayStyle = {
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(255, 255, 255, 0.98)',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 100,
-  padding: '20px',
-  textAlign: 'center',
-  borderRadius: '24px',
-  border: '1px solid var(--border-color)',
-};
+        return (
+          <div
+            key={i}
+            className={isTop && bouncing ? 'bouncing-ball' : isTop && selected ? 'idle-ball' : ''}
+            style={{
+              width: `${ballSize}px`,
+              height: `${ballSize}px`,
+              borderRadius: '50%',
+              zIndex: i + 1,
+              position: 'relative',
+              transition: 'transform 0.2s',
+              transform: isTop && selected ? 'translateY(-30px)' : 'translateY(0)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              filter: isMaskedShape ? `drop-shadow(0px 5px 5px ${colorData.hex}88)` : 'none',
+              ...getBallStyle()
+            }}
+          >
+            {/* Specular highlight only for non-masked shapes */}
+            {!isMaskedShape && (
+              <div style={{
+                position: 'absolute',
+                top: '10%', left: '20%',
+                width: '30%', height: '30%',
+                background: 'radial-gradient(circle, rgba(255,255,255,0.9), rgba(255,255,255,0))',
+                borderRadius: '50%'
+              }} />
+            )}
+          </div>
+        );
+      })}
 
-const victoryTitleStyle = {
-  fontFamily: 'var(--font-main)',
-  fontSize: '28px',
-  color: '#10b981',
-  fontWeight: '800',
-  marginBottom: '10px',
-};
-
-const descStyle = {
-  color: 'var(--text-main)',
-  fontSize: '16px',
-  fontWeight: '600',
-  marginBottom: '24px',
-};
-
-const restartBtnStyle = {
-  padding: '14px 28px',
-  fontSize: '16px',
-  border: '2px solid #10b981',
-  background: '#10b981',
-  color: '#ffffff',
-  fontWeight: '800',
-};
-
-const footerHelpStyle = {
-  marginTop: '16px',
-  fontSize: '13px',
-  fontWeight: '600',
-  color: 'var(--text-muted)',
-  textAlign: 'center',
-  lineHeight: '1.45',
-};
+      {/* Particles */}
+      {particles.map(p => (
+        <div
+          key={p.id}
+          style={{
+            position: 'absolute',
+            bottom: `${(capacity * ballSize) / 2}px`,
+            left: '30px',
+            width: '8px',
+            height: '8px',
+            background: p.colorHex,
+            borderRadius: '50%',
+            boxShadow: `0 0 10px ${p.colorHex}`,
+            pointerEvents: 'none',
+            animation: 'fadeIn 0.8s ease-out forwards',
+            transform: `translate(${p.dx}, ${p.dy})`,
+            transition: 'transform 0.8s cubic-bezier(0.1, 0.8, 0.3, 1)'
+          }}
+        />
+      ))}
+    </div>
+  );
+}

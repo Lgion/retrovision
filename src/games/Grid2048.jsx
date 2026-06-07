@@ -17,6 +17,31 @@ export default function Grid2048({ onBack, onScoreSave }) {
     initGame();
   }, []);
 
+  // Ask permission to leave if game is in progress
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      const isGameInProgress = !gameOver && !victory && score > 0;
+      if (isGameInProgress) {
+        e.preventDefault();
+        e.returnValue = "Voulez-vous vraiment quitter la partie en cours ?";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [gameOver, victory, score]);
+
+  const handleBackWithConfirm = () => {
+    const isGameInProgress = !gameOver && !victory && score > 0;
+    if (isGameInProgress) {
+      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+        onBack();
+      }
+    } else {
+      onBack();
+    }
+  };
+
   const initGame = () => {
     const emptyBoard = Array(16).fill(null);
     let b = addRandomTile(addRandomTile(emptyBoard));
@@ -275,7 +300,7 @@ export default function Grid2048({ onBack, onScoreSave }) {
   return (
     <div className="game-container neon-border" style={containerStyle}>
       <div style={headerStyle}>
-        <button onClick={onBack} className="retro-btn" style={backBtnStyle}>
+        <button onClick={handleBackWithConfirm} className="retro-btn" style={backBtnStyle}>
           &lt; Retour Hub
         </button>
         <div style={titleStyle}>NEON 2048</div>
