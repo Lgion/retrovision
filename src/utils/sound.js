@@ -398,6 +398,48 @@ class SoundController {
       console.warn('Progress chime failed', e);
     }
   }
+
+  // ── Wind Breeze ──────────────────────────────────────────────
+  playWind() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const duration = 4.0;
+      const bufferSize = this.ctx.sampleRate * duration;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const output = buffer.getChannelData(0);
+      
+      // Generate white noise
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      // Animate filter frequency to create a "whoosh" wind sound
+      filter.frequency.setValueAtTime(100, now);
+      filter.frequency.exponentialRampToValueAtTime(800, now + duration / 2);
+      filter.frequency.exponentialRampToValueAtTime(100, now + duration);
+      filter.Q.value = 1.5;
+      
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.06, now + duration / 3);
+      gain.gain.linearRampToValueAtTime(0, now + duration);
+      
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      
+      noise.start(now);
+    } catch (e) {
+      console.warn('Wind sound failed', e);
+    }
+  }
 }
 
 export const sound = new SoundController();

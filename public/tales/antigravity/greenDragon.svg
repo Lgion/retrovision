@@ -1,0 +1,130 @@
+<svg width={size} height={size} viewBox="-2 -2 28 28" fill="none" style={{ display: 'block', overflow: 'visible' }}>
+          <defs>
+            {/* Rich Emerald Gradient for the body */}
+            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#022c22" />
+            </linearGradient>
+
+            {/* Shimmering Gold Gradient for the stroke */}
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef08a">
+                <animate attributeName="stop-color" values="#fef08a;#ca8a04;#fef08a" dur="2s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="50%" stopColor="#ca8a04" />
+              <stop offset="100%" stopColor="#fef08a">
+                 <animate attributeName="stop-color" values="#fef08a;#eab308;#fef08a" dur="2s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+
+            {/* Glow Filter for magic effects */}
+            <filter id="dragonGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Intense Eye Glow */}
+            <filter id="eyeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="0.6" result="blur" />
+              <feComponentTransfer in="blur" result="glow">
+                 <feFuncA type="linear" slope="2.5"/>
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode in="glow"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <style>
+            {`
+              @keyframes dragonIdle {
+                0%, 85%, 100% { transform: scale(1) translateY(0) rotate(0deg); filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5)); }
+                90% { transform: scale(1.12) translateY(-2px) rotate(4deg); filter: drop-shadow(0px 10px 15px rgba(250,204,21,0.5)); }
+                95% { transform: scale(1.12) translateY(-2px) rotate(-4deg); filter: drop-shadow(0px 10px 15px rgba(250,204,21,0.5)); }
+              }
+              @keyframes dashAnim {
+                from { stroke-dashoffset: 20; }
+                to { stroke-dashoffset: 0; }
+              }
+              @keyframes fierceEye {
+                0%, 100% { fill: #fef08a; }
+                50% { fill: #ffffff; }
+              }
+              @keyframes floatSparkle {
+                0%, 100% { opacity: 0.2; transform: translateY(0) scale(1); }
+                50% { opacity: 1; transform: translateY(-3px) scale(1.5); }
+              }
+              .dragon-expert {
+                animation: dragonIdle 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+                transform-origin: 12px 12px;
+              }
+              .magic-contour {
+                stroke-dasharray: 4 6;
+                animation: dashAnim 2s linear infinite;
+              }
+              .dragon-eye-expert {
+                animation: fierceEye 3.5s ease-in-out infinite;
+                filter: url(#eyeGlow);
+              }
+              .sparkle {
+                animation: floatSparkle 2s ease-in-out infinite;
+              }
+            `}
+          </style>
+
+          <g className="dragon-expert">
+            {/* Ambient Aura */}
+            <circle cx="12" cy="12" r="10" fill="url(#emeraldGrad)" opacity="0.2" filter="url(#dragonGlow)"/>
+
+            {/* Main Silhouette with Emerald Gradient */}
+            <path id="dragon-path" 
+              d="M12 1 L14.5 5.5 L20 4 L17.5 9.5 L22 13 L16.5 15.5 L18 21 L12 18.5 L6 21 L7.5 15.5 L2 13 L6.5 9.5 L4 4 L9.5 5.5 Z" 
+              fill="url(#emeraldGrad)" 
+              stroke="#022c22" 
+              strokeWidth="0.5"
+              strokeLinejoin="round"
+            />
+            
+            {/* Scintillating Golden Contour */}
+            <path 
+              d="M12 1 L14.5 5.5 L20 4 L17.5 9.5 L22 13 L16.5 15.5 L18 21 L12 18.5 L6 21 L7.5 15.5 L2 13 L6.5 9.5 L4 4 L9.5 5.5 Z" 
+              fill="none" 
+              stroke="url(#goldGrad)" 
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+              className="magic-contour"
+              filter="url(#dragonGlow)"
+            />
+
+            {/* Inner Emerald Scales */}
+            <path d="M12 4 L13 6 L12 7 L11 6 Z M12 8 L13.5 10 L12 11 L10.5 10 Z" fill="#86efac" opacity="0.6"/>
+
+            {/* Angry Fiery Eyes */}
+            <path className="dragon-eye-expert" d="M7 11 L11 12.5 L7 14 Z" />
+            <path className="dragon-eye-expert" d="M17 11 L13 12.5 L17 14 Z" />
+
+            {/* Sharp Fangs */}
+            <path d="M10 18.5 L10.5 20 L11 18.5 Z" fill="#ffffff" />
+            <path d="M14 18.5 L13.5 20 L13 18.5 Z" fill="#ffffff" />
+
+            {/* Glowing Nostrils */}
+            <circle cx="10" cy="16.5" r="1.2" fill="#022c22" />
+            <circle cx="14" cy="16.5" r="1.2" fill="#022c22" />
+            
+            {/* Glowing Traditional Character */}
+            <text x="12" y="7.5" fontSize="4.8" fontWeight="900" fill="url(#goldGrad)" filter="url(#dragonGlow)" textAnchor="middle" dominantBaseline="middle" fontFamily='"Microsoft YaHei", "SimHei", sans-serif'>
+              發
+            </text>
+
+            {/* Floating Magic Sparkles */}
+            <circle cx="4" cy="4" r="0.6" fill="#fef08a" className="sparkle" style={{animationDelay: '0s'}} />
+            <circle cx="20" cy="20" r="0.8" fill="#4ade80" className="sparkle" style={{animationDelay: '0.5s'}} />
+            <circle cx="21" cy="5" r="0.5" fill="#fef08a" className="sparkle" style={{animationDelay: '1s'}} />
+            <circle cx="3" cy="18" r="0.7" fill="#4ade80" className="sparkle" style={{animationDelay: '1.5s'}} />
+          </g>
+        </svg>

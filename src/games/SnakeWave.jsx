@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { sound } from '../utils/sound';
+import GameIntro from '../components/GameIntro';
 
 export default function SnakeWave({ onBack, onScoreSave }) {
+  const [showIntro, setShowIntro] = useState(true);
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
@@ -339,8 +341,16 @@ export default function SnakeWave({ onBack, onScoreSave }) {
   };
 
   return (
-    <div className="game-container neon-border" style={containerStyle}>
-      <div style={headerStyle}>
+    <>
+      {showIntro && <GameIntro 
+        gameName="SNAKE WAVE" 
+        icon="🐍" 
+        colors={['#00f0ff', '#9d00ff', '#ff007f']} 
+        particleType="neon" 
+        onComplete={() => setShowIntro(false)} 
+      />}
+      <div className="game-container neon-border" style={containerStyle}>
+        <div style={headerStyle}>
         <button onClick={onBack} className="retro-btn" style={backBtnStyle}>
           &lt; Hub
         </button>
@@ -415,6 +425,7 @@ export default function SnakeWave({ onBack, onScoreSave }) {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

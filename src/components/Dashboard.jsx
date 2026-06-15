@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { sound } from '../utils/sound';
+import { getStats, saveStats, resetAllStats, getRecommendation } from '../utils/stats';
+import { getConfigs, saveConfigs, resetAllConfigs } from '../utils/config';
 
 export default function Dashboard({ onSelectGame, statsUpdated }) {
   const [profileName, setProfileName] = useState(() => {
@@ -11,23 +13,129 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
   });
   const [muted, setMuted] = useState(sound.muted);
 
+  const [stats, setStats] = useState({});
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [recommendation, setRecommendation] = useState(null);
+
   // Load high scores to calculate achievements
   const [highScores, setHighScores] = useState({
     mahjong: 0,
     water: 0,
     ball: 0,
-    grid2048: 0
+    grid2048: 0,
+    jigsaw: 0,
+    unblock: 0,
+    freecell: 0,
+    mines: 0,
+    arrows: 0,
+    hangman: 0
   });
 
   const avatars = ['✦', '♥', '★', '●', '☘', '☾', '☀'];
 
   useEffect(() => {
-    const mahjong = parseInt(localStorage.getItem('retrovision_mahjong_highscore') || '0', 10);
-    const water = parseInt(localStorage.getItem('retrovision_water_highscore') || '0', 10);
-    const ball = parseInt(localStorage.getItem('retrovision_ball_highscore') || '0', 10);
-    const grid2048 = parseInt(localStorage.getItem('retrovision_2048_highscore') || '0', 10);
-    setHighScores({ mahjong, water, ball, grid2048 });
+    const detailedStats = getStats();
+    setStats(detailedStats);
+
+    const mahjong = detailedStats.mahjong?.highScore || 0;
+    const water = detailedStats.water?.highScore || 0;
+    const ball = detailedStats.ball?.highScore || 0;
+    const grid2048 = detailedStats['2048']?.highScore || 0;
+    const jigsaw = detailedStats.jigsaw?.highScore || 0;
+    const unblock = detailedStats.unblock?.highScore || 0;
+    const freecell = detailedStats.freecell?.highScore || 0;
+    const mines = detailedStats.mines?.highScore || 0;
+    const arrows = detailedStats.arrows?.highScore || 0;
+    const hangman = detailedStats.hangman?.highScore || 0;
+    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman });
   }, [statsUpdated]);
+
+  const totalPlays = Object.values(stats).reduce((acc, curr) => acc + (curr.plays || 0), 0);
+  const totalWins = Object.values(stats).reduce((acc, curr) => acc + (curr.wins || 0), 0);
+  const totalTime = Object.values(stats).reduce((acc, curr) => acc + (curr.timeSpent || 0), 0);
+
+  const formatDuration = (ms) => {
+    if (!ms || ms <= 0) return '0s';
+    const totalSecs = Math.floor(ms / 1000);
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+
+    let result = '';
+    if (hrs > 0) result += `${hrs}h `;
+    if (mins > 0 || hrs > 0) result += `${mins}m `;
+    result += `${secs}s`;
+    return result;
+  };
+
+  const handleExport = () => {
+    const unifiedProfile = {
+      retrovision_profile_v1: true,
+      player: {
+        name: profileName,
+        avatar: avatar
+      },
+      stats: stats,
+      configs: getConfigs()
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(unifiedProfile, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `retrovision_profile_${profileName.toLowerCase()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    sound.playScore();
+  };
+
+  const handleImport = (e) => {
+    const fileReader = new FileReader();
+    if (e.target.files && e.target.files[0]) {
+      fileReader.readAsText(e.target.files[0], "UTF-8");
+      fileReader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (imported && typeof imported === 'object') {
+            if (imported.retrovision_profile_v1) {
+              // Unified new format
+              if (imported.stats) saveStats(imported.stats);
+              if (imported.configs) saveConfigs(imported.configs);
+              if (imported.player) {
+                if (imported.player.name) localStorage.setItem('retrovision_player_name', imported.player.name);
+                if (imported.player.avatar) localStorage.setItem('retrovision_player_avatar', imported.player.avatar);
+              }
+            } else {
+              // Backward compatibility for old stats-only file
+              saveStats(imported);
+            }
+            window.location.reload();
+          } else {
+            alert("Format de fichier invalide.");
+          }
+        } catch (err) {
+          alert("Erreur lors de la lecture du fichier.");
+        }
+      };
+    }
+  };
+
+  const handleReset = () => {
+    if (window.confirm("Êtes-vous sûr de vouloir réinitialiser TOUTES vos statistiques, préférences, et historiques ? Cette action est irréversible.")) {
+      if (window.confirm("Confirmation finale : réinitialiser toutes les données ?")) {
+        resetAllStats();
+        resetAllConfigs();
+        localStorage.removeItem('retrovision_player_name');
+        localStorage.removeItem('retrovision_player_avatar');
+        window.location.reload();
+      }
+    }
+  };
+
+  const handleRequestRecommendation = () => {
+    sound.playPowerup();
+    const rec = getRecommendation();
+    setRecommendation(rec);
+  };
 
   const handleNameSave = () => {
     setIsEditingName(false);
@@ -92,6 +200,60 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       unlocked: highScores.grid2048 >= 512,
       color: '#00f0ff',
       textColor: '#0369a1'
+    },
+    {
+      id: 'jigsaw',
+      title: 'Artiste Zen',
+      desc: 'Reconstituer un puzzle magique',
+      icon: '🖼️',
+      unlocked: highScores.jigsaw > 0,
+      color: '#ffaa00',
+      textColor: '#b45309'
+    },
+    {
+      id: 'unblock',
+      title: 'Évasion Logique',
+      desc: 'Libérer le bloc rouge du labyrinthe',
+      icon: '🧩',
+      unlocked: highScores.unblock > 0,
+      color: '#E53E3E',
+      textColor: '#991b1b'
+    },
+    {
+      id: 'freecell',
+      title: 'Stratège Patient',
+      desc: 'Résoudre une partie de FreeCell',
+      icon: '🃏',
+      unlocked: highScores.freecell > 0,
+      color: '#eab308',
+      textColor: '#854d0e'
+    },
+    {
+      id: 'mines',
+      title: 'Démineur Expert',
+      desc: 'Pacifier une zone minée',
+      icon: '💣',
+      unlocked: highScores.mines > 0,
+      color: '#ef4444',
+      textColor: '#991b1b'
+    },
+    {
+      id: 'arrows',
+      title: 'Robin des Bois',
+      desc: 'Vider complètement un plateau de flèches',
+      icon: '🎯',
+      unlocked: highScores.arrows > 0,
+      color: '#3b82f6',
+      textColor: '#1e3a8a'
+    },
+    {
+      id: 'hangman',
+      title: 'Maître des Mots',
+      desc: 'Résoudre une énigme du Pendu',
+      icon: '🎈',
+      unlocked: highScores.hangman > 0,
+      color: '#8b5cf6',
+      textColor: '#4c1d95'
     }
   ];
 
@@ -131,8 +293,69 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
       color: '#00f0ff',
       textColor: '#0369a1',
       icon: '🧠'
+    },
+    {
+      id: 'jigsaw',
+      title: 'PUZZLE MAGIQUE',
+      desc: 'Reconstituez de magnifiques images apaisantes en glissant les pièces. Idéal pour stimuler l\'orientation spatiale sans stress.',
+      highscore: highScores.jigsaw,
+      color: '#ffaa00',
+      textColor: '#b45309',
+      icon: '🖼️'
+    },
+    {
+      id: 'unblock',
+      title: 'DÉBLOQUE-MOI',
+      desc: 'Faites glisser les blocs en bois pour libérer le chemin au bloc rouge. Excellent pour la vision spatiale et la logique.',
+      highscore: highScores.unblock,
+      color: '#E53E3E',
+      textColor: '#991b1b',
+      icon: '🧩'
+    },
+    {
+      id: 'freecell',
+      title: 'FREECELL',
+      desc: 'Le célèbre jeu de cartes solitaire. Ordonnez les suites rouges et noires pour trier le paquet. Sans chronomètre.',
+      highscore: highScores.freecell,
+      color: '#eab308',
+      textColor: '#854d0e',
+      icon: '🃏'
+    },
+    {
+      id: 'mines',
+      title: 'DÉMINEUR',
+      desc: 'Le grand classique de la logique. Localisez toutes les mines de la grille. Adapté avec des touches larges et un mode "Drapeau".',
+      highscore: highScores.mines,
+      color: '#ef4444',
+      textColor: '#991b1b',
+      icon: '💣'
+    },
+    {
+      id: 'arrows',
+      title: 'ARROW PUZZLE',
+      desc: 'Démêlez les flèches ! Touchez une flèche pour la faire voler. Elle ne partira que si sa trajectoire est libre.',
+      highscore: highScores.arrows,
+      color: '#3b82f6',
+      textColor: '#1e3a8a',
+      icon: '⬆️'
+    },
+    {
+      id: 'hangman',
+      title: 'LE PENDU',
+      desc: 'Résolvez des charades et énigmes pour deviner le mot caché. Attention aux ballons qui éclatent !',
+      highscore: highScores.hangman,
+      color: '#8b5cf6',
+      textColor: '#4c1d95',
+      icon: '🎈'
     }
   ];
+
+  const sortedGames = [...games].sort((a, b) => {
+    const playsA = stats[a.id]?.plays || 0;
+    const playsB = stats[b.id]?.plays || 0;
+    if (playsA !== playsB) return playsB - playsA;
+    return a.title.localeCompare(b.title);
+  });
 
   return (
     <div style={containerStyle}>
@@ -196,14 +419,159 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
         </div>
       </div>
 
+      {/* Dropdown de statistiques */}
+      <div style={statsDropdownWrapperStyle}>
+        <button 
+          onClick={() => { setIsStatsOpen(!isStatsOpen); sound.playClick(); }} 
+          style={{
+            ...statsDropdownHeaderStyle,
+            borderColor: isStatsOpen ? 'var(--secondary)' : 'var(--primary)',
+            color: isStatsOpen ? 'var(--secondary)' : 'var(--primary)',
+          }}
+          className="retro-btn"
+        >
+          <span>📊 {isStatsOpen ? 'Masquer les Statistiques' : 'Afficher les Statistiques'}</span>
+          <span style={{ transform: isStatsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block', fontSize: '18px' }}>▼</span>
+        </button>
+
+        {isStatsOpen && (
+          <div style={statsDropdownContentStyle} className="neon-border-subtle">
+            {/* Global Stats Summary */}
+            <div style={globalStatsSummaryStyle}>
+              <div style={globalStatBoxStyle}>
+                <div style={globalStatLabelStyle}>⏱️ TEMPS DE RÉÉDUCATION</div>
+                <div style={globalStatValueStyle}>{formatDuration(totalTime)}</div>
+              </div>
+              <div style={globalStatBoxStyle}>
+                <div style={globalStatLabelStyle}>🎮 PARTIES LANCÉES</div>
+                <div style={globalStatValueStyle}>{totalPlays}</div>
+              </div>
+              <div style={globalStatBoxStyle}>
+                <div style={globalStatLabelStyle}>🏆 SUCCÈS DÉVERROUILLÉS</div>
+                <div style={globalStatValueStyle}>{totalWins} / {games.length}</div>
+              </div>
+              <div style={globalStatBoxStyle}>
+                <div style={globalStatLabelStyle}>📈 TAUX DE RÉUSSITE</div>
+                <div style={globalStatValueStyle}>
+                  {totalPlays > 0 ? `${Math.round((totalWins / totalPlays) * 100)}%` : '0%'}
+                </div>
+              </div>
+            </div>
+
+            {/* Individual Game Stats List */}
+            <div style={gamesStatsTableStyle}>
+              {games.map(game => {
+                const gameStat = stats[game.id] || { plays: 0, wins: 0, timeSpent: 0, highScore: 0 };
+                return (
+                  <div key={game.id} style={gameStatRowStyle}>
+                    <div style={gameStatNameColStyle}>
+                      <span style={{ fontSize: '20px', marginRight: '8px' }}>{game.icon}</span>
+                      <span style={{ fontWeight: 'bold', color: game.textColor }}>{game.title}</span>
+                    </div>
+                    <div style={gameStatDetailsStyle}>
+                      <div style={gameStatItemStyle}>
+                        Parties : <strong>{gameStat.plays || 0}</strong>
+                      </div>
+                      <div style={gameStatItemStyle}>
+                        Victoires : <strong>{gameStat.wins || 0}</strong>
+                      </div>
+                      <div style={gameStatItemStyle}>
+                        Temps : <strong>{formatDuration(gameStat.timeSpent || 0)}</strong>
+                      </div>
+                      <div style={gameStatItemStyle}>
+                        Record : <strong>{gameStat.highScore || 0}</strong>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Action buttons */}
+            <div style={statsActionButtonsStyle}>
+              <button onClick={handleExport} className="retro-btn" style={statsActionBtnStyle}>
+                📤 Exporter (.json)
+              </button>
+              <label className="retro-btn" style={{ ...statsActionBtnStyle, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                📥 Importer (.json)
+                <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
+              </label>
+              <button onClick={handleReset} className="retro-btn" style={{ ...statsActionBtnStyle, borderColor: '#ef4444', color: '#ef4444' }}>
+                🗑️ Réinitialiser
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Main Arcade Titles */}
       <div style={sectionTitleStyle}>
         <span style={{ color: '#ff007f' }}>★</span> SÉLECTIONNEZ VOTRE JEU <span style={{ color: '#ff007f' }}>★</span>
       </div>
 
+      {/* Bouton de recommandation intelligent */}
+      <div style={recBtnContainerStyle}>
+        <button 
+          onClick={handleRequestRecommendation}
+          className="retro-btn"
+          style={recommendationBtnStyle}
+        >
+          🚀 Lancer un jeu conseillé par l'I.A.
+        </button>
+      </div>
+
+      {/* Recommendation modal */}
+      {recommendation && (
+        <div className="accessibility-modal-backdrop" onClick={() => setRecommendation(null)}>
+          <div className="accessibility-modal-content" onClick={(e) => e.stopPropagation()} style={recModalStyle}>
+            <div style={recModalHeaderStyle}>
+              <h2 style={{ margin: 0, fontFamily: 'var(--font-main)', fontWeight: '800' }}>🤖 CONSEIL DE L'I.A.</h2>
+            </div>
+            <div style={recModalBodyStyle}>
+              <p style={recIntroTextStyle}>
+                Pour optimiser votre rééducation cognitive, nous vous suggérons :
+              </p>
+              <div style={recGameDisplayStyle}>
+                <span style={recGameIconStyle}>
+                  {games.find(g => g.id === recommendation.gameId)?.icon || '🎮'}
+                </span>
+                <span style={recGameTitleStyle}>{recommendation.name.toUpperCase()}</span>
+              </div>
+              <div style={recReasonBoxStyle}>
+                <strong style={{ fontSize: '14px', color: 'var(--text-main)' }}>Pourquoi ?</strong>
+                <p style={recReasonTextStyle}>{recommendation.reason}</p>
+              </div>
+            </div>
+            <div style={recModalFooterStyle}>
+              <button 
+                onClick={() => {
+                  sound.playClick();
+                  setRecommendation(null);
+                }} 
+                className="retro-btn"
+                style={recCancelBtnStyle}
+              >
+                Fermer
+              </button>
+              <button 
+                onClick={() => {
+                  sound.playClick();
+                  onSelectGame(recommendation.gameId);
+                  setRecommendation(null);
+                }} 
+                className="retro-btn"
+                style={recConfirmBtnStyle}
+              >
+                Jouer maintenant 🎮
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Game Cards Grid */}
       <div style={gridStyle}>
-        {games.map((game) => (
+        {sortedGames.map((game) => (
           <div 
             key={game.id} 
             className="game-card neon-card"
@@ -241,6 +609,19 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* External Links */}
+      <div style={sectionTitleStyle}>
+        <span style={{ color: '#f59e0b' }}>★</span> LIENS UTILES <span style={{ color: '#f59e0b' }}>★</span>
+      </div>
+      <div style={linksContainerStyle} className="neon-border-subtle">
+        <a href="https://poki.com/fr" target="_blank" rel="noopener noreferrer" style={linkStyle}>Poki Jeux</a>
+        <a href="https://itch.io/search?type=games&q=mahjong+zen" target="_blank" rel="noopener noreferrer" style={linkStyle}>Itch.io - Mahjong Zen</a>
+        <a href="https://puzzles.twistymaze.com/" target="_blank" rel="noopener noreferrer" style={linkStyle}>TwistyMaze Puzzles</a>
+        <a href="https://solitaired.com/mahjong/fish" target="_blank" rel="noopener noreferrer" style={linkStyle}>Solitaired Mahjong Fish</a>
+        <a href="https://github.com/vvaldesc/BallSortPuzzle_web" target="_blank" rel="noopener noreferrer" style={linkStyle}>BallSort Puzzle Web (GitHub)</a>
+        <a href="https://ffalt.github.io/mah/" target="_blank" rel="noopener noreferrer" style={linkStyle}>Mahjong (FFALT)</a>
       </div>
 
       {/* Achievements / Badge Room */}
@@ -445,7 +826,7 @@ const sectionTitleStyle = {
 
 const gridStyle = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
   gap: '24px',
   width: '100%'
 };
@@ -458,7 +839,31 @@ const cardStyle = {
   flexDirection: 'column',
   textAlign: 'left',
   cursor: 'pointer',
+  transition: 'transform 0.2s',
+  position: 'relative',
+  overflow: 'hidden',
   boxSizing: 'border-box'
+};
+
+const linksContainerStyle = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '15px',
+  justifyContent: 'center',
+  padding: '20px',
+  background: 'rgba(255, 255, 255, 0.05)',
+  borderRadius: '12px'
+};
+
+const linkStyle = {
+  color: '#00f0ff',
+  textDecoration: 'none',
+  fontWeight: 'bold',
+  fontSize: '16px',
+  padding: '8px 16px',
+  background: 'rgba(0, 240, 255, 0.1)',
+  borderRadius: '8px',
+  transition: 'background 0.2s, transform 0.2s'
 };
 
 const cardHeaderStyle = {
@@ -559,4 +964,224 @@ const achStatusStyle = {
   fontFamily: 'var(--font-main)',
   fontSize: '13px',
   fontWeight: '800'
+};
+
+// Statistics & Recommendation Styles
+const statsDropdownWrapperStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  gap: '10px',
+  marginTop: '10px'
+};
+
+const statsDropdownHeaderStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  width: '100%',
+  padding: '12px 20px',
+  fontFamily: 'var(--font-main)',
+  fontSize: '16px',
+  fontWeight: '700',
+  background: '#ffffff',
+  borderRadius: '12px',
+  cursor: 'pointer',
+  outline: 'none',
+  transition: 'all 0.2s ease-in-out',
+  minHeight: '48px',
+  border: '2px solid'
+};
+
+const statsDropdownContentStyle = {
+  background: '#ffffff',
+  padding: '24px',
+  borderRadius: '16px',
+  border: '1px solid var(--border-color)',
+  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '24px'
+};
+
+const globalStatsSummaryStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))',
+  gap: '16px'
+};
+
+const globalStatBoxStyle = {
+  background: 'var(--bg-app)',
+  padding: '16px',
+  borderRadius: '12px',
+  border: '1px solid var(--border-color)',
+  textAlign: 'center'
+};
+
+const globalStatLabelStyle = {
+  fontSize: '11px',
+  fontWeight: '700',
+  color: 'var(--text-muted)',
+  marginBottom: '6px',
+  letterSpacing: '0.5px'
+};
+
+const globalStatValueStyle = {
+  fontSize: '20px',
+  fontWeight: '800',
+  color: 'var(--text-main)'
+};
+
+const gamesStatsTableStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px'
+};
+
+const gameStatRowStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '12px 16px',
+  borderRadius: '8px',
+  background: 'rgba(241, 245, 249, 0.5)',
+  border: '1px solid var(--border-color)',
+  flexWrap: 'wrap',
+  gap: '12px'
+};
+
+const gameStatNameColStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  minWidth: '150px'
+};
+
+const gameStatDetailsStyle = {
+  display: 'flex',
+  gap: '16px',
+  flexWrap: 'wrap'
+};
+
+const gameStatItemStyle = {
+  fontSize: '13px',
+  color: 'var(--text-muted)'
+};
+
+const statsActionButtonsStyle = {
+  display: 'flex',
+  justifyContent: 'flex-end',
+  gap: '12px',
+  flexWrap: 'wrap'
+};
+
+const statsActionBtnStyle = {
+  padding: '8px 16px',
+  fontSize: '14px',
+  minHeight: '40px'
+};
+
+// Recommender styles
+const recBtnContainerStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  margin: '10px 0 20px 0'
+};
+
+const recommendationBtnStyle = {
+  background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+  color: '#ffffff',
+  borderColor: 'transparent',
+  fontSize: '16px',
+  padding: '12px 24px',
+  borderRadius: '12px',
+  fontWeight: '800',
+  boxShadow: '0 4px 15px rgba(2, 132, 199, 0.3)',
+  cursor: 'pointer'
+};
+
+const recModalStyle = {
+  maxWidth: '500px',
+  padding: '24px',
+  textAlign: 'center'
+};
+
+const recModalHeaderStyle = {
+  borderBottom: '2px solid var(--bg-app)',
+  paddingBottom: '12px',
+  marginBottom: '16px',
+  color: 'var(--primary)'
+};
+
+const recModalBodyStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '16px',
+  marginBottom: '24px'
+};
+
+const recIntroTextStyle = {
+  fontSize: '15px',
+  color: 'var(--text-muted)',
+  margin: 0
+};
+
+const recGameDisplayStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '16px',
+  background: 'rgba(2, 132, 199, 0.05)',
+  borderRadius: '16px',
+  border: '2px dashed var(--primary)',
+  width: '80%'
+};
+
+const recGameIconStyle = {
+  fontSize: '48px'
+};
+
+const recGameTitleStyle = {
+  fontFamily: 'var(--font-main)',
+  fontSize: '22px',
+  fontWeight: '800',
+  color: 'var(--primary)'
+};
+
+const recReasonBoxStyle = {
+  background: 'var(--bg-app)',
+  padding: '12px 16px',
+  borderRadius: '12px',
+  border: '1px solid var(--border-color)',
+  width: '100%',
+  textAlign: 'left'
+};
+
+const recReasonTextStyle = {
+  fontSize: '14px',
+  color: 'var(--text-main)',
+  margin: '6px 0 0 0',
+  lineHeight: '1.4'
+};
+
+const recModalFooterStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: '12px',
+  width: '100%'
+};
+
+const recCancelBtnStyle = {
+  flex: 1,
+  borderColor: 'var(--border-color)',
+  color: 'var(--text-muted)',
+  background: '#ffffff'
+};
+
+const recConfirmBtnStyle = {
+  flex: 2,
+  background: 'var(--primary)',
+  color: '#ffffff',
+  borderColor: 'var(--primary)'
 };

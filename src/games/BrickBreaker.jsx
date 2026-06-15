@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { sound } from '../utils/sound';
+import GameIntro from '../components/GameIntro';
 
 export default function BrickBreaker({ onBack, onScoreSave }) {
+  const [showIntro, setShowIntro] = useState(true);
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
@@ -665,8 +667,16 @@ export default function BrickBreaker({ onBack, onScoreSave }) {
   };
 
   return (
-    <div className="game-container neon-border" style={containerStyle}>
-      <div style={headerStyle}>
+    <>
+      {showIntro && <GameIntro 
+        gameName="BRICK BREAKER" 
+        icon="🧱" 
+        colors={['#ff007f', '#00f0ff', '#9d00ff']} 
+        particleType="bricks" 
+        onComplete={() => setShowIntro(false)} 
+      />}
+      <div className="game-container neon-border" style={containerStyle}>
+        <div style={headerStyle}>
         <button onClick={onBack} className="retro-btn" style={backBtnStyle}>
           &lt; Hub
         </button>
@@ -715,7 +725,7 @@ export default function BrickBreaker({ onBack, onScoreSave }) {
         )}
 
         {victory && (
-          <div style={overlayStyle}>
+          <div style={{ ...overlayStyle, animation: 'delayFadeIn 2s forwards' }}>
             <div style={victoryTitleStyle}>NIVEAU COMPLÉTÉ</div>
             <div style={gameOverStatsStyle}>Félicitations ! Score : {score}</div>
             <button onClick={resetGame} className="retro-btn pulse-glow" style={restartBtnStyle}>
@@ -729,6 +739,7 @@ export default function BrickBreaker({ onBack, onScoreSave }) {
         Contrôles : Glissez sur le pavé tactile ou déplacez votre souris pour déplacer la raquette. Quand le bonus LASER [L] est actif, cliquez/appuyez pour tirer.
       </div>
     </div>
+    </>
   );
 }
 

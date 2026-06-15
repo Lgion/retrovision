@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { sound } from '../utils/sound';
+import GameIntro from '../components/GameIntro';
 
 export default function FlappyNeon({ onBack, onScoreSave }) {
+  const [showIntro, setShowIntro] = useState(true);
   const canvasRef = useRef(null);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
@@ -401,8 +403,16 @@ export default function FlappyNeon({ onBack, onScoreSave }) {
   };
 
   return (
-    <div className="game-container neon-border" style={containerStyle}>
-      <div style={headerStyle}>
+    <>
+      {showIntro && <GameIntro 
+        gameName="FLAPPY NEON" 
+        icon="🚀" 
+        colors={['#00f0ff', '#ff007f', '#ffffff']} 
+        particleType="neon" 
+        onComplete={() => setShowIntro(false)} 
+      />}
+      <div className="game-container neon-border" style={containerStyle}>
+        <div style={headerStyle}>
         <button onClick={onBack} className="retro-btn" style={backBtnStyle}>
           &lt; Retour Hub
         </button>
@@ -446,6 +456,7 @@ export default function FlappyNeon({ onBack, onScoreSave }) {
         Astuce: Cliquez n'importe où dans la zone noire ou appuyez sur [ESPACE] pour propulser le vaisseau.
       </div>
     </div>
+    </>
   );
 }
 

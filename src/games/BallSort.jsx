@@ -1,9 +1,190 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { sound } from '../utils/sound';
 import BallSortCollection from './BallSortCollection';
+import { getGameConfig, updateGameConfig } from '../utils/config';
+import { gsap } from 'gsap';
+import WinLossTransition from '../components/WinLossTransition';
+
+const BallSortIntro = ({ onComplete }) => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const tl = gsap.timeline();
+
+    gsap.to(".bg-sphere", {
+        y: -50,
+        duration: 4,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+        stagger: 1
+    });
+
+    tl.fromTo(".text-3d-bal", 
+        { scale: 0, rotationY: 45, rotationZ: -10, opacity: 1 }, 
+        { duration: 0.8, scale: 1, rotationY: 0, rotationZ: 0, ease: "back.out(1.7)" }
+    )
+    .to(".vortex-green-orb-container", { duration: 1, rotation: 360, repeat: 1, ease: "none" }, 0)
+    .fromTo(".lightning-bolts", { opacity: 0 }, { opacity: 1, duration: 0.1, yoyo: true, repeat: 5 }, 0.2)
+    .to(".text-3d-bal", { duration: 0.5, scale: 0.2, opacity: 0, ease: "power2.in" }, "+=0.5")
+    .to(".vortex-container", { duration: 0.5, scale: 0, opacity: 0, ease: "power2.in" }, "<")
+    .set(".logo-ball-sort", { visibility: "visible" })
+    .fromTo(".logo-ball-sort", 
+        { scale: 1.5, opacity: 0 }, 
+        { duration: 0.6, scale: 1, opacity: 1, ease: "bounce.out" }
+    )
+    .set(".btn-niveau", { visibility: "visible" })
+    .fromTo(".btn-niveau", 
+        { y: 200, opacity: 0 }, 
+        { duration: 0.6, y: 0, opacity: 1, ease: "back.out(1.5)" }, 
+        "-=0.2"
+    )
+    .to(".ads-badge", { opacity: 1, duration: 0.5 }, "-=0.2")
+    .call(() => startParticles());
+
+    let particles = [];
+    let isRunning = false;
+    let animationFrameId;
+    let spawnInterval;
+    let resizeHandler;
+
+    const startParticles = () => {
+      if (isRunning) return;
+      isRunning = true;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      resizeHandler = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      };
+      window.addEventListener('resize', resizeHandler);
+      resizeHandler();
+
+      const spawnGreenParticle = () => {
+        const flask = document.getElementById('flask-origin');
+        if (!flask) return;
+        const rect = flask.getBoundingClientRect();
+        const startX = rect.left + rect.width / 2;
+        const startY = rect.top;
+
+        particles.push({
+            x: startX,
+            y: startY,
+            startX: startX,
+            startY: startY,
+            controlX: startX + (Math.random() - 0.5) * 200,
+            controlY: startY - 200 - Math.random() * 100,
+            endX: startX + (Math.random() - 0.5) * 150,
+            endY: startY - 400 - Math.random() * 200,
+            t: 0,
+            speed: 0.005 + Math.random() * 0.01,
+            size: Math.random() * 5 + 3,
+            color: '#00FF00'
+        });
+      };
+
+      spawnInterval = setInterval(spawnGreenParticle, 150);
+
+      const ctx = canvas.getContext('2d');
+      const renderParticles = () => {
+        if (!isRunning) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.t += p.speed;
+            const u = 1 - p.t;
+            p.x = u * u * p.startX + 2 * u * p.t * p.controlX + p.t * p.t * p.endX;
+            p.y = u * u * p.startY + 2 * u * p.t * p.controlY + p.t * p.t * p.endY;
+            
+            const life = 1 - p.t;
+
+            if (life <= 0 || p.t >= 1) {
+                particles.splice(i, 1);
+                continue;
+            }
+
+            const currentSize = p.size * Math.max(life, 0);
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, currentSize, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 255, 0, ${life})`;
+            ctx.fill();
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00FF00';
+        }
+        animationFrameId = requestAnimationFrame(renderParticles);
+      };
+      renderParticles();
+    };
+
+    return () => {
+      tl.kill();
+      isRunning = false;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (spawnInterval) clearInterval(spawnInterval);
+      if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+    };
+  }, []);
+
+  return (
+    <div style={{
+      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+      background: 'radial-gradient(circle at center, #0A0E1A 0%, #000000 100%)',
+      zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center',
+      overflow: 'hidden', fontFamily: '"Arial", sans-serif', perspective: 1000
+    }}>
+      <style>{`
+        .bg-sphere { position: absolute; border-radius: 50%; filter: blur(20px); opacity: 0.6; z-index: 1; }
+        .sphere-1 { width: 150px; height: 150px; background: #8A2BE2; bottom: -50px; left: 20%; }
+        .sphere-2 { width: 200px; height: 200px; background: #4B0082; bottom: -100px; right: 15%; }
+        .sphere-3 { width: 120px; height: 120px; background: #DC143C; bottom: -30px; left: 60%; }
+        .vortex-container { position: absolute; width: 400px; height: 400px; z-index: 5; display: flex; justify-content: center; alignItems: center; }
+        .vortex-disk { position: absolute; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(138,43,226,0.3) 0%, rgba(0,0,0,0) 70%); border: 2px dashed rgba(138,43,226,0.5); animation: spin-vortex 4s linear infinite; }
+        @keyframes spin-vortex { 100% { transform: rotate(360deg); } }
+        .vortex-green-orb-container { position: absolute; width: 350px; height: 350px; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        .vortex-green-orb { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; background: #00FF00; border-radius: 50%; box-shadow: 0 0 20px #00FF00, 0 0 40px #00FF00, -20px 5px 15px rgba(0,255,0,0.8), -40px 10px 15px rgba(0,255,0,0.5); }
+        .lightning-bolts { position: absolute; width: 100%; height: 100%; z-index: 6; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><path d="M200,200 L150,100 L180,90 L120,20" stroke="%2300FFFF" stroke-width="3" fill="none" filter="drop-shadow(0 0 5px %2300FFFF)"/><path d="M200,200 L250,300 L220,310 L280,380" stroke="%2300FFFF" stroke-width="3" fill="none" filter="drop-shadow(0 0 5px %2300FFFF)"/><path d="M200,200 L300,150 L290,120 L380,80" stroke="%2300FFFF" stroke-width="3" fill="none" filter="drop-shadow(0 0 5px %2300FFFF)"/></svg>') center/contain no-repeat; opacity: 0; animation: flash-lightning 0.15s infinite alternate; }
+        @keyframes flash-lightning { 0%, 50% { filter: brightness(1); } 100% { filter: brightness(2) drop-shadow(0 0 10px white); } }
+        @keyframes bal-light { 0% { text-shadow: -2px -2px 0 #FFF, 1px 1px 0 #F9A602, 2px 2px 0 #F9A602, 3px 3px 0 #D35400, 4px 4px 0 #D35400, 5px 5px 0 #A04000, 6px 6px 0 #A04000, 0 0 20px #FFD700; } 50% { text-shadow: 2px -2px 0 #FFF, 1px 1px 0 #F9A602, 2px 2px 0 #F9A602, 3px 3px 0 #D35400, 4px 4px 0 #D35400, 5px 5px 0 #A04000, 6px 6px 0 #A04000, 0 0 20px #FFD700; } 100% { text-shadow: -2px -2px 0 #FFF, 1px 1px 0 #F9A602, 2px 2px 0 #F9A602, 3px 3px 0 #D35400, 4px 4px 0 #D35400, 5px 5px 0 #A04000, 6px 6px 0 #A04000, 0 0 20px #FFD700; } }
+        .text-3d-bal { font-family: '"Arial Black", sans-serif'; font-size: 8rem; font-weight: 900; color: #FFD700; position: absolute; text-transform: uppercase; animation: bal-light 2s linear infinite; z-index: 10; }
+        .logo-ball-sort { position: absolute; font-family: '"Arial Black", sans-serif'; font-size: 5rem; font-weight: 900; color: transparent; background: linear-gradient(to bottom, #FFFFFF, #B0E0E6); -webkit-background-clip: text; -webkit-text-stroke: 2px #00008B; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); display: flex; align-items: center; gap: 10px; z-index: 20; opacity: 0; visibility: hidden; }
+        .letter-a { position: relative; display: inline-block; color: transparent; }
+        .letter-a::after { content: '👁'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -30%); font-size: 1.5rem; color: #000; -webkit-text-stroke: 0; }
+        .letter-o-flask { display: inline-block; width: 40px; height: 70px; border: 4px solid rgba(255,255,255,0.8); border-top: none; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; position: relative; margin: 0 5px; background: linear-gradient(to top, #0000FF 0%, #FF1493 50%, transparent 50%); box-shadow: inset 0 0 10px rgba(255,255,255,0.5); }
+        .letter-o-flask::after { content: ''; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 25px; height: 25px; background: #FF0000; border-radius: 50%; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5); }
+        .word-sort { position: relative; }
+        .word-sort::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #00FF00; filter: blur(15px); opacity: 0; z-index: -1; animation: glow-sort 2s infinite alternate; }
+        @keyframes glow-sort { 0% { opacity: 0; } 100% { opacity: 0.6; } }
+        .btn-niveau { position: absolute; bottom: 20%; background: linear-gradient(to bottom, #32CD32, #228B22); border: 2px solid #90EE90; border-radius: 50px; padding: 15px 40px; font-size: 2rem; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,255,0,0.3), inset 0 5px 10px rgba(255,255,255,0.4); z-index: 20; opacity: 0; visibility: hidden; }
+        .ads-badge { position: absolute; top: 20px; left: 20px; width: 50px; height: 50px; background: #FF0000; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 0 15px rgba(255,0,0,0.6); z-index: 20; animation: pulse-ads 2s infinite ease-in-out; opacity: 0; }
+        @keyframes pulse-ads { 0% { transform: scale(0.95); } 50% { transform: scale(1.05); } 100% { transform: scale(0.95); } }
+      `}</style>
+      <div className="bg-sphere sphere-1" />
+      <div className="bg-sphere sphere-2" />
+      <div className="bg-sphere sphere-3" />
+      <div className="vortex-container">
+        <div className="vortex-disk" />
+        <div className="vortex-green-orb-container"><div className="vortex-green-orb" /></div>
+        <div className="lightning-bolts" />
+      </div>
+      <div className="text-3d-bal">BAL!</div>
+      <div className="logo-ball-sort">
+        <div style={{ display: 'flex', alignItems: 'center' }}>B<span className="letter-a">A</span>LL</div>
+        <div className="word-sort" style={{ display: 'flex', alignItems: 'center' }}>S<div className="letter-o-flask" id="flask-origin" />RT</div>
+      </div>
+      <button className="btn-niveau" onClick={onComplete}>Niveau 116</button>
+      <div className="ads-badge">ADS</div>
+      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 15, pointerEvents: 'none' }} />
+    </div>
+  );
+};
+
 
 export default function BallSort({ onBack, onScoreSave }) {
+  const containerRef = useRef(null);
   // Game state
+  const [showIntro, setShowIntro] = useState(true);
   const [tubes, setTubes] = useState([]);
   const [selectedTube, setSelectedTube] = useState(null);
   const [history, setHistory] = useState([]);
@@ -17,7 +198,7 @@ export default function BallSort({ onBack, onScoreSave }) {
   const [particles, setParticles] = useState([]);
   const [scale, setScale] = useState(1);
   const [showCollection, setShowCollection] = useState(false);
-  const [customizations, setCustomizations] = useState({ tube: 't1', theme: 'bg1', ball: 'b1', color: 'c1' });
+  const [customizations, setCustomizations] = useState(() => getGameConfig('ball', 'customizations', { tube: 't1', theme: 'bg1', ball: 'b1', color: 'c1' }));
   const [shakingTube, setShakingTube] = useState(null);
   const [bgmOn, setBgmOn] = useState(false);
 
@@ -94,7 +275,8 @@ export default function BallSort({ onBack, onScoreSave }) {
     initGame();
 
     const handleResize = () => {
-      const availableWidth = window.innerWidth - 60; // 30px padding on sides
+      if (!containerRef.current) return;
+      const availableWidth = containerRef.current.clientWidth - 60; // 30px padding on sides
       // 6 tubes of 64px + 5 gaps of 15px = 384 + 75 = 459px
       const requiredWidth = 6 * 64 + 5 * 15;
       if (availableWidth < requiredWidth) {
@@ -103,9 +285,25 @@ export default function BallSort({ onBack, onScoreSave }) {
         setScale(1);
       }
     };
+
+    const target = containerRef.current;
+    let resizeObserver;
+    if (target) {
+      resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+      resizeObserver.observe(target);
+    }
+
     window.addEventListener('resize', handleResize);
     handleResize();
-    return () => window.removeEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver && target) {
+        resizeObserver.unobserve(target);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -152,7 +350,7 @@ export default function BallSort({ onBack, onScoreSave }) {
   };
 
   const handleTubeClick = (index) => {
-    if (victoryPhase > 0) return;
+    if (victoryPhase !== 0) return;
     setHintTubes(null);
 
     // Start BGM on first interaction (browser requires user gesture)
@@ -251,11 +449,11 @@ export default function BallSort({ onBack, onScoreSave }) {
   };
 
   const addExtraTube = () => {
-    if (victoryPhase > 0 || extraTubesCount >= 1) return;
+    if (victoryPhase !== 0 || extraTubesCount >= 1) return;
     setHistory([...history, JSON.stringify(tubes)]);
     setTubes([...tubes, []]);
     setExtraTubesCount(1);
-    sound.playPowerup();
+    sound.playClick();
   };
 
   const getHint = () => {
@@ -320,25 +518,28 @@ export default function BallSort({ onBack, onScoreSave }) {
       return false;
     });
 
-    if (isWon) {
-      setVictoryPhase(1);
-      sound.stopBGM();
-      sound.playPowerup();
+    if (isWon && victoryPhase === 0) {
+      setVictoryPhase(-1);
 
-      // Stage 1 -> Stage 2
       setTimeout(() => {
-        setVictoryPhase(2);
-        sound.playExplosion(); // Fireworks sound
-      }, 2000);
+        setVictoryPhase(1);
+        sound.stopBGM();
 
-      // Stage 2 -> Stage 3 (Final)
-      setTimeout(() => {
-        setVictoryPhase(3);
-        sound.playScore();
-        if (onScoreSave) {
-          onScoreSave('Tri Billes', Math.max(1000 - moves * 10, 100));
-        }
-      }, 4500);
+        // Stage 1 -> Stage 2
+        setTimeout(() => {
+          setVictoryPhase(2);
+          sound.playExplosion(); // Fireworks sound
+        }, 2000);
+
+        // Stage 2 -> Stage 3 (Final)
+        setTimeout(() => {
+          setVictoryPhase(3);
+          sound.playScore();
+          if (onScoreSave) {
+            onScoreSave('Tri Billes', Math.max(1000 - moves * 10, 100));
+          }
+        }, 4500);
+      }, 1500);
     }
   };
 
@@ -363,7 +564,13 @@ export default function BallSort({ onBack, onScoreSave }) {
       <BallSortCollection
         onClose={() => setShowCollection(false)}
         currentSelections={customizations}
-        onSelect={(category, id) => setCustomizations(prev => ({ ...prev, [category]: id }))}
+        onSelect={(category, id) => {
+          setCustomizations(prev => {
+            const next = { ...prev, [category]: id };
+            updateGameConfig('ball', 'customizations', next);
+            return next;
+          });
+        }}
       />
     );
   }
@@ -405,17 +612,22 @@ export default function BallSort({ onBack, onScoreSave }) {
   };
 
   return (
-    <div style={{
-      position: 'relative',
-      width: '100vw',
-      height: '100vh',
-      background: getBackground(),
-      display: 'flex',
-      flexDirection: 'column',
-      color: 'white',
-      fontFamily: '"Nunito", "Segoe UI", sans-serif',
-      overflow: 'hidden',
-    }}>
+    <>
+    {showIntro && <BallSortIntro onComplete={() => setShowIntro(false)} />}
+    <div 
+      ref={containerRef}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        background: getBackground(),
+        display: 'flex',
+        flexDirection: 'column',
+        color: 'white',
+        fontFamily: '"Nunito", "Segoe UI", sans-serif',
+        overflow: 'hidden',
+      }}
+    >
       {/* Background Overlay to soften image */}
       <div style={{
         position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -700,6 +912,9 @@ export default function BallSort({ onBack, onScoreSave }) {
         </div>
       </div>
 
+      {/* Transition Phase */}
+      {victoryPhase === -1 && <WinLossTransition type="win" />}
+
       {/* Victory Overlays */}
       {victoryPhase > 0 && (
         <div style={{
@@ -935,6 +1150,7 @@ export default function BallSort({ onBack, onScoreSave }) {
         }
       `}} />
     </div>
+    </>
   );
 }
 

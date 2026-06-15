@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 import WaterSortCollection from './WaterSortCollection';
+import { getGameConfig, updateGameConfig } from '../utils/config';
+import GameIntro from '../components/GameIntro';
+import WinLossTransition from '../components/WinLossTransition';
 
 export default function WaterSort({ onBack, onScoreSave }) {
+  const [showIntro, setShowIntro] = useState(true);
+  const containerRef = useRef(null);
   const [tubes, setTubes] = useState([]);
   const [selectedTube, setSelectedTube] = useState(null);
   const [history, setHistory] = useState([]);
@@ -14,7 +19,7 @@ export default function WaterSort({ onBack, onScoreSave }) {
   const [hintTubes, setHintTubes] = useState(null);
   const [scale, setScale] = useState(1);
   const [showCollection, setShowCollection] = useState(false);
-  const [customizations, setCustomizations] = useState({ tube: 'wt1', theme: 'bg1', color: 'wc1' });
+  const [customizations, setCustomizations] = useState(() => getGameConfig('water', 'customizations', { tube: 'wt1', theme: 'bg1', color: 'wc1' }));
   const [pourFromBottom, setPourFromBottom] = useState(false);
   const [completedTubeIndex, setCompletedTubeIndex] = useState(null);
 
@@ -87,7 +92,8 @@ export default function WaterSort({ onBack, onScoreSave }) {
     initGame();
 
     const handleResize = () => {
-      const availableWidth = window.innerWidth - 60; // 30px padding on sides
+      if (!containerRef.current) return;
+      const availableWidth = containerRef.current.clientWidth - 60; // 30px padding on sides
       // 6 tubes of 50px + 5 gaps of 15px = 300 + 75 = 375px
       const requiredWidth = 6 * 50 + 5 * 15;
       if (availableWidth < requiredWidth) {
@@ -96,9 +102,25 @@ export default function WaterSort({ onBack, onScoreSave }) {
         setScale(1);
       }
     };
+
+    const target = containerRef.current;
+    let resizeObserver;
+    if (target) {
+      resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+      resizeObserver.observe(target);
+    }
+
     window.addEventListener('resize', handleResize);
     handleResize();
-    return () => window.removeEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver && target) {
+        resizeObserver.unobserve(target);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -139,7 +161,7 @@ export default function WaterSort({ onBack, onScoreSave }) {
   };
 
   const handleTubeClick = (index) => {
-    if (victoryPhase > 0 || pouringTubes) return;
+    if (victoryPhase !== 0 || pouringTubes) return;
     setHintTubes(null);
 
     if (selectedTube === null) {
@@ -222,7 +244,7 @@ export default function WaterSort({ onBack, onScoreSave }) {
   };
 
   const addExtraTube = () => {
-    if (victoryPhase > 0 || extraTubesCount >= 1 || pouringTubes) return;
+    if (victoryPhase !== 0 || extraTubesCount >= 1 || pouringTubes) return;
     setHistory([...history, JSON.stringify(tubes)]);
     setTubes([...tubes, []]);
     setExtraTubesCount(1);
@@ -269,30 +291,33 @@ export default function WaterSort({ onBack, onScoreSave }) {
       return false;
     });
 
-    if (isWon) {
-      setVictoryPhase(1);
-      sound.playPowerup();
+    if (isWon && victoryPhase === 0) {
+      setVictoryPhase(-1);
 
-      // Stage 1 -> Stage 2
       setTimeout(() => {
-        setVictoryPhase(2);
-        sound.playExplosion(); // Bubble burst/fireworks
-      }, 2000);
+        setVictoryPhase(1);
 
-      // Stage 2 -> Stage 3 (Final)
-      setTimeout(() => {
-        setVictoryPhase(3);
-        sound.playScore();
-        if (onScoreSave) {
-          onScoreSave({
-            game: 'watersort',
-            score: Math.max(1000 - moves * 10, 100),
-            date: new Date().toISOString(),
-            moves: moves + 1,
-            timeMs: Date.now() - startTime
-          });
-        }
-      }, 4500);
+        // Stage 1 -> Stage 2
+        setTimeout(() => {
+          setVictoryPhase(2);
+          sound.playExplosion(); // Bubble burst/fireworks
+        }, 2000);
+
+        // Stage 2 -> Stage 3 (Final)
+        setTimeout(() => {
+          setVictoryPhase(3);
+          sound.playScore();
+          if (onScoreSave) {
+            onScoreSave({
+              game: 'watersort',
+              score: Math.max(1000 - moves * 10, 100),
+              date: new Date().toISOString(),
+              moves: moves + 1,
+              timeMs: Date.now() - startTime
+            });
+          }
+        }, 4500);
+      }, 1500);
     }
   };
 
@@ -313,7 +338,13 @@ export default function WaterSort({ onBack, onScoreSave }) {
       <WaterSortCollection
         onClose={() => setShowCollection(false)}
         currentSelections={customizations}
-        onSelect={(category, id) => setCustomizations(prev => ({ ...prev, [category]: id }))}
+        onSelect={(category, id) => {
+          setCustomizations(prev => {
+            const next = { ...prev, [category]: id };
+            updateGameConfig('water', 'customizations', next);
+            return next;
+          });
+        }}
       />
     );
   }
@@ -334,419 +365,433 @@ export default function WaterSort({ onBack, onScoreSave }) {
   };
 
   return (
-    <div style={{
-      position: 'relative',
-      width: '100vw',
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      background: getBackground(),
+    <>
+      {showIntro && <GameIntro
+        gameName="WATER SORT"
+        icon="💧"
+        colors={['#33CCFF', '#FF3366', '#FFD700']}
+        particleType="bubbles"
+        onComplete={() => setShowIntro(false)}
+      />}
+      <div
+        ref={containerRef}
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          background: getBackground(),
 
-      color: 'white',
-      fontFamily: '"Nunito", "Segoe UI", sans-serif',
-      overflow: 'hidden',
-    }}>
-      {/* Background Overlay to soften image */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-        background: 'rgba(255, 255, 255, 0.1)',
-        zIndex: 0
-      }} />
-
-      {/* Header */}
-      <div style={{
-        padding: '20px 30px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: 'rgba(255, 255, 255, 0.03)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-        zIndex: 10
-      }}>
-        <button
-          onClick={() => {
-            if (victoryPhase === 0 && history.length > 0) {
-              if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) onBack();
-            } else onBack();
-          }}
-          style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            transition: 'all 0.2s',
-          }}
-        >
-          ← Retour
-        </button>
-        <button
-          onClick={() => setShowCollection(true)}
-          style={{
-            background: 'linear-gradient(45deg, #FCD34D, #F59E0B)',
-            border: 'none',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '25px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
-          }}
-        >
-          📖 Boutique
-        </button>
-      </div>
-
-      {/* Main Game Area */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '10px',
-        zIndex: 5,
-        gap: '60px' // increased gap for pouring clearance
-      }}>
+          color: 'white',
+          fontFamily: '"Nunito", "Segoe UI", sans-serif',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Background Overlay to soften image */}
         <div style={{
+          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(255, 255, 255, 0.1)',
+          zIndex: 0
+        }} />
+
+        {/* Header */}
+        <div style={{
+          padding: '20px 30px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          zIndex: 10
+        }}>
+          <button
+            onClick={() => {
+              if (victoryPhase === 0 && history.length > 0) {
+                if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) onBack();
+              } else onBack();
+            }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              transition: 'all 0.2s',
+            }}
+          >
+            ← Retour
+          </button>
+          <button
+            onClick={() => setShowCollection(true)}
+            style={{
+              background: 'linear-gradient(45deg, #FCD34D, #F59E0B)',
+              border: 'none',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '25px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+            }}
+          >
+            📖 Boutique
+          </button>
+        </div>
+
+        {/* Main Game Area */}
+        <div style={{
+          flex: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '60px',
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center',
-          padding: "1em",
-          background: 'rgba(255, 255, 255, .2)'
+          justifyContent: 'center',
+          padding: '10px',
+          zIndex: 5,
+          gap: '60px' // increased gap for pouring clearance
         }}>
-          <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center' }}>
-            {tubes.slice(0, 6).map((tube, i) => (
-              <div key={i} style={{
-                animation: completedTubeIndex === i ? 'tubeCompletePulse 1s ease-out' : 'none',
-                transformOrigin: 'bottom center'
-              }}>
-                <LiquidTube
-                  tube={tube}
-                  idx={i}
-                  capacity={getTubeCapacity(i)}
-                  selected={selectedTube === i}
-                  hint={hintTubes && (hintTubes[0] === i || hintTubes[1] === i)}
-                  pouring={pouringTubes && pouringTubes.src === i}
-                  receiving={pouringTubes && pouringTubes.dest === i}
-                  colors={colors}
-                  customization={customizations}
-                  onClick={() => handleTubeClick(i)}
-                />
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'flex-end' }}>
-            {tubes.slice(6, 11).map((tube, i) => {
-              const idx = i + 6;
-              return (
-                <div key={idx} style={{
-                  animation: completedTubeIndex === idx ? 'tubeCompletePulse 1s ease-out' : 'none',
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '60px',
+            transform: `scale(${scale})`,
+            transformOrigin: 'center center',
+            padding: "1em",
+            background: 'rgba(255, 255, 255, .2)'
+          }}>
+            <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center' }}>
+              {tubes.slice(0, 6).map((tube, i) => (
+                <div key={i} style={{
+                  animation: completedTubeIndex === i ? 'tubeCompletePulse 1s ease-out' : 'none',
                   transformOrigin: 'bottom center'
                 }}>
                   <LiquidTube
                     tube={tube}
-                    idx={idx}
-                    capacity={getTubeCapacity(idx)}
-                    selected={selectedTube === idx}
-                    hint={hintTubes && (hintTubes[0] === idx || hintTubes[1] === idx)}
-                    pouring={pouringTubes && pouringTubes.src === idx}
-                    receiving={pouringTubes && pouringTubes.dest === idx}
+                    idx={i}
+                    capacity={getTubeCapacity(i)}
+                    selected={selectedTube === i}
+                    hint={hintTubes && (hintTubes[0] === i || hintTubes[1] === i)}
+                    pouring={pouringTubes && pouringTubes.src === i}
+                    receiving={pouringTubes && pouringTubes.dest === i}
                     colors={colors}
                     customization={customizations}
-                    onClick={() => handleTubeClick(idx)}
+                    onClick={() => handleTubeClick(i)}
                   />
                 </div>
-              );
-            })}
+              ))}
+            </div>
 
-            {tubes.length > 11 ? (
-              <div style={{
-                animation: completedTubeIndex === 11 ? 'tubeCompletePulse 1s ease-out' : 'none',
-                transformOrigin: 'bottom center'
-              }}>
-                <LiquidTube
-                  tube={tubes[11]}
-                  idx={11}
-                  capacity={getTubeCapacity(11)}
-                  selected={selectedTube === 11}
-                  hint={hintTubes && (hintTubes[0] === 11 || hintTubes[1] === 11)}
-                  pouring={pouringTubes && pouringTubes.src === 11}
-                  receiving={pouringTubes && pouringTubes.dest === 11}
-                  colors={colors}
-                  customization={customizations}
-                  onClick={() => handleTubeClick(11)}
-                />
-              </div>
-            ) : (
-              <div
-                onClick={addExtraTube}
-                style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '10px',
-                  border: '2px dashed rgba(255,255,255,0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'rgba(255,255,255,0.5)',
-                  fontSize: '24px',
-                  marginBottom: '10px'
-                }}
-              >
-                +
-              </div>
-            )}
+            <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'flex-end' }}>
+              {tubes.slice(6, 11).map((tube, i) => {
+                const idx = i + 6;
+                return (
+                  <div key={idx} style={{
+                    animation: completedTubeIndex === idx ? 'tubeCompletePulse 1s ease-out' : 'none',
+                    transformOrigin: 'bottom center'
+                  }}>
+                    <LiquidTube
+                      tube={tube}
+                      idx={idx}
+                      capacity={getTubeCapacity(idx)}
+                      selected={selectedTube === idx}
+                      hint={hintTubes && (hintTubes[0] === idx || hintTubes[1] === idx)}
+                      pouring={pouringTubes && pouringTubes.src === idx}
+                      receiving={pouringTubes && pouringTubes.dest === idx}
+                      colors={colors}
+                      customization={customizations}
+                      onClick={() => handleTubeClick(idx)}
+                    />
+                  </div>
+                );
+              })}
+
+              {tubes.length > 11 ? (
+                <div style={{
+                  animation: completedTubeIndex === 11 ? 'tubeCompletePulse 1s ease-out' : 'none',
+                  transformOrigin: 'bottom center'
+                }}>
+                  <LiquidTube
+                    tube={tubes[11]}
+                    idx={11}
+                    capacity={getTubeCapacity(11)}
+                    selected={selectedTube === 11}
+                    hint={hintTubes && (hintTubes[0] === 11 || hintTubes[1] === 11)}
+                    pouring={pouringTubes && pouringTubes.src === 11}
+                    receiving={pouringTubes && pouringTubes.dest === 11}
+                    colors={colors}
+                    customization={customizations}
+                    onClick={() => handleTubeClick(11)}
+                  />
+                </div>
+              ) : (
+                <div
+                  onClick={addExtraTube}
+                  style={{
+                    width: '50px',
+                    height: '50px',
+                    borderRadius: '10px',
+                    border: '2px dashed rgba(255,255,255,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: 'rgba(255,255,255,0.5)',
+                    fontSize: '24px',
+                    marginBottom: '10px'
+                  }}
+                >
+                  +
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            gap: '30px',
+            marginTop: '10px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            paddingBottom: '20px'
+          }}>
+            {/* Undo Button */}
+            <button
+              onClick={undo}
+              disabled={history.length === 0}
+              style={{
+                width: '60px',
+                height: '60px',
+                background: history.length === 0 ? 'rgba(255, 255, 255, 0.3)' : 'linear-gradient(135deg, #FF99CC, #FF3366)',
+                border: '3px solid rgba(255,255,255,0.5)',
+                borderRadius: '20px',
+                color: 'white',
+                fontSize: '1.8rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: history.length === 0 ? 'default' : 'pointer',
+                boxShadow: history.length === 0 ? 'none' : '0 8px 20px rgba(255, 51, 102, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)',
+                transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              }}
+              onMouseOver={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'; }}
+              onMouseOut={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1) translateY(0)'; }}
+            >
+              ↩️
+            </button>
+
+            {/* Hint Button */}
+            <button
+              onClick={getHint}
+              style={{
+                width: '80px',
+                height: '80px',
+                background: 'linear-gradient(135deg, #FFF099, #FFD700)',
+                border: '4px solid rgba(255,255,255,0.8)',
+                borderRadius: '50%',
+                color: 'white',
+                fontSize: '2.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 10px 25px rgba(255, 215, 0, 0.5), inset 0 5px 10px rgba(255,255,255,0.8)',
+                transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                transformOrigin: 'center'
+              }}
+              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.15) rotate(15deg)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
+            >
+              ✨
+            </button>
+
+            {/* Refresh Button */}
+            <button
+              onClick={() => {
+                if (window.confirm("Recommencer ce niveau ?")) {
+                  initGame();
+                  setVictoryPhase(0);
+                  sound.playClick();
+                }
+              }}
+              style={{
+                width: '60px',
+                height: '60px',
+                background: 'linear-gradient(135deg, #FF6B6B, #C92A2A)',
+                border: '3px solid rgba(255,255,255,0.5)',
+                borderRadius: '20px',
+                color: 'white',
+                fontSize: '1.8rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 8px 20px rgba(201, 42, 42, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)',
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}
+            >
+              🔄
+            </button>
+
+            {/* Bottom Pour Button */}
+            <button
+              onClick={() => { setPourFromBottom(!pourFromBottom); sound.playClick(); }}
+              style={{
+                background: pourFromBottom ? 'linear-gradient(45deg, #FF3366, #FF99CC)' : 'rgba(255, 255, 255, 0.1)',
+                border: '3px solid rgba(255, 255, 255, 0.5)',
+                color: 'white',
+                padding: '0 20px',
+                height: '60px',
+                borderRadius: '25px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: pourFromBottom ? '0 8px 20px rgba(255, 51, 102, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)' : 'none',
+                transition: 'all 0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1rem'
+              }}
+              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}
+            >
+              {pourFromBottom ? 'Bas ↓' : 'Haut ↑'}
+            </button>
           </div>
         </div>
 
-        <div style={{
-          display: 'flex',
-          gap: '30px',
-          marginTop: '10px',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          paddingBottom: '20px'
-        }}>
-          {/* Undo Button */}
-          <button
-            onClick={undo}
-            disabled={history.length === 0}
-            style={{
-              width: '60px',
-              height: '60px',
-              background: history.length === 0 ? 'rgba(255, 255, 255, 0.3)' : 'linear-gradient(135deg, #FF99CC, #FF3366)',
-              border: '3px solid rgba(255,255,255,0.5)',
-              borderRadius: '20px',
-              color: 'white',
-              fontSize: '1.8rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: history.length === 0 ? 'default' : 'pointer',
-              boxShadow: history.length === 0 ? 'none' : '0 8px 20px rgba(255, 51, 102, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)',
-              transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            }}
-            onMouseOver={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'; }}
-            onMouseOut={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1) translateY(0)'; }}
-          >
-            ↩️
-          </button>
+        {/* Transition Phase */}
+        {victoryPhase === -1 && <WinLossTransition type="win" />}
 
-          {/* Hint Button */}
-          <button
-            onClick={getHint}
-            style={{
-              width: '80px',
-              height: '80px',
-              background: 'linear-gradient(135deg, #FFF099, #FFD700)',
-              border: '4px solid rgba(255,255,255,0.8)',
-              borderRadius: '50%',
-              color: 'white',
-              fontSize: '2.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 10px 25px rgba(255, 215, 0, 0.5), inset 0 5px 10px rgba(255,255,255,0.8)',
-              transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-              transformOrigin: 'center'
-            }}
-            onMouseOver={e => e.currentTarget.style.transform = 'scale(1.15) rotate(15deg)'}
-            onMouseOut={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
-          >
-            ✨
-          </button>
+        {/* Victory Overlay Stages */}
+        {victoryPhase > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 100,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            animation: 'fadeIn 0.5s',
+            overflow: 'hidden'
+          }}>
+            {/* Confetti & Fireworks Backgrounds */}
+            {victoryPhase >= 2 && (
+              <div style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                background: 'url("https://cdn.pixabay.com/photo/2017/12/26/16/06/confetti-3040854_1280.png") center/cover',
+                opacity: 0.5,
+                animation: 'slideDown 10s linear infinite'
+              }} />
+            )}
 
-          {/* Refresh Button */}
-          <button
-            onClick={() => {
-              if (window.confirm("Recommencer ce niveau ?")) {
-                initGame();
-                setVictoryPhase(0);
-                sound.playClick();
-              }
-            }}
-            style={{
-              width: '60px',
-              height: '60px',
-              background: 'linear-gradient(135deg, #FF6B6B, #C92A2A)',
-              border: '3px solid rgba(255,255,255,0.5)',
-              borderRadius: '20px',
-              color: 'white',
-              fontSize: '1.8rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: '0 8px 20px rgba(201, 42, 42, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)',
-              transition: 'all 0.2s',
-            }}
-            onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'}
-            onMouseOut={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}
-          >
-            🔄
-          </button>
-
-          {/* Bottom Pour Button */}
-          <button
-            onClick={() => { setPourFromBottom(!pourFromBottom); sound.playClick(); }}
-            style={{
-              background: pourFromBottom ? 'linear-gradient(45deg, #FF3366, #FF99CC)' : 'rgba(255, 255, 255, 0.1)',
-              border: '3px solid rgba(255, 255, 255, 0.5)',
-              color: 'white',
-              padding: '0 20px',
-              height: '60px',
-              borderRadius: '25px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              boxShadow: pourFromBottom ? '0 8px 20px rgba(255, 51, 102, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)' : 'none',
-              transition: 'all 0.3s',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1rem'
-            }}
-            onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'}
-            onMouseOut={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}
-          >
-            {pourFromBottom ? 'Bas ↓' : 'Haut ↑'}
-          </button>
-        </div>
-      </div>
-
-      {/* Victory Overlay Stages */}
-      {victoryPhase > 0 && (
-        <div style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(10px)',
-          zIndex: 100,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          animation: 'fadeIn 0.5s',
-          overflow: 'hidden'
-        }}>
-          {/* Confetti & Fireworks Backgrounds */}
-          {victoryPhase >= 2 && (
-            <div style={{
-              position: 'absolute',
-              top: 0, left: 0, right: 0, bottom: 0,
-              background: 'url("https://cdn.pixabay.com/photo/2017/12/26/16/06/confetti-3040854_1280.png") center/cover',
-              opacity: 0.5,
-              animation: 'slideDown 10s linear infinite'
-            }} />
-          )}
-
-          {/* Stage 1: Initial WOW */}
-          {victoryPhase === 1 && (
-            <div style={{ animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
-              <h2 style={{
-                fontSize: '4rem',
-                color: '#33CCFF',
-                textShadow: '0 0 20px rgba(51,204,255,0.8), 2px 2px 0px white',
-                margin: 0,
-                transform: 'rotate(5deg)'
-              }}>EAU PURE !</h2>
-              <div style={{ fontSize: '6rem', textAlign: 'center', animation: 'bounce 1s infinite' }}>💧</div>
-            </div>
-          )}
-
-          {/* Stage 2: Stats & Fireworks */}
-          {victoryPhase === 2 && (
-            <div style={{
-              animation: 'slideUpFade 0.6s ease-out',
-              background: 'rgba(255,255,255,0.9)',
-              padding: '40px',
-              borderRadius: '30px',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
-              textAlign: 'center',
-              zIndex: 10
-            }}>
-              <h3 style={{ fontSize: '2.5rem', color: '#FF3366', margin: '0 0 20px 0' }}>Analyse du flux...</h3>
-              <div style={{ fontSize: '1.8rem', color: '#666', margin: '10px 0' }}>
-                Temps : <strong style={{ color: '#FF9933' }}>{Math.floor((Date.now() - startTime) / 1000)}s</strong>
+            {/* Stage 1: Initial WOW */}
+            {victoryPhase === 1 && (
+              <div style={{ animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
+                <h2 style={{
+                  fontSize: '4rem',
+                  color: '#33CCFF',
+                  textShadow: '0 0 20px rgba(51,204,255,0.8), 2px 2px 0px white',
+                  margin: 0,
+                  transform: 'rotate(5deg)'
+                }}>EAU PURE !</h2>
+                <div style={{ fontSize: '6rem', textAlign: 'center', animation: 'bounce 1s infinite' }}>💧</div>
               </div>
-              <div style={{ fontSize: '1.8rem', color: '#666', margin: '10px 0', animation: 'popIn 0.5s 0.5s backwards' }}>
-                Transvasements : <strong style={{ color: '#33CCFF' }}>{moves}</strong>
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Stage 3: Final Master Screen */}
-          {victoryPhase === 3 && (
-            <div style={{
-              textAlign: 'center',
-              animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-              zIndex: 10
-            }}>
-              <div style={{ fontSize: '5rem', marginBottom: '10px' }}>🌸</div>
-              <h2 style={{
-                fontSize: '3.5rem',
-                background: 'linear-gradient(45deg, #33CCFF, #FF3366, #FFD700)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                margin: '0 0 30px 0',
-                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
-              }}>MAÎTRE ZEN</h2>
-
-              <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                <button
-                  onClick={initGame}
-                  style={{
-                    background: 'linear-gradient(135deg, #33FF77, #009933)',
-                    border: '4px solid white',
-                    color: 'white',
-                    padding: '15px 40px',
-                    borderRadius: '40px',
-                    fontSize: '1.5rem',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    boxShadow: '0 10px 20px rgba(51,255,119,0.4)',
-                    transition: 'transform 0.2s'
-                  }}
-                  onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                  onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  Rejouer 🔄
-                </button>
-                <button
-                  onClick={onBack}
-                  style={{
-                    background: 'rgba(0,0,0,0.1)',
-                    border: 'none',
-                    color: '#666',
-                    padding: '15px 30px',
-                    borderRadius: '40px',
-                    fontSize: '1.5rem',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
-                  onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
-                >
-                  Quitter
-                </button>
+            {/* Stage 2: Stats & Fireworks */}
+            {victoryPhase === 2 && (
+              <div style={{
+                animation: 'slideUpFade 0.6s ease-out',
+                background: 'rgba(255,255,255,0.9)',
+                padding: '40px',
+                borderRadius: '30px',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+                textAlign: 'center',
+                zIndex: 10
+              }}>
+                <h3 style={{ fontSize: '2.5rem', color: '#FF3366', margin: '0 0 20px 0' }}>Analyse du flux...</h3>
+                <div style={{ fontSize: '1.8rem', color: '#666', margin: '10px 0' }}>
+                  Temps : <strong style={{ color: '#FF9933' }}>{Math.floor((Date.now() - startTime) / 1000)}s</strong>
+                </div>
+                <div style={{ fontSize: '1.8rem', color: '#666', margin: '10px 0', animation: 'popIn 0.5s 0.5s backwards' }}>
+                  Transvasements : <strong style={{ color: '#33CCFF' }}>{moves}</strong>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-      <style dangerouslySetInnerHTML={{
-        __html: `
+            )}
+
+            {/* Stage 3: Final Master Screen */}
+            {victoryPhase === 3 && (
+              <div style={{
+                textAlign: 'center',
+                animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                zIndex: 10
+              }}>
+                <div style={{ fontSize: '5rem', marginBottom: '10px' }}>🌸</div>
+                <h2 style={{
+                  fontSize: '3.5rem',
+                  background: 'linear-gradient(45deg, #33CCFF, #FF3366, #FFD700)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  margin: '0 0 30px 0',
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
+                }}>MAÎTRE ZEN</h2>
+
+                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                  <button
+                    onClick={initGame}
+                    style={{
+                      background: 'linear-gradient(135deg, #33FF77, #009933)',
+                      border: '4px solid white',
+                      color: 'white',
+                      padding: '15px 40px',
+                      borderRadius: '40px',
+                      fontSize: '1.5rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      boxShadow: '0 10px 20px rgba(51,255,119,0.4)',
+                      transition: 'transform 0.2s'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                    onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    Rejouer 🔄
+                  </button>
+                  <button
+                    onClick={onBack}
+                    style={{
+                      background: 'rgba(0,0,0,0.1)',
+                      border: 'none',
+                      color: '#666',
+                      padding: '15px 30px',
+                      borderRadius: '40px',
+                      fontSize: '1.5rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
+                    onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
+                  >
+                    Quitter
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        <style dangerouslySetInnerHTML={{
+          __html: `
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
         @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
@@ -765,7 +810,8 @@ export default function WaterSort({ onBack, onScoreSave }) {
           100% { transform: scale(1); filter: brightness(1); }
         }
       `}} />
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -773,7 +819,7 @@ function LiquidTube({ tube, capacity, selected, hint, pouring, receiving, colors
   const isFull = tube.length === capacity;
   const isComplete = isFull && capacity >= 1 && tube.every(b => b === tube[0]);
 
-  const unitHeight = 40;
+  const unitHeight = 60;
   const tubeHeight = capacity * unitHeight + 20;
 
   // Render liquid as blocks
@@ -806,7 +852,7 @@ function LiquidTube({ tube, capacity, selected, hint, pouring, receiving, colors
       case 'wt1': return { border: `2px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 15px 15px', background: bgComplete };
       case 'wt2': return { border: `1px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 10px 10px', background: 'rgba(255,255,255,0.02)' };
       case 'wt3': return { border: `3px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 20px 20px', background: bgComplete };
-      case 'wt4': return { border: `2px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 5px 5px', background: bgComplete, width: '40px' };
+      case 'wt4': return { border: `2px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 5px 5px', background: bgComplete, width: '60px' };
       case 'wt5': return { border: `3px double ${baseColor}`, borderTop: 'none', borderRadius: '0 0 20px 20px', background: bgComplete };
       case 'wt6': return { border: `2px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 8px 8px', background: bgComplete, width: '60px' };
       case 'wt7': return { border: `2px solid ${baseColor}`, borderTop: 'none', borderRadius: '0 0 12px 12px', background: bgComplete };

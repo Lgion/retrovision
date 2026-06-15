@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
+import GameIntro from '../components/GameIntro';
 
 export default function Grid2048({ onBack, onScoreSave }) {
+  const [showIntro, setShowIntro] = useState(true);
   const [board, setBoard] = useState([]);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
@@ -298,8 +300,16 @@ export default function Grid2048({ onBack, onScoreSave }) {
   };
 
   return (
-    <div className="game-container neon-border" style={containerStyle}>
-      <div style={headerStyle}>
+    <>
+      {showIntro && <GameIntro 
+        gameName="NEON 2048" 
+        icon="🔢" 
+        colors={['#00f0ff', '#ff007f', '#ffd700']} 
+        particleType="blocks" 
+        onComplete={() => setShowIntro(false)} 
+      />}
+      <div className="game-container neon-border" style={containerStyle}>
+        <div style={headerStyle}>
         <button onClick={handleBackWithConfirm} className="retro-btn" style={backBtnStyle}>
           &lt; Retour Hub
         </button>
@@ -347,7 +357,7 @@ export default function Grid2048({ onBack, onScoreSave }) {
         })}
 
         {victory && !keepPlaying && (
-          <div style={overlayStyle}>
+          <div style={{ ...overlayStyle, animation: 'delayFadeIn 2s forwards' }}>
             <div style={victoryTitleStyle}>VICTOIRE !</div>
             <div style={descStyle}>Vous avez atteint la tuile 2048.</div>
             <div style={btnRowStyle}>
@@ -391,6 +401,7 @@ export default function Grid2048({ onBack, onScoreSave }) {
         Comment jouer: Utilisez les flèches du clavier ou glissez (swipe) avec votre doigt dans la grille pour fusionner les nombres identiques et former la tuile 2048.
       </div>
     </div>
+    </>
   );
 }
 

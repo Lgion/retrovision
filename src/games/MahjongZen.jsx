@@ -1,26 +1,174 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
+import { getGameConfig, updateGameConfig } from '../utils/config';
+import WinLossTransition from '../components/WinLossTransition';
+import GameIntro from '../components/GameIntro';
+
+// --- DIMENSIONS & THEME CONFIGURATION ---
+const MAHJONG_THEME = {
+  icon: {
+    size: 50,
+    fontSize: '40px'
+  },
+  board: {
+    cellWidth: 64,
+    cellHeight: 67,
+    tileWidth: 64,
+    tileHeight: 67
+  },
+  fonts: {
+    roundTitleSize: '19px',
+    statLabelSize: '11px',
+    statValueSize: '18px',
+    helperBtnSize: '13px',
+    hintBulbSize: '30px',
+    badgeSize: '13px',
+    descSize: '17px',
+    restartBtnSize: '16px',
+    footerHelpSize: '12px'
+  }
+};
 
 function MahjongIcon({ name }) {
-  const size = 50;
+  const size = MAHJONG_THEME.icon.size;
   switch (name) {
     case 'fa': // Green Dragon
       return (
-        <span style={{
-          fontSize: '40px',
-          color: '#14532d', // Deep Forest Green
-          fontWeight: '900',
-          fontFamily: '"Microsoft YaHei", "SimHei", "Noto Sans TC", sans-serif',
-          lineHeight: '1',
-          textShadow: '1px 1px 0px rgba(0,0,0,0.1)'
-        }}>
-          發
-        </span>
+        <svg width={size} height={size} viewBox="-2 -2 28 28" fill="none" style={{ display: 'block', overflow: 'visible' }}>
+          <defs>
+            {/* Rich Emerald Gradient for the body */}
+            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#022c22" />
+            </linearGradient>
+
+            {/* Shimmering Gold Gradient for the stroke */}
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef08a">
+                <animate attributeName="stop-color" values="#fef08a;#ca8a04;#fef08a" dur="2s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="50%" stopColor="#ca8a04" />
+              <stop offset="100%" stopColor="#fef08a">
+                <animate attributeName="stop-color" values="#fef08a;#eab308;#fef08a" dur="2s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+
+            {/* Glow Filter for magic effects */}
+            <filter id="dragonGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense Eye Glow */}
+            <filter id="eyeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="0.6" result="blur" />
+              <feComponentTransfer in="blur" result="glow">
+                <feFuncA type="linear" slope="2.5" />
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <style>
+            {`
+              @keyframes dragonIdle {
+                0%, 85%, 100% { transform: scale(1) translateY(0) rotate(0deg); filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5)); }
+                90% { transform: scale(1.12) translateY(-2px) rotate(4deg); filter: drop-shadow(0px 10px 15px rgba(250,204,21,0.5)); }
+                95% { transform: scale(1.12) translateY(-2px) rotate(-4deg); filter: drop-shadow(0px 10px 15px rgba(250,204,21,0.5)); }
+              }
+              @keyframes dashAnim {
+                from { stroke-dashoffset: 20; }
+                to { stroke-dashoffset: 0; }
+              }
+              @keyframes fierceEye {
+                0%, 100% { fill: #fef08a; }
+                50% { fill: #ffffff; }
+              }
+              @keyframes floatSparkle {
+                0%, 100% { opacity: 0.2; transform: translateY(0) scale(1); }
+                50% { opacity: 1; transform: translateY(-3px) scale(1.5); }
+              }
+              .dragon-expert {
+                animation: dragonIdle 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+                transform-origin: 12px 12px;
+              }
+              .magic-contour {
+                stroke-dasharray: 4 6;
+                animation: dashAnim 2s linear infinite;
+              }
+              .dragon-eye-expert {
+                animation: fierceEye 3.5s ease-in-out infinite;
+                filter: url(#eyeGlow);
+              }
+              .sparkle {
+                animation: floatSparkle 2s ease-in-out infinite;
+              }
+            `}
+          </style>
+
+          <g className="dragon-expert">
+            {/* Ambient Aura */}
+            <circle cx="12" cy="12" r="10" fill="url(#emeraldGrad)" opacity="0.2" filter="url(#dragonGlow)" />
+
+            {/* Main Silhouette with Emerald Gradient */}
+            <path id="dragon-path"
+              d="M12 1 L14.5 5.5 L20 4 L17.5 9.5 L22 13 L16.5 15.5 L18 21 L12 18.5 L6 21 L7.5 15.5 L2 13 L6.5 9.5 L4 4 L9.5 5.5 Z"
+              fill="url(#emeraldGrad)"
+              stroke="#022c22"
+              strokeWidth="0.5"
+              strokeLinejoin="round"
+            />
+
+            {/* Scintillating Golden Contour */}
+            <path
+              d="M12 1 L14.5 5.5 L20 4 L17.5 9.5 L22 13 L16.5 15.5 L18 21 L12 18.5 L6 21 L7.5 15.5 L2 13 L6.5 9.5 L4 4 L9.5 5.5 Z"
+              fill="none"
+              stroke="url(#goldGrad)"
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+              className="magic-contour"
+              filter="url(#dragonGlow)"
+            />
+
+            {/* Inner Emerald Scales */}
+            <path d="M12 4 L13 6 L12 7 L11 6 Z M12 8 L13.5 10 L12 11 L10.5 10 Z" fill="#86efac" opacity="0.6" />
+
+            {/* Angry Fiery Eyes */}
+            <path className="dragon-eye-expert" d="M7 11 L11 12.5 L7 14 Z" />
+            <path className="dragon-eye-expert" d="M17 11 L13 12.5 L17 14 Z" />
+
+            {/* Sharp Fangs */}
+            <path d="M10 18.5 L10.5 20 L11 18.5 Z" fill="#ffffff" />
+            <path d="M14 18.5 L13.5 20 L13 18.5 Z" fill="#ffffff" />
+
+            {/* Glowing Nostrils */}
+            <circle cx="10" cy="16.5" r="1.2" fill="#022c22" />
+            <circle cx="14" cy="16.5" r="1.2" fill="#022c22" />
+
+            {/* Glowing Traditional Character */}
+            <text x="12" y="7.5" fontSize="4.8" fontWeight="900" fill="url(#goldGrad)" filter="url(#dragonGlow)" textAnchor="middle" dominantBaseline="middle" fontFamily='"Microsoft YaHei", "SimHei", sans-serif'>
+              發
+            </text>
+
+            {/* Floating Magic Sparkles */}
+            <circle cx="4" cy="4" r="0.6" fill="#fef08a" className="sparkle" style={{ animationDelay: '0s' }} />
+            <circle cx="20" cy="20" r="0.8" fill="#4ade80" className="sparkle" style={{ animationDelay: '0.5s' }} />
+            <circle cx="21" cy="5" r="0.5" fill="#fef08a" className="sparkle" style={{ animationDelay: '1s' }} />
+            <circle cx="3" cy="18" r="0.7" fill="#4ade80" className="sparkle" style={{ animationDelay: '1.5s' }} />
+          </g>
+        </svg>
       );
     case 'xi': // West Wind
       return (
         <span style={{
-          fontSize: '40px',
+          fontSize: MAHJONG_THEME.icon.fontSize,
           color: '#1f2937', // Very Dark Grey/Black
           fontWeight: '900',
           fontFamily: '"Microsoft YaHei", "SimHei", "Noto Sans TC", sans-serif',
@@ -33,7 +181,7 @@ function MahjongIcon({ name }) {
     case 'six': // Six
       return (
         <span style={{
-          fontSize: '40px',
+          fontSize: MAHJONG_THEME.icon.fontSize,
           color: '#1e3a8a', // Dark Navy Blue
           fontWeight: '900',
           fontFamily: '"Microsoft YaHei", "SimHei", "Noto Sans TC", sans-serif',
@@ -179,8 +327,9 @@ function MahjongIcon({ name }) {
 }
 
 export default function MahjongZen({ onBack, onScoreSave }) {
-  const [mode, setMode] = useState(() => localStorage.getItem('retrovision_mahjong_mode') || 'slide');
-  const [boardSize, setBoardSize] = useState(() => localStorage.getItem('retrovision_mahjong_size') || 'large');
+  const [showIntro, setShowIntro] = useState(true);
+  const [mode, setMode] = useState(() => getGameConfig('mahjong', 'mode', 'slide'));
+  const [boardSize, setBoardSize] = useState(() => getGameConfig('mahjong', 'boardSize', 'large'));
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showArrows, setShowArrows] = useState(false); // Hidden by default to match reference
 
@@ -205,7 +354,23 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   const [vibratingSymbol, setVibratingSymbol] = useState(null);
   const [confetti, setConfetti] = useState([]);
   const [matchSelection, setMatchSelection] = useState(null);
+  const [windGust, setWindGust] = useState(false);
   const lastTouchTime = useRef(0);
+
+  useEffect(() => {
+    let windTimer;
+    const scheduleNextWind = () => {
+      const nextDelay = 15000 + Math.random() * 20000;
+      windTimer = setTimeout(() => {
+        setWindGust(true);
+        sound.playWind();
+        setTimeout(() => setWindGust(false), 6000);
+        scheduleNextWind();
+      }, nextDelay);
+    };
+    scheduleNextWind();
+    return () => clearTimeout(windTimer);
+  }, []);
 
   useEffect(() => {
     if (won) {
@@ -351,9 +516,9 @@ export default function MahjongZen({ onBack, onScoreSave }) {
 
     const pool = [];
     let symIdx = 0;
-    while (pool.length < totalTiles) {
+    while (pool.length < totalTiles / 2) {
       const sym = symbols[symIdx % symbols.length];
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 2; i++) {
         pool.push({ ...sym });
       }
       symIdx++;
@@ -364,17 +529,17 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
 
-    const occupied = new Set();
+    const remainingSet = new Set(slots.map(s => `${s.x},${s.y},${s.z}`));
     const boardTiles = [];
     let idCounter = 1;
 
-    const isOccupied = (x, y, z) => occupied.has(`${x},${y},${z}`);
+    const isSlotInRemaining = (x, y, z) => remainingSet.has(`${x},${y},${z}`);
 
     const isSlotFreeToFill = (slot) => {
       const { x, y, z } = slot;
-      if (isOccupied(x, y, z + 1)) return false;
-      const leftOccupied = isOccupied(x - 1, y, z);
-      const rightOccupied = isOccupied(x + 1, y, z);
+      if (isSlotInRemaining(x, y, z + 1)) return false;
+      const leftOccupied = isSlotInRemaining(x - 1, y, z);
+      const rightOccupied = isSlotInRemaining(x + 1, y, z);
       if (leftOccupied && rightOccupied) return false;
       return true;
     };
@@ -384,18 +549,19 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       const freeSlots = remainingSlots.filter(isSlotFreeToFill);
 
       if (freeSlots.length < 2) {
+        // Fallback if somehow stuck (should not happen with valid layouts)
         const s1 = remainingSlots.pop();
         const s2 = remainingSlots.pop() || s1;
         if (!s1) break;
 
         const sym = pool.pop();
         boardTiles.push({ id: idCounter++, x: s1.x, y: s1.y, z: s1.z, sym, active: true });
-        occupied.add(`${s1.x},${s1.y},${s1.z}`);
+        remainingSet.delete(`${s1.x},${s1.y},${s1.z}`);
 
         if (s2 !== s1) {
           const sym2 = pool.pop() || sym;
           boardTiles.push({ id: idCounter++, x: s2.x, y: s2.y, z: s2.z, sym: sym2, active: true });
-          occupied.add(`${s2.x},${s2.y},${s2.z}`);
+          remainingSet.delete(`${s2.x},${s2.y},${s2.z}`);
         }
         continue;
       }
@@ -416,10 +582,10 @@ export default function MahjongZen({ onBack, onScoreSave }) {
 
       const sym = pool.pop();
       boardTiles.push({ id: idCounter++, x: slot1.x, y: slot1.y, z: slot1.z, sym, active: true });
-      occupied.add(`${slot1.x},${slot1.y},${slot1.z}`);
+      remainingSet.delete(`${slot1.x},${slot1.y},${slot1.z}`);
 
       boardTiles.push({ id: idCounter++, x: slot2.x, y: slot2.y, z: slot2.z, sym, active: true });
-      occupied.add(`${slot2.x},${slot2.y},${slot2.z}`);
+      remainingSet.delete(`${slot2.x},${slot2.y},${slot2.z}`);
     }
 
     return boardTiles;
@@ -669,7 +835,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   const canPushTile = (tileId, dx, dy, nextCoords, currentTiles, allowedGroup) => {
     const tile = currentTiles.find(t => t.id === tileId);
     if (!tile) return false;
-    
+
     if (allowedGroup && !allowedGroup.has(tileId)) return false;
 
     const nextX = tile.x + dx;
@@ -747,16 +913,27 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   };
 
   const processDrag = (dx, dy) => {
-    const cellWidth = 52;
-    const cellHeight = 64;
+    const boardEl = document.querySelector('.board-scaler');
+    let scale = 1;
+    if (boardEl) {
+      const rect = boardEl.getBoundingClientRect();
+      if (rect.width && boardEl.offsetWidth) {
+        scale = rect.width / boardEl.offsetWidth;
+      }
+    }
+    const adjustedDx = dx / scale;
+    const adjustedDy = dy / scale;
+
+    const cellWidth = MAHJONG_THEME.board.cellWidth;
+    const cellHeight = MAHJONG_THEME.board.cellHeight;
 
     let gridDx = 0;
     let gridDy = 0;
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-      gridDx = Math.round(dx / cellWidth);
+    if (Math.abs(adjustedDx) > Math.abs(adjustedDy)) {
+      gridDx = Math.round(adjustedDx / cellWidth);
     } else {
-      gridDy = Math.round(dy / cellHeight);
+      gridDy = Math.round(adjustedDy / cellHeight);
     }
 
     if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
@@ -1066,9 +1243,8 @@ export default function MahjongZen({ onBack, onScoreSave }) {
       sound.playPowerup();
       if (onScoreSave) onScoreSave('Mahjong Slide', newScore + 100);
     } else if (mode === 'slide' && !hasAnyPossibleMovesSlider(nextTiles)) {
-      setWon(true);
-      sound.playPowerup();
-      if (onScoreSave) onScoreSave('Mahjong Slide', newScore + 100);
+      setLost(true);
+      sound.playClick();
     }
   };
 
@@ -1168,7 +1344,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
             }
           }
         }
-        
+
         if (possibleMatches.length === 1) {
           matchFound = { t1: draggedTile, t2: possibleMatches[0].t, path: possibleMatches[0].path };
         } else if (possibleMatches.length > 1) {
@@ -1254,9 +1430,8 @@ export default function MahjongZen({ onBack, onScoreSave }) {
         sound.playPowerup();
         if (onScoreSave) onScoreSave('Mahjong Slide', newScore + 100);
       } else if (mode === 'slide' && !hasAnyPossibleMovesSlider(nextTiles)) {
-        setWon(true);
-        sound.playPowerup();
-        if (onScoreSave) onScoreSave('Mahjong Slide', newScore + 100);
+        setLost(true);
+        sound.playClick();
       }
     } else {
       // Revert if no matches were made!
@@ -1341,7 +1516,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
             const t1 = list[i];
             const t2 = list[j];
             const directions = [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 }];
-            
+
             for (const dir of directions) {
               let currentLayout = active.map(t => ({ ...t }));
               const allowedGroup = new Set();
@@ -1354,7 +1529,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
               for (let step = 1; step <= 6; step++) {
                 const nextCoords = new Map();
                 currentLayout.forEach(t => nextCoords.set(t.id, { x: t.x, y: t.y }));
-                
+
                 if (canPushTile(t1.id, dir.dx, dir.dy, nextCoords, currentLayout, allowedGroup)) {
                   pushTile(t1.id, dir.dx, dir.dy, nextCoords, currentLayout);
                   currentLayout = currentLayout.map(t => {
@@ -1363,7 +1538,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
                   });
                   const newT1 = currentLayout.find(t => t.id === t1.id);
                   const newT2 = currentLayout.find(t => t.id === t2.id);
-                  
+
                   if (newT1 && newT2 && findConnectionPath(newT1, newT2, currentLayout)) {
                     // Valid simulation found!
                     setHintIds([t1.id, t2.id]);
@@ -1405,6 +1580,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
     setTiles(nextTiles);
     setHintIds([]);
     setSelectedTile(null);
+    setLost(false);
     sound.playPowerup();
   };
 
@@ -1412,16 +1588,16 @@ export default function MahjongZen({ onBack, onScoreSave }) {
     setMode(newMode);
     setBoardSize(newSize);
     setShowArrows(newShowArrows);
-    localStorage.setItem('retrovision_mahjong_mode', newMode);
-    localStorage.setItem('retrovision_mahjong_size', newSize);
+    updateGameConfig('mahjong', 'mode', newMode);
+    updateGameConfig('mahjong', 'boardSize', newSize);
     setIsSettingsOpen(false);
   };
 
   // Grid dimensions
-  const cellWidth = 57;
-  const cellHeight = 67;
-  const tileWidth = 57;
-  const tileHeight = 67;
+  const cellWidth = MAHJONG_THEME.board.cellWidth;
+  const cellHeight = MAHJONG_THEME.board.cellHeight;
+  const tileWidth = MAHJONG_THEME.board.tileWidth;
+  const tileHeight = MAHJONG_THEME.board.tileHeight;
 
   const maxBoardWidth = mode === 'zen' ? (boardSize === 'small' ? 220 : boardSize === 'medium' ? 280 : 348) : 6 * cellWidth;
   const maxBoardHeight = mode === 'zen' ? (boardSize === 'small' ? 260 : boardSize === 'medium' ? 340 : 420) : maxRows * cellHeight;
@@ -1434,35 +1610,76 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   }
 
   return (
-    <div
-      className="game-container"
-      style={containerStyle}
-      onMouseMove={handleTileMouseMove}
-      onTouchMove={handleTileTouchMove}
-      onMouseUp={handleDragRelease}
-      onTouchEnd={handleDragRelease}
-    >
-      {/* Jungle bottom silhouette overlay */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '110px',
-        pointerEvents: 'none',
-        zIndex: 1,
-        overflow: 'hidden',
-        borderBottomLeftRadius: '25px',
-        borderBottomRightRadius: '25px',
-      }}>
-        <svg viewBox="0 0 430 110" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-          <path d="M 0 110 Q 50 65 100 85 Q 150 55 200 80 Q 250 45 300 75 Q 350 55 400 85 T 430 75 L 430 110 Z" fill="#047857" opacity="0.25" />
-          <path d="M 0 110 Q 60 75 120 90 Q 180 65 240 85 Q 300 60 360 85 T 430 80 L 430 110 Z" fill="#065f46" opacity="0.5" />
-          <path d="M 0 110 Q 70 85 140 95 Q 210 75 280 90 Q 350 70 420 90 T 430 85 L 430 110 Z" fill="#022c22" opacity="0.9" />
-        </svg>
-      </div>
+    <>
+      {showIntro && <GameIntro
+        gameName="MAHJONG ZEN"
+        icon="🀄"
+        colors={['#10b981', '#3b82f6', '#f59e0b']}
+        particleType="tiles"
+        onComplete={() => setShowIntro(false)}
+      />}
+      <div
+        className="game-container"
+        style={containerStyle}
+        onMouseMove={handleTileMouseMove}
+        onTouchMove={handleTileTouchMove}
+        onMouseUp={handleDragRelease}
+        onTouchEnd={handleDragRelease}
+      >
+        {/* Jungle bottom silhouette overlay */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '110px',
+          pointerEvents: 'none',
+          zIndex: 1,
+          overflow: 'hidden',
+          borderBottomLeftRadius: '25px',
+          borderBottomRightRadius: '25px',
+        }}>
+          <svg viewBox="0 0 430 110" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+            <path d="M 0 110 Q 50 65 100 85 Q 150 55 200 80 Q 250 45 300 75 Q 350 55 400 85 T 430 75 L 430 110 Z" fill="#047857" opacity="0.25" />
+            <path d="M 0 110 Q 60 75 120 90 Q 180 65 240 85 Q 300 60 360 85 T 430 80 L 430 110 Z" fill="#065f46" opacity="0.5" />
+            <path d="M 0 110 Q 70 85 140 95 Q 210 75 280 90 Q 350 70 420 90 T 430 85 L 430 110 Z" fill="#022c22" opacity="0.9" />
+          </svg>
+        </div>
 
-      <style>{`
+        {/* Wind Breeze Animation */}
+        {windGust && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            pointerEvents: 'none',
+            zIndex: 50,
+            overflow: 'hidden'
+          }}>
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="wind-leaf" style={{
+                position: 'absolute',
+                left: `-20px`,
+                top: `${Math.random() * 80}%`,
+                width: `${10 + Math.random() * 10}px`,
+                height: `${10 + Math.random() * 10}px`,
+                background: '#4ade80',
+                borderRadius: '12px 0px 12px 0px',
+                animation: `blowLeaf ${2.5 + Math.random() * 2}s linear forwards`,
+                animationDelay: `${Math.random() * 1.5}s`,
+                opacity: 0,
+                boxShadow: 'inset 2px 2px 4px rgba(255,255,255,0.3)'
+              }} />
+            ))}
+          </div>
+        )}
+
+        <style>{`
+        @keyframes blowLeaf {
+          0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.8; }
+          90% { opacity: 0.8; }
+          100% { transform: translate(120vw, -100px) rotate(720deg); opacity: 0; }
+        }
         @keyframes confetti-fall {
           0% {
             transform: translateY(0vh) rotate(0deg);
@@ -1546,701 +1763,686 @@ export default function MahjongZen({ onBack, onScoreSave }) {
           --container-padding: 24px;
           --board-padding: 16px;
         }
-        @media (max-width: 440px) {
-          :root {
-            --container-padding: 12px;
-            --board-padding: 8px;
-          }
-        }
-        @media (max-width: 395px) {
-          :root {
-            --container-padding: 8px;
-            --board-padding: 4px;
-          }
-          .board-scaler {
-            transform: scale(0.9) !important;
-            transform-origin: center center !important;
-          }
-        }
-        @media (max-width: 360px) {
-          .board-scaler {
-            transform: scale(0.8) !important;
-            transform-origin: center center !important;
-          }
-        }
       `}</style>
-      {/* Header styled exactly to match the reference */}
-      <div style={headerWrapperStyle}>
-        <button onClick={handleBackWithConfirm} style={blueSquareBtnStyle}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
+        {/* Header styled exactly to match the reference */}
+        <div style={headerWrapperStyle}>
+          <button onClick={handleBackWithConfirm} style={blueSquareBtnStyle}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
 
-        <div style={referenceStatsStyle}>
-          <div style={statItemStyle}>
-            <span style={statLabelStyle}>Meilleur du mois</span>
-            <span style={statValueStyle}>{highScore}</span>
+          <div style={referenceStatsStyle}>
+            <div style={statItemStyle}>
+              <span style={statLabelStyle}>Meilleur du mois</span>
+              <span style={statValueStyle}>{highScore}</span>
+            </div>
+            <div style={statItemStyle}>
+              <span style={statLabelStyle}>Score</span>
+              <span style={statValueStyle}>{score}</span>
+            </div>
           </div>
-          <div style={statItemStyle}>
-            <span style={statLabelStyle}>Score</span>
-            <span style={statValueStyle}>{score}</span>
-          </div>
+
+          <button onClick={() => setIsSettingsOpen(true)} style={blueSquareBtnStyle}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <div style={redDotStyle} />
+          </button>
         </div>
 
-        <button onClick={() => setIsSettingsOpen(true)} style={blueSquareBtnStyle}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-          <div style={redDotStyle} />
-        </button>
-      </div>
+        {/* Round / Mode indicator */}
+        <div style={roundTitleStyle}>
+          {mode === 'zen' ? 'Zen Solitaire Stacked' : `Normal Round ${boardSize === 'small' ? '3' : boardSize === 'medium' ? '4' : '5'}`}
+        </div>
 
-      {/* Round / Mode indicator */}
-      <div style={roundTitleStyle}>
-        {mode === 'zen' ? 'Zen Solitaire Stacked' : `Normal Round ${boardSize === 'small' ? '3' : boardSize === 'medium' ? '4' : '5'}`}
-      </div>
+        {/* Restart helper */}
+        <div style={helpersContainerStyle}>
+          <button onClick={initGame} className="retro-btn" style={helperBtnStyle}>
+            🔄 Recommencer
+          </button>
+        </div>
 
-      {/* Restart helper */}
-      <div style={helpersContainerStyle}>
-        <button onClick={initGame} className="retro-btn" style={helperBtnStyle}>
-          🔄 Recommencer
-        </button>
-      </div>
+        {/* Playfield wrapper styled to match screenshots */}
+        <div style={{
+          ...boardWrapperStyle,
+          background: mode === 'slide' ? 'rgba(8, 60, 84, 0.2)' : '#f8fafc',
+          // backdropFilter: mode === 'slide' ? 'blur(8px)' : 'none',
+          border: mode === 'slide' ? '6px solid #38bdf8' : '2px solid var(--border-color)',
+          boxShadow: mode === 'slide' ? 'inset 0 4px 12px rgba(0,0,0,0.4), 0 10px 25px rgba(0,0,0,0.15)' : 'inset 0 2px 8px rgba(0,0,0,0.02)',
+          position: 'relative',
+          zIndex: 2,
+        }}>
+          <div className="board-scaler" style={{ ...boardStyle, width: "100%"/*`${maxBoardWidth}px`*/, height: `${maxBoardHeight}px` }}>
 
-      {/* Playfield wrapper styled to match screenshots */}
-      <div style={{
-        ...boardWrapperStyle,
-        background: mode === 'slide' ? 'rgba(8, 60, 84, 0.2)' : '#f8fafc',
-        backdropFilter: mode === 'slide' ? 'blur(8px)' : 'none',
-        border: mode === 'slide' ? '6px solid #38bdf8' : '2px solid var(--border-color)',
-        boxShadow: mode === 'slide' ? 'inset 0 4px 12px rgba(0,0,0,0.4), 0 10px 25px rgba(0,0,0,0.15)' : 'inset 0 2px 8px rgba(0,0,0,0.02)',
-        position: 'relative',
-        zIndex: 2,
-      }}>
-        <div className="board-scaler" style={{ ...boardStyle, width: "100%"/*`${maxBoardWidth}px`*/, height: `${maxBoardHeight}px` }}>
-
-          {/* Faint grid guide lines in slider mode */}
-          {mode === 'slide' && gridSlots.map(slot => (
-            <div
-              key={`bg-${slot.x}-${slot.y}`}
-              style={{
-                position: 'absolute',
-                left: `${(slot.x - 1) * cellWidth}px`,
-                top: `${(slot.y - 1) * cellHeight}px`,
-                width: `${tileWidth}px`,
-                height: `${tileHeight}px`,
-                borderRadius: '8px',
-                border: 'none',
-                background: 'rgba(255, 255, 255, 0.15)',
-                pointerEvents: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-          ))}
-
-          {/* Glowing laser crosshair guides for active drag */}
-          {mode === 'slide' && dragStart && dragHasMoved && (() => {
-            const draggedTile = tiles.find(t => t.id === dragStart.tileId);
-            if (!draggedTile) return null;
-
-            const crosshairX = (draggedTile.x - 0.5) * cellWidth;
-            const crosshairY = (draggedTile.y - 0.5) * cellHeight;
-            const boardW = 6 * cellWidth;
-            const boardH = maxRows * cellHeight;
-
-            return (
-              <>
-                {/* Horizontal crosshair laser */}
-                <div style={{
-                  position: 'absolute',
-                  top: `${crosshairY - 2}px`,
-                  left: 0,
-                  width: `${boardW}px`,
-                  height: '4px',
-                  background: 'linear-gradient(90deg, rgba(0, 240, 255, 0.1), #00f0ff, rgba(0, 240, 255, 0.1))',
-                  boxShadow: '0 0 10px #00f0ff, 0 0 20px #00f0ff',
-                  zIndex: 90,
-                  pointerEvents: 'none',
-                  borderRadius: '2px'
-                }} />
-                {/* Vertical crosshair laser */}
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: `${crosshairX - 2}px`,
-                  width: '4px',
-                  height: `${boardH}px`,
-                  background: 'linear-gradient(180deg, rgba(0, 240, 255, 0.1), #00f0ff, rgba(0, 240, 255, 0.1))',
-                  boxShadow: '0 0 10px #00f0ff, 0 0 20px #00f0ff',
-                  zIndex: 90,
-                  pointerEvents: 'none',
-                  borderRadius: '2px'
-                }} />
-              </>
-            );
-          })()}
-
-          {/* Golden bands for hint */}
-          {mode === 'slide' && hintIds.length === 2 && (() => {
-            const t1 = tiles.find(t => t.id === hintIds[0]);
-            const t2 = tiles.find(t => t.id === hintIds[1]);
-            if (!t1 || !t2) return null;
-
-            const boardW = 6 * cellWidth;
-            const boardH = maxRows * cellHeight;
-
-            const renderBand = (isHoriz, pos, key) => {
-              const style = isHoriz ? {
-                position: 'absolute',
-                top: `${(pos - 1) * cellHeight}px`,
-                left: 0,
-                width: `${boardW}px`,
-                height: `${cellHeight}px`,
-                background: 'linear-gradient(90deg, rgba(250, 204, 21, 0.0), rgba(250, 204, 21, 0.3), rgba(250, 204, 21, 0.0))',
-                zIndex: 85,
-                pointerEvents: 'none',
-              } : {
-                position: 'absolute',
-                top: 0,
-                left: `${(pos - 1) * cellWidth}px`,
-                width: `${cellWidth}px`,
-                height: `${boardH}px`,
-                background: 'linear-gradient(180deg, rgba(250, 204, 21, 0.0), rgba(250, 204, 21, 0.3), rgba(250, 204, 21, 0.0))',
-                zIndex: 85,
-                pointerEvents: 'none',
-              };
-              return <div key={key} style={style} />;
-            };
-
-            const bands = [];
-            if (hintMove) {
-              if (hintMove.dx !== 0) {
-                bands.push(renderBand(true, t1.y, 'h-t1'));
-                bands.push(renderBand(false, t2.x, 'v-t2'));
-              } else {
-                bands.push(renderBand(false, t1.x, 'v-t1'));
-                bands.push(renderBand(true, t2.y, 'h-t2'));
-              }
-            } else {
-              if (t1.x === t2.x) {
-                bands.push(renderBand(false, t1.x, 'v-shared'));
-              } else if (t1.y === t2.y) {
-                bands.push(renderBand(true, t1.y, 'h-shared'));
-              } else {
-                bands.push(renderBand(true, t1.y, 'h-t1'));
-                bands.push(renderBand(false, t1.x, 'v-t1'));
-                bands.push(renderBand(true, t2.y, 'h-t2'));
-                bands.push(renderBand(false, t2.x, 'v-t2'));
-              }
-            }
-
-            return <>{bands}</>;
-          })()}
-
-          {/* Render glowing matching lines */}
-          {matchingLines.length > 0 && (
-            <svg
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                zIndex: 95,
-                pointerEvents: 'none',
-              }}
-            >
-              {matchingLines.map((path, idx) => {
-                const pointsStr = path.map(p => {
-                  const px = (p.x - 1) * cellWidth + cellWidth / 2;
-                  const py = (p.y - 1) * cellHeight + cellHeight / 2;
-                  return `${px},${py}`;
-                }).join(' ');
-
-                return (
-                  <polyline
-                    key={`path-${idx}`}
-                    points={pointsStr}
-                    fill="none"
-                    stroke="#22d3ee"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{
-                      filter: 'drop-shadow(0 0 3px #06b6d4) drop-shadow(0 0 8px #22d3ee)',
-                    }}
-                  />
-                );
-              })}
-            </svg>
-          )}
-
-          {/* Render particle explosion & floating score effects */}
-          {matchEffects.map(effect => {
-            if (effect.type === 'particles') {
-              return (
-                <div
-                  key={effect.id}
-                  style={{
-                    position: 'absolute',
-                    left: `${(effect.x - 1) * cellWidth}px`,
-                    top: `${(effect.y - 1) * cellHeight}px`,
-                    width: `${tileWidth}px`,
-                    height: `${tileHeight}px`,
-                    pointerEvents: 'none',
-                    zIndex: 100,
-                  }}
-                >
-                  {/* Central glowing ring */}
-                  <div style={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    width: '30px',
-                    height: '30px',
-                    background: 'radial-gradient(circle, rgba(34, 197, 94, 0.8) 0%, rgba(34, 197, 94, 0) 70%)',
-                    transform: 'translate(-50%, -50%)',
-                    borderRadius: '50%',
-                    animation: 'sparkle-glow 0.6s forwards ease-out',
-                  }} />
-                  {/* Floating leaves */}
-                  {Array.from({ length: 8 }).map((_, i) => {
-                    const angle = (i * 360) / 8;
-                    const rad = (angle * Math.PI) / 180;
-                    const tx = Math.cos(rad) * 45;
-                    const ty = Math.sin(rad) * 45;
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          position: 'absolute',
-                          left: '50%',
-                          top: '50%',
-                          transform: 'translate(-50%, -50%)',
-                          animation: 'leaf-spin-out 0.6s forwards ease-out',
-                          animationDelay: `${i * 0.02}s`,
-                          '--tx': `${tx}px`,
-                          '--ty': `${ty}px`,
-                          '--rot': `${angle + 180}deg`,
-                        }}
-                      >
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="#22c55e">
-                          <path d="M12 2C8 6 8 10 12 12C16 10 16 6 12 2Z" />
-                        </svg>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            } else if (effect.type === 'text') {
-              return (
-                <div
-                  key={effect.id}
-                  style={{
-                    position: 'absolute',
-                    left: `${(effect.x - 1) * cellWidth + cellWidth / 2}px`,
-                    top: `${(effect.y - 1) * cellHeight + cellHeight / 2}px`,
-                    transform: 'translate(-50%, -50%)',
-                    color: '#facc15', // Gold color
-                    fontWeight: '900',
-                    fontSize: '26px',
-                    fontFamily: 'var(--font-main), sans-serif',
-                    textShadow: '0 0 6px #eab308, 0 1px 3px rgba(0,0,0,0.6)',
-                    animation: 'float-up-fade 0.8s forwards ease-out',
-                    pointerEvents: 'none',
-                    zIndex: 101,
-                  }}
-                >
-                  {effect.text}
-                </div>
-              );
-            }
-            return null;
-          })}
-
-          {/* Slider circular shifting arrows (optional, hidden by default) */}
-          {mode === 'slide' && showArrows && (
-            <>
-              {Array.from({ length: maxRows }).map((_, rIdx) => {
-                const y = rIdx + 1;
-                return (
-                  <React.Fragment key={`row-ctrl-${y}`}>
-                    <button
-                      onClick={() => shiftRow(y, -1)}
-                      style={{ ...rowArrowStyle, left: '-30px', top: `${(y - 1) * cellHeight + 16}px` }}
-                    >
-                      ◀
-                    </button>
-                    <button
-                      onClick={() => shiftRow(y, 1)}
-                      style={{ ...rowArrowStyle, right: '-30px', top: `${(y - 1) * cellHeight + 16}px` }}
-                    >
-                      ▶
-                    </button>
-                  </React.Fragment>
-                );
-              })}
-
-              {Array.from({ length: 6 }).map((_, cIdx) => {
-                const x = cIdx + 1;
-                return (
-                  <React.Fragment key={`col-ctrl-${x}`}>
-                    <button
-                      onClick={() => shiftColumn(x, -1)}
-                      style={{ ...colArrowStyle, top: '-30px', left: `${(x - 1) * cellWidth + 10}px` }}
-                    >
-                      ▲
-                    </button>
-                    <button
-                      onClick={() => shiftColumn(x, 1)}
-                      style={{ ...colArrowStyle, bottom: '-30px', left: `${(x - 1) * cellWidth + 10}px` }}
-                    >
-                      ▼
-                    </button>
-                  </React.Fragment>
-                );
-              })}
-            </>
-          )}
-
-          {/* Render Active Tiles */}
-          {tiles.map((tile) => {
-            if (!tile.active) return null;
-
-            const isSelected = selectedTile?.id === tile.id;
-            const isHint = hintIds.includes(tile.id);
-            const isFree = mode === 'zen' ? isTileFree(tile) : true;
-
-            // Determine if this tile is grayed out/unclickable due to matchSelection
-            let isGreyedOut = false;
-            let isMatchOption = false;
-            if (matchSelection !== null) {
-              const isSource = tile.id === matchSelection.sourceTile.id;
-              const isOption = matchSelection.options.some(opt => opt.t.id === tile.id);
-              if (isOption) {
-                isMatchOption = true;
-              }
-              if (!isSource && !isOption) {
-                isGreyedOut = true;
-              }
-            }
-
-            let left = 0;
-            let top = 0;
-            let zIndex = 80;
-
-            if (mode === 'zen') {
-              left = (tile.x - 1) * 30 + tile.z * 5;
-              top = (tile.y - 1) * 44 - tile.z * 7;
-              zIndex = 80 + tile.z + (isSelected ? 50 : 0);
-            } else {
-              left = (tile.x - 1) * cellWidth;
-              top = (tile.y - 1) * cellHeight;
-              zIndex = 80 + (isSelected ? 50 : 0) + (isMatchOption ? 40 : 0);
-            }
-
-            return (
+            {/* Faint grid guide lines in slider mode */}
+            {mode === 'slide' && gridSlots.map(slot => (
               <div
-                key={tile.id}
-                onClick={() => mode === 'zen' ? handleZenTileClick(tile) : null}
-                onMouseDown={(e) => handleTileMouseDown(e, tile)}
-                onTouchStart={(e) => handleTileTouchStart(e, tile)}
-                className={`mahjong-tile-3d ${isSelected ? 'selected' : ''} ${isHint ? 'hinted' : ''} ${!isFree && mode === 'zen' ? 'blocked' : ''} ${tile.sym.name === vibratingSymbol ? 'tile-vibrating' : ''} ${hintMove && hintMove.tileId === tile.id ? 'hint-simulating' : ''}`}
+                key={`bg-${slot.x}-${slot.y}`}
                 style={{
                   position: 'absolute',
-                  left: `${left}px`,
-                  top: `${top}px`,
-                  width: `${mode === 'zen' ? 44 : tileWidth}px`,
-                  height: `${mode === 'zen' ? 56 : tileHeight}px`,
-                  zIndex,
-                  transform: isSelected ? 'translate3d(0, -8px, 10px)' : 'none',
-                  cursor: isGreyedOut ? 'not-allowed' : (isFree ? 'pointer' : 'not-allowed'),
-                  opacity: isGreyedOut ? 0.25 : (tile.matching ? 0.7 : isFree ? 1 : 0.6),
-                  filter: isGreyedOut ? 'grayscale(100%) brightness(0.6)' : (isFree ? 'none' : 'brightness(0.8) grayscale(20%)'),
-                  pointerEvents: isGreyedOut ? 'none' : 'auto',
-                  '--hint-dx': hintMove && hintMove.tileId === tile.id ? hintMove.dx * cellWidth : 0,
-                  '--hint-dy': hintMove && hintMove.tileId === tile.id ? hintMove.dy * cellHeight : 0,
-                  background: '#ffffff',
+                  left: `${(slot.x - 1) * cellWidth}px`,
+                  top: `${(slot.y - 1) * cellHeight}px`,
+                  width: `${tileWidth}px`,
+                  height: `${tileHeight}px`,
                   borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  border: '1px dotted black',
+                  background: 'rgba(255, 255, 255, 0.01)',
+                  pointerEvents: 'none',
                   boxSizing: 'border-box',
-                  borderBottom: tile.sym.name === vibratingSymbol
-                    ? '5px solid #ef4444'
-                    : '5px solid #16a34a', // Thicker green bottom layer
-                  borderRight: tile.sym.name === vibratingSymbol
-                    ? '3px solid #dc2626'
-                    : '3px solid #15803d',
-                  boxShadow: tile.sym.name === vibratingSymbol
-                    ? '0 0 20px #ef4444'
-                    : isSelected
-                      ? '0 0 20px #00f0ff, inset 0 0 10px #00f0ff'
-                      : isMatchOption
-                        ? '0 0 20px #38bdf8, inset 0 0 10px #38bdf8'
-                        : isHint
-                          ? '0 0 20px #facc15, inset 0 0 10px #facc15'
-                          : `0 4px 6px rgba(0, 0, 0, 0.15), ${tile.z * 2}px ${tile.z * 2 + 2}px 6px rgba(0,0,0,0.18)`,
-                  outline: isSelected
-                    ? '3px solid #00f0ff'
-                    : isMatchOption
-                      ? '3px solid #38bdf8'
-                      : isHint
-                        ? '3px dashed #facc15'
-                        : 'none',
-                  outlineOffset: '2px',
-                  transition: dragStart ? 'none' : 'left 0.2s cubic-bezier(0.25, 1, 0.5, 1), top 0.2s cubic-bezier(0.25, 1, 0.5, 1), transform 0.15s, opacity 0.2s',
-                  userSelect: 'none',
-                  touchAction: 'none',
                 }}
-              >
-                <MahjongIcon name={tile.sym.name} />
+              />
+            ))}
 
-                {isMatchOption && (
+            {/* Glowing laser crosshair guides for active drag */}
+            {mode === 'slide' && dragStart && dragHasMoved && (() => {
+              const draggedTile = tiles.find(t => t.id === dragStart.tileId);
+              if (!draggedTile) return null;
+
+              const crosshairX = (draggedTile.x - 0.5) * cellWidth;
+              const crosshairY = (draggedTile.y - 0.5) * cellHeight;
+              const boardW = 6 * cellWidth;
+              const boardH = maxRows * cellHeight;
+
+              return (
+                <>
+                  {/* Horizontal crosshair laser */}
                   <div style={{
                     position: 'absolute',
-                    top: '-15px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: '#ef4444',
-                    color: '#ffffff',
-                    fontSize: '9px',
-                    fontWeight: '900',
-                    padding: '1px 5px',
-                    borderRadius: '6px',
-                    border: '1.5px solid #ffffff',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
-                    whiteSpace: 'nowrap',
-                    zIndex: 100,
-                    animation: 'victory-bounce 0.6s infinite alternate'
-                  }}>
-                    CHOISIR
+                    top: `${crosshairY - 2}px`,
+                    left: 0,
+                    width: `${boardW}px`,
+                    height: '4px',
+                    background: 'linear-gradient(90deg, rgba(0, 240, 255, 0.1), #00f0ff, rgba(0, 240, 255, 0.1))',
+                    boxShadow: '0 0 10px #00f0ff, 0 0 20px #00f0ff',
+                    zIndex: 90,
+                    pointerEvents: 'none',
+                    borderRadius: '2px'
+                  }} />
+                  {/* Vertical crosshair laser */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: `${crosshairX - 2}px`,
+                    width: '4px',
+                    height: `${boardH}px`,
+                    background: 'linear-gradient(180deg, rgba(0, 240, 255, 0.1), #00f0ff, rgba(0, 240, 255, 0.1))',
+                    boxShadow: '0 0 10px #00f0ff, 0 0 20px #00f0ff',
+                    zIndex: 90,
+                    pointerEvents: 'none',
+                    borderRadius: '2px'
+                  }} />
+                </>
+              );
+            })()}
+
+            {/* Golden bands for hint */}
+            {mode === 'slide' && hintIds.length === 2 && (() => {
+              const t1 = tiles.find(t => t.id === hintIds[0]);
+              const t2 = tiles.find(t => t.id === hintIds[1]);
+              if (!t1 || !t2) return null;
+
+              const boardW = 6 * cellWidth;
+              const boardH = maxRows * cellHeight;
+
+              const renderBand = (isHoriz, pos, key) => {
+                const style = isHoriz ? {
+                  position: 'absolute',
+                  top: `${(pos - 1) * cellHeight}px`,
+                  left: 0,
+                  width: `${boardW}px`,
+                  height: `${cellHeight}px`,
+                  background: 'linear-gradient(90deg, rgba(250, 204, 21, 0.0), rgba(250, 204, 21, 0.3), rgba(250, 204, 21, 0.0))',
+                  zIndex: 85,
+                  pointerEvents: 'none',
+                } : {
+                  position: 'absolute',
+                  top: 0,
+                  left: `${(pos - 1) * cellWidth}px`,
+                  width: `${cellWidth}px`,
+                  height: `${boardH}px`,
+                  background: 'linear-gradient(180deg, rgba(250, 204, 21, 0.0), rgba(250, 204, 21, 0.3), rgba(250, 204, 21, 0.0))',
+                  zIndex: 85,
+                  pointerEvents: 'none',
+                };
+                return <div key={key} style={style} />;
+              };
+
+              const bands = [];
+              if (hintMove) {
+                if (hintMove.dx !== 0) {
+                  bands.push(renderBand(true, t1.y, 'h-t1'));
+                  bands.push(renderBand(false, t2.x, 'v-t2'));
+                } else {
+                  bands.push(renderBand(false, t1.x, 'v-t1'));
+                  bands.push(renderBand(true, t2.y, 'h-t2'));
+                }
+              } else {
+                if (t1.x === t2.x) {
+                  bands.push(renderBand(false, t1.x, 'v-shared'));
+                } else if (t1.y === t2.y) {
+                  bands.push(renderBand(true, t1.y, 'h-shared'));
+                } else {
+                  bands.push(renderBand(true, t1.y, 'h-t1'));
+                  bands.push(renderBand(false, t1.x, 'v-t1'));
+                  bands.push(renderBand(true, t2.y, 'h-t2'));
+                  bands.push(renderBand(false, t2.x, 'v-t2'));
+                }
+              }
+
+              return <>{bands}</>;
+            })()}
+
+            {/* Render glowing matching lines */}
+            {matchingLines.length > 0 && (
+              <svg
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  zIndex: 95,
+                  pointerEvents: 'none',
+                }}
+              >
+                {matchingLines.map((path, idx) => {
+                  const pointsStr = path.map(p => {
+                    const px = (p.x - 1) * cellWidth + cellWidth / 2;
+                    const py = (p.y - 1) * cellHeight + cellHeight / 2;
+                    return `${px},${py}`;
+                  }).join(' ');
+
+                  return (
+                    <polyline
+                      key={`path-${idx}`}
+                      points={pointsStr}
+                      fill="none"
+                      stroke="#22d3ee"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{
+                        filter: 'drop-shadow(0 0 3px #06b6d4) drop-shadow(0 0 8px #22d3ee)',
+                      }}
+                    />
+                  );
+                })}
+              </svg>
+            )}
+
+            {/* Render particle explosion & floating score effects */}
+            {matchEffects.map(effect => {
+              if (effect.type === 'particles') {
+                return (
+                  <div
+                    key={effect.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${(effect.x - 1) * cellWidth}px`,
+                      top: `${(effect.y - 1) * cellHeight}px`,
+                      width: `${tileWidth}px`,
+                      height: `${tileHeight}px`,
+                      pointerEvents: 'none',
+                      zIndex: 100,
+                    }}
+                  >
+                    {/* Central glowing ring */}
+                    <div style={{
+                      position: 'absolute',
+                      left: '50%',
+                      top: '50%',
+                      width: '30px',
+                      height: '30px',
+                      background: 'radial-gradient(circle, rgba(34, 197, 94, 0.8) 0%, rgba(34, 197, 94, 0) 70%)',
+                      transform: 'translate(-50%, -50%)',
+                      borderRadius: '50%',
+                      animation: 'sparkle-glow 0.6s forwards ease-out',
+                    }} />
+                    {/* Floating leaves */}
+                    {Array.from({ length: 8 }).map((_, i) => {
+                      const angle = (i * 360) / 8;
+                      const rad = (angle * Math.PI) / 180;
+                      const tx = Math.cos(rad) * 45;
+                      const ty = Math.sin(rad) * 45;
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            animation: 'leaf-spin-out 0.6s forwards ease-out',
+                            animationDelay: `${i * 0.02}s`,
+                            '--tx': `${tx}px`,
+                            '--ty': `${ty}px`,
+                            '--rot': `${angle + 180}deg`,
+                          }}
+                        >
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="#22c55e">
+                            <path d="M12 2C8 6 8 10 12 12C16 10 16 6 12 2Z" />
+                          </svg>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              } else if (effect.type === 'text') {
+                return (
+                  <div
+                    key={effect.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${(effect.x - 1) * cellWidth + cellWidth / 2}px`,
+                      top: `${(effect.y - 1) * cellHeight + cellHeight / 2}px`,
+                      transform: 'translate(-50%, -50%)',
+                      color: '#facc15', // Gold color
+                      fontWeight: '900',
+                      fontSize: '26px',
+                      fontFamily: 'var(--font-main), sans-serif',
+                      textShadow: '0 0 6px #eab308, 0 1px 3px rgba(0,0,0,0.6)',
+                      animation: 'float-up-fade 0.8s forwards ease-out',
+                      pointerEvents: 'none',
+                      zIndex: 101,
+                    }}
+                  >
+                    {effect.text}
+                  </div>
+                );
+              }
+              return null;
+            })}
 
-        </div>
-      </div>
+            {/* Slider circular shifting arrows (optional, hidden by default) */}
+            {mode === 'slide' && showArrows && (
+              <>
+                {Array.from({ length: maxRows }).map((_, rIdx) => {
+                  const y = rIdx + 1;
+                  return (
+                    <React.Fragment key={`row-ctrl-${y}`}>
+                      <button
+                        onClick={() => shiftRow(y, -1)}
+                        style={{ ...rowArrowStyle, left: '-30px', top: `${(y - 1) * cellHeight + 16}px` }}
+                      >
+                        ◀
+                      </button>
+                      <button
+                        onClick={() => shiftRow(y, 1)}
+                        style={{ ...rowArrowStyle, right: '-30px', top: `${(y - 1) * cellHeight + 16}px` }}
+                      >
+                        ▶
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
 
-      {/* Bottom Center Floating Lightbulb Hint Button */}
-      <div style={bottomControlsStyle}>
-        <button
-          onClick={getHint}
-          style={{
-            ...hintCircleBtnStyle,
-            opacity: hintsLeft > 0 ? 1 : 0.5,
-            cursor: hintsLeft > 0 ? 'pointer' : 'not-allowed'
-          }}
-          disabled={hintsLeft <= 0}
-          className="hints_btn"
-        >
-          <span style={{ fontSize: '30px' }}>💡</span>
-          <div style={badgeStyle}>{hintsLeft}</div>
-        </button>
-      </div>
+                {Array.from({ length: 6 }).map((_, cIdx) => {
+                  const x = cIdx + 1;
+                  return (
+                    <React.Fragment key={`col-ctrl-${x}`}>
+                      <button
+                        onClick={() => shiftColumn(x, -1)}
+                        style={{ ...colArrowStyle, top: '-30px', left: `${(x - 1) * cellWidth + 10}px` }}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => shiftColumn(x, 1)}
+                        style={{ ...colArrowStyle, bottom: '-30px', left: `${(x - 1) * cellWidth + 10}px` }}
+                      >
+                        ▼
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+              </>
+            )}
 
-      {won && (
-        <div style={{
-          ...overlayStyle,
-          background: 'rgba(8, 60, 84, 0.95)',
-          backdropFilter: 'blur(10px)',
-          border: '4px solid #38bdf8',
-          boxShadow: '0 0 40px rgba(56, 189, 248, 0.6), inset 0 0 20px rgba(56, 189, 248, 0.3)',
-          color: '#ffffff',
-          borderRadius: '24px',
-          overflow: 'hidden'
-        }}>
-          {/* Confetti pieces falling */}
-          {confetti.map(c => (
-            <div
-              key={c.id}
-              style={{
-                position: 'absolute',
-                left: `${c.x}%`,
-                top: `${c.y}px`,
-                width: `${c.size}px`,
-                height: `${c.size * 1.5}px`,
-                backgroundColor: c.color,
-                borderRadius: '2px',
-                zIndex: 999,
-                animation: `confetti-fall ${c.duration}s linear ${c.delay}s infinite`,
-                transform: `rotate(${c.rotation}deg)`,
-                pointerEvents: 'none',
-              }}
-            />
-          ))}
+            {/* Render Active Tiles */}
+            {tiles.map((tile) => {
+              if (!tile.active) return null;
 
-          {/* Animated Trophy / Crown Icon */}
-          <div className="victory-crown" style={{ fontSize: '70px', marginBottom: '16px', animation: 'victory-bounce 1s infinite alternate', zIndex: 10 }}>
-            🏆
+              const isSelected = selectedTile?.id === tile.id;
+              const isHint = hintIds.includes(tile.id);
+              const isFree = mode === 'zen' ? isTileFree(tile) : true;
+
+              // Determine if this tile is grayed out/unclickable due to matchSelection
+              let isGreyedOut = false;
+              let isMatchOption = false;
+              if (matchSelection !== null) {
+                const isSource = tile.id === matchSelection.sourceTile.id;
+                const isOption = matchSelection.options.some(opt => opt.t.id === tile.id);
+                if (isOption) {
+                  isMatchOption = true;
+                }
+                if (!isSource && !isOption) {
+                  isGreyedOut = true;
+                }
+              }
+
+              let left = 0;
+              let top = 0;
+              let zIndex = 80;
+
+              if (mode === 'zen') {
+                left = (tile.x - 1) * 30 + tile.z * 5;
+                top = (tile.y - 1) * 44 - tile.z * 7;
+                zIndex = 80 + tile.z + (isSelected ? 50 : 0);
+              } else {
+                left = (tile.x - 1) * cellWidth;
+                top = (tile.y - 1) * cellHeight;
+                zIndex = 80 + (isSelected ? 50 : 0) + (isMatchOption ? 40 : 0);
+              }
+
+              return (
+                <div
+                  key={tile.id}
+                  onClick={() => mode === 'zen' ? handleZenTileClick(tile) : null}
+                  onMouseDown={(e) => handleTileMouseDown(e, tile)}
+                  onTouchStart={(e) => handleTileTouchStart(e, tile)}
+                  className={`mahjong-tile-3d ${isSelected ? 'selected' : ''} ${isHint ? 'hinted' : ''} ${!isFree && mode === 'zen' ? 'blocked' : ''} ${tile.sym.name === vibratingSymbol ? 'tile-vibrating' : ''} ${hintMove && hintMove.tileId === tile.id ? 'hint-simulating' : ''}`}
+                  style={{
+                    position: 'absolute',
+                    left: `${left}px`,
+                    top: `${top}px`,
+                    width: `${mode === 'zen' ? 44 : tileWidth}px`,
+                    height: `${mode === 'zen' ? 56 : tileHeight}px`,
+                    zIndex,
+                    transform: isSelected ? 'translate3d(0, -8px, 10px)' : 'none',
+                    cursor: isGreyedOut ? 'not-allowed' : (isFree ? 'pointer' : 'not-allowed'),
+                    opacity: isGreyedOut ? 0.25 : (tile.matching ? 0.7 : isFree ? 1 : 0.6),
+                    filter: isGreyedOut ? 'grayscale(100%) brightness(0.6)' : (isFree ? 'none' : 'brightness(0.8) grayscale(20%)'),
+                    pointerEvents: isGreyedOut ? 'none' : 'auto',
+                    '--hint-dx': hintMove && hintMove.tileId === tile.id ? hintMove.dx * cellWidth : 0,
+                    '--hint-dy': hintMove && hintMove.tileId === tile.id ? hintMove.dy * cellHeight : 0,
+                    background: '#ffffff',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxSizing: 'border-box',
+                    borderBottom: tile.sym.name === vibratingSymbol
+                      ? '5px solid #ef4444'
+                      : '5px solid #16a34a', // Thicker green bottom layer
+                    borderRight: tile.sym.name === vibratingSymbol
+                      ? '3px solid #dc2626'
+                      : '3px solid #15803d',
+                    boxShadow: tile.sym.name === vibratingSymbol
+                      ? '0 0 20px #ef4444'
+                      : isSelected
+                        ? '0 0 20px #00f0ff, inset 0 0 10px #00f0ff'
+                        : isMatchOption
+                          ? '0 0 20px #38bdf8, inset 0 0 10px #38bdf8'
+                          : isHint
+                            ? '0 0 20px #facc15, inset 0 0 10px #facc15'
+                            : `0 4px 6px rgba(0, 0, 0, 0.15), ${tile.z * 2}px ${tile.z * 2 + 2}px 6px rgba(0,0,0,0.18)`,
+                    outline: isSelected
+                      ? '3px solid #00f0ff'
+                      : isMatchOption
+                        ? '3px solid #38bdf8'
+                        : isHint
+                          ? '3px dashed #facc15'
+                          : 'none',
+                    outlineOffset: '2px',
+                    transition: dragStart ? 'none' : 'left 0.2s cubic-bezier(0.25, 1, 0.5, 1), top 0.2s cubic-bezier(0.25, 1, 0.5, 1), transform 0.15s, opacity 0.2s',
+                    userSelect: 'none',
+                    touchAction: 'none',
+                  }}
+                >
+                  <MahjongIcon name={tile.sym.name} />
+
+                  {isMatchOption && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-15px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: '#ef4444',
+                      color: '#ffffff',
+                      fontSize: '9px',
+                      fontWeight: '900',
+                      padding: '1px 5px',
+                      borderRadius: '6px',
+                      border: '1.5px solid #ffffff',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
+                      whiteSpace: 'nowrap',
+                      zIndex: 100,
+                      animation: 'victory-bounce 0.6s infinite alternate'
+                    }}>
+                      CHOISIR
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
           </div>
+        </div>
 
+        {/* Bottom Center Floating Lightbulb Hint Button */}
+        <div style={bottomControlsStyle}>
+          <button
+            onClick={getHint}
+            style={{
+              ...hintCircleBtnStyle,
+              opacity: hintsLeft > 0 ? 1 : 0.5,
+              cursor: hintsLeft > 0 ? 'pointer' : 'not-allowed'
+            }}
+            disabled={hintsLeft <= 0}
+            className="hints_btn"
+          >
+            <span style={{ fontSize: '30px' }}>💡</span>
+            <div style={badgeStyle}>{hintsLeft}</div>
+          </button>
+        </div>
+
+        {won && <WinLossTransition type="win" />}
+        {lost && <WinLossTransition type="lose" message="PERDU !" />}
+
+        {won && (
           <div style={{
-            fontFamily: 'var(--font-main)',
-            fontSize: '32px',
-            color: '#38bdf8',
-            fontWeight: '900',
-            textShadow: '0 0 15px rgba(56, 189, 248, 0.8)',
-            marginBottom: '10px',
-            letterSpacing: '1px',
-            animation: 'victory-glow 1.5s ease-in-out infinite alternate',
-            zIndex: 10
+            ...overlayStyle,
+            animation: 'delayFadeIn 2s forwards',
+            background: 'rgba(8, 60, 84, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '4px solid #38bdf8',
+            boxShadow: '0 0 40px rgba(56, 189, 248, 0.6), inset 0 0 20px rgba(56, 189, 248, 0.3)',
+            color: '#ffffff',
+            borderRadius: '24px',
+            overflow: 'hidden'
           }}>
-            FÉLICITATIONS !
-          </div>
+            {/* Confetti pieces falling */}
+            {confetti.map(c => (
+              <div
+                key={c.id}
+                style={{
+                  position: 'absolute',
+                  left: `${c.x}%`,
+                  top: `${c.y}px`,
+                  width: `${c.size}px`,
+                  height: `${c.size * 1.5}px`,
+                  backgroundColor: c.color,
+                  borderRadius: '2px',
+                  zIndex: 999,
+                  animation: `confetti-fall ${c.duration}s linear ${c.delay}s infinite`,
+                  transform: `rotate(${c.rotation}deg)`,
+                  pointerEvents: 'none',
+                }}
+              />
+            ))}
 
-          <div style={{
-            color: '#e0f2fe',
-            fontSize: '16px',
-            fontWeight: '600',
-            marginBottom: '28px',
-            maxWidth: '300px',
-            lineHeight: '1.5',
-            textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-            zIndex: 10
-          }}>
-            Vous avez brillamment complété le plateau avec un score de <strong style={{ color: '#f59e0b' }}>{score}</strong> points !
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '240px', zIndex: 10 }}>
-            <button
-              onClick={initGame}
-              className="retro-btn pulse-glow"
-              style={{
-                ...restartBtnStyle,
-                background: '#10b981',
-                borderColor: '#10b981',
-                color: '#ffffff',
-                width: '100%',
-                fontWeight: '800',
-                fontSize: '16px',
-                padding: '12px 0',
-                borderRadius: '12px',
-                boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)',
-              }}
-            >
-              🔄 Nouveau Niveau
-            </button>
-            <button
-              onClick={onBack}
-              className="retro-btn"
-              style={{
-                ...restartBtnStyle,
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderColor: 'rgba(255, 255, 255, 0.2)',
-                color: '#e0f2fe',
-                width: '100%',
-                fontWeight: '700',
-                fontSize: '15px',
-                padding: '10px 0',
-                borderRadius: '12px',
-              }}
-            >
-              &lt; Retour au Hub
-            </button>
-          </div>
-        </div>
-      )}
-
-      {lost && (
-        <div style={overlayStyle}>
-          <div style={{ ...victoryTitleStyle, color: '#ef4444' }}>PLUS DE COUPS !</div>
-          <div style={descStyle}>Aucune paire libre n'est disponible sur le plateau.</div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={shuffleTiles} className="retro-btn" style={{ ...restartBtnStyle, background: '#f59e0b', borderColor: '#f59e0b' }}>
-              Mélanger
-            </button>
-            <button onClick={initGame} className="retro-btn" style={{ ...restartBtnStyle, background: '#ef4444', borderColor: '#ef4444' }}>
-              Recommencer
-            </button>
-          </div>
-        </div>
-      )}
-
-      {isSettingsOpen && (
-        <div className="accessibility-modal-backdrop" onClick={() => setIsSettingsOpen(false)}>
-          <div className="accessibility-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="accessibility-modal-title">Paramètres de Mahjong</h3>
-
-            <div className="accessibility-setting-row">
-              <span className="accessibility-setting-label">Mode de Jeu :</span>
-              <div className="accessibility-setting-options">
-                <button
-                  className={`accessibility-setting-btn ${mode === 'zen' ? 'active' : ''}`}
-                  onClick={() => saveSettings('zen', boardSize, showArrows)}
-                >
-                  Zen (Solitaire)
-                </button>
-                <button
-                  className={`accessibility-setting-btn ${mode === 'slide' ? 'active' : ''}`}
-                  onClick={() => saveSettings('slide', boardSize, showArrows)}
-                >
-                  Slider (Glisser/Aligner)
-                </button>
-              </div>
+            {/* Animated Trophy / Crown Icon */}
+            <div className="victory-crown" style={{ fontSize: '70px', marginBottom: '16px', animation: 'victory-bounce 1s infinite alternate', zIndex: 10 }}>
+              🏆
             </div>
 
-            <div className="accessibility-setting-row">
-              <span className="accessibility-setting-label">Taille / Tuiles :</span>
-              <div className="accessibility-setting-options">
-                <button
-                  className={`accessibility-setting-btn ${boardSize === 'small' ? 'active' : ''}`}
-                  onClick={() => saveSettings(mode, 'small', showArrows)}
-                >
-                  Petite ({mode === 'zen' ? '36' : '24'} tuiles)
-                </button>
-                <button
-                  className={`accessibility-setting-btn ${boardSize === 'medium' ? 'active' : ''}`}
-                  onClick={() => saveSettings(mode, 'medium', showArrows)}
-                >
-                  Moyenne ({mode === 'zen' ? '72' : '36'} tuiles)
-                </button>
-                <button
-                  className={`accessibility-setting-btn ${boardSize === 'large' ? 'active' : ''}`}
-                  onClick={() => saveSettings(mode, 'large', showArrows)}
-                >
-                  Grande ({mode === 'zen' ? '144' : '48'} tuiles)
-                </button>
-              </div>
+            <div style={{
+              fontFamily: 'var(--font-main)',
+              fontSize: '32px',
+              color: '#38bdf8',
+              fontWeight: '900',
+              textShadow: '0 0 15px rgba(56, 189, 248, 0.8)',
+              marginBottom: '10px',
+              letterSpacing: '1px',
+              animation: 'victory-glow 1.5s ease-in-out infinite alternate',
+              zIndex: 10
+            }}>
+              FÉLICITATIONS !
             </div>
 
-            <div className="accessibility-setting-row">
-              <span className="accessibility-setting-label">Flèches d'aide :</span>
-              <div className="accessibility-setting-options">
-                <button
-                  className={`accessibility-setting-btn ${showArrows ? 'active' : ''}`}
-                  onClick={() => saveSettings(mode, boardSize, true)}
-                >
-                  Afficher
-                </button>
-                <button
-                  className={`accessibility-setting-btn ${!showArrows ? 'active' : ''}`}
-                  onClick={() => saveSettings(mode, boardSize, false)}
-                >
-                  Masquer
-                </button>
-              </div>
+            <div style={{
+              color: '#e0f2fe',
+              fontSize: '16px',
+              fontWeight: '600',
+              marginBottom: '28px',
+              maxWidth: '300px',
+              lineHeight: '1.5',
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+              zIndex: 10
+            }}>
+              Vous avez brillamment complété le plateau avec un score de <strong style={{ color: '#f59e0b' }}>{score}</strong> points !
             </div>
 
-            <div className="accessibility-modal-footer">
-              <button className="retro-btn" onClick={() => setIsSettingsOpen(false)}>
-                Fermer
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '240px', zIndex: 10 }}>
+              <button
+                onClick={initGame}
+                className="retro-btn pulse-glow"
+                style={{
+                  ...restartBtnStyle,
+                  background: '#10b981',
+                  borderColor: '#10b981',
+                  color: '#ffffff',
+                  width: '100%',
+                  fontWeight: '800',
+                  fontSize: '16px',
+                  padding: '12px 0',
+                  borderRadius: '12px',
+                  boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)',
+                }}
+              >
+                🔄 Nouveau Niveau
+              </button>
+              <button
+                onClick={onBack}
+                className="retro-btn"
+                style={{
+                  ...restartBtnStyle,
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  color: '#e0f2fe',
+                  width: '100%',
+                  fontWeight: '700',
+                  fontSize: '15px',
+                  padding: '10px 0',
+                  borderRadius: '12px',
+                }}
+              >
+                &lt; Retour au Hub
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div style={footerHelpStyle}>
-        {mode === 'zen'
-          ? 'Mahjong Zen : Sélectionnez deux tuiles identiques libres pour les éliminer.'
-          : 'Mahjong Slider : Glissez une tuile pour pousser les autres. Alignez deux tuiles identiques en ligne droite dégagée pour les faire disparaître.'}
+        {lost && (
+          <div style={{ ...overlayStyle, animation: 'delayFadeIn 2s forwards' }}>
+            <div style={{ ...victoryTitleStyle, color: '#ef4444' }}>PERDU !</div>
+            <div style={{ ...descStyle, color: '#1e293b' }}>Plus aucun mouvement n'est possible.</div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={shuffleTiles} className="retro-btn" style={{ ...restartBtnStyle, background: '#f59e0b', borderColor: '#f59e0b' }}>
+                Mélanger
+              </button>
+              <button onClick={initGame} className="retro-btn" style={{ ...restartBtnStyle, background: '#ef4444', borderColor: '#ef4444' }}>
+                Recommencer
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isSettingsOpen && (
+          <div className="accessibility-modal-backdrop" onClick={() => setIsSettingsOpen(false)}>
+            <div className="accessibility-modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3 className="accessibility-modal-title">Paramètres de Mahjong</h3>
+
+              <div className="accessibility-setting-row">
+                <span className="accessibility-setting-label">Mode de Jeu :</span>
+                <div className="accessibility-setting-options">
+                  <button
+                    className={`accessibility-setting-btn ${mode === 'zen' ? 'active' : ''}`}
+                    onClick={() => saveSettings('zen', boardSize, showArrows)}
+                  >
+                    Zen (Solitaire)
+                  </button>
+                  <button
+                    className={`accessibility-setting-btn ${mode === 'slide' ? 'active' : ''}`}
+                    onClick={() => saveSettings('slide', boardSize, showArrows)}
+                  >
+                    Slider (Glisser/Aligner)
+                  </button>
+                </div>
+              </div>
+
+              <div className="accessibility-setting-row">
+                <span className="accessibility-setting-label">Taille / Tuiles :</span>
+                <div className="accessibility-setting-options">
+                  <button
+                    className={`accessibility-setting-btn ${boardSize === 'small' ? 'active' : ''}`}
+                    onClick={() => saveSettings(mode, 'small', showArrows)}
+                  >
+                    Petite ({mode === 'zen' ? '36' : '24'} tuiles)
+                  </button>
+                  <button
+                    className={`accessibility-setting-btn ${boardSize === 'medium' ? 'active' : ''}`}
+                    onClick={() => saveSettings(mode, 'medium', showArrows)}
+                  >
+                    Moyenne ({mode === 'zen' ? '72' : '36'} tuiles)
+                  </button>
+                  <button
+                    className={`accessibility-setting-btn ${boardSize === 'large' ? 'active' : ''}`}
+                    onClick={() => saveSettings(mode, 'large', showArrows)}
+                  >
+                    Grande ({mode === 'zen' ? '144' : '48'} tuiles)
+                  </button>
+                </div>
+              </div>
+
+              <div className="accessibility-setting-row">
+                <span className="accessibility-setting-label">Flèches d'aide :</span>
+                <div className="accessibility-setting-options">
+                  <button
+                    className={`accessibility-setting-btn ${showArrows ? 'active' : ''}`}
+                    onClick={() => saveSettings(mode, boardSize, true)}
+                  >
+                    Afficher
+                  </button>
+                  <button
+                    className={`accessibility-setting-btn ${!showArrows ? 'active' : ''}`}
+                    onClick={() => saveSettings(mode, boardSize, false)}
+                  >
+                    Masquer
+                  </button>
+                </div>
+              </div>
+
+              <div className="accessibility-modal-footer">
+                <button className="retro-btn" onClick={() => setIsSettingsOpen(false)}>
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ padding: '0 20px 20px 20px' }}>
+          <div style={footerHelpStyle}>
+            {mode === 'zen'
+              ? 'Mahjong Zen : Sélectionnez deux tuiles identiques libres pour les éliminer.'
+              : 'Mahjong Slider : Glissez une tuile pour pousser les autres. Alignez deux tuiles identiques en ligne droite dégagée pour les faire disparaître.'}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -2250,9 +2452,10 @@ const containerStyle = {
   flexDirection: 'column',
   width: '100%',
   maxWidth: '430px',
-  background: 'url(/mahjong_bg.png) center bottom / cover no-repeat',
+  background: 'linear-gradient(to bottom, #0ea5e9 0%, rgba(14, 165, 233, 0) 50%), linear-gradient(to top, #022c22 0%, rgba(2, 44, 34, 0) 80%), url("https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format&fit=crop") center bottom / cover no-repeat',
+  backgroundBlendMode: 'normal',
   borderRadius: '28px',
-  padding: 'var(--container-padding, 24px)',
+  // padding: 'var(--container-padding, 24px)',
   boxSizing: 'border-box',
   margin: '0 auto',
   boxShadow: '0 15px 35px rgba(0,0,0,0.25)',
@@ -2313,7 +2516,7 @@ const statItemStyle = {
 };
 
 const statLabelStyle = {
-  fontSize: '11px',
+  fontSize: MAHJONG_THEME.fonts.statLabelSize,
   fontWeight: 'bold',
   color: '#93c5fd',
   textTransform: 'uppercase',
@@ -2321,13 +2524,13 @@ const statLabelStyle = {
 };
 
 const statValueStyle = {
-  fontSize: '18px',
+  fontSize: MAHJONG_THEME.fonts.statValueSize,
   fontWeight: '900',
   color: '#ffffff',
 };
 
 const roundTitleStyle = {
-  fontSize: '19px',
+  fontSize: MAHJONG_THEME.fonts.roundTitleSize,
   fontWeight: '800',
   color: '#ffffff',
   textAlign: 'center',
@@ -2345,7 +2548,7 @@ const helpersContainerStyle = {
 
 const helperBtnStyle = {
   padding: '6px 14px',
-  fontSize: '13px',
+  fontSize: MAHJONG_THEME.fonts.helperBtnSize,
   fontWeight: '800',
   color: '#1e3a8a',
   background: '#ffffff',
@@ -2366,6 +2569,7 @@ const boardWrapperStyle = {
   boxSizing: 'border-box',
   transition: 'background-color 0.3s, border-color 0.3s',
   overflow: 'hidden',
+  minHeight: "min-content"
 };
 
 const boardStyle = {
@@ -2406,7 +2610,7 @@ const badgeStyle = {
   background: '#ef4444',
   borderRadius: '50%',
   color: '#ffffff',
-  fontSize: '13px',
+  fontSize: MAHJONG_THEME.fonts.badgeSize,
   fontWeight: '800',
   display: 'flex',
   alignItems: 'center',
@@ -2444,14 +2648,14 @@ const victoryTitleStyle = {
 
 const descStyle = {
   color: '#e0f2fe',
-  fontSize: '17px',
+  fontSize: MAHJONG_THEME.fonts.descSize,
   fontWeight: '600',
   marginBottom: '24px',
 };
 
 const restartBtnStyle = {
   padding: '14px 28px',
-  fontSize: '16px',
+  fontSize: MAHJONG_THEME.fonts.restartBtnSize,
   border: '2px solid #ffffff',
   background: '#ffffff',
   color: '#0284c7',
@@ -2462,7 +2666,7 @@ const restartBtnStyle = {
 
 const footerHelpStyle = {
   marginTop: '16px',
-  fontSize: '12px',
+  fontSize: MAHJONG_THEME.fonts.footerHelpSize,
   fontWeight: 'bold',
   color: '#e0f2fe',
   textAlign: 'center',
