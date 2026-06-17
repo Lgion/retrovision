@@ -354,18 +354,18 @@ export default function FreeCell({ onBack, onScoreSave }) {
 
   // --- DIMENSIONS & THEME CONFIGURATION ---
   const theme = isMobile ? {
-    cardWidth: '60px',
-    cardHeight: '78px',
-    emojiSize: '30px',
-    pipAceSize: '30px',
-    pipNormalSize: '30px',
-    cornerRankSize: '10px',
-    cornerSuitSize: '7px',
-    emptySlotSize: '30px',
+    cardWidth: '75px',
+    cardHeight: '105px',
+    emojiSize: '35px',
+    pipAceSize: '35px',
+    pipNormalSize: '35px',
+    cornerRankSize: '14px',
+    cornerSuitSize: '10px',
+    emptySlotSize: '35px',
     titleSize: '20px',
     statusSize: '16px',
     undoSize: '16px',
-    verticalSpacing: 14
+    verticalSpacing: 20
   } : {
     cardWidth: '80px',
     cardHeight: '115px',

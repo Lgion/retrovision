@@ -356,6 +356,34 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   const [matchSelection, setMatchSelection] = useState(null);
   const [windGust, setWindGust] = useState(false);
   const lastTouchTime = useRef(0);
+  const containerRef = useRef(null);
+  const [boardScale, setBoardScale] = useState(1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const availableWidth = containerRef.current.clientWidth - 16; 
+      const availableHeight = containerRef.current.clientHeight - 250; 
+      
+      const boardW = mode === 'zen' ? (boardSize === 'small' ? 220 : boardSize === 'medium' ? 280 : 348) : 6 * 64;
+      const boardH = mode === 'zen' ? (boardSize === 'small' ? 260 : boardSize === 'medium' ? 340 : 420) : 7 * 64;
+      
+      const requiredWidth = boardW + 32;
+      const requiredHeight = boardH + 32;
+      
+      const scaleX = availableWidth / requiredWidth;
+      const scaleY = availableHeight / requiredHeight;
+      const newScale = Math.min(1, scaleX, scaleY);
+      
+      setBoardScale(newScale);
+    };
+    
+    const observer = new ResizeObserver(handleResize);
+    if (containerRef.current) observer.observe(containerRef.current);
+    handleResize();
+    
+    return () => observer.disconnect();
+  }, [mode, boardSize]);
 
   useEffect(() => {
     let windTimer;
@@ -1619,6 +1647,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)}
       />}
       <div
+        ref={containerRef}
         className="game-container"
         style={containerStyle}
         onMouseMove={handleTileMouseMove}
@@ -1806,16 +1835,26 @@ export default function MahjongZen({ onBack, onScoreSave }) {
 
         {/* Playfield wrapper styled to match screenshots */}
         <div style={{
-          ...boardWrapperStyle,
-          background: mode === 'slide' ? 'rgba(8, 60, 84, 0.2)' : '#f8fafc',
-          // backdropFilter: mode === 'slide' ? 'blur(8px)' : 'none',
-          border: mode === 'slide' ? '6px solid #38bdf8' : '2px solid var(--border-color)',
-          boxShadow: mode === 'slide' ? 'inset 0 4px 12px rgba(0,0,0,0.4), 0 10px 25px rgba(0,0,0,0.15)' : 'inset 0 2px 8px rgba(0,0,0,0.02)',
-          position: 'relative',
-          zIndex: 2,
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          height: `${(maxBoardHeight + 32) * boardScale}px`,
         }}>
-          <div className="board-scaler" style={{ ...boardStyle, width: "100%"/*`${maxBoardWidth}px`*/, height: `${maxBoardHeight}px` }}>
-
+          <div style={{
+            ...boardWrapperStyle,
+            background: mode === 'slide' ? 'rgba(8, 60, 84, 0.2)' : '#f8fafc',
+            border: mode === 'slide' ? '6px solid #38bdf8' : '2px solid var(--border-color)',
+            boxShadow: mode === 'slide' ? 'inset 0 4px 12px rgba(0,0,0,0.4), 0 10px 25px rgba(0,0,0,0.15)' : 'inset 0 2px 8px rgba(0,0,0,0.02)',
+            position: 'relative',
+            zIndex: 2,
+            width: `${maxBoardWidth + 32}px`,
+            height: `${maxBoardHeight + 32}px`,
+            transform: `scale(${boardScale})`,
+            transformOrigin: 'top center',
+            flexShrink: 0
+          }}>
+            <div className="board-scaler" style={{ ...boardStyle, width: `${maxBoardWidth}px`, height: `${maxBoardHeight}px` }}>
             {/* Faint grid guide lines in slider mode */}
             {mode === 'slide' && gridSlots.map(slot => (
               <div
@@ -2220,9 +2259,10 @@ export default function MahjongZen({ onBack, onScoreSave }) {
 
           </div>
         </div>
+      </div>
 
-        {/* Bottom Center Floating Lightbulb Hint Button */}
-        <div style={bottomControlsStyle}>
+      {/* Bottom Center Floating Lightbulb Hint Button */}
+      <div style={bottomControlsStyle}>
           <button
             onClick={getHint}
             style={{
@@ -2451,15 +2491,11 @@ const containerStyle = {
   display: 'flex',
   flexDirection: 'column',
   width: '100%',
-  maxWidth: '430px',
+  height: '100%',
   background: 'linear-gradient(to bottom, #0ea5e9 0%, rgba(14, 165, 233, 0) 50%), linear-gradient(to top, #022c22 0%, rgba(2, 44, 34, 0) 80%), url("https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format&fit=crop") center bottom / cover no-repeat',
   backgroundBlendMode: 'normal',
-  borderRadius: '28px',
-  // padding: 'var(--container-padding, 24px)',
   boxSizing: 'border-box',
-  margin: '0 auto',
-  boxShadow: '0 15px 35px rgba(0,0,0,0.25)',
-  border: '3px solid #ffffff',
+  margin: '0',
   position: 'relative',
   overflow: 'hidden'
 };

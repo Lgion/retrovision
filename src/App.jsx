@@ -73,13 +73,11 @@ function App() {
     switch (view) {
       case 'mahjong':
         return (
-          <div className="game-wrapper">
-            <GameScaleWrapper designWidth={430} defaultHeight={910}>
-              <MahjongZen
-                onBack={() => setView('dashboard')}
-                onScoreSave={handleScoreSave}
-              />
-            </GameScaleWrapper>
+          <div className="game-wrapper-fullscreen">
+            <MahjongZen
+              onBack={() => setView('dashboard')}
+              onScoreSave={handleScoreSave}
+            />
           </div>
         );
       case 'water':

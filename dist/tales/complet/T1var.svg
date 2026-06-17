@@ -1,0 +1,475 @@
+<svg width="3240" height="1620" viewBox="0 0 3240 1620"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink">
+	<g transform="translate(270,270)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="217"/>
+		<circle fill="#147E48" r="195"/>
+		<circle fill="#fff" r="170"/>
+		<circle fill="#147E48" r="137"/>
+		<circle fill="#fff" r="110"/>
+		<circle fill="#B63A22" r="92"/>
+		<circle fill="#fff" r="68"/>
+		<circle fill="#B63A22" r="24"/>
+		<g id="k1">
+			<ellipse cx="170" rx="18" ry="36" fill="#147E48"/>
+			<ellipse cy="137" rx="36" ry="18" fill="#147E48"/>
+		</g>
+		<use xlink:href="#k1" transform="rotate(60)"/>
+		<use xlink:href="#k1" transform="rotate(120)"/>
+		<use xlink:href="#k1" transform="rotate(180)"/>
+		<use xlink:href="#k1" transform="rotate(240)"/>
+		<use xlink:href="#k1" transform="rotate(300)"/>
+	</g>
+	<g transform="translate(810,270)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="230"/>
+		<circle fill="#147E48" r="222"/>
+		<g id="a2">
+			<g id="a1">
+				<ellipse cy="150" rx="19" ry="69" fill="#fff"/>
+				<path fill="#147E48" d="M3,0L3,193A3,3 180 0 1 -3,193L-3,0z"/>
+			</g>
+			<use xlink:href="#a1" transform="rotate(15)"/>
+			<use xlink:href="#a1" transform="rotate(30)"/>
+			<use xlink:href="#a1" transform="rotate(45)"/>
+			<use xlink:href="#a1" transform="rotate(60)"/>
+			<use xlink:href="#a1" transform="rotate(75)"/>
+		</g>
+		<use xlink:href="#a2" transform="rotate(90)"/>
+		<use xlink:href="#a2" transform="rotate(180)"/>
+		<use xlink:href="#a2" transform="rotate(270)"/>
+		<circle fill="#147E48" r="152"/>
+		<circle fill="#fff" r="139"/>
+		<circle fill="#B63A22" r="128"/>
+		<g id="a3">
+			<path fill="#fff" d="M54.56,-83.09A12,12 60 0 0 54.56,-94.5A63,63 120 0 0 -54.56,-94.5A12,12 60 0 0 -54.56,-83.09L0,-8z"/>
+			<path fill="#B63A22" d="M6,0L6,-103A6,6 180 0 0 -6,-103L-6,0z"/>
+			<circle cy="-103" fill="#B63A22" r="9"/>
+			<path id="a4" transform="rotate(18)" fill="#B63A22" d="M4,0L4,-90A4,4 180 0 0 -4,-90L-4,0z"/>
+			<use xlink:href="#a4" transform="scale(-1,1)"/>
+		</g>
+		<use xlink:href="#a3" transform="rotate(72)"/>
+		<use xlink:href="#a3" transform="rotate(144)"/>
+		<use xlink:href="#a3" transform="rotate(-144)"/>
+		<use xlink:href="#a3" transform="rotate(-72)"/>
+		<circle fill="#B63A22" r="53"/>
+		<circle fill="#fff" r="46"/>
+		<circle fill="#B63A22" r="34"/>
+	</g>
+	<g transform="translate(1350,270)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="214"/>
+		<circle fill="#147E48" r="175"/>
+		<g id="b2">
+			<circle id="b1" cy="194" fill="#147E48" r="14"/>
+			<use xlink:href="#b1" transform="rotate(22.5)"/>
+			<path fill="#fff" d="M44,114A44,54 180 0 1 -44,114C-44,105 -44,78 0,0C44,78 44,105 44,114z"/>
+			<path fill="#B63A22" d="M27,114A27,30 180 0 1 -27,114C-27,105 -27,78 0,20C27,78 27,105 27,114z"/>
+		</g>
+		<use xlink:href="#b2" transform="rotate(45)"/>
+		<use xlink:href="#b2" transform="rotate(90)"/>
+		<use xlink:href="#b2" transform="rotate(135)"/>
+		<use xlink:href="#b2" transform="rotate(180)"/>
+		<use xlink:href="#b2" transform="rotate(225)"/>
+		<use xlink:href="#b2" transform="rotate(270)"/>
+		<use xlink:href="#b2" transform="rotate(315)"/>
+		<circle fill="#fff" r="41"/>
+		<circle fill="#B63A22" r="27"/>
+		<circle fill="#fff" r="14"/>
+	</g>
+	<g transform="translate(1890,270)">
+		<circle fill="#147E48" r="250"/>
+		<circle fill="#fff" r="154"/>
+		<g id="c2">
+			<path id="c1" fill="#fff" d="M14,193A14,14 180 0 1 -14,193C-14,190 -14,181 0,167C14,181 14,190 14,193z"/>
+			<use xlink:href="#c1" transform="rotate(15)"/>
+			<use xlink:href="#c1" transform="rotate(30)"/>
+			<use xlink:href="#c1" transform="rotate(45)"/>
+			<use xlink:href="#c1" transform="rotate(60)"/>
+			<use xlink:href="#c1" transform="rotate(75)"/>
+		</g>
+		<use xlink:href="#c2" transform="rotate(90)"/>
+		<use xlink:href="#c2" transform="rotate(180)"/>
+		<use xlink:href="#c2" transform="rotate(270)"/>
+		<circle fill="#B63A22" r="136"/>
+		<g id="c3">
+			<path fill="#fff" d="M0,0L45,37L75,37A37,37 180 0 0 75,-37L45,-37z"/>
+			<path fill="#B63A22" d="M0,7L72,7A7,7 180 0 0 72,-7L0,-7z"/>
+		</g>
+		<use xlink:href="#c3" transform="rotate(60)"/>
+		<use xlink:href="#c3" transform="rotate(120)"/>
+		<use xlink:href="#c3" transform="rotate(180)"/>
+		<use xlink:href="#c3" transform="rotate(240)"/>
+		<use xlink:href="#c3" transform="rotate(300)"/>
+		<circle fill="#B63A22" r="42"/>
+		<circle fill="#fff" r="28"/>
+	</g>
+	<g transform="translate(2430,270)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="218"/>
+		<circle fill="#147E48" r="201"/>
+		<circle fill="#fff" r="184"/>
+		<g id="d2">
+			<g id="d1">
+				<rect x="-8" y="-190" width="16" height="380" fill="#147E48"/>
+				<ellipse transform="rotate(10)" cy="120" rx="8" ry="45" fill="#147E48"/>
+			</g>
+			<use xlink:href="#d1" transform="rotate(20)"/>
+			<use xlink:href="#d1" transform="rotate(40)"/>
+			<use xlink:href="#d1" transform="rotate(60)"/>
+			<use xlink:href="#d1" transform="rotate(80)"/>
+			<use xlink:href="#d1" transform="rotate(100)"/>
+			<use xlink:href="#d1" transform="rotate(120)"/>
+			<use xlink:href="#d1" transform="rotate(140)"/>
+			<use xlink:href="#d1" transform="rotate(160)"/>
+		</g>
+		<use xlink:href="#d2" transform="rotate(180)"/>
+		<circle fill="#147E48" r="120"/>
+		<circle fill="#fff" r="102"/>
+		<g id="d3">
+			<path transform="rotate(180)" fill="#B63A22" d="M44,71A44,25 180 0 1 -44,71C-44,68 -44,48 0,25C44,48 44,68 44,71z"/>
+			<path fill="#fff" d="M7,0L7,-54A7,7 180 0 0 -7,-54L-7,0z"/>
+		</g>
+		<use xlink:href="#d3" transform="rotate(72)"/>
+		<use xlink:href="#d3" transform="rotate(144)"/>
+		<use xlink:href="#d3" transform="rotate(-144)"/>
+		<use xlink:href="#d3" transform="rotate(-72)"/>
+		<circle fill="#B63A22" r="18"/>
+	</g>
+	<g transform="translate(2970,270)">
+		<circle fill="#147E48" r="250"/>
+		<circle fill="#fff" r="227"/>
+		<circle fill="#147E48" r="218"/>
+		<circle fill="#fff" r="211"/>
+		<circle fill="#147E48" r="168"/>
+		<circle fill="#fff" r="161"/>
+		<circle fill="#B63A22" r="150"/>
+		<g id="e4">
+			<g id="e1">
+				<path fill="#147E48" d="M0,202 39,185 28,212 0,216 -28,212 -39,185z"/>
+				<rect x="-6" y="164" width="12" height="50" fill="#147E48"/>
+				<path fill="#147E48" d="M15,166 -15,166 0,181z"/>
+			</g>
+			<g transform="rotate(45)">
+				<use xlink:href="#e1" transform="rotate(180,0,189)"/>
+			</g>
+			<g id="e2" transform="rotate(22.5)">
+				<path fill="#147E48" d="M30,215 0,185 0,190 -25,215z"/>
+				<rect x="-5" y="164" width="10" height="50" fill="#147E48"/>
+				<path fill="#147E48" d="M-14,166 0,165 0,174z"/>
+			</g>
+			<use xlink:href="#e2" transform="scale(-1,1)"/>
+			<g id="e3" transform="rotate(11.25)">
+				<path fill="#fff" d="M0,12 23,126 0,150 -23,126z"/>
+				<rect x="-2" y="65" width="4" height="41" fill="#B63A22"/>
+			</g>
+			<use xlink:href="#e3" transform="rotate(22.5)"/>
+			<use xlink:href="#e3" transform="rotate(45)"/>
+			<use xlink:href="#e3" transform="rotate(67.5)"/>
+		</g>
+		<use xlink:href="#e4" transform="rotate(90)"/>
+		<use xlink:href="#e4" transform="rotate(180)"/>
+		<use xlink:href="#e4" transform="rotate(270)"/>
+		<circle fill="#B63A22" r="66"/>
+		<circle fill="#fff" r="61"/>
+		<circle fill="#B63A22" r="51"/>
+		<g id="e5">
+			<path fill="#fff" d="M0,35 16,60 -16,60z"/>
+			<rect x="-5" y="5" width="10" height="50" fill="#fff"/>
+		</g>
+		<use xlink:href="#e5" transform="rotate(72)"/>
+		<use xlink:href="#e5" transform="rotate(144)"/>
+		<use xlink:href="#e5" transform="rotate(-144)"/>
+		<use xlink:href="#e5" transform="rotate(-72)"/>
+		<circle fill="#fff" r="15"/>
+	</g>
+	<g transform="translate(270,810)">
+		<circle fill="#147E48" r="250"/>
+		<circle fill="#fff" r="217"/>
+		<circle fill="#147E48" r="195"/>
+		<g id="l1">
+			<path fill="#fff" d="M0,188 56,150 24,80 -24,80 -56,150z"/>
+			<rect x="-5" y="80" width="10" height="55" fill="#147E48"/>
+		</g>
+		<use xlink:href="#l1" transform="rotate(45)"/>
+		<use xlink:href="#l1" transform="rotate(90)"/>
+		<use xlink:href="#l1" transform="rotate(135)"/>
+		<use xlink:href="#l1" transform="rotate(180)"/>
+		<use xlink:href="#l1" transform="rotate(225)"/>
+		<use xlink:href="#l1" transform="rotate(270)"/>
+		<use xlink:href="#l1" transform="rotate(315)"/>
+		<circle fill="#147E48" r="86"/>
+		<circle fill="#fff" r="75"/>
+		<circle fill="#B63A22" r="60"/>
+		<circle fill="#fff" r="47"/>
+		<g id="l3">
+			<path id="l2" fill="#B63A22" d="M-20,50Q-15,33 0,23Q15,33 20,50z"/>
+			<use xlink:href="#l2" transform="rotate(180)"/>
+			<rect x="-5" y="-40" width="10" height="80" fill="#B63A22"/>
+		</g>
+		<use xlink:href="#l3" transform="rotate(90)"/>
+	</g>
+	<g transform="translate(810,810)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="202"/>
+		<circle fill="#147E48" r="184"/>
+		<circle fill="#fff" r="150"/>
+		<circle fill="#147E48" r="135"/>
+		<circle fill="#fff" r="112"/>
+		<circle fill="#147E48" r="94"/>
+		<circle fill="#fff" r="73"/>
+		<circle fill="#B63A22" r="53"/>
+	</g>
+	<g transform="translate(1350,810)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="225"/>
+		<circle fill="#147E48" r="210"/>
+		<circle fill="#fff" r="174"/>
+		<circle fill="#B63A22" r="159"/>
+		<g id="g1" transform="rotate(90)">
+			<path fill="#fff" d="M45,110A45,42 180 0 1 -45,110C-45,100 -45,80 0,20C45,80 45,100 45,110z"/>
+			<rect x="-6" y="40" width="12" height="60" fill="#B63A22"/>
+			<circle cy="100" fill="#B63A22" r="13"/>
+		</g>
+		<use xlink:href="#g1" transform="rotate(60)"/>
+		<use xlink:href="#g1" transform="rotate(120)"/>
+		<use xlink:href="#g1" transform="rotate(180)"/>
+		<use xlink:href="#g1" transform="rotate(240)"/>
+		<use xlink:href="#g1" transform="rotate(300)"/>
+		<circle fill="#B63A22" r="48"/>
+		<circle fill="#fff" r="35"/>
+		<circle fill="#B63A22" r="22"/>
+	</g>
+	<g transform="translate(1890,810)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="200"/>
+		<circle fill="#147E48" r="177"/>
+		<circle fill="#fff" r="141"/>
+		<circle fill="#B63A22" r="125"/>
+		<path id="h1" fill="#fff" transform="rotate(180)" d="M44,84A44,23 180 0 1 -44,84C-44,75 -44,65 0,20C44,65 44,75 44,84z"/>
+		<use xlink:href="#h1" transform="rotate(72)"/>
+		<use xlink:href="#h1" transform="rotate(144)"/>
+		<use xlink:href="#h1" transform="rotate(-144)"/>
+		<use xlink:href="#h1" transform="rotate(-72)"/>
+		<circle fill="#B63A22" r="46"/>
+		<circle fill="#fff" r="33"/>
+		<circle fill="#B63A22" r="14"/>
+	</g>
+	<g transform="translate(2430,810)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="226"/>
+		<circle fill="#147E48" r="190"/>
+		<circle fill="#fff" r="173"/>
+		<circle fill="#147E48" r="162"/>
+		<circle fill="#fff" r="147"/>
+		<g id="i2">
+			<circle id="i1" cy="208" fill="#283989" r="16"/>
+			<use xlink:href="#i1" transform="rotate(22.5)"/>
+			<circle cy="127" transform="rotate(22.5)" fill="#147E48" r="10"/>
+			<path fill="#B63A22" d="M36,90A36,44 180 0 1 -36,90C-36,85 -36,55 0,-10C36,55 36,85 36,90z"/>
+			<path fill="#fff" d="M20,90A20,28 180 0 1 -20,90C-20,85 -20,60 0,20C20,60 20,85 20,90z"/>
+			<circle cy="95" fill="#B63A22" r="7"/>
+		</g>
+		<use xlink:href="#i2" transform="rotate(45)"/>
+		<use xlink:href="#i2" transform="rotate(90)"/>
+		<use xlink:href="#i2" transform="rotate(135)"/>
+		<use xlink:href="#i2" transform="rotate(180)"/>
+		<use xlink:href="#i2" transform="rotate(225)"/>
+		<use xlink:href="#i2" transform="rotate(270)"/>
+		<use xlink:href="#i2" transform="rotate(315)"/>
+		<circle fill="#B63A22" r="34"/>
+		<circle fill="#fff" r="22"/>
+		<circle fill="#B63A22" r="12"/>
+	</g>
+	<g transform="translate(2970,810)">
+		<g id="j2">
+			<g id="j1">
+				<ellipse cy="215" rx="48" ry="35" fill="#147E48"/>
+				<ellipse cy="205" rx="35" ry="25" fill="#fff"/>
+			</g>
+			<use xlink:href="#j1" transform="rotate(22.5)"/>
+			<use xlink:href="#j1" transform="rotate(45)"/>
+			<use xlink:href="#j1" transform="rotate(67.5)"/>
+		</g>
+		<use xlink:href="#j2" transform="rotate(90)"/>
+		<use xlink:href="#j2" transform="rotate(180)"/>
+		<use xlink:href="#j2" transform="rotate(270)"/>
+		<circle fill="#fff" r="210"/>
+		<g id="j4">
+			<rect id="j3" transform="rotate(11.25)" x="-7" y="135" width="14" height="85" fill="#147E48"/>
+			<use xlink:href="#j3" transform="rotate(22.5)"/>
+			<use xlink:href="#j3" transform="rotate(45)"/>
+			<use xlink:href="#j3" transform="rotate(67.5)"/>
+		</g>
+		<use xlink:href="#j4" transform="rotate(90)"/>
+		<use xlink:href="#j4" transform="rotate(180)"/>
+		<use xlink:href="#j4" transform="rotate(270)"/>
+		<circle fill="#147E48" r="138"/>
+		<circle fill="#fff" r="120"/>
+		<circle fill="#283989" r="108"/>
+		<circle fill="#fff" r="90"/>
+		<circle fill="#B63A22" r="79"/>
+		<path id="j5" transform="rotate(180)" fill="#fff" d="M30,53A15,15 180 0 1 0,53A15,15 180 0 1 -30,53C-30,45 -30,38 0,12C30,38 30,45 30,53z"/>
+		<use xlink:href="#j5" transform="rotate(72)"/>
+		<use xlink:href="#j5" transform="rotate(144)"/>
+		<use xlink:href="#j5" transform="rotate(-144)"/>
+		<use xlink:href="#j5" transform="rotate(-72)"/>
+		<circle fill="#B63A22" r="28"/>
+	</g>
+	<g transform="translate(270,1350)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="218"/>
+		<circle fill="#147E48" r="203"/>
+		<circle fill="#fff" r="185"/>
+		<circle fill="#147E48" r="133"/>
+		<circle fill="#fff" r="115"/>
+		<circle fill="#B63A22" r="104"/>
+		<circle fill="#fff" r="80"/>
+		<circle fill="#B63A22" r="15"/>
+		<g id="m1">
+			<rect x="-9" y="125" width="18" height="70" fill="#147E48"/>
+			<path transform="rotate(18)" fill="#147E48" d="M0,130 45,183 25,183 0,153 -25,183 -45,183z"/>
+		</g>
+		<use xlink:href="#m1" transform="rotate(36)"/>
+		<use xlink:href="#m1" transform="rotate(72)"/>
+		<use xlink:href="#m1" transform="rotate(108)"/>
+		<use xlink:href="#m1" transform="rotate(144)"/>
+		<use xlink:href="#m1" transform="rotate(180)"/>
+		<use xlink:href="#m1" transform="rotate(-144)"/>
+		<use xlink:href="#m1" transform="rotate(-108)"/>
+		<use xlink:href="#m1" transform="rotate(-72)"/>
+		<use xlink:href="#m1" transform="rotate(-36)"/>
+	</g>
+	<g transform="translate(810,1350)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="225"/>
+		<circle fill="#147E48" r="205"/>
+		<circle fill="#fff" r="180"/>
+		<circle fill="#147E48" r="160"/>
+		<circle fill="#fff" r="140"/>
+		<circle fill="#B63A22" r="115"/>
+		<circle fill="#fff" r="95"/>
+		<circle fill="#B63A22" r="20"/>
+		<g id="n1">
+			<path fill="#147E48" d="M-23.6,180A23.6,9.5 180 0 1 23.6,180L23.6,195 -23.6,195z"/>
+			<path transform="rotate(15)" fill="#fff" d="M-23.6,180A23.6,9.5 180 0 0 23.6,180L23.6,175 -23.6,175z"/>
+			<path fill="#147E48" d="M-21,160A21,8 180 0 0 21,160L21,155 -21,155z"/>
+			<path transform="rotate(15)" fill="#fff" d="M-21,160A21,8 180 0 1 21,160L21,175 -21,175z"/>
+		</g>
+		<use xlink:href="#n1" transform="rotate(30)"/>
+		<use xlink:href="#n1" transform="rotate(60)"/>
+		<use xlink:href="#n1" transform="rotate(90)"/>
+		<use xlink:href="#n1" transform="rotate(120)"/>
+		<use xlink:href="#n1" transform="rotate(150)"/>
+		<use xlink:href="#n1" transform="rotate(180)"/>
+		<use xlink:href="#n1" transform="rotate(210)"/>
+		<use xlink:href="#n1" transform="rotate(240)"/>
+		<use xlink:href="#n1" transform="rotate(270)"/>
+		<use xlink:href="#n1" transform="rotate(300)"/>
+		<use xlink:href="#n1" transform="rotate(330)"/>
+	</g>
+	<g transform="translate(1350,1350)">
+		<circle fill="#147E48" r="250"/>
+		<circle fill="#fff" r="220"/>
+		<circle fill="#147E48" r="190"/>
+		<circle fill="#fff" r="170"/>
+		<g id="o1">
+			<path fill="#B63A22" d="M50,110A50,40 180 0 1 -50,110C-50,90 -25,65 0,0C25,65 50,90 50,110z"/>
+			<path fill="#fff" d="M35,110A35,25 180 0 1 -35,110C-35,90 -10,65 0,0C10,65 35,90 35,110z"/>
+		</g>
+		<use xlink:href="#o1" transform="rotate(45)"/>
+		<use xlink:href="#o1" transform="rotate(90)"/>
+		<use xlink:href="#o1" transform="rotate(135)"/>
+		<use xlink:href="#o1" transform="rotate(180)"/>
+		<use xlink:href="#o1" transform="rotate(225)"/>
+		<use xlink:href="#o1" transform="rotate(270)"/>
+		<use xlink:href="#o1" transform="rotate(315)"/>
+		<circle fill="#fff" r="90"/>
+		<g id="o2">
+			<rect x="-7" y="0" width="14" height="105" fill="#B63A22"/>
+			<circle cy="105" fill="#B63A22" r="7"/>
+			<circle transform="rotate(22.5)" cy="90" fill="#B63A22" r="7"/>
+		</g>
+		<use xlink:href="#o2" transform="rotate(45)"/>
+		<use xlink:href="#o2" transform="rotate(90)"/>
+		<use xlink:href="#o2" transform="rotate(135)"/>
+		<use xlink:href="#o2" transform="rotate(180)"/>
+		<use xlink:href="#o2" transform="rotate(225)"/>
+		<use xlink:href="#o2" transform="rotate(270)"/>
+		<use xlink:href="#o2" transform="rotate(315)"/>
+		<circle fill="#B63A22" r="70"/>
+		<circle fill="#fff" r="60"/>
+		<circle fill="#B63A22" r="55"/>
+		<circle fill="#fff" r="45"/>
+		<circle fill="#B63A22" r="25"/>
+		<rect id="o3" x="-6" y="-54" width="12" height="54" fill="#B63A22"/>
+		<use xlink:href="#o3" transform="rotate(72)"/>
+		<use xlink:href="#o3" transform="rotate(144)"/>
+		<use xlink:href="#o3" transform="rotate(-144)"/>
+		<use xlink:href="#o3" transform="rotate(-72)"/>
+	</g>
+	<g transform="translate(1890,1350)">
+		<g id="p6">
+			<g id="p2">
+				<g id="p1">
+					<ellipse cy="210" rx="51.5" ry="40" fill="#147E48"/>
+					<ellipse cy="205" rx="31.5" ry="20" fill="#fff"/>
+				</g>
+				<use xlink:href="#p1" transform="rotate(22.5)"/>
+				<use xlink:href="#p1" transform="rotate(45)"/>
+				<use xlink:href="#p1" transform="rotate(67.5)"/>
+			</g>
+			<use xlink:href="#p2" transform="rotate(90)"/>
+			<use xlink:href="#p2" transform="rotate(180)"/>
+			<use xlink:href="#p2" transform="rotate(270)"/>
+			<circle fill="#fff" r="210"/>
+			<g id="p4">
+				<rect id="p3" transform="rotate(11.25)" x="-10" y="135" width="20" height="85" fill="#147E48"/>
+				<use xlink:href="#p3" transform="rotate(22.5)"/>
+				<use xlink:href="#p3" transform="rotate(45)"/>
+				<use xlink:href="#p3" transform="rotate(67.5)"/>
+			</g>
+			<use xlink:href="#p4" transform="rotate(90)"/>
+			<use xlink:href="#p4" transform="rotate(180)"/>
+			<use xlink:href="#p4" transform="rotate(270)"/>
+			<circle fill="#147E48" r="152"/>
+			<circle fill="#fff" r="126"/>
+			<circle fill="#B63A22" r="121"/>
+			<circle fill="#fff" r="95"/>
+		</g>
+		<g id="p5">
+			<path fill="none" d="M20,-70 80,-70" stroke="#B63A22" stroke-width="26" stroke-linecap="round"/>
+			<path fill="none" d="M20,-35 90,-35" stroke="#B63A22" stroke-width="26" stroke-linecap="round"/>
+			<path fill="none" d="M20,0 95,0" stroke="#B63A22" stroke-width="26" stroke-linecap="round"/>
+		</g>
+		<use xlink:href="#p5" transform="scale(-1,1)"/>
+		<path fill="none" d="M-50,35 50,35" stroke="#B63A22" stroke-width="26" stroke-linecap="round"/>
+		<path fill="none" d="M-30,70 30,70" stroke="#B63A22" stroke-width="26" stroke-linecap="round"/>
+	</g>
+	<g transform="translate(2430,1350)">
+		<use xlink:href="#p6"/>
+		<path fill="none" d="M-35,-80 -55,-70V70M-55,-40H-35M-90,-30 -40,-10 -90,30M0,-90H0.1M0,-40H0.1M80,50 0,0 -55,40M0,40H0.1M40,-80H40.1M40,-50H90M40,-20 95,15M-10,75Q40,75 50,40" stroke="#B63A22" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+	</g>
+	<g transform="translate(2970,1350)">
+		<circle fill="#283989" r="250"/>
+		<circle fill="#fff" r="230"/>
+		<g id="q1" transform="rotate(22.5)">
+			<ellipse cx="170" rx="45" ry="65" fill="#147E48"/>
+			<ellipse cx="170" rx="25" ry="45" fill="#fff"/>
+			<rect x="0" y="-25" width="170" height="50" fill="#fff"/>
+			<circle cx="139" cy="25" fill="#147E48" r="10"/>
+			<circle cx="139" cy="-25" fill="#147E48" r="10"/>
+		</g>
+		<use xlink:href="#q1" transform="rotate(45)"/>
+		<use xlink:href="#q1" transform="rotate(90)"/>
+		<use xlink:href="#q1" transform="rotate(135)"/>
+		<use xlink:href="#q1" transform="rotate(180)"/>
+		<use xlink:href="#q1" transform="rotate(225)"/>
+		<use xlink:href="#q1" transform="rotate(270)"/>
+		<use xlink:href="#q1" transform="rotate(315)"/>
+		<circle fill="#B63A22" r="110"/>
+		<circle fill="#fff" r="90"/>
+		<circle fill="#B63A22" r="20"/>
+	</g>
+</svg>

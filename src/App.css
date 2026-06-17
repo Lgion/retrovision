@@ -672,6 +672,21 @@ body {
   padding: 16px;
 }
 
+.game-wrapper-fullscreen {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-app);
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0;
+}
+
 @media (max-width: 480px) {
   .game-wrapper {
     padding: 8px;

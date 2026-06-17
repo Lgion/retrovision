@@ -11,14 +11,74 @@ const DIRS = {
 };
 
 const WIRE_COLORS = [
-  '#475569', // Slate Blue
-  '#059669', // Emerald
-  '#dc2626', // Crimson
-  '#7c3aed', // Violet
-  '#d97706', // Amber
-  '#db2777', // Pink
-  '#0284c7'  // Sky Blue
+  '#0f172a', // Dark Navy for the unified shape look
 ];
+
+const HORSE_MASK_16 = [
+  "       XXX      ",
+  "      XXXXX     ",
+  "      XXXXXX    ",
+  "      XXXXXX    ",
+  "      XXXXXX    ",
+  "  XXX XXXXXXX   ",
+  " XXXXXXXXXXXXX  ",
+  " XXXXXXXXXXXXX  ",
+  "  XXXXXXXXXXXX  ",
+  "     XXXXXXXXX  ",
+  "    XXXXXXXXXX  ",
+  "   XXXXXXXXXXX  ",
+  "  XXXXXXXXXXXX  ",
+  " XXXXXXXXXXXXX  ",
+  "XXXXXXXXXXXXXX  ",
+  "XXXXXXXXXXXXXX  "
+];
+
+const HORSE_MASK_32 = [
+  "              XXXXX             ",
+  "             XXXXXXX            ",
+  "             XXXXXXXX           ",
+  "             XXXXXXXXX          ",
+  "             XXXXXXXXXX         ",
+  "             XXXXXXXXXX         ",
+  "             XXXXXXXXXX         ",
+  "             XXXXXXXXXXX        ",
+  "             XXXXXXXXXXX        ",
+  "             XXXXXXXXXXX        ",
+  "    XXXXX    XXXXXXXXXXXX       ",
+  "   XXXXXXX   XXXXXXXXXXXX       ",
+  "  XXXXXXXXX  XXXXXXXXXXXXX      ",
+  " XXXXXXXXXXXXXXXXXXXXXXXXX      ",
+  " XXXXXXXXXXXXXXXXXXXXXXXXXX     ",
+  " XXXXXXXXXXXXXXXXXXXXXXXXXX     ",
+  " XXXXXXXXXXXXXXXXXXXXXXXXXX     ",
+  "  XXXXXXXXXXXXXXXXXXXXXXXXX     ",
+  "   XXXXXXXXXXXXXXXXXXXXXXXX     ",
+  "        XXXXXXXXXXXXXXXXXXX     ",
+  "       XXXXXXXXXXXXXXXXXXXX     ",
+  "      XXXXXXXXXXXXXXXXXXXXX     ",
+  "     XXXXXXXXXXXXXXXXXXXXXX     ",
+  "    XXXXXXXXXXXXXXXXXXXXXXX     ",
+  "   XXXXXXXXXXXXXXXXXXXXXXXX     ",
+  "  XXXXXXXXXXXXXXXXXXXXXXXXX     ",
+  " XXXXXXXXXXXXXXXXXXXXXXXXXX     ",
+  " XXXXXXXXXXXXXXXXXXXXXXXXXX     ",
+  "XXXXXXXXXXXXXXXXXXXXXXXXXXX     ",
+  "XXXXXXXXXXXXXXXXXXXXXXXXXXX     ",
+  "XXXXXXXXXXXXXXXXXXXXXXXXXXXX    ",
+  "XXXXXXXXXXXXXXXXXXXXXXXXXXXX    "
+];
+
+const MASKS = {
+  16: HORSE_MASK_16,
+  32: HORSE_MASK_32
+};
+
+const isValidCell = (r, c, size) => {
+  if (MASKS[size]) {
+    return MASKS[size][r][c] === 'X';
+  }
+  return true;
+};
 
 export default function ArrowPuzzle({ onBack, onScoreSave }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -31,6 +91,8 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
   const [wires, setWires] = useState([]);
   const [victoryPhase, setVictoryPhase] = useState(0);
   const [flyingArrows, setFlyingArrows] = useState([]); // Array of flying animations for standard mode
+  const [lives, setLives] = useState(3);
+  const [hints, setHints] = useState(3);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -165,17 +227,18 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
     return { grid: newGrid, placed };
   };
 
-  // 3. Wires / Labyrinthe generator (similar to com.ecffri.arrows)
   const generateWireBoard = (size, numWires) => {
     let newGrid = Array(size).fill(null).map(() => Array(size).fill(null));
     let newWires = [];
     const dirKeys = Object.keys(DIRS);
     let attempts = 0;
+    const maxAttempts = size > 20 ? 25000 : 10000;
 
-    while (newWires.length < numWires && attempts < 10000) {
+    while (newWires.length < numWires && attempts < maxAttempts) {
       attempts++;
       const r = Math.floor(Math.random() * size);
       const c = Math.floor(Math.random() * size);
+      if (!isValidCell(r, c, size)) continue;
       if (newGrid[r][c] !== null) continue;
 
       const dirName = dirKeys[Math.floor(Math.random() * dirKeys.length)];
@@ -199,16 +262,17 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
       const tailR = r - dir.dr;
       const tailC = c - dir.dc;
       if (tailR < 0 || tailR >= size || tailC < 0 || tailC >= size) continue;
+      if (!isValidCell(tailR, tailC, size)) continue;
       if (newGrid[tailR][tailC] !== null) continue;
 
       let currentWire = [{ r, c }, { r: tailR, c: tailC }];
       let currentCells = new Set([`${r},${c}`, `${tailR},${tailC}`]);
-      // Longer wires to be compactly interlaced
-      const maxLen = Math.min(8, size - 2);
-      const targetLength = 4 + Math.floor(Math.random() * (maxLen - 3));
+      // Longer wires to be compactly interlaced like a real labyrinth
+      const maxLen = Math.min(35, size * 1.5);
+      const targetLength = 5 + Math.floor(Math.random() * (maxLen - 4));
 
       let growAttempts = 0;
-      while (currentWire.length < targetLength && growAttempts < 50) {
+      while (currentWire.length < targetLength && growAttempts < 80) {
         growAttempts++;
         const tail = currentWire[currentWire.length - 1];
         
@@ -222,7 +286,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
           const nc = tail.c + n.dc;
           
           if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-            if (newGrid[nr][nc] === null && !currentCells.has(`${nr},${nc}`)) {
+            if (isValidCell(nr, nc, size) && newGrid[nr][nc] === null && !currentCells.has(`${nr},${nc}`)) {
               // Ensure we don't cross the head's exit ray
               let onExitRay = false;
               let currR = r + dir.dr;
@@ -286,6 +350,8 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
     setMoves(0);
     setVictoryPhase(0);
     setFlyingArrows([]);
+    setLives(3);
+    setHints(3);
     setGameState('playing');
     sound.startBGM();
   };
@@ -325,13 +391,18 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
         setFlyingArrows(prev => prev.filter(f => f.flyingId !== flyingId));
       }, 400);
 
-      const newLeft = arrowsLeft - 1;
-      setArrowsLeft(newLeft);
-      if (newLeft === 0) {
-        handleVictory();
-      }
+      setArrowsLeft(prev => {
+        const newLeft = prev - 1;
+        if (newLeft === 0) handleVictory();
+        return newLeft;
+      });
     } else {
       sound.playShake();
+      setLives(l => {
+        const newL = l - 1;
+        if (newL <= 0) setVictoryPhase(-2); // Game over phase
+        return newL;
+      });
       const el = document.getElementById(arrow.id);
       if (el) {
         el.classList.remove('shake-anim');
@@ -347,19 +418,17 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
 
     const dir = DIRS[wire.dir];
     let canFly = true;
-    for (let cell of wire.path) {
-      let currR = cell.r + dir.dr;
-      let currC = cell.c + dir.dc;
-      while (currR >= 0 && currR < boardSize && currC >= 0 && currC < boardSize) {
-        const hit = grid[currR][currC];
-        if (hit !== null && hit !== wire.id) {
-          canFly = false;
-          break;
-        }
-        currR += dir.dr;
-        currC += dir.dc;
+    const head = wire.path[0];
+    let currR = head.r + dir.dr;
+    let currC = head.c + dir.dc;
+    while (currR >= 0 && currR < boardSize && currC >= 0 && currC < boardSize) {
+      const hit = grid[currR][currC];
+      if (hit !== null && hit !== wire.id) {
+        canFly = false;
+        break;
       }
-      if (!canFly) break;
+      currR += dir.dr;
+      currC += dir.dc;
     }
 
     if (canFly) {
@@ -378,13 +447,20 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
 
       setTimeout(() => {
         setWires(prev => prev.filter(w => w.id !== wire.id));
-        const newLeft = arrowsLeft - 1;
-        setArrowsLeft(newLeft);
-        if (newLeft === 0) handleVictory();
+        setArrowsLeft(prev => {
+          const newLeft = prev - 1;
+          if (newLeft === 0) handleVictory();
+          return newLeft;
+        });
       }, 800); // Wait for transition duration
 
     } else {
       sound.playShake();
+      setLives(l => {
+        const newL = l - 1;
+        if (newL <= 0) setVictoryPhase(-2); // Game over phase
+        return newL;
+      });
       const el = document.getElementById(wire.id);
       if (el) {
         el.classList.remove('shake-anim');
@@ -416,9 +492,55 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
     }, 1500);
   };
 
+  const useHint = () => {
+    if (hints <= 0 || victoryPhase !== 0) return;
+    
+    // Find an arrow or wire that can fly
+    if (mode === 'wire') {
+      const flyable = wires.find(wire => {
+        if (wire.flying) return false;
+        const dir = DIRS[wire.dir];
+        let canFly = true;
+        const head = wire.path[0];
+        let currR = head.r + dir.dr;
+        let currC = head.c + dir.dc;
+        while (currR >= 0 && currR < boardSize && currC >= 0 && currC < boardSize) {
+          const hit = grid[currR][currC];
+          if (hit !== null && hit !== wire.id) {
+            canFly = false;
+            break;
+          }
+          currR += dir.dr;
+          currC += dir.dc;
+        }
+        return canFly;
+      });
+      if (flyable) {
+        setHints(h => h - 1);
+        handleWireTap(flyable);
+      }
+    } else {
+      let flyable = null;
+      for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+          const arrow = grid[r][c];
+          if (arrow && checkPath(r, c, arrow.dir, grid)) {
+            flyable = { r, c };
+            break;
+          }
+        }
+        if (flyable) break;
+      }
+      if (flyable) {
+        setHints(h => h - 1);
+        handleArrowTap(flyable.r, flyable.c);
+      }
+    }
+  };
+
   const CELL_SIZE = Math.min(50, Math.floor(440 / boardSize));
-  const strokeWidth = Math.max(4, Math.round(CELL_SIZE * 0.22));
-  const arrowHeadSize = Math.max(6, Math.round(CELL_SIZE * 0.26));
+  const strokeWidth = mode === 'wire' ? Math.max(2, Math.round(CELL_SIZE * 0.15)) : CELL_SIZE - 4;
+  const arrowHeadSize = Math.max(6, Math.round(CELL_SIZE * 0.4));
   const fontSize = Math.max(12, Math.round(CELL_SIZE * 0.48));
 
   // Construct full SVG Path for wire (Tail to Head + straight exit path)
@@ -457,9 +579,14 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
         </button>
         <div style={titleStyle}>ARROW PUZZLE</div>
         {gameState === 'playing' ? (
-          <button onClick={() => setGameState('menu')} className="retro-btn" style={backBtnStyle}>
-            Menu
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={() => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250))} className="retro-btn" style={{...backBtnStyle, borderColor: '#f59e0b', color: '#f59e0b'}}>
+              Rejouer
+            </button>
+            <button onClick={() => setGameState('menu')} className="retro-btn" style={backBtnStyle}>
+              Menu
+            </button>
+          </div>
         ) : <div style={{width: '70px'}}></div>}
       </div>
 
@@ -502,18 +629,18 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
           </div>
           
           <button 
-            onClick={() => startGame(12, mode === 'wire' ? 38 : 45)} 
+            onClick={() => startGame(16, mode === 'wire' ? 75 : 85)} 
             className="retro-btn pulse-glow"
             style={{padding: '15px 40px', fontSize: '20px', borderColor: '#3b82f6', color: '#3b82f6', marginBottom: '15px', width: '250px'}}
           >
-            Facile (12x12)
+            Facile (16x16)
           </button>
           <button 
-            onClick={() => startGame(16, mode === 'wire' ? 75 : 85)} 
+            onClick={() => startGame(32, mode === 'wire' ? 300 : 250)} 
             className="retro-btn"
             style={{padding: '15px 40px', fontSize: '20px', borderColor: '#10b981', color: '#10b981', width: '250px'}}
           >
-            Moyen (16x16)
+            Moyen (32x32)
           </button>
           
           <div style={{marginTop: '30px', color: '#cbd5e1', textAlign: 'center', fontSize: '14px', maxWidth: '300px'}}>
@@ -526,23 +653,38 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
         <div style={gameplayContainerStyle}>
           
           <div style={statusRowStyle}>
-            <div><span style={{color: '#8e8a9f'}}>Restantes: </span><span style={{color: '#fff', fontWeight: 'bold', fontSize: '20px'}}>{arrowsLeft}</span></div>
-            <div><span style={{color: '#8e8a9f'}}>Coups: </span><span style={{color: '#fff', fontWeight: 'bold', fontSize: '20px'}}>{moves}</span></div>
+            <div><span style={{color: '#8e8a9f'}}>Vies: </span>
+              <span style={{color: '#ef4444', fontSize: '18px'}}>{'❤️'.repeat(lives)}{'🖤'.repeat(3 - lives)}</span>
+            </div>
+            <div><span style={{color: '#8e8a9f'}}>Restes: </span><span style={{color: '#fff', fontWeight: 'bold', fontSize: '18px'}}>{arrowsLeft}</span></div>
+            <div>
+              <button 
+                onClick={useHint} 
+                disabled={hints <= 0}
+                style={{
+                  background: hints > 0 ? '#3b82f6' : '#475569', color: 'white', border: 'none', 
+                  padding: '5px 12px', borderRadius: '15px', cursor: hints > 0 ? 'pointer' : 'not-allowed',
+                  fontWeight: 'bold', fontSize: '14px'
+                }}
+              >
+                💡 {hints}
+              </button>
+            </div>
           </div>
 
           <div style={{
             position: 'relative', width: boardSize * CELL_SIZE, height: boardSize * CELL_SIZE,
             backgroundColor: mode === 'wire' ? '#f8fafc' : '#1e293b', 
             borderRadius: '12px', border: '2px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)', margin: '0 auto', overflow: 'hidden'
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)', margin: '0 auto', overflow: 'hidden',
+            animation: 'boardEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both' // Staging & Appeal
           }}>
-            {/* Grid Lines */}
             <div style={{
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
               display: 'grid', gridTemplateColumns: `repeat(${boardSize}, 1fr)`, zIndex: 0
             }}>
               {Array.from({length: boardSize * boardSize}).map((_, i) => (
-                <div key={i} style={{ border: `1px ${mode === 'wire' ? 'solid #e2e8f0' : 'dashed rgba(255,255,255,0.05)'}` }} />
+                <div key={i} style={{ border: `1px ${mode === 'wire' ? 'solid transparent' : 'dashed rgba(255,255,255,0.05)'}` }} />
               ))}
             </div>
 
@@ -556,13 +698,13 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
                   const L_orig = (wire.path.length - 1) * CELL_SIZE;
                   const L_exit = 15 * CELL_SIZE;
 
-                  // Triangle arrowhead coordinates
+                  // Triangle arrowhead coordinates positioned at the tip of the line
                   const size = arrowHeadSize;
                   let arrowPoly = "";
-                  if (wire.dir === 'up') arrowPoly = `${cx-size},${cy+size/2} ${cx},${cy-size} ${cx+size},${cy+size/2}`;
-                  if (wire.dir === 'down') arrowPoly = `${cx-size},${cy-size/2} ${cx},${cy+size} ${cx+size},${cy-size/2}`;
-                  if (wire.dir === 'left') arrowPoly = `${cx+size/2},${cy-size} ${cx-size},${cy} ${cx+size/2},${cy+size}`;
-                  if (wire.dir === 'right') arrowPoly = `${cx-size/2},${cy-size} ${cx+size},${cy} ${cx-size/2},${cy+size}`;
+                  if (wire.dir === 'up') arrowPoly = `${cx-size*0.7},${cy+size*0.4} ${cx},${cy-size*0.8} ${cx+size*0.7},${cy+size*0.4}`;
+                  if (wire.dir === 'down') arrowPoly = `${cx-size*0.7},${cy-size*0.4} ${cx},${cy+size*0.8} ${cx+size*0.7},${cy-size*0.4}`;
+                  if (wire.dir === 'left') arrowPoly = `${cx+size*0.4},${cy-size*0.7} ${cx-size*0.8},${cy} ${cx+size*0.4},${cy+size*0.7}`;
+                  if (wire.dir === 'right') arrowPoly = `${cx-size*0.4},${cy-size*0.7} ${cx+size*0.8},${cy} ${cx-size*0.4},${cy+size*0.7}`;
 
                   return (
                     <g 
@@ -571,7 +713,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
                       onClick={() => handleWireTap(wire)}
                       style={{ 
                         cursor: 'pointer',
-                        filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.18))'
+                        filter: boardSize > 16 ? 'none' : 'drop-shadow(0 2px 3px rgba(0,0,0,0.15))'
                       }}
                     >
                       <path 
@@ -584,15 +726,18 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
                         style={{
                           strokeDasharray: `${L_orig} 10000`,
                           strokeDashoffset: wire.flying ? -L_exit : 0,
-                          transition: wire.flying ? 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
+                          transition: wire.flying ? 'stroke-dashoffset 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none'
                         }}
                       />
                       <polygon 
                         points={arrowPoly} 
                         fill={wire.color} 
+                        stroke={wire.color}
+                        strokeWidth="1"
+                        strokeLinejoin="round"
                         style={{
                           transform: wire.flying ? `translate(${dir.dc * L_exit}px, ${dir.dr * L_exit}px)` : 'none',
-                          transition: wire.flying ? 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
+                          transition: wire.flying ? 'transform 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none'
                         }}
                       />
                     </g>
@@ -635,6 +780,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
             {mode !== 'wire' && flyingArrows.map(arrow => {
               const dx = DIRS[arrow.dir].dc * 400; // Fly far away
               const dy = DIRS[arrow.dir].dr * 400;
+              const isHoriz = DIRS[arrow.dir].dc !== 0;
               return (
                 <div 
                   key={arrow.flyingId}
@@ -643,8 +789,12 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
                     width: CELL_SIZE, height: CELL_SIZE, zIndex: 20,
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     pointerEvents: 'none',
-                    animation: `flyAway 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards`,
-                    '--dx': `${dx}px`, '--dy': `${dy}px`
+                    animation: `flyAwaySquash 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards`,
+                    '--dx': `${dx}px`, '--dy': `${dy}px`,
+                    '--sx': isHoriz ? 1.8 : 0.4, // Stretch in flight direction
+                    '--sy': isHoriz ? 0.4 : 1.8,
+                    '--asx': isHoriz ? 0.7 : 1.3, // Squash for anticipation
+                    '--asy': isHoriz ? 1.3 : 0.7,
                   }}
                 >
                   <div style={{
@@ -664,34 +814,74 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
         </div>
       )}
 
+      {/* Immediate Confetti Explosion */}
+      {victoryPhase !== 0 && victoryPhase !== -2 && (
+        <div style={{ position: 'absolute', top: '50%', left: '50%', width: 0, height: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 1000 }}>
+          {Array.from({ length: 100 }, (_, i) => {
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 150 + Math.random() * 450; // spread
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity + 300; // gravity effect
+            return (
+              <div key={i} style={{
+                position: 'absolute',
+                width: '10px', height: '10px',
+                background: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#a855f7'][i % 6],
+                borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                '--tx': `${tx}px`, '--ty': `${ty}px`, '--rot': `${Math.random() * 720}deg`,
+                animation: `confettiExplode ${1 + Math.random()*1.5}s cubic-bezier(0.25, 1, 0.5, 1) forwards`
+              }} />
+            )
+          })}
+        </div>
+      )}
+
       {/* Victory Overlays */}
-      {victoryPhase > 0 && (
+      {(victoryPhase > 0 || victoryPhase === -2) && (
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
           background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', redirection: 'column',
+          backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', flexDirection: 'column',
           justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.5s'
         }}>
-          {victoryPhase >= 2 && (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-              {Array.from({ length: 40 }, (_, i) => (
-                <div key={i} style={{
-                  position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
-                  width: '10px', height: '10px', background: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'][i%4],
-                  borderRadius: '2px', animation: `confettiFall ${2 + Math.random()*3}s linear ${Math.random()*2}s infinite`,
-                  transform: `rotate(${Math.random()*360}deg)`, opacity: 0.8
-                }} />
-              ))}
+          {/* Removed old missing confettiFall element */}
+
+          {victoryPhase === -2 && (
+            <div style={{
+              animation: 'dropInHeavy 0.8s cubic-bezier(0.25, 1, 0.5, 1) both', textAlign: 'center', background: 'white', padding: '50px',
+              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #ef4444', zIndex: 10
+            }}>
+              <div style={{ fontSize: '4rem', marginBottom: '10px' }}>💀</div>
+              <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Game Over !</h2>
+              <div style={{ fontSize: '1.2rem', color: '#666', marginBottom: '30px' }}>
+                Plus de vies restantes.
+              </div>
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250))}
+                  className="retro-btn pulse-glow"
+                  style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#f59e0b', color: '#f59e0b' }}
+                >
+                  Recommencer
+                </button>
+                <button
+                  onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
+                  className="retro-btn"
+                  style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#ef4444', color: '#ef4444' }}
+                >
+                  Menu
+                </button>
+              </div>
             </div>
           )}
 
           {victoryPhase === 1 && (
-            <h2 style={{ fontSize: '4rem', color: '#3b82f6', margin: 0, animation: 'popIn 0.8s' }}>ÉPURÉ !</h2>
+            <h2 style={{ fontSize: '4rem', color: '#3b82f6', margin: 0, animation: 'textPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>ÉPURÉ !</h2>
           )}
 
           {victoryPhase === 3 && (
             <div style={{
-              animation: 'popIn 0.5s', textAlign: 'center', background: 'white', padding: '50px',
+              animation: 'popInBouncy 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both', textAlign: 'center', background: 'white', padding: '50px',
               borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #3b82f6', zIndex: 10
             }}>
               <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🎯</div>
@@ -699,31 +889,69 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
               <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
                 Score: <strong style={{ color: '#3b82f6', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
               </div>
-              <button
-                onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
-                className="retro-btn"
-                style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#3b82f6', color: '#3b82f6' }}
-              >
-                Super !
-              </button>
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250))}
+                  className="retro-btn"
+                  style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#f59e0b', color: '#f59e0b' }}
+                >
+                  Recommencer
+                </button>
+                <button
+                  onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
+                  className="retro-btn"
+                  style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#3b82f6', color: '#3b82f6' }}
+                >
+                  Super !
+                </button>
+              </div>
             </div>
           )}
         </div>
       )}
 
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes flyAway {
-          0% { transform: translate(0, 0) scale(1); opacity: 1; }
-          100% { transform: translate(var(--dx), var(--dy)) scale(0.5); opacity: 0; }
+        @keyframes flyAwaySquash {
+          0% { transform: translate(0, 0) scale(1, 1); opacity: 1; }
+          25% { transform: translate(calc(var(--dx) * -0.05), calc(var(--dy) * -0.05)) scale(var(--asx), var(--asy)); opacity: 1; }
+          100% { transform: translate(var(--dx), var(--dy)) scale(var(--sx), var(--sy)); opacity: 0; }
         }
         @keyframes shake-arrow {
-          0%, 100% { transform: translateX(0) translateY(0); }
-          25% { transform: translateX(-4px) translateY(-2px); }
-          50% { transform: translateX(4px) translateY(2px); }
-          75% { transform: translateX(-4px) translateY(2px); }
+          0%, 100% { transform: translate(0, 0) rotate(0); }
+          20% { transform: translate(-6px, 0) rotate(-10deg); }
+          40% { transform: translate(6px, 0) rotate(10deg); }
+          60% { transform: translate(-3px, 0) rotate(-5deg); }
+          80% { transform: translate(3px, 0) rotate(5deg); }
+        }
+        @keyframes popInBouncy {
+          0% { transform: scale(0.3) translateY(50px); opacity: 0; }
+          50% { transform: scale(1.05) translateY(-10px); opacity: 1; }
+          75% { transform: scale(0.95) translateY(5px); opacity: 1; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        @keyframes dropInHeavy {
+          0% { transform: translateY(-150vh) rotate(-15deg); opacity: 0; }
+          50% { transform: translateY(20px) rotate(5deg); opacity: 1; }
+          65% { transform: translateY(-10px) rotate(-2deg); opacity: 1; }
+          80% { transform: translateY(5px) rotate(1deg); opacity: 1; }
+          100% { transform: translateY(0) rotate(0); opacity: 1; }
+        }
+        @keyframes boardEnter {
+          0% { transform: perspective(1000px) rotateX(-15deg) translateY(60px) scale(0.9); opacity: 0; }
+          100% { transform: perspective(1000px) rotateX(0deg) translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes confettiExplode {
+          0% { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 1; }
+          40% { opacity: 1; }
+          100% { transform: translate(var(--tx), var(--ty)) scale(1) rotate(var(--rot)); opacity: 0; }
+        }
+        @keyframes textPop {
+          0% { transform: scale(0.5); opacity: 0; }
+          60% { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
         }
         .shake-anim {
-          animation: shake-arrow 0.35s ease-in-out;
+          animation: shake-arrow 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
         }
       `}} />
       </div>

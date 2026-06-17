@@ -30,22 +30,47 @@ export default function GameIntro({
     )
     .to(".intro-vortex-green", { duration: 1, rotation: 360, repeat: 1, ease: "none" }, 0)
     .fromTo(".intro-lightning", { opacity: 0 }, { opacity: 1, duration: 0.1, yoyo: true, repeat: 5 }, 0.2)
-    .to(".intro-title", { duration: 0.5, scale: 0.2, opacity: 0, ease: "power2.in" }, "+=0.5")
-    .to(".intro-vortex-container", { duration: 0.5, scale: 0, opacity: 0, ease: "power2.in" }, "<")
+    // Principle 2: Anticipation (Gonfler avant de disparaître)
+    .to(".intro-title", { duration: 0.2, scale: 1.1, ease: "power1.out" }, "+=0.3")
+    .to(".intro-title", { duration: 0.4, scale: 0, opacity: 0, ease: "back.in(2)" })
+    .to(".intro-vortex-container", { duration: 0.4, scale: 0, opacity: 0, ease: "back.in(2)" }, "<")
     
     // Logo & Play Button
     .set(".intro-logo-container", { visibility: "visible" })
+    // Principle 1: Squash and Stretch (Élasticité)
     .fromTo(".intro-logo-container", 
-        { scale: 1.5, opacity: 0 }, 
-        { duration: 0.6, scale: 1, opacity: 1, ease: "bounce.out" }
+        { scaleX: 0.2, scaleY: 2, opacity: 0, y: -100 }, 
+        { duration: 0.6, scaleX: 1, scaleY: 1, y: 0, opacity: 1, ease: "elastic.out(1, 0.5)" }
+    )
+    // Principle 3: Follow Through & Overlapping Action (Décalage Icone/Texte)
+    .fromTo(".intro-icon", 
+        { y: -30, opacity: 0 }, 
+        { duration: 0.5, y: 0, opacity: 1, ease: "back.out(1.7)" }, 
+        "<0.1"
+    )
+    .fromTo(".intro-game-name", 
+        { y: -30, opacity: 0 }, 
+        { duration: 0.5, y: 0, opacity: 1, ease: "back.out(1.7)" }, 
+        "<0.1"
     )
     .set(".intro-btn-play", { visibility: "visible" })
+    // Principle 4: Arc & Exaggeration (Mouvement en courbe et rotation)
     .fromTo(".intro-btn-play", 
-        { y: 200, opacity: 0 }, 
-        { duration: 0.6, y: 0, opacity: 1, ease: "back.out(1.5)" }, 
-        "-=0.2"
+        { y: 150, x: -30, rotationZ: -15, opacity: 0 }, 
+        { duration: 0.7, y: 0, x: 0, rotationZ: 0, opacity: 1, ease: "back.out(1.5)" }, 
+        "-=0.3"
     )
-    .call(() => startParticles());
+    .call(() => {
+        startParticles();
+        // Principle 5: Appeal & Staging (Animation perpétuelle du bouton Jouer)
+        gsap.to(".intro-btn-play", {
+            scale: 1.05,
+            duration: 0.8,
+            yoyo: true,
+            repeat: -1,
+            ease: "sine.inOut"
+        });
+    });
 
     let particles = [];
     let isRunning = false;
@@ -197,6 +222,7 @@ export default function GameIntro({
 
   const mainColor = colors[0] || '#8A2BE2';
   const secColor = colors[1] || '#4B0082';
+  const bgImageName = gameName.toLowerCase().replace(" collection", "").split(' ').join('_') + "_bg.webp";
 
   return (
     <div style={{
@@ -218,17 +244,28 @@ export default function GameIntro({
         .intro-lightning { position: absolute; width: 100%; height: 100%; z-index: 6; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><path d="M200,200 L150,100 L180,90 L120,20" stroke="%23FFFFFF" stroke-width="3" fill="none" filter="drop-shadow(0 0 5px %23FFFFFF)"/><path d="M200,200 L250,300 L220,310 L280,380" stroke="%23FFFFFF" stroke-width="3" fill="none" filter="drop-shadow(0 0 5px %23FFFFFF)"/><path d="M200,200 L300,150 L290,120 L380,80" stroke="%23FFFFFF" stroke-width="3" fill="none" filter="drop-shadow(0 0 5px %23FFFFFF)"/></svg>') center/contain no-repeat; opacity: 0; animation: intro-flash 0.15s infinite alternate; }
         @keyframes intro-flash { 0%, 50% { filter: brightness(1); } 100% { filter: brightness(2) drop-shadow(0 0 10px white); } }
         @keyframes intro-light { 
-            0% { text-shadow: 0 0 10px ${mainColor}; } 
-            50% { text-shadow: 0 0 30px ${secColor}, 0 0 50px ${mainColor}; } 
-            100% { text-shadow: 0 0 10px ${mainColor}; } 
+            0% { filter: drop-shadow(0 0 10px ${mainColor}) drop-shadow(0 10px 10px rgba(0,0,0,0.8)); } 
+            50% { filter: drop-shadow(0 0 30px ${secColor}) drop-shadow(0 0 50px ${mainColor}) drop-shadow(0 10px 10px rgba(0,0,0,0.8)); } 
+            100% { filter: drop-shadow(0 0 10px ${mainColor}) drop-shadow(0 10px 10px rgba(0,0,0,0.8)); } 
         }
-        .intro-title { font-family: '"Arial Black", sans-serif'; font-size: 5rem; font-weight: 900; color: #FFF; position: absolute; text-transform: uppercase; animation: intro-light 2s linear infinite; z-index: 10; text-align: center; }
+        @keyframes shine-sweep {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+        .intro-title { font-family: '"Arial Black", sans-serif'; font-size: 6rem; font-weight: 900; position: absolute; text-transform: uppercase; animation: intro-light 2s linear infinite; z-index: 10; text-align: center; background: linear-gradient(to bottom, #FFFFFF 0%, #E0E0E0 40%, ${mainColor} 50%, #FFFFFF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .intro-title::after { content: attr(data-text); position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: linear-gradient(120deg, transparent 0%, transparent 40%, rgba(255,255,255,0.8) 50%, transparent 60%, transparent 100%); background-size: 200% 100%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine-sweep 3s infinite linear; pointer-events: none; }
         .intro-logo-container { position: absolute; font-family: '"Arial Black", sans-serif'; font-size: 3.5rem; font-weight: 900; color: white; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 20; opacity: 0; visibility: hidden; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 5px 15px rgba(0,0,0,0.5); text-align: center; }
         .intro-icon { font-size: 5rem; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5)); }
-        .intro-btn-play { position: absolute; bottom: 15%; background: linear-gradient(to bottom, ${mainColor}, ${secColor}); border: 2px solid #FFF; border-radius: 50px; padding: 15px 40px; font-size: 2rem; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,255,255,0.4); z-index: 20; opacity: 0; visibility: hidden; text-transform: uppercase; transition: transform 0.2s, filter 0.2s; }
-        .intro-btn-play:hover { filter: brightness(1.2); transform: scale(1.05); }
+        .intro-btn-play { position: absolute; bottom: 15%; background: linear-gradient(to bottom, ${mainColor}, ${secColor}); border: 2px solid #FFF; border-radius: 50px; padding: 15px 40px; font-size: 2rem; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,255,255,0.4); z-index: 20; opacity: 0; visibility: hidden; text-transform: uppercase; transition: filter 0.2s; }
+        .intro-btn-play:hover { filter: brightness(1.2); }
       `}</style>
       <div className="intro-bg-sphere intro-sphere-1" />
+      <div className="intro-bg-image" style={{
+          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundImage: `url(/assets/bg/${bgImageName})`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          opacity: 0.25, zIndex: 0, mixBlendMode: 'screen', filter: 'blur(3px)'
+      }} />
       <div className="intro-bg-sphere intro-sphere-2" />
       <div className="intro-bg-sphere intro-sphere-3" />
       <div className="intro-vortex-container">
@@ -236,10 +273,10 @@ export default function GameIntro({
         <div className="intro-vortex-green"><div className="intro-orb" /></div>
         <div className="intro-lightning" />
       </div>
-      <div className="intro-title">{gameName.split(' ')[0]}</div>
+      <div className="intro-title" data-text={gameName.split(' ')[0]}>{gameName.split(' ')[0]}</div>
       <div className="intro-logo-container">
         <div className="intro-icon">{icon}</div>
-        <div>{gameName}</div>
+        <div className="intro-game-name">{gameName}</div>
       </div>
       <button className="intro-btn-play" onClick={onComplete}>JOUER</button>
       <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 15, pointerEvents: 'none' }} />
