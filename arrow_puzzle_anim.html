@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Arrow Puzzle Animation v2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0A0E1A;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .container {
+      position: relative;
+      perspective: 1200px;
+    }
+    .title {
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      position: relative;
+      display: flex;
+      gap: 5px; /* slight gap between letters for readability */
+    }
+    .letter {
+      display: inline-block;
+      transform-origin: bottom center;
+      position: relative;
+    }
+    .flare {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, #ffffff 0%, #a855f7 30%, transparent 70%);
+      border-radius: 50%;
+      mix-blend-mode: screen;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .sweep {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,0.9), transparent);
+      transform: skewX(-20deg);
+      mix-blend-mode: overlay;
+      pointer-events: none;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="flare" id="flare"></div>
+    <div class="title" id="title">
+      <div class="sweep" id="sweep"></div>
+    </div>
+  </div>
+
+  <script>
+    const titleText = "ARROW PUZZLE";
+    const titleEl = document.getElementById('title');
+    
+    // Primary colors for each word
+    const wordColors = ['#f59e0b', '#3b82f6']; // Orange, Blue
+    // Complementary glow colors
+    const glowColors = ['#ef4444', '#10b981']; // Red, Green
+    
+    let currentWordIndex = 0;
+    titleText.split('').forEach((char, i) => {
+      if (char === ' ') {
+        currentWordIndex++;
+        const space = document.createElement('span');
+        space.style.width = '3rem'; // fixed space width
+        titleEl.appendChild(space);
+        return;
+      }
+      
+      const span = document.createElement('span');
+      span.className = 'letter';
+      span.innerText = char;
+      
+      // Dynamic color styling for each letter
+      const baseColor = wordColors[currentWordIndex];
+      const glowColor = glowColors[currentWordIndex];
+      
+      // A unique metallic gradient for each letter based on its word
+      span.style.background = `linear-gradient(to bottom, #ffffff 0%, ${baseColor} 50%, #222222 100%)`;
+      span.style.webkitBackgroundClip = 'text';
+      span.style.webkitTextFillColor = 'transparent';
+      span.style.filter = `drop-shadow(0 0 15px ${glowColor}) drop-shadow(0 20px 20px rgba(0,0,0,0.9))`;
+      
+      titleEl.appendChild(span);
+    });
+
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 1 });
+
+    // 1. Anticipation: Shrink, rotate back, and hide
+    gsap.set('.letter', { scale: 0, opacity: 0, y: 150, rotationX: -90, rotationY: (i) => i % 2 === 0 ? -30 : 30 });
+    gsap.set('#flare', { width: 0, height: 0, opacity: 1 });
+
+    // 2. Squash, Stretch, Overlapping Action
+    tl.to('.letter', {
+      duration: 1.5,
+      scale: 1,
+      opacity: 1,
+      y: 0,
+      rotationX: 0,
+      rotationY: 0,
+      stagger: 0.08,
+      ease: "elastic.out(1, 0.3)",
+    }, 0.5);
+
+    // 3. Exaggeration (Flare explosion in the middle of the spawn)
+    tl.to('#flare', {
+      duration: 0.8,
+      width: 1200,
+      height: 1200,
+      opacity: 0,
+      ease: "power3.out"
+    }, 0.8);
+
+    // 4. Staging / Appeal (Shine sweep)
+    tl.to('#sweep', {
+      duration: 1.5,
+      left: '200%',
+      ease: "power2.inOut"
+    }, 1.8);
+
+    // 5. Secondary Action (Floating wave text)
+    tl.to('.letter', {
+      duration: 1.2,
+      y: -20,
+      yoyo: true,
+      repeat: 1,
+      stagger: {
+        each: 0.1,
+        from: "start"
+      },
+      ease: "sine.inOut"
+    }, 2.0);
+
+    // 6. Fade out
+    tl.to('.container', {
+      duration: 0.6,
+      opacity: 0,
+      scale: 1.2,
+      rotationX: 20,
+      ease: "power2.in"
+    }, "+=0.3");
+  </script>
+</body>
+</html>

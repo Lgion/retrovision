@@ -354,25 +354,25 @@ export default function FreeCell({ onBack, onScoreSave }) {
 
   // --- DIMENSIONS & THEME CONFIGURATION ---
   const theme = isMobile ? {
-    cardWidth: '75px',
-    cardHeight: '105px',
+    cardWidth: '85px',
+    cardHeight: '110px',
     emojiSize: '35px',
     pipAceSize: '35px',
     pipNormalSize: '35px',
-    cornerRankSize: '14px',
-    cornerSuitSize: '10px',
+    cornerRankSize: '30px',
+    cornerSuitSize: '14px',
     emptySlotSize: '35px',
     titleSize: '20px',
     statusSize: '16px',
     undoSize: '16px',
     verticalSpacing: 20
   } : {
-    cardWidth: '80px',
+    cardWidth: '105px',
     cardHeight: '115px',
     emojiSize: '40px',
     pipAceSize: '32px',
     pipNormalSize: '40px',
-    cornerRankSize: '18px',
+    cornerRankSize: '30px',
     cornerSuitSize: '14px',
     emptySlotSize: '40px',
     titleSize: '24px',
@@ -532,8 +532,9 @@ export default function FreeCell({ onBack, onScoreSave }) {
           position: 'relative', zIndex: isSelected ? 10 : 1
         }}
       >
+
         <div style={{ position: 'absolute', top: isMobile ? '2px' : '4px', left: isMobile ? '3px' : '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
-          <div style={{ color: card.color, fontSize: theme.cornerRankSize, fontWeight: 'bold' }}>{card.rankLabel}</div>
+          <div style={{ color: card.color, background: "white", padding: "0 3px", zIndex: 1, fontSize: theme.cornerRankSize, fontWeight: 'bold' }}>{card.rankLabel}</div>
           <div style={{ color: card.color, fontSize: theme.cornerSuitSize, marginTop: isMobile ? '-2px' : '0' }}>{card.suit}</div>
         </div>
         <div style={{ position: 'absolute', bottom: isMobile ? '2px' : '4px', right: isMobile ? '3px' : '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1, transform: 'rotate(180deg)' }}>
