@@ -366,8 +366,10 @@ export default function MahjongZen({ onBack, onScoreSave }) {
   useEffect(() => {
     const handleResize = () => {
       if (!containerRef.current) return;
+      const isMobile = window.innerWidth <= 600;
+      const headerOffset = isMobile ? 320 : 250;
       const availableWidth = containerRef.current.clientWidth - 16;
-      const availableHeight = containerRef.current.clientHeight - 250;
+      const availableHeight = containerRef.current.clientHeight - headerOffset;
 
       const boardW = mode === 'zen' ? (boardSize === 'small' ? 220 : boardSize === 'medium' ? 280 : 348) : 6 * 64;
       const boardH = mode === 'zen' ? (boardSize === 'small' ? 260 : boardSize === 'medium' ? 340 : 420) : 7 * 64;
@@ -1985,20 +1987,17 @@ export default function MahjongZen({ onBack, onScoreSave }) {
           onRestart={initGame}
           onUndo={undo}
           undoDisabled={history.length === 0}
-          onHint={getHint}
-          hintDisabled={hintsLeft <= 0}
-          hintsLeft={hintsLeft}
           onShop={() => setIsSettingsOpen(true)}
           showBgmToggle={false} // bgm is not toggled here directly
           centerContent={
             <div className="stats_header" style={{ display: 'flex', gap: '10px', alignItems: 'center', fontFamily: 'Orbitron, sans-serif' }}>
-              <div style={{ 
-                background: 'linear-gradient(180deg, rgba(250, 204, 21, 0.2), rgba(202, 138, 4, 0.4))', 
-                border: '2px solid rgba(250, 204, 21, 0.6)', 
-                borderRadius: '12px', 
-                padding: '4px 12px', 
-                display: 'flex', 
-                flexDirection: 'column', 
+              <div style={{
+                background: 'linear-gradient(180deg, rgba(250, 204, 21, 0.2), rgba(202, 138, 4, 0.4))',
+                border: '2px solid rgba(250, 204, 21, 0.6)',
+                borderRadius: '12px',
+                padding: '4px 12px',
+                display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 boxShadow: '0 4px 10px rgba(250, 204, 21, 0.3), inset 0 2px 4px rgba(255,255,255,0.4)',
                 textShadow: '0 2px 4px rgba(0,0,0,0.5)'
@@ -2006,14 +2005,14 @@ export default function MahjongZen({ onBack, onScoreSave }) {
                 <span style={{ fontSize: '0.7rem', color: '#fef08a', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>🏆 Record</span>
                 <span style={{ fontSize: '1.4rem', color: '#fff', fontWeight: '900' }}>{highScore}</span>
               </div>
-              
-              <div style={{ 
-                background: 'linear-gradient(180deg, rgba(34, 211, 238, 0.2), rgba(8, 145, 178, 0.4))', 
-                border: '2px solid rgba(34, 211, 238, 0.6)', 
-                borderRadius: '12px', 
-                padding: '4px 12px', 
-                display: 'flex', 
-                flexDirection: 'column', 
+
+              <div style={{
+                background: 'linear-gradient(180deg, rgba(34, 211, 238, 0.2), rgba(8, 145, 178, 0.4))',
+                border: '2px solid rgba(34, 211, 238, 0.6)',
+                borderRadius: '12px',
+                padding: '4px 12px',
+                display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 boxShadow: '0 4px 10px rgba(34, 211, 238, 0.3), inset 0 2px 4px rgba(255,255,255,0.4)',
                 textShadow: '0 2px 4px rgba(0,0,0,0.5)'
@@ -2026,18 +2025,27 @@ export default function MahjongZen({ onBack, onScoreSave }) {
           style={{ marginBottom: '15px' }}
         />
 
-        {/* Round / Mode indicator & Shuffle Button */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: `${maxBoardWidth + 32}px`, marginBottom: '10px' }}>
-          <div style={{ ...roundTitleStyle, margin: 0, textAlign: 'left', flex: 1 }}>
-            {mode === 'zen' ? 'Zen Solitaire Stacked' : `Normal Round ${boardSize === 'small' ? '3' : boardSize === 'medium' ? '4' : '5'}`}
-          </div>
-          <button 
-            onClick={() => { shuffleTiles(); setLost(false); }} 
+        {/* Hint Button & Shuffle Button */}
+        <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center', width: '100%', /*maxWidth: `${maxBoardWidth + 32}px`,*/ marginBottom: '10px' }}>
+          <button
+            onClick={getHint}
+            disabled={hintsLeft <= 0}
+            className="candy-btn btn-hint"
+            title="Indice"
+            style={{ width: '44px', height: '44px', padding: 0 }}
+          >
+            <svg className="btn-icon" viewBox="0 0 24 24" style={{ width: '22px', height: '22px', fill: 'currentColor' }}>
+              <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" />
+            </svg>
+            <span className="badge">{hintsLeft}</span>
+          </button>
+          <button
+            onClick={() => { shuffleTiles(); setLost(false); }}
             className={`candy-btn btn-shuffle ${lost ? 'pulse-shuffle' : ''}`}
             title="Mélanger"
           >
             <svg className="btn-icon" viewBox="0 0 24 24" style={{ width: '22px', height: '22px', fill: 'currentColor' }}>
-              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
             </svg>
           </button>
         </div>
@@ -2056,6 +2064,7 @@ export default function MahjongZen({ onBack, onScoreSave }) {
             ...boardWrapperStyle,
             background: mode === 'slide' ? 'rgba(8, 60, 84, 0.2)' : '#f8fafc',
             border: mode === 'slide' ? '6px solid #38bdf8' : '2px solid var(--border-color)',
+            borderLeft: mode === 'slide' ? '12px solid red' : '2px solid var(--border-color)',
             boxShadow: mode === 'slide' ? 'inset 0 4px 12px rgba(0,0,0,0.4), 0 10px 25px rgba(0,0,0,0.15)' : 'inset 0 2px 8px rgba(0,0,0,0.02)',
             position: 'relative',
             zIndex: 2,

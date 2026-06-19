@@ -109,9 +109,44 @@ export default function GameHeader({
           fill: currentColor;
           filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
         }
+
+        /* Mobile Responsiveness */
+        .gh-container {
+          padding: 15px 20px;
+          gap: 10px;
+        }
+        .gh-title {
+          display: block;
+        }
+        .btn-shop-text {
+          display: inline;
+        }
+        
+        @media (max-width: 600px) {
+          .gh-container {
+            padding: 8px 10px !important;
+            gap: 5px !important;
+          }
+          .candy-btn {
+            width: 40px !important;
+            height: 40px !important;
+          }
+          .candy-btn.btn-shop {
+            padding: 0 10px !important;
+          }
+          .btn-icon {
+            width: 20px;
+            height: 20px;
+          }
+          .gh-title {
+            display: none !important;
+          }
+          .btn-shop-text {
+            display: none !important;
+          }
+        }
       `}</style>
-      <div style={{
-        padding: '15px 20px',
+      <div className="gh-container" style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -120,7 +155,6 @@ export default function GameHeader({
         borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         zIndex: 10,
         flexWrap: 'wrap',
-        gap: '10px',
         ...style
       }}>
         {/* Left Area: Back Button & Title */}
@@ -145,14 +179,12 @@ export default function GameHeader({
             {backText}
           </button>
           {title && (
-            <div style={{
+            <div className="gh-title" style={{
               fontFamily: 'Orbitron, sans-serif',
               fontSize: '1.2rem',
               color: '#fff',
               letterSpacing: '1px',
-              fontWeight: 'bold',
-              display: 'none', // Hidden on very small screens if needed, or shown via media query. Let's show it by default.
-              '@media (minWidth: 600px)': { display: 'block' }
+              fontWeight: 'bold'
             }}>
               {title}
             </div>
@@ -167,7 +199,7 @@ export default function GameHeader({
         )}
 
         {/* Right Area: Controls */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: '2em', width: "100%", alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
 
           {onRestart && (
             <button
@@ -228,8 +260,9 @@ export default function GameHeader({
               }
             }}
             className="candy-btn btn-shop"
+            title="Boutique"
           >
-            🛍️ Boutique
+            🛍️<span className="btn-shop-text"> Boutique</span>
           </button>
 
           {extraControls}
