@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
+import GameHeader from '../components/GameHeader';
 import hangmanData from '../utils/hangmanData.json';
 
 export default function Hangman({ onBack, onScoreSave }) {
@@ -249,23 +250,22 @@ export default function Hangman({ onBack, onScoreSave }) {
       <div style={containerStyle}>
         
         {/* Top Header */}
-        <div style={headerStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button onClick={handleBackWithConfirm} className="retro-btn" style={backBtnStyle}>
-              ↩
-            </button>
-            <div style={levelTextStyle}>Devinette</div>
-          </div>
-          
-          <div style={statsBoxStyle}>
-            <span style={{ fontSize: '18px' }}>😈</span>
-            <div style={coinsBadgeStyle}>
-              <span style={{ color: '#f59e0b', fontSize: '16px' }}>★</span> 
-              <span style={{ fontWeight: 'bold' }}>{coins}</span>
-              <button style={addCoinBtnStyle}>+</button>
+        <GameHeader
+          title="DEVINETTE"
+          onBack={handleBackWithConfirm}
+          showBgmToggle={false} // bgm global
+          centerContent={
+            <div style={statsBoxStyle}>
+              <span style={{ fontSize: '18px' }}>😈</span>
+              <div style={coinsBadgeStyle}>
+                <span style={{ color: '#f59e0b', fontSize: '16px' }}>★</span> 
+                <span style={{ fontWeight: 'bold' }}>{coins}</span>
+                <button style={addCoinBtnStyle}>+</button>
+              </div>
             </div>
-          </div>
-        </div>
+          }
+          style={{ background: 'transparent', boxShadow: 'none', borderBottom: '2px dashed #cbd5e1' }}
+        />
 
         {/* Drawing & Riddle Section */}
         <div style={topSectionStyle}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
 import WinLossTransition from '../components/WinLossTransition';
+import GameHeader from '../components/GameHeader';
 
 const SUITS = [
   { id: '♥', color: '#c21807' },
@@ -659,17 +660,19 @@ export default function FreeCell({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)}
       />}
       <div ref={containerRef} style={containerStyle}>
-        <div style={headerStyle}>
-          <button onClick={handleBackWithConfirm} className="retro-btn" style={backBtnStyle}>
-            &lt; Retour Hub
-          </button>
-          <div style={titleStyle}>FREECELL</div>
-          {gameState === 'playing' ? (
-            <button onClick={() => setGameState('menu')} className="retro-btn" style={backBtnStyle}>
-              Abandonner
-            </button>
-          ) : <div style={{ width: isMobile ? '60px' : '80px' }}></div>}
-        </div>
+        <GameHeader
+          title="FREECELL"
+          onBack={handleBackWithConfirm}
+          onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
+          onUndo={gameState === 'playing' ? undoMove : undefined}
+          undoDisabled={history.length === 0}
+          showBgmToggle={false} // bgm is managed automatically here or not togglable
+          centerContent={
+            gameState === 'playing' ? (
+              <div style={{ color: '#8e8a9f', fontSize: '1rem' }}>Coups: <span style={{ color: '#fff', fontWeight: 'bold' }}>{moves}</span></div>
+            ) : null
+          }
+        />
 
         {gameState === 'menu' && (
           <div style={menuStyle}>
@@ -688,19 +691,6 @@ export default function FreeCell({ onBack, onScoreSave }) {
         {gameState === 'playing' && (
           <div style={gameplayContainerStyle}>
 
-            <div style={statusRowStyle}>
-              <div><span style={{ color: '#8e8a9f' }}>Coups: </span><span style={{ color: '#fff', fontWeight: 'bold' }}>{moves}</span></div>
-              <button
-                onClick={undoMove}
-                disabled={history.length === 0}
-                style={{
-                  background: 'transparent', border: 'none', color: history.length > 0 ? '#00F0FF' : '#555',
-                  cursor: history.length > 0 ? 'pointer' : 'default', fontSize: theme.undoSize, fontWeight: 'bold'
-                }}
-              >
-                ↩️ Annuler (Undo)
-              </button>
-            </div>
 
             <div
               className="bloc_freecell"

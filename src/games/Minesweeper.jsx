@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
+import GameHeader from '../components/GameHeader';
 
 export default function Minesweeper({ onBack, onScoreSave }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -254,17 +255,39 @@ export default function Minesweeper({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)} 
       />}
       <div style={containerStyle}>
-        <div style={headerStyle}>
-        <button onClick={handleBackWithConfirm} className="retro-btn" style={backBtnStyle}>
-          &lt; Hub
-        </button>
-        <div style={titleStyle}>DÉMINEUR</div>
-        {gameState === 'playing' ? (
-          <button onClick={() => setGameState('menu')} className="retro-btn" style={backBtnStyle}>
-            Menu
-          </button>
-        ) : <div style={{width: '70px'}}></div>}
-      </div>
+      <GameHeader
+        title="DÉMINEUR"
+        onBack={handleBackWithConfirm}
+        onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
+        showBgmToggle={false} // BGM handled elsewhere
+        centerContent={
+          gameState === 'playing' ? (
+            <div style={mineCounterStyle}>
+              💣 {minesLeft}
+            </div>
+          ) : null
+        }
+        extraControls={
+          gameState === 'playing' ? (
+            <button 
+              onClick={() => { sound.playClick(); setFlagMode(!flagMode); }}
+              className={`retro-btn ${flagMode ? 'pulse-glow' : ''}`}
+              style={{
+                padding: '8px 16px', fontSize: '14px', 
+                backgroundColor: flagMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${flagMode ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                color: flagMode ? '#ef4444' : '#ffffff',
+                borderRadius: '20px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {flagMode ? '🚩 Mode Drapeau' : '⛏️ Mode Creuser'}
+            </button>
+          ) : null
+        }
+      />
 
       {gameState === 'menu' && (
         <div style={menuStyle}>
@@ -295,24 +318,7 @@ export default function Minesweeper({ onBack, onScoreSave }) {
       {gameState === 'playing' && (
         <div style={gameplayContainerStyle}>
           
-          <div style={statusRowStyle}>
-            <div style={mineCounterStyle}>
-              💣 {minesLeft}
-            </div>
-            
-            <button 
-              onClick={() => { sound.playClick(); setFlagMode(!flagMode); }}
-              className={`retro-btn ${flagMode ? 'pulse-glow' : ''}`}
-              style={{
-                padding: '8px 16px', fontSize: '16px', 
-                backgroundColor: flagMode ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                borderColor: flagMode ? '#ef4444' : '#cbd5e1',
-                color: flagMode ? '#ef4444' : '#cbd5e1'
-              }}
-            >
-              {flagMode ? '🚩 Mode Drapeau' : '⛏️ Mode Creuser'}
-            </button>
-          </div>
+
 
           <div style={{...boardWrapperStyle, padding: boardSize === 9 ? '15px' : '10px'}}>
             <div style={{

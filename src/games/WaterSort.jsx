@@ -4,10 +4,12 @@ import WaterSortCollection from './WaterSortCollection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import WinLossTransition from '../components/WinLossTransition';
+import GameHeader from '../components/GameHeader';
 
 export default function WaterSort({ onBack, onScoreSave }) {
   const [showIntro, setShowIntro] = useState(true);
   const containerRef = useRef(null);
+  const lastNumFilledRef = useRef(0);
   const [tubes, setTubes] = useState([]);
   const [selectedTube, setSelectedTube] = useState(null);
   const [history, setHistory] = useState([]);
@@ -23,19 +25,18 @@ export default function WaterSort({ onBack, onScoreSave }) {
   const [pourFromBottom, setPourFromBottom] = useState(false);
   const [completedTubeIndex, setCompletedTubeIndex] = useState(null);
 
-  const numFilledTubes = 9;
-  const numEmptyTubes = 2;
+  // We will determine tube counts dynamically in initGame
   const defaultCap = 4;
 
   const colorPalettes = {
-    wc1: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FF8800', '#FFFFFF', '#888888'],
-    wc2: ['#FF9999', '#99FF99', '#9999FF', '#FFFF99', '#FF99FF', '#99FFFF', '#FFCC99', '#E0E0E0', '#B266B2'],
-    wc3: ['#800000', '#008000', '#000080', '#808000', '#800080', '#008080', '#D2691E', '#C0C0C0', '#4B0082'],
+    wc1: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FF8800', '#14B8A6', '#4C1D95'],
+    wc2: ['#FF9999', '#99FF99', '#9999FF', '#FFFF99', '#FF99FF', '#99FFFF', '#FFCC99', '#F5F5DC', '#B266B2'],
+    wc3: ['#800000', '#008000', '#000080', '#808000', '#800080', '#008080', '#D2691E', '#6B21A8', '#4B0082'],
     wc4: ['#FF1493', '#32CD32', '#1E90FF', '#FFD700', '#8A2BE2', '#00FA9A', '#FF4500', '#20B2AA', '#F5DEB3'],
-    wc5: ['#EA3323', '#75FA4C', '#3A3AFA', '#F6FA05', '#F505F1', '#05FAFA', '#FA9E05', '#EFEFEF', '#A9A9A9'],
-    wc6: ['#8B0000', '#556B2F', '#00008B', '#B8860B', '#4B0082', '#2F4F4F', '#D2691E', '#778899', '#8B4513'],
+    wc5: ['#EA3323', '#75FA4C', '#3A3AFA', '#F6FA05', '#F505F1', '#05FAFA', '#FA9E05', '#F43F5E', '#8B5A2B'],
+    wc6: ['#8B0000', '#556B2F', '#00008B', '#B8860B', '#4B0082', '#2F4F4F', '#D2691E', '#0EA5E9', '#8B4513'],
     wc7: ['#FF69B4', '#7CFC00', '#4169E1', '#F0E68C', '#9370DB', '#40E0D0', '#FFA07A', '#EE82EE', '#FFDAB9'],
-    wc8: ['#DC143C', '#00FF7F', '#191970', '#FFD700', '#9932CC', '#00CED1', '#FF8C00', '#D3D3D3', '#C71585'],
+    wc8: ['#DC143C', '#00FF7F', '#191970', '#FFD700', '#9932CC', '#00CED1', '#FF8C00', '#BE123C', '#C71585'],
     wc9: ['#E6194B', '#3CB44B', '#4363D8', '#FFE119', '#911EB4', '#42D4F4', '#F58231', '#F032E6', '#BFEEF4']
   };
 
@@ -57,7 +58,14 @@ export default function WaterSort({ onBack, onScoreSave }) {
   };
 
   const initGame = () => {
-    const activeColorsKeys = ['R', 'B', 'G', 'Y', 'P', 'O', 'W', 'D', 'M'];
+    let numFilled;
+    do {
+      numFilled = Math.floor(Math.random() * 6) + 4; // 4 to 9 tubes
+    } while (numFilled === lastNumFilledRef.current);
+    lastNumFilledRef.current = numFilled;
+    const numEmpty = 2;
+    const activeColorsKeys = ['R', 'B', 'G', 'Y', 'P', 'O', 'W', 'D', 'M'].slice(0, numFilled);
+
     const liquidPool = [];
     activeColorsKeys.forEach(col => {
       for (let i = 0; i < defaultCap; i++) liquidPool.push(col);
@@ -69,11 +77,11 @@ export default function WaterSort({ onBack, onScoreSave }) {
     }
 
     const initialTubes = [];
-    for (let i = 0; i < numFilledTubes; i++) {
+    for (let i = 0; i < numFilled; i++) {
       initialTubes.push(liquidPool.slice(i * defaultCap, i * defaultCap + defaultCap));
     }
 
-    for (let i = 0; i < numEmptyTubes; i++) {
+    for (let i = 0; i < numEmpty; i++) {
       initialTubes.push([]);
     }
 
@@ -136,7 +144,9 @@ export default function WaterSort({ onBack, onScoreSave }) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [victoryPhase, history]);
 
-  const getTubeCapacity = (index) => index >= 11 ? 1 : defaultCap;
+  const getTubeCapacity = (index) => {
+    return (extraTubesCount > 0 && index === tubes.length - 1) ? 1 : defaultCap;
+  };
 
   const getTopColorGroupCount = (tube) => {
     if (tube.length === 0) return 0;
@@ -396,51 +406,46 @@ export default function WaterSort({ onBack, onScoreSave }) {
         }} />
 
         {/* Header */}
-        <div style={{
-          padding: '20px 30px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-          zIndex: 10
-        }}>
-          <button
-            onClick={() => {
-              if (victoryPhase === 0 && history.length > 0) {
-                if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) onBack();
-              } else onBack();
-            }}
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '20px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              transition: 'all 0.2s',
-            }}
-          >
-            ← Retour
-          </button>
-          <button
-            onClick={() => setShowCollection(true)}
-            style={{
-              background: 'linear-gradient(45deg, #FCD34D, #F59E0B)',
-              border: 'none',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '25px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
-            }}
-          >
-            📖 Boutique
-          </button>
-        </div>
+        <GameHeader
+          title="WATER SORT"
+          onBack={() => {
+            if (victoryPhase === 0 && history.length > 0) {
+              if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) onBack();
+            } else onBack();
+          }}
+          onRestart={() => {
+            if (window.confirm("Recommencer ce niveau ?")) {
+              initGame();
+              setVictoryPhase(0);
+              sound.playClick();
+            }
+          }}
+          onUndo={undo}
+          undoDisabled={history.length === 0}
+          onHint={getHint}
+          hintDisabled={false}
+          onShop={() => setShowCollection(true)}
+          showBgmToggle={false} // bgm is global
+          extraControls={
+            <button
+              onClick={() => { setPourFromBottom(!pourFromBottom); sound.playClick(); }}
+              style={{
+                background: pourFromBottom ? 'linear-gradient(45deg, #FF3366, #FF99CC)' : 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.5)',
+                color: 'white',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: pourFromBottom ? '0 4px 10px rgba(255, 51, 102, 0.4)' : 'none',
+                transition: 'all 0.3s',
+              }}
+              title={pourFromBottom ? "Verser depuis le bas" : "Verser depuis le haut"}
+            >
+              {pourFromBottom ? 'Bas ↓' : 'Haut ↑'}
+            </button>
+          }
+        />
 
         {/* Main Game Area */}
         <div style={{
@@ -461,209 +466,107 @@ export default function WaterSort({ onBack, onScoreSave }) {
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
             padding: "1em",
-            background: 'rgba(255, 255, 255, .2)'
+            background: 'rgba(0, 0, 0, 0.8)',
+            boxShadow: '0 0 10px 5px white',
+            borderRadius: '5px',
           }}>
-            <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center' }}>
-              {tubes.slice(0, 6).map((tube, i) => (
-                <div key={i} style={{
-                  animation: completedTubeIndex === i ? 'tubeCompletePulse 1s ease-out' : 'none',
-                  transformOrigin: 'bottom center'
-                }}>
-                  <LiquidTube
-                    tube={tube}
-                    idx={i}
-                    capacity={getTubeCapacity(i)}
-                    selected={selectedTube === i}
-                    hint={hintTubes && (hintTubes[0] === i || hintTubes[1] === i)}
-                    pouring={pouringTubes && pouringTubes.src === i}
-                    receiving={pouringTubes && pouringTubes.dest === i}
-                    colors={colors}
-                    customization={customizations}
-                    onClick={() => handleTubeClick(i)}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'flex-end' }}>
-              {tubes.slice(6, 11).map((tube, i) => {
-                const idx = i + 6;
-                return (
-                  <div key={idx} style={{
-                    animation: completedTubeIndex === idx ? 'tubeCompletePulse 1s ease-out' : 'none',
-                    transformOrigin: 'bottom center'
-                  }}>
-                    <LiquidTube
-                      tube={tube}
-                      idx={idx}
-                      capacity={getTubeCapacity(idx)}
-                      selected={selectedTube === idx}
-                      hint={hintTubes && (hintTubes[0] === idx || hintTubes[1] === idx)}
-                      pouring={pouringTubes && pouringTubes.src === idx}
-                      receiving={pouringTubes && pouringTubes.dest === idx}
-                      colors={colors}
-                      customization={customizations}
-                      onClick={() => handleTubeClick(idx)}
-                    />
+            {(() => {
+              const baseTubesCount = tubes.length - extraTubesCount;
+              const mid = Math.ceil(baseTubesCount / 2);
+              return (
+                <>
+                  <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center' }}>
+                    {tubes.slice(0, mid).map((tube, i) => (
+                      <div key={i} style={{
+                        animation: completedTubeIndex === i ? 'tubeCompletePulse 1s ease-out' : 'none',
+                        transformOrigin: 'bottom center'
+                      }}>
+                        <LiquidTube
+                          tube={tube}
+                          idx={i}
+                          capacity={getTubeCapacity(i)}
+                          selected={selectedTube === i}
+                          hint={hintTubes && (hintTubes[0] === i || hintTubes[1] === i)}
+                          pouring={pouringTubes && pouringTubes.src === i}
+                          receiving={pouringTubes && pouringTubes.dest === i}
+                          colors={colors}
+                          customization={customizations}
+                          onClick={() => handleTubeClick(i)}
+                        />
+                      </div>
+                    ))}
                   </div>
-                );
-              })}
 
-              {tubes.length > 11 ? (
-                <div style={{
-                  animation: completedTubeIndex === 11 ? 'tubeCompletePulse 1s ease-out' : 'none',
-                  transformOrigin: 'bottom center'
-                }}>
-                  <LiquidTube
-                    tube={tubes[11]}
-                    idx={11}
-                    capacity={getTubeCapacity(11)}
-                    selected={selectedTube === 11}
-                    hint={hintTubes && (hintTubes[0] === 11 || hintTubes[1] === 11)}
-                    pouring={pouringTubes && pouringTubes.src === 11}
-                    receiving={pouringTubes && pouringTubes.dest === 11}
-                    colors={colors}
-                    customization={customizations}
-                    onClick={() => handleTubeClick(11)}
-                  />
-                </div>
-              ) : (
-                <div
-                  onClick={addExtraTube}
-                  style={{
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '10px',
-                    border: '2px dashed rgba(255,255,255,0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: 'rgba(255,255,255,0.5)',
-                    fontSize: '24px',
-                    marginBottom: '10px'
-                  }}
-                >
-                  +
-                </div>
-              )}
-            </div>
+                  <div style={{ display: 'flex', gap: '15px', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'flex-end' }}>
+                    {tubes.slice(mid, baseTubesCount).map((tube, i) => {
+                      const idx = i + mid;
+                      return (
+                        <div key={idx} style={{
+                          animation: completedTubeIndex === idx ? 'tubeCompletePulse 1s ease-out' : 'none',
+                          transformOrigin: 'bottom center'
+                        }}>
+                          <LiquidTube
+                            tube={tube}
+                            idx={idx}
+                            capacity={getTubeCapacity(idx)}
+                            selected={selectedTube === idx}
+                            hint={hintTubes && (hintTubes[0] === idx || hintTubes[1] === idx)}
+                            pouring={pouringTubes && pouringTubes.src === idx}
+                            receiving={pouringTubes && pouringTubes.dest === idx}
+                            colors={colors}
+                            customization={customizations}
+                            onClick={() => handleTubeClick(idx)}
+                          />
+                        </div>
+                      );
+                    })}
+
+                    {extraTubesCount > 0 ? (
+                      <div style={{
+                        animation: completedTubeIndex === tubes.length - 1 ? 'tubeCompletePulse 1s ease-out' : 'none',
+                        transformOrigin: 'bottom center'
+                      }}>
+                        <LiquidTube
+                          tube={tubes[tubes.length - 1]}
+                          idx={tubes.length - 1}
+                          capacity={getTubeCapacity(tubes.length - 1)}
+                          selected={selectedTube === tubes.length - 1}
+                          hint={hintTubes && (hintTubes[0] === tubes.length - 1 || hintTubes[1] === tubes.length - 1)}
+                          pouring={pouringTubes && pouringTubes.src === tubes.length - 1}
+                          receiving={pouringTubes && pouringTubes.dest === tubes.length - 1}
+                          colors={colors}
+                          customization={customizations}
+                          onClick={() => handleTubeClick(tubes.length - 1)}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        onClick={addExtraTube}
+                        style={{
+                          width: '50px',
+                          height: '50px',
+                          borderRadius: '10px',
+                          border: '2px dashed rgba(255,255,255,0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          color: 'rgba(255,255,255,0.5)',
+                          fontSize: '24px',
+                          marginBottom: '10px'
+                        }}
+                      >
+                        +
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
-          <div style={{
-            display: 'flex',
-            gap: '30px',
-            marginTop: '10px',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            paddingBottom: '20px'
-          }}>
-            {/* Undo Button */}
-            <button
-              onClick={undo}
-              disabled={history.length === 0}
-              style={{
-                width: '60px',
-                height: '60px',
-                background: history.length === 0 ? 'rgba(255, 255, 255, 0.3)' : 'linear-gradient(135deg, #FF99CC, #FF3366)',
-                border: '3px solid rgba(255,255,255,0.5)',
-                borderRadius: '20px',
-                color: 'white',
-                fontSize: '1.8rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: history.length === 0 ? 'default' : 'pointer',
-                boxShadow: history.length === 0 ? 'none' : '0 8px 20px rgba(255, 51, 102, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)',
-                transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-              }}
-              onMouseOver={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'; }}
-              onMouseOut={e => { if (history.length > 0) e.currentTarget.style.transform = 'scale(1) translateY(0)'; }}
-            >
-              ↩️
-            </button>
 
-            {/* Hint Button */}
-            <button
-              onClick={getHint}
-              style={{
-                width: '80px',
-                height: '80px',
-                background: 'linear-gradient(135deg, #FFF099, #FFD700)',
-                border: '4px solid rgba(255,255,255,0.8)',
-                borderRadius: '50%',
-                color: 'white',
-                fontSize: '2.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 10px 25px rgba(255, 215, 0, 0.5), inset 0 5px 10px rgba(255,255,255,0.8)',
-                transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                transformOrigin: 'center'
-              }}
-              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.15) rotate(15deg)'}
-              onMouseOut={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
-            >
-              ✨
-            </button>
 
-            {/* Refresh Button */}
-            <button
-              onClick={() => {
-                if (window.confirm("Recommencer ce niveau ?")) {
-                  initGame();
-                  setVictoryPhase(0);
-                  sound.playClick();
-                }
-              }}
-              style={{
-                width: '60px',
-                height: '60px',
-                background: 'linear-gradient(135deg, #FF6B6B, #C92A2A)',
-                border: '3px solid rgba(255,255,255,0.5)',
-                borderRadius: '20px',
-                color: 'white',
-                fontSize: '1.8rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 8px 20px rgba(201, 42, 42, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)',
-                transition: 'all 0.2s',
-              }}
-              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'}
-              onMouseOut={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}
-            >
-              🔄
-            </button>
-
-            {/* Bottom Pour Button */}
-            <button
-              onClick={() => { setPourFromBottom(!pourFromBottom); sound.playClick(); }}
-              style={{
-                background: pourFromBottom ? 'linear-gradient(45deg, #FF3366, #FF99CC)' : 'rgba(255, 255, 255, 0.1)',
-                border: '3px solid rgba(255, 255, 255, 0.5)',
-                color: 'white',
-                padding: '0 20px',
-                height: '60px',
-                borderRadius: '25px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                boxShadow: pourFromBottom ? '0 8px 20px rgba(255, 51, 102, 0.4), inset 0 4px 8px rgba(255,255,255,0.6)' : 'none',
-                transition: 'all 0.3s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1rem'
-              }}
-              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'}
-              onMouseOut={e => e.currentTarget.style.transform = 'scale(1) translateY(0)'}
-            >
-              {pourFromBottom ? 'Bas ↓' : 'Haut ↑'}
-            </button>
-          </div>
         </div>
 
         {/* Transition Phase */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
+import GameHeader from '../components/GameHeader';
 
 export default function Grid2048({ onBack, onScoreSave }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -309,26 +310,24 @@ export default function Grid2048({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)} 
       />}
       <div className="game-container neon-border" style={containerStyle}>
-        <div style={headerStyle}>
-        <button onClick={handleBackWithConfirm} className="retro-btn" style={backBtnStyle}>
-          &lt; Retour Hub
-        </button>
-        <div style={titleStyle}>NEON 2048</div>
-        <button onClick={initGame} className="retro-btn" style={backBtnStyle}>
-          Reset
-        </button>
-      </div>
-
-      <div style={statsContainerStyle}>
-        <div style={statBoxStyle}>
-          <div style={statLabelStyle}>SCORE</div>
-          <div style={statValStyle}>{score}</div>
-        </div>
-        <div style={statBoxStyle}>
-          <div style={statLabelStyle}>RECORD</div>
-          <div style={statValStyle}>{highScore}</div>
-        </div>
-      </div>
+      <GameHeader
+        title="NEON 2048"
+        onBack={handleBackWithConfirm}
+        onRestart={initGame}
+        showBgmToggle={false} // BGM global
+        centerContent={
+          <div style={statsContainerStyle}>
+            <div style={statBoxStyle}>
+              <div style={statLabelStyle}>SCORE</div>
+              <div style={statValStyle}>{score}</div>
+            </div>
+            <div style={statBoxStyle}>
+              <div style={statLabelStyle}>RECORD</div>
+              <div style={statValStyle}>{highScore}</div>
+            </div>
+          </div>
+        }
+      />
 
       <div 
         style={gridContainerStyle}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
-
+import GameHeader from '../components/GameHeader';
 const DIRS = {
   'up': { dr: -1, dc: 0, symbol: '▲', color: '#ef4444' }, // Red
   'down': { dr: 1, dc: 0, symbol: '▼', color: '#3b82f6' }, // Blue
@@ -573,22 +573,24 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)} 
       />}
       <div style={containerStyle}>
-        <div style={headerStyle}>
-        <button onClick={handleBackWithConfirm} className="retro-btn" style={backBtnStyle}>
-          &lt; Hub
-        </button>
-        <div style={titleStyle}>ARROW PUZZLE</div>
-        {gameState === 'playing' ? (
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250))} className="retro-btn" style={{...backBtnStyle, borderColor: '#f59e0b', color: '#f59e0b'}}>
-              Rejouer
-            </button>
-            <button onClick={() => setGameState('menu')} className="retro-btn" style={backBtnStyle}>
-              Menu
-            </button>
-          </div>
-        ) : <div style={{width: '70px'}}></div>}
-      </div>
+      <GameHeader
+        title="ARROW PUZZLE"
+        onBack={handleBackWithConfirm}
+        onRestart={gameState === 'playing' ? () => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250)) : undefined}
+        onHint={gameState === 'playing' ? useHint : undefined}
+        hintDisabled={hints <= 0}
+        hintsLeft={hints}
+        showBgmToggle={false} // bgm is managed elsewhere
+        centerContent={
+          gameState === 'playing' ? (
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+              <div><span style={{color: '#8e8a9f'}}>Vies: </span><span style={{color: '#ef4444', fontSize: '1rem'}}>{'❤️'.repeat(lives)}{'🖤'.repeat(3 - lives)}</span></div>
+              <div><span style={{color: '#8e8a9f'}}>Restes: </span><span style={{color: '#fff', fontWeight: 'bold', fontSize: '1rem'}}>{arrowsLeft}</span></div>
+            </div>
+          ) : null
+        }
+        style={{ marginBottom: '20px' }}
+      />
 
       {gameState === 'menu' && (
         <div style={menuStyle}>
@@ -652,25 +654,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
       {gameState === 'playing' && (
         <div style={gameplayContainerStyle}>
           
-          <div style={statusRowStyle}>
-            <div><span style={{color: '#8e8a9f'}}>Vies: </span>
-              <span style={{color: '#ef4444', fontSize: '18px'}}>{'❤️'.repeat(lives)}{'🖤'.repeat(3 - lives)}</span>
-            </div>
-            <div><span style={{color: '#8e8a9f'}}>Restes: </span><span style={{color: '#fff', fontWeight: 'bold', fontSize: '18px'}}>{arrowsLeft}</span></div>
-            <div>
-              <button 
-                onClick={useHint} 
-                disabled={hints <= 0}
-                style={{
-                  background: hints > 0 ? '#3b82f6' : '#475569', color: 'white', border: 'none', 
-                  padding: '5px 12px', borderRadius: '15px', cursor: hints > 0 ? 'pointer' : 'not-allowed',
-                  fontWeight: 'bold', fontSize: '14px'
-                }}
-              >
-                💡 {hints}
-              </button>
-            </div>
-          </div>
+
 
           <div style={{
             position: 'relative', width: boardSize * CELL_SIZE, height: boardSize * CELL_SIZE,

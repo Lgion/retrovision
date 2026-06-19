@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
+import GameHeader from '../components/GameHeader';
 
 export default function SnakeWave({ onBack, onScoreSave }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -350,20 +351,22 @@ export default function SnakeWave({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)} 
       />}
       <div className="game-container neon-border" style={containerStyle}>
-        <div style={headerStyle}>
-        <button onClick={onBack} className="retro-btn" style={backBtnStyle}>
-          &lt; Hub
-        </button>
-        <div style={titleStyle}>SNAKE WAVE</div>
-        <div style={scoreBoardStyle}>
-          Score: <span style={{ color: '#00f0ff' }}>{score}</span>
-        </div>
-      </div>
-
-      <div style={topStatsStyle}>
-        <div>Vitesse: Lvl {speedLevel}</div>
-        <div>Max Score: {highScore}</div>
-      </div>
+      <GameHeader
+        title="SNAKE WAVE"
+        onBack={onBack}
+        showBgmToggle={false} // BGM handled globally
+        centerContent={
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', fontFamily: 'Orbitron, sans-serif' }}>
+            <div style={{ fontSize: '13px', color: '#ffffff' }}>
+              Score: <span style={{ color: '#00f0ff' }}>{score}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '15px', fontSize: '12px', color: '#8e8a9f' }}>
+              <span>Vitesse: Lvl {speedLevel}</span>
+              <span>Max: {highScore}</span>
+            </div>
+          </div>
+        }
+      />
 
       <div style={canvasWrapperStyle}>
         <canvas ref={canvasRef} style={canvasStyle} />

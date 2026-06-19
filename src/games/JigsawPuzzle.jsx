@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
+import GameHeader from '../components/GameHeader';
 
 export default function JigsawPuzzle({ onBack, onScoreSave }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -157,17 +158,20 @@ export default function JigsawPuzzle({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)} 
       />}
       <div style={containerStyle}>
-        <div style={headerStyle}>
-        <button onClick={handleBackWithConfirm} className="retro-btn" style={backBtnStyle}>
-          &lt; Retour Hub
-        </button>
-        <div style={titleStyle}>PUZZLE MAGIQUE</div>
-        {gameState === 'playing' ? (
-          <button onClick={() => setGameState('menu')} className="retro-btn" style={backBtnStyle}>
-            Menu
-          </button>
-        ) : <div style={{width: '80px'}}></div>}
-      </div>
+      <GameHeader
+        title="PUZZLE MAGIQUE"
+        onBack={handleBackWithConfirm}
+        onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
+        showBgmToggle={false} // bgm global
+        centerContent={
+          gameState === 'playing' ? (
+            <div style={statusRowStyle}>
+              <span style={{color: '#8e8a9f'}}>Coups: </span>
+              <span style={{color: '#fff', fontWeight: 'bold'}}>{moves}</span>
+            </div>
+          ) : null
+        }
+      />
 
       {gameState === 'menu' && (
         <div style={menuStyle}>
@@ -204,10 +208,7 @@ export default function JigsawPuzzle({ onBack, onScoreSave }) {
       {gameState === 'playing' && (
         <div style={gameplayContainerStyle}>
           
-          <div style={statusRowStyle}>
-            <span style={{color: '#8e8a9f'}}>Coups: </span>
-            <span style={{color: '#fff', fontWeight: 'bold'}}>{moves}</span>
-          </div>
+
 
           {/* Target Board */}
           <div style={{...boardWrapperStyle, width: BOARD_SIZE, height: BOARD_SIZE}}>

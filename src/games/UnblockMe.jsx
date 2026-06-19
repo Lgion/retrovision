@@ -3,6 +3,7 @@ import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import LEVELS from '../utils/unblockLevels.json';
 import GameIntro from '../components/GameIntro';
+import GameHeader from '../components/GameHeader';
 
 export default function UnblockMe({ onBack, onScoreSave }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -251,17 +252,40 @@ export default function UnblockMe({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)} 
       />}
       <div style={containerStyle}>
-        <div style={headerStyle}>
-        <button onClick={handleBackWithConfirm} className="retro-btn" style={backBtnStyle}>
-          &lt; Retour Hub
-        </button>
-        <div style={titleStyle}>DÉBLOQUE-MOI</div>
-        {gameState === 'playing' ? (
-          <button onClick={() => setGameState('menu')} className="retro-btn" style={backBtnStyle}>
-            Menu
-          </button>
-        ) : <div style={{width: '80px'}}></div>}
-      </div>
+      <GameHeader
+        title="DÉBLOQUE-MOI"
+        onBack={handleBackWithConfirm}
+        onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
+        showBgmToggle={false} // BGM global
+        centerContent={
+          gameState === 'playing' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', fontFamily: 'Orbitron, sans-serif' }}>
+              <div style={{ fontSize: '14px', color: '#ffffff' }}>
+                Niv: <span style={{ color: '#F59E0B', fontWeight: 'bold' }}>{currentLevelIdx + 1}</span>
+              </div>
+              <div style={{ fontSize: '13px', color: '#8e8a9f' }}>
+                Coups: <span style={{ color: '#fff', fontWeight: 'bold' }}>{moves}</span>
+              </div>
+            </div>
+          ) : null
+        }
+        extraControls={
+          gameState === 'playing' ? (
+            <button 
+              onClick={undoMove} 
+              disabled={history.length === 0}
+              className="retro-btn"
+              style={{
+                padding: '6px 12px',
+                fontSize: '13px',
+                opacity: history.length > 0 ? 1 : 0.5
+              }}
+            >
+              ↩️ Undo
+            </button>
+          ) : null
+        }
+      />
 
       {gameState === 'menu' && (
         <div style={menuStyle}>
@@ -324,20 +348,7 @@ export default function UnblockMe({ onBack, onScoreSave }) {
       {gameState === 'playing' && (
         <div style={gameplayContainerStyle}>
           
-          <div style={statusRowStyle}>
-            <div><span style={{color: '#8e8a9f'}}>Niv: </span><span style={{color: '#F59E0B', fontWeight: 'bold'}}>{currentLevelIdx + 1}</span></div>
-            <div><span style={{color: '#8e8a9f'}}>Coups: </span><span style={{color: '#fff', fontWeight: 'bold'}}>{moves}</span></div>
-            <button 
-              onClick={undoMove} 
-              disabled={history.length === 0}
-              style={{
-                background: 'transparent', border: 'none', color: history.length > 0 ? '#00F0FF' : '#555',
-                cursor: history.length > 0 ? 'pointer' : 'default', fontSize: '20px'
-              }}
-            >
-              ↩️ Undo
-            </button>
-          </div>
+
 
           <div style={{...boardWrapperStyle, width: BOARD_PX, height: BOARD_PX}}>
             {/* Exit hole indicator */}

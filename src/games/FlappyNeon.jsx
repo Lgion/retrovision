@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
+import GameHeader from '../components/GameHeader';
 
 export default function FlappyNeon({ onBack, onScoreSave }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -412,15 +413,16 @@ export default function FlappyNeon({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)} 
       />}
       <div className="game-container neon-border" style={containerStyle}>
-        <div style={headerStyle}>
-        <button onClick={onBack} className="retro-btn" style={backBtnStyle}>
-          &lt; Retour Hub
-        </button>
-        <div style={titleStyle}>FLAPPY NEON</div>
-        <div style={scoreBoardStyle}>
-          Score: <span style={{ color: '#ff007f', fontWeight: 'bold' }}>{score}</span> | Max: <span style={{ color: '#00f0ff', fontWeight: 'bold' }}>{highScore}</span>
-        </div>
-      </div>
+      <GameHeader
+        title="FLAPPY NEON"
+        onBack={onBack}
+        showBgmToggle={false} // BGM handled globally
+        centerContent={
+          <div style={scoreBoardStyle}>
+            Score: <span style={{ color: '#ff007f', fontWeight: 'bold' }}>{score}</span> | Max: <span style={{ color: '#00f0ff', fontWeight: 'bold' }}>{highScore}</span>
+          </div>
+        }
+      />
 
       <div 
         style={canvasWrapperStyle} 
