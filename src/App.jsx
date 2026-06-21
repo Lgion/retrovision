@@ -217,7 +217,16 @@ function App() {
         );
       case 'intermission-victory':
         return (
-          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'radial-gradient(circle at center, #1e293b, #020617)' }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            background: 'radial-gradient(circle at center, #1e293b, #020617)',
+            animation: 'fade-out-victory 0.5s ease-in 2.5s forwards'
+          }}>
             <div style={{ fontSize: '100px', animation: 'victory-bounce 1s infinite alternate' }}>🏆</div>
             <h1 style={{ fontSize: '3.5rem', color: '#fcd34d', textShadow: '0 0 20px #f59e0b', margin: '20px 0', animation: 'float-up-fade 0.8s forwards' }}>ENTRACTE RÉUSSI !</h1>
             <p style={{ fontSize: '1.5rem', color: '#cbd5e1', animation: 'float-up-fade 1s forwards' }}>Préparation du prochain défi...</p>
@@ -230,6 +239,9 @@ function App() {
                 0% { opacity: 0; transform: translateY(20px); }
                 100% { opacity: 1; transform: translateY(0); }
               }
+              @keyframes fade-out-victory {
+                0% { opacity: 1; }
+                100% { opacity: 0; }
             `}</style>
           </div>
         );
