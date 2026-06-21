@@ -474,9 +474,9 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
   useEffect(() => {
     let interval;
     if (lost && mode === 'slide') {
-      sound.playError(); // play once immediately
+      sound.playShake(); // play once immediately
       interval = setInterval(() => {
-        sound.playError();
+        sound.playShake();
       }, 800);
     }
     return () => clearInterval(interval);
