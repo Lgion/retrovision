@@ -108,8 +108,8 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
 
   useEffect(() => {
     if (isIntermission && gameState === 'menu') {
-      setMode('dense');
-      startGame(8, 64, 'dense');
+      setMode('wire');
+      startGame(8, 12, 'wire'); // 8x8 grid, 12 wires
     }
   }, [isIntermission, gameState]);
 
