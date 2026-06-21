@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Dashboard from './components/Dashboard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import MahjongZen from './games/MahjongZen';
 import WaterSort from './games/WaterSort';
 import BallSort from './games/BallSort';
@@ -18,6 +19,24 @@ function App() {
   const [view, setView] = useState('dashboard');
   const [statsUpdated, setStatsUpdated] = useState(0);
   const gameStartRef = useRef(0);
+  
+  const [isIntermissionMode, setIsIntermissionMode] = useState(false);
+  const [returnView, setReturnView] = useState(null);
+
+  const intermissionGames = ['ball', 'water', 'mines', 'arrows'];
+  const handleMahjongNextLevel = () => {
+    const randomGame = intermissionGames[Math.floor(Math.random() * intermissionGames.length)];
+    setReturnView('mahjong');
+    setIsIntermissionMode(true);
+    setView(randomGame);
+  };
+
+  const handleIntermissionComplete = () => {
+    setView(returnView || 'dashboard');
+    setIsIntermissionMode(false);
+    setReturnView(null);
+  };
+
 
   useEffect(() => {
     const currentView = view;
@@ -77,6 +96,7 @@ function App() {
             <MahjongZen
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
+              onIntermissionRequest={handleMahjongNextLevel}
             />
           </div>
         );
@@ -86,6 +106,8 @@ function App() {
             <WaterSort
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
+              isIntermission={isIntermissionMode}
+              onIntermissionComplete={handleIntermissionComplete}
             />
           </div>
         );
@@ -95,6 +117,8 @@ function App() {
             <BallSort
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
+              isIntermission={isIntermissionMode}
+              onIntermissionComplete={handleIntermissionComplete}
             />
           </div>
         );
@@ -147,6 +171,8 @@ function App() {
               <Minesweeper
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
+                isIntermission={isIntermissionMode}
+                onIntermissionComplete={handleIntermissionComplete}
               />
             </GameScaleWrapper>
           </div>
@@ -158,6 +184,8 @@ function App() {
               <ArrowPuzzle
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
+                isIntermission={isIntermissionMode}
+                onIntermissionComplete={handleIntermissionComplete}
               />
             </GameScaleWrapper>
           </div>
@@ -196,7 +224,9 @@ function App() {
       </header>
 
       <main style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {renderContent()}
+        <ErrorBoundary>
+          {renderContent()}
+        </ErrorBoundary>
       </main>
 
       <footer className="app-footer">

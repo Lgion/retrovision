@@ -182,7 +182,7 @@ const BallSortIntro = ({ onComplete }) => {
 };
 
 
-export default function BallSort({ onBack, onScoreSave }) {
+export default function BallSort({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
   // Game state
@@ -239,11 +239,15 @@ export default function BallSort({ onBack, onScoreSave }) {
 
   const initGame = () => {
     let numFilled;
-    do {
-      numFilled = Math.floor(Math.random() * 6) + 4; // 4 to 9 tubes
-    } while (numFilled === lastNumFilledRef.current);
+    if (isIntermission) {
+      numFilled = 3; // Easy level
+    } else {
+      do {
+        numFilled = Math.floor(Math.random() * 6) + 4; // 4 to 9 tubes
+      } while (numFilled === lastNumFilledRef.current);
+    }
     lastNumFilledRef.current = numFilled;
-    const numEmpty = 2;
+    const numEmpty = isIntermission ? 1 : 2;
     const activeColorsKeys = ['R', 'B', 'G', 'Y', 'P', 'O', 'W', 'D', 'M'].slice(0, numFilled);
 
     const ballPool = [];
@@ -619,7 +623,7 @@ export default function BallSort({ onBack, onScoreSave }) {
 
   return (
     <>
-      {showIntro && <BallSortIntro onComplete={() => setShowIntro(false)} />}
+      {showIntro && !isIntermission && <BallSortIntro onComplete={() => setShowIntro(false)} />}
       <div
         ref={containerRef}
         style={{
@@ -645,21 +649,29 @@ export default function BallSort({ onBack, onScoreSave }) {
         <AmbientParticles config={getAmbientConfig()} />
 
         {/* Header */}
-        <GameHeader
-          title="TRI BILLES"
-          onBack={handleBackWithConfirm}
-          onRestart={initGame}
-          onUndo={undo}
-          undoDisabled={history.length === 0}
-          onHint={getHint}
-          hintDisabled={false}
-          onShop={() => setShowCollection(true)}
-          bgmOn={bgmOn}
-          onBgmToggle={() => {
-            const isOn = sound.toggleBGM();
-            setBgmOn(isOn);
-          }}
-        />
+        {!isIntermission && (
+          <GameHeader
+            title="TRI BILLES"
+            onBack={handleBackWithConfirm}
+            onRestart={initGame}
+            onUndo={undo}
+            undoDisabled={history.length === 0}
+            onHint={getHint}
+            hintDisabled={false}
+            onShop={() => setShowCollection(true)}
+            bgmOn={bgmOn}
+            onBgmToggle={() => {
+              const isOn = sound.toggleBGM();
+              setBgmOn(isOn);
+            }}
+          />
+        )}
+        
+        {isIntermission && victoryPhase === 0 && (
+          <div style={{ textAlign: 'center', color: '#FFD700', fontWeight: 'bold', padding: '10px', background: 'rgba(0,0,0,0.5)', zIndex: 10 }}>
+            Entracte ! Triez les billes pour retourner au Mahjong.
+          </div>
+        )}
 
         {/* Main Game Area */}
         <div style={{
@@ -894,7 +906,10 @@ export default function BallSort({ onBack, onScoreSave }) {
 
                 <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                   <button
-                    onClick={initGame}
+                    onClick={() => {
+                      if (isIntermission && onIntermissionComplete) onIntermissionComplete();
+                      else initGame();
+                    }}
                     style={{
                       background: 'linear-gradient(135deg, #33FF77, #009933)',
                       border: '4px solid white',
@@ -910,26 +925,28 @@ export default function BallSort({ onBack, onScoreSave }) {
                     onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
                     onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
                   >
-                    Rejouer 🔄
+                    {isIntermission ? "Retour au Mahjong" : "Rejouer 🔄"}
                   </button>
-                  <button
-                    onClick={onBack}
-                    style={{
-                      background: 'rgba(0,0,0,0.1)',
-                      border: 'none',
-                      color: '#666',
-                      padding: '15px 30px',
-                      borderRadius: '40px',
-                      fontSize: '1.5rem',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      transition: 'background 0.2s'
-                    }}
-                    onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
-                    onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
-                  >
-                    Quitter
-                  </button>
+                  {!isIntermission && (
+                    <button
+                      onClick={onBack}
+                      style={{
+                        background: 'rgba(0,0,0,0.1)',
+                        border: 'none',
+                        color: '#666',
+                        padding: '15px 30px',
+                        borderRadius: '40px',
+                        fontSize: '1.5rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
+                      onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
+                    >
+                      Quitter
+                    </button>
+                  )}
                 </div>
               </div>
             )}

@@ -4,7 +4,7 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 
-export default function Minesweeper({ onBack, onScoreSave }) {
+export default function Minesweeper({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mines', 'boardSize', 9)); // 9 or 12
@@ -29,6 +29,13 @@ export default function Minesweeper({ onBack, onScoreSave }) {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, victoryPhase, gameOver, moves]);
+
+  useEffect(() => {
+    if (isIntermission && gameState === 'menu') {
+      // Small delay to allow intro to show properly
+      setTimeout(() => startGame(9, 10), 100);
+    }
+  }, [isIntermission, gameState]);
 
   const handleBackWithConfirm = () => {
     if (gameState === 'playing' && victoryPhase === 0 && !gameOver && moves > 0) {
@@ -247,47 +254,56 @@ export default function Minesweeper({ onBack, onScoreSave }) {
 
   return (
     <>
-      {showIntro && <GameIntro 
+      {showIntro && !isIntermission && <GameIntro 
         gameName="DÉMINEUR" 
         icon="💣" 
         colors={['#ef4444', '#f59e0b', '#39FF14']} 
         particleType="mines" 
         onComplete={() => setShowIntro(false)} 
       />}
+      
+      {isIntermission && gameState === 'playing' && (
+        <div style={{ textAlign: 'center', color: '#39FF14', fontWeight: 'bold', padding: '10px', background: 'rgba(0,0,0,0.5)' }}>
+          Entracte ! Gagnez pour retourner au Mahjong.
+        </div>
+      )}
+      
       <div style={containerStyle}>
-      <GameHeader
-        title="DÉMINEUR"
-        onBack={handleBackWithConfirm}
-        onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
-        showBgmToggle={false} // BGM handled elsewhere
-        centerContent={
-          gameState === 'playing' ? (
-            <div style={mineCounterStyle}>
-              💣 {minesLeft}
-            </div>
-          ) : null
-        }
-        extraControls={
-          gameState === 'playing' ? (
-            <button 
-              onClick={() => { sound.playClick(); setFlagMode(!flagMode); }}
-              className={`retro-btn ${flagMode ? 'pulse-glow' : ''}`}
-              style={{
-                padding: '8px 16px', fontSize: '14px', 
-                backgroundColor: flagMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                border: `1px solid ${flagMode ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
-                color: flagMode ? '#ef4444' : '#ffffff',
-                borderRadius: '20px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              {flagMode ? '🚩 Mode Drapeau' : '⛏️ Mode Creuser'}
-            </button>
-          ) : null
-        }
-      />
+      {!isIntermission && (
+        <GameHeader
+          title="DÉMINEUR"
+          onBack={handleBackWithConfirm}
+          onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
+          showBgmToggle={false} // BGM handled elsewhere
+          centerContent={
+            gameState === 'playing' ? (
+              <div style={mineCounterStyle}>
+                💣 {minesLeft}
+              </div>
+            ) : null
+          }
+          extraControls={
+            gameState === 'playing' ? (
+              <button 
+                onClick={() => { sound.playClick(); setFlagMode(!flagMode); }}
+                className={`retro-btn ${flagMode ? 'pulse-glow' : ''}`}
+                style={{
+                  padding: '8px 16px', fontSize: '14px', 
+                  backgroundColor: flagMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                  border: `1px solid ${flagMode ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                  color: flagMode ? '#ef4444' : '#ffffff',
+                  borderRadius: '20px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {flagMode ? '🚩 Mode Drapeau' : '⛏️ Mode Creuser'}
+              </button>
+            ) : null
+          }
+        />
+      )}
 
       {gameState === 'menu' && (
         <div style={menuStyle}>
@@ -420,11 +436,14 @@ export default function Minesweeper({ onBack, onScoreSave }) {
                 Score: <strong style={{ color: '#39FF14', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
               </div>
               <button
-                onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
+                onClick={() => {
+                  if (isIntermission && onIntermissionComplete) onIntermissionComplete();
+                  else { setVictoryPhase(0); setGameState('menu'); }
+                }}
                 className="retro-btn pulse-glow"
                 style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#39FF14', color: '#39FF14' }}
               >
-                Super !
+                {isIntermission ? "Retour au Mahjong" : "Super !"}
               </button>
             </div>
           )}

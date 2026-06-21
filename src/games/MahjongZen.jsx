@@ -327,7 +327,7 @@ function MahjongIcon({ name }) {
   }
 }
 
-export default function MahjongZen({ onBack, onScoreSave }) {
+export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const [mode, setMode] = useState(() => getGameConfig('mahjong', 'mode', 'slide'));
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mahjong', 'boardSize', 'large'));
@@ -1313,33 +1313,35 @@ export default function MahjongZen({ onBack, onScoreSave }) {
             { dx: 0, dy: -1 }
           ];
 
-          for (const dir of directions) {
-            let currentLayout = active.map(t => ({ ...t }));
-            const allowedGroup = new Set();
-            let currentTest = t1;
-            while (currentTest) {
-              allowedGroup.add(currentTest.id);
-              currentTest = active.find(t => t.active && t.x === currentTest.x + dir.dx && t.y === currentTest.y + dir.dy);
-            }
+          for (const [pushTileRef, targetTileRef] of [[t1, t2], [t2, t1]]) {
+            for (const dir of directions) {
+              let currentLayout = active.map(t => ({ ...t }));
+              const allowedGroup = new Set();
+              let currentTest = pushTileRef;
+              while (currentTest) {
+                allowedGroup.add(currentTest.id);
+                currentTest = active.find(t => t.active && t.x === currentTest.x + dir.dx && t.y === currentTest.y + dir.dy);
+              }
 
-            for (let step = 1; step <= 6; step++) {
-              const nextCoords = new Map();
-              currentLayout.forEach(t => nextCoords.set(t.id, { x: t.x, y: t.y }));
+              for (let step = 1; step <= 6; step++) {
+                const nextCoords = new Map();
+                currentLayout.forEach(t => nextCoords.set(t.id, { x: t.x, y: t.y }));
 
-              if (canPushTile(t1.id, dir.dx, dir.dy, nextCoords, currentLayout, allowedGroup)) {
-                pushTile(t1.id, dir.dx, dir.dy, nextCoords, currentLayout);
-                currentLayout = currentLayout.map(t => {
-                  const coord = nextCoords.get(t.id);
-                  return { ...t, x: coord.x, y: coord.y };
-                });
+                if (canPushTile(pushTileRef.id, dir.dx, dir.dy, nextCoords, currentLayout, allowedGroup)) {
+                  pushTile(pushTileRef.id, dir.dx, dir.dy, nextCoords, currentLayout);
+                  currentLayout = currentLayout.map(t => {
+                    const coord = nextCoords.get(t.id);
+                    return { ...t, x: coord.x, y: coord.y };
+                  });
 
-                const newT1 = currentLayout.find(t => t.id === t1.id);
-                const newT2 = currentLayout.find(t => t.id === t2.id);
-                if (newT1 && newT2 && findConnectionPath(newT1, newT2, currentLayout)) {
-                  return true;
+                  const newT1 = currentLayout.find(t => t.id === pushTileRef.id);
+                  const newT2 = currentLayout.find(t => t.id === targetTileRef.id);
+                  if (newT1 && newT2 && findConnectionPath(newT1, newT2, currentLayout)) {
+                    return true;
+                  }
+                } else {
+                  break;
                 }
-              } else {
-                break;
               }
             }
           }
@@ -2078,6 +2080,44 @@ export default function MahjongZen({ onBack, onScoreSave }) {
             <div className="left-attention-bar" style={{ borderTopLeftRadius: '10px', borderBottomLeftRadius: '10px' }} />
 
             <div className="board-scaler" style={{ ...boardStyle, width: `${maxBoardWidth}px`, height: `${maxBoardHeight}px` }}>
+              {/* Overlay for "lost" state (Option 2: Grid darkening) */}
+              {lost && mode === 'slide' && (
+                <div style={{
+                  position: 'absolute',
+                  top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'rgba(0,0,0,0.5)',
+                  zIndex: 40,
+                  borderRadius: 'inherit',
+                  pointerEvents: 'none'
+                }} />
+              )}
+
+              {/* Alert Banner for no more moves (Option 1) */}
+              {lost && mode === 'slide' && (
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  background: 'rgba(10, 15, 30, 0.95)',
+                  color: '#ef4444',
+                  padding: '25px 40px',
+                  borderRadius: '16px',
+                  border: '3px solid #ef4444',
+                  fontSize: '1.8rem',
+                  fontWeight: '900',
+                  textAlign: 'center',
+                  zIndex: 50,
+                  boxShadow: '0 0 30px rgba(239, 68, 68, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.3)',
+                  animation: 'victory-bounce 1s infinite alternate',
+                  width: 'max-content',
+                  pointerEvents: 'none'
+                }}>
+                  BLOQUÉ !<br/>
+                  <span style={{ fontSize: '1.1rem', color: '#FFF', fontWeight: 'bold' }}>Aucun mouvement possible.<br/>Veuillez cliquer sur Mélanger.</span>
+                </div>
+              )}
+
               {/* Faint grid guide lines in slider mode */}
               {mode === 'slide' && gridSlots.map(slot => (
                 <div
@@ -2553,7 +2593,10 @@ export default function MahjongZen({ onBack, onScoreSave }) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '240px', zIndex: 10 }}>
               <button
-                onClick={initGame}
+                onClick={() => {
+                  if (onIntermissionRequest) onIntermissionRequest();
+                  else initGame();
+                }}
                 className="retro-btn pulse-glow"
                 style={{
                   ...restartBtnStyle,

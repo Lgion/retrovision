@@ -80,7 +80,7 @@ const isValidCell = (r, c, size) => {
   return true;
 };
 
-export default function ArrowPuzzle({ onBack, onScoreSave }) {
+export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [mode, setMode] = useState(() => getGameConfig('arrows', 'mode', 'dense')); // 'scattered' | 'dense' | 'wire'
@@ -105,6 +105,13 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, victoryPhase, moves, arrowsLeft]);
+
+  useEffect(() => {
+    if (isIntermission && gameState === 'menu') {
+      setMode('dense');
+      setTimeout(() => startGame(8, 64), 100);
+    }
+  }, [isIntermission, gameState]);
 
   const handleBackWithConfirm = () => {
     if (gameState === 'playing' && victoryPhase === 0 && moves > 0 && arrowsLeft > 0) {
@@ -565,32 +572,41 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
 
   return (
     <>
-      {showIntro && <GameIntro 
+      {showIntro && !isIntermission && <GameIntro 
         gameName="ARROW PUZZLE" 
         icon="⬆️" 
         colors={['#3b82f6', '#10b981', '#ef4444']} 
         particleType="arrows" 
         onComplete={() => setShowIntro(false)} 
       />}
+      
+      {isIntermission && gameState === 'playing' && (
+        <div style={{ textAlign: 'center', color: '#3b82f6', fontWeight: 'bold', padding: '10px', background: 'rgba(0,0,0,0.5)' }}>
+          Entracte ! Videz la grille pour retourner au Mahjong.
+        </div>
+      )}
+
       <div style={containerStyle}>
-      <GameHeader
-        title="ARROW PUZZLE"
-        onBack={handleBackWithConfirm}
-        onRestart={gameState === 'playing' ? () => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250)) : undefined}
-        onHint={gameState === 'playing' ? useHint : undefined}
-        hintDisabled={hints <= 0}
-        hintsLeft={hints}
-        showBgmToggle={false} // bgm is managed elsewhere
-        centerContent={
-          gameState === 'playing' ? (
-            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-              <div><span style={{color: '#8e8a9f'}}>Vies: </span><span style={{color: '#ef4444', fontSize: '1rem'}}>{'❤️'.repeat(lives)}{'🖤'.repeat(3 - lives)}</span></div>
-              <div><span style={{color: '#8e8a9f'}}>Restes: </span><span style={{color: '#fff', fontWeight: 'bold', fontSize: '1rem'}}>{arrowsLeft}</span></div>
-            </div>
-          ) : null
-        }
-        style={{ marginBottom: '20px' }}
-      />
+      {!isIntermission && (
+        <GameHeader
+          title="ARROW PUZZLE"
+          onBack={handleBackWithConfirm}
+          onRestart={gameState === 'playing' ? () => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250)) : undefined}
+          onHint={gameState === 'playing' ? useHint : undefined}
+          hintDisabled={hints <= 0}
+          hintsLeft={hints}
+          showBgmToggle={false} // bgm is managed elsewhere
+          centerContent={
+            gameState === 'playing' ? (
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                <div><span style={{color: '#8e8a9f'}}>Vies: </span><span style={{color: '#ef4444', fontSize: '1rem'}}>{'❤️'.repeat(lives)}{'🖤'.repeat(3 - lives)}</span></div>
+                <div><span style={{color: '#8e8a9f'}}>Restes: </span><span style={{color: '#fff', fontWeight: 'bold', fontSize: '1rem'}}>{arrowsLeft}</span></div>
+              </div>
+            ) : null
+          }
+          style={{ marginBottom: '20px' }}
+        />
+      )}
 
       {gameState === 'menu' && (
         <div style={menuStyle}>
@@ -882,11 +898,14 @@ export default function ArrowPuzzle({ onBack, onScoreSave }) {
                   Recommencer
                 </button>
                 <button
-                  onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
+                  onClick={() => {
+                    if (isIntermission && onIntermissionComplete) onIntermissionComplete();
+                    else { setVictoryPhase(0); setGameState('menu'); }
+                  }}
                   className="retro-btn"
                   style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#3b82f6', color: '#3b82f6' }}
                 >
-                  Super !
+                  {isIntermission ? "Retour au Mahjong" : "Super !"}
                 </button>
               </div>
             </div>

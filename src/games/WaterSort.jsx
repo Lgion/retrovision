@@ -6,7 +6,7 @@ import GameIntro from '../components/GameIntro';
 import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 
-export default function WaterSort({ onBack, onScoreSave }) {
+export default function WaterSort({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
@@ -59,11 +59,15 @@ export default function WaterSort({ onBack, onScoreSave }) {
 
   const initGame = () => {
     let numFilled;
-    do {
-      numFilled = Math.floor(Math.random() * 6) + 4; // 4 to 9 tubes
-    } while (numFilled === lastNumFilledRef.current);
+    if (isIntermission) {
+      numFilled = 3;
+    } else {
+      do {
+        numFilled = Math.floor(Math.random() * 6) + 4; // 4 to 9 tubes
+      } while (numFilled === lastNumFilledRef.current);
+    }
     lastNumFilledRef.current = numFilled;
-    const numEmpty = 2;
+    const numEmpty = isIntermission ? 1 : 2;
     const activeColorsKeys = ['R', 'B', 'G', 'Y', 'P', 'O', 'W', 'D', 'M'].slice(0, numFilled);
 
     const liquidPool = [];
@@ -376,8 +380,8 @@ export default function WaterSort({ onBack, onScoreSave }) {
 
   return (
     <>
-      {showIntro && <GameIntro
-        gameName="WATER SORT"
+      {showIntro && !isIntermission && <GameIntro
+        gameName="TRI EAU"
         icon="💧"
         colors={['#33CCFF', '#FF3366', '#FFD700']}
         particleType="bubbles"
@@ -406,46 +410,54 @@ export default function WaterSort({ onBack, onScoreSave }) {
         }} />
 
         {/* Header */}
-        <GameHeader
-          title="WATER SORT"
-          onBack={() => {
-            if (victoryPhase === 0 && history.length > 0) {
-              if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) onBack();
-            } else onBack();
-          }}
-          onRestart={() => {
-            if (window.confirm("Recommencer ce niveau ?")) {
-              initGame();
-              setVictoryPhase(0);
-              sound.playClick();
+        {!isIntermission && (
+          <GameHeader
+            title="WATER SORT"
+            onBack={() => {
+              if (victoryPhase === 0 && history.length > 0) {
+                if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) onBack();
+              } else onBack();
+            }}
+            onRestart={() => {
+              if (window.confirm("Recommencer ce niveau ?")) {
+                initGame();
+                setVictoryPhase(0);
+                sound.playClick();
+              }
+            }}
+            onUndo={undo}
+            undoDisabled={history.length === 0}
+            onHint={getHint}
+            hintDisabled={false}
+            onShop={() => setShowCollection(true)}
+            showBgmToggle={false} // bgm is global
+            extraControls={
+              <button
+                onClick={() => { setPourFromBottom(!pourFromBottom); sound.playClick(); }}
+                style={{
+                  background: pourFromBottom ? 'linear-gradient(45deg, #FF3366, #FF99CC)' : 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.5)',
+                  color: 'white',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  boxShadow: pourFromBottom ? '0 4px 10px rgba(255, 51, 102, 0.4)' : 'none',
+                  transition: 'all 0.3s',
+                }}
+                title={pourFromBottom ? "Verser depuis le bas" : "Verser depuis le haut"}
+              >
+                {pourFromBottom ? 'Bas ↓' : 'Haut ↑'}
+              </button>
             }
-          }}
-          onUndo={undo}
-          undoDisabled={history.length === 0}
-          onHint={getHint}
-          hintDisabled={false}
-          onShop={() => setShowCollection(true)}
-          showBgmToggle={false} // bgm is global
-          extraControls={
-            <button
-              onClick={() => { setPourFromBottom(!pourFromBottom); sound.playClick(); }}
-              style={{
-                background: pourFromBottom ? 'linear-gradient(45deg, #FF3366, #FF99CC)' : 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.5)',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                boxShadow: pourFromBottom ? '0 4px 10px rgba(255, 51, 102, 0.4)' : 'none',
-                transition: 'all 0.3s',
-              }}
-              title={pourFromBottom ? "Verser depuis le bas" : "Verser depuis le haut"}
-            >
-              {pourFromBottom ? 'Bas ↓' : 'Haut ↑'}
-            </button>
-          }
-        />
+          />
+        )}
+
+        {isIntermission && victoryPhase === 0 && (
+          <div style={{ textAlign: 'center', color: '#33CCFF', fontWeight: 'bold', padding: '10px', background: 'rgba(0,0,0,0.5)', zIndex: 10 }}>
+            Entracte ! Triez l'eau pour retourner au Mahjong.
+          </div>
+        )}
 
         {/* Main Game Area */}
         <div style={{
@@ -652,7 +664,10 @@ export default function WaterSort({ onBack, onScoreSave }) {
 
                 <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                   <button
-                    onClick={initGame}
+                    onClick={() => {
+                      if (isIntermission && onIntermissionComplete) onIntermissionComplete();
+                      else initGame();
+                    }}
                     style={{
                       background: 'linear-gradient(135deg, #33FF77, #009933)',
                       border: '4px solid white',
@@ -668,26 +683,28 @@ export default function WaterSort({ onBack, onScoreSave }) {
                     onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
                     onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
                   >
-                    Rejouer 🔄
+                    {isIntermission ? "Retour au Mahjong" : "Rejouer 🔄"}
                   </button>
-                  <button
-                    onClick={onBack}
-                    style={{
-                      background: 'rgba(0,0,0,0.1)',
-                      border: 'none',
-                      color: '#666',
-                      padding: '15px 30px',
-                      borderRadius: '40px',
-                      fontSize: '1.5rem',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      transition: 'background 0.2s'
-                    }}
-                    onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
-                    onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
-                  >
-                    Quitter
-                  </button>
+                  {!isIntermission && (
+                    <button
+                      onClick={onBack}
+                      style={{
+                        background: 'rgba(0,0,0,0.1)',
+                        border: 'none',
+                        color: '#666',
+                        padding: '15px 30px',
+                        borderRadius: '40px',
+                        fontSize: '1.5rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
+                      onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
+                    >
+                      Quitter
+                    </button>
+                  )}
                 </div>
               </div>
             )}
