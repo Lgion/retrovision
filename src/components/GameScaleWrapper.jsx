@@ -11,20 +11,23 @@ export default function GameScaleWrapper({ children, designWidth = 430, defaultH
   const [scale, setScale] = useState(1);
   const [designHeight, setDesignHeight] = useState(defaultHeight);
 
-  // Function to measure children scrollHeight when scale is 1 (unconstrained)
+  // Function to measure children scrollHeight securely
   const measureHeight = () => {
     if (innerRef.current) {
+      // Temporarily remove scale to measure true natural height without fractional pixel wrapping issues
+      const oldTransform = innerRef.current.style.transform;
+      innerRef.current.style.transform = 'none';
+      
       const naturalHeight = innerRef.current.scrollHeight;
-      if (naturalHeight && naturalHeight !== designHeight) {
-        setDesignHeight(naturalHeight);
+      
+      innerRef.current.style.transform = oldTransform;
+
+      const newDesignHeight = Math.max(defaultHeight, naturalHeight);
+      if (Math.abs(newDesignHeight - designHeight) > 5) {
+        setDesignHeight(newDesignHeight);
       }
     }
   };
-
-  // Run before painting to avoid layout shift
-  useLayoutEffect(() => {
-    measureHeight();
-  });
 
   useEffect(() => {
     const handleResize = () => {
