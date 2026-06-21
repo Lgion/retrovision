@@ -109,7 +109,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
   useEffect(() => {
     if (isIntermission && gameState === 'menu') {
       setMode('dense');
-      setTimeout(() => startGame(8, 64), 100);
+      startGame(8, 64, 'dense');
     }
   }, [isIntermission, gameState]);
 
@@ -340,16 +340,17 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
     return { grid: newGrid, placed: newWires.length, wires: newWires };
   };
 
-  const startGame = (size, arrows) => {
+  const startGame = (size, arrows, overrideMode = null) => {
+    const activeMode = overrideMode || mode;
     sound.playClick();
     setBoardSize(size);
-    if (mode === 'wire') {
+    if (activeMode === 'wire') {
       const { grid: newGrid, placed, wires: newWires } = generateWireBoard(size, arrows);
       setGrid(newGrid);
       setWires(newWires);
       setArrowsLeft(placed);
     } else {
-      const { grid: newGrid, placed } = mode === 'dense' ? generateDenseBoard(size) : generateBoard(size, arrows);
+      const { grid: newGrid, placed } = activeMode === 'dense' ? generateDenseBoard(size) : generateBoard(size, arrows);
       setGrid(newGrid);
       setWires([]);
       setArrowsLeft(placed);
