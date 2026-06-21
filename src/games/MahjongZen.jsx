@@ -470,6 +470,18 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest 
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [won, lost, tiles]);
 
+  // Alert sound for blocked state
+  useEffect(() => {
+    let interval;
+    if (lost && mode === 'slide') {
+      sound.playError(); // play once immediately
+      interval = setInterval(() => {
+        sound.playError();
+      }, 800);
+    }
+    return () => clearInterval(interval);
+  }, [lost, mode]);
+
   const handleBackWithConfirm = () => {
     const isGameInProgress = !won && !lost && tiles.some(t => !t.active);
     if (isGameInProgress) {
@@ -1928,6 +1940,10 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest 
           0%, 100% { box-shadow: 0 8px 15px rgba(234, 88, 12, 0.4), inset 0 6px 8px rgba(255,255,255,0.6), inset 0 -4px 6px rgba(0,0,0,0.4); transform: scale(1); filter: brightness(1); }
           50% { box-shadow: 0 8px 25px rgba(234, 88, 12, 0.9), inset 0 6px 8px rgba(255,255,255,0.8), inset 0 -4px 6px rgba(0,0,0,0.4); transform: scale(1.1); filter: brightness(1.2); }
         }
+        @keyframes shuffle-panic {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); transform: scale(1); background: radial-gradient(circle at 30% 30%, #ef4444, #b91c1c); }
+          50% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); transform: scale(1.2); background: radial-gradient(circle at 30% 30%, #f87171, #ef4444); }
+        }
         .btn-shuffle {
           background: radial-gradient(circle at 30% 30%, #fb923c, #ea580c);
           border-bottom: 4px solid #c2410c;
@@ -1936,7 +1952,8 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest 
           margin-left: 10px;
         }
         .pulse-shuffle {
-          animation: shuffle-glow 1.2s infinite;
+          animation: shuffle-panic 0.8s infinite !important;
+          border-bottom-color: #991b1b !important;
         }
 
         @keyframes vapor-move {
@@ -2074,7 +2091,34 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest 
           justifyContent: 'center',
           alignItems: 'flex-start',
           height: `${(maxBoardHeight + 32) * boardScale}px`,
+          position: 'relative'
         }}>
+          {/* New Banner Position - Completely outside the overflow:hidden wrapper */}
+          {lost && mode === 'slide' && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'rgba(10, 15, 30, 0.95)',
+              color: '#ef4444',
+              padding: '15px 30px',
+              borderRadius: '16px',
+              border: '3px solid #ef4444',
+              fontSize: '1.4rem',
+              fontWeight: '900',
+              textAlign: 'center',
+              zIndex: 9999,
+              boxShadow: '0 0 30px rgba(239, 68, 68, 0.8), inset 0 0 15px rgba(239, 68, 68, 0.5)',
+              animation: 'victory-bounce 1s infinite alternate',
+              width: 'max-content',
+              pointerEvents: 'none',
+              textTransform: 'uppercase'
+            }}>
+              plus aucun coup possible... mélanger
+            </div>
+          )}
+
           <div style={{
             ...boardWrapperStyle,
             background: mode === 'slide' ? 'rgba(8, 60, 84, 0.2)' : '#f8fafc',
@@ -2105,31 +2149,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest 
                 }} />
               )}
 
-              {/* Alert Banner for no more moves (Option 1) */}
-              {lost && mode === 'slide' && (
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  background: 'rgba(10, 15, 30, 0.95)',
-                  color: '#ef4444',
-                  padding: '25px 40px',
-                  borderRadius: '16px',
-                  border: '3px solid #ef4444',
-                  fontSize: '1.8rem',
-                  fontWeight: '900',
-                  textAlign: 'center',
-                  zIndex: 210,
-                  boxShadow: '0 0 30px rgba(239, 68, 68, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.3)',
-                  animation: 'victory-bounce 1s infinite alternate',
-                  width: 'max-content',
-                  pointerEvents: 'none'
-                }}>
-                  BLOQUÉ !<br/>
-                  <span style={{ fontSize: '1.1rem', color: '#FFF', fontWeight: 'bold' }}>Aucun mouvement possible.<br/>Veuillez cliquer sur Mélanger.</span>
-                </div>
-              )}
+              {/* Alert Banner has been moved completely outside this container to avoid z-index and clipping issues */}
 
               {/* Faint grid guide lines in slider mode */}
               {mode === 'slide' && gridSlots.map(slot => (
