@@ -672,8 +672,17 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, onInterm
         )}
         
         {isIntermission && victoryPhase === 0 && (
-          <div style={{ textAlign: 'center', color: '#FFD700', fontWeight: 'bold', padding: '10px', background: 'rgba(0,0,0,0.5)', zIndex: 10 }}>
-            Entracte ! Triez les billes pour retourner au Mahjong.
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', background: 'rgba(0,0,0,0.5)', zIndex: 10 }}>
+            <div style={{ color: '#FFD700', fontWeight: 'bold' }}>
+              Entracte ! Triez les billes pour retourner au Mahjong.
+            </div>
+            <button
+              onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }}
+              className="retro-btn"
+              style={{ fontSize: '0.9rem', padding: '5px 15px', borderColor: '#3b82f6', color: '#3b82f6' }}
+            >
+              Passer l'entracte ⏭
+            </button>
           </div>
         )}
 
