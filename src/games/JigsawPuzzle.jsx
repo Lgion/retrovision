@@ -421,7 +421,7 @@ const containerStyle = {
   display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '600px',
   background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(10px)',
   borderRadius: '16px', padding: '20px', boxSizing: 'border-box',
-  margin: '0 auto', minHeight: '100%', position: 'relative'
+  margin: '0 auto', flex: 1, position: 'relative'
 };
 
 const headerStyle = {

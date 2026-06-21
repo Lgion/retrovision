@@ -390,7 +390,7 @@ const containerStyle = {
   flexDirection: 'column',
   width: '100%',
   maxWidth: '430px',
-  minHeight: '100%',
+  flex: 1,
   margin: '0 auto',
   background: '#fafafa',
   backgroundImage: 'linear-gradient(rgba(59, 130, 246, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.2) 1px, transparent 1px)',
