@@ -327,8 +327,8 @@ function MahjongIcon({ name }) {
   }
 }
 
-export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest }) {
-  const [showIntro, setShowIntro] = useState(true);
+export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest, skipIntro }) {
+  const [showIntro, setShowIntro] = useState(!skipIntro);
   const [mode, setMode] = useState(() => getGameConfig('mahjong', 'mode', 'slide'));
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mahjong', 'boardSize', 'large'));
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

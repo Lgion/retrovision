@@ -226,6 +226,10 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
   };
 
   const handleVictory = () => {
+    if (isIntermission && onIntermissionComplete) {
+      setTimeout(() => onIntermissionComplete(), 1000);
+      return;
+    }
     setVictoryPhase(-1);
     setTimeout(() => {
       sound.stopBGM();

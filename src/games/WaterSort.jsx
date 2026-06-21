@@ -306,6 +306,10 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, onInter
     });
 
     if (isWon && victoryPhase === 0) {
+      if (isIntermission && onIntermissionComplete) {
+        setTimeout(() => onIntermissionComplete(), 1000);
+        return;
+      }
       setVictoryPhase(-1);
 
       setTimeout(() => {

@@ -22,6 +22,7 @@ function App() {
   
   const [isIntermissionMode, setIsIntermissionMode] = useState(false);
   const [returnView, setReturnView] = useState(null);
+  const [skipNextIntro, setSkipNextIntro] = useState(false);
 
   const intermissionGames = ['ball', 'water', 'mines', 'arrows'];
   const handleMahjongNextLevel = () => {
@@ -32,10 +33,22 @@ function App() {
   };
 
   const handleIntermissionComplete = () => {
-    setView(returnView || 'dashboard');
-    setIsIntermissionMode(false);
-    setReturnView(null);
+    setView('intermission-victory');
+    setSkipNextIntro(true);
   };
+
+  useEffect(() => {
+    if (view === 'dashboard') {
+      setSkipNextIntro(false);
+    } else if (view === 'intermission-victory') {
+      const timer = setTimeout(() => {
+        setView(returnView || 'dashboard');
+        setIsIntermissionMode(false);
+        setReturnView(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [view, returnView]);
 
 
   useEffect(() => {
@@ -97,6 +110,7 @@ function App() {
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
               onIntermissionRequest={handleMahjongNextLevel}
+              skipIntro={skipNextIntro}
             />
           </div>
         );
@@ -199,6 +213,24 @@ function App() {
                 onScoreSave={handleScoreSave}
               />
             </GameScaleWrapper>
+          </div>
+        );
+      case 'intermission-victory':
+        return (
+          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'radial-gradient(circle at center, #1e293b, #020617)' }}>
+            <div style={{ fontSize: '100px', animation: 'victory-bounce 1s infinite alternate' }}>🏆</div>
+            <h1 style={{ fontSize: '3.5rem', color: '#fcd34d', textShadow: '0 0 20px #f59e0b', margin: '20px 0', animation: 'float-up-fade 0.8s forwards' }}>ENTRACTE RÉUSSI !</h1>
+            <p style={{ fontSize: '1.5rem', color: '#cbd5e1', animation: 'float-up-fade 1s forwards' }}>Préparation du prochain défi...</p>
+            <style>{`
+              @keyframes victory-bounce {
+                0% { transform: translateY(0) scale(1); }
+                100% { transform: translateY(-20px) scale(1.1); }
+              }
+              @keyframes float-up-fade {
+                0% { opacity: 0; transform: translateY(20px); }
+                100% { opacity: 1; transform: translateY(0); }
+              }
+            `}</style>
           </div>
         );
       default:

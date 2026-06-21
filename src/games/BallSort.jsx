@@ -529,6 +529,10 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, onInterm
     });
 
     if (isWon && victoryPhase === 0) {
+      if (isIntermission && onIntermissionComplete) {
+        setTimeout(() => onIntermissionComplete(), 1000);
+        return;
+      }
       setVictoryPhase(-1);
 
       setTimeout(() => {
