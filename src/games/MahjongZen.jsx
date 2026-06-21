@@ -696,7 +696,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
             active: true,
           });
         }
-        
+
         valid = hasAnyPossibleMovesSlider(boardTiles);
         attempts++;
       }
@@ -1890,7 +1890,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
           }
         }
         @keyframes victory-bounce {
-          0% { transform: translateY(0) scale(1); }
+          0% { transform: translateY(0) scale(.8); }
           100% { transform: translateY(-15px) scale(1.05); }
         }
         @keyframes victory-glow {
@@ -2064,7 +2064,6 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
             disabled={hintsLeft <= 0}
             className="candy-btn btn-hint"
             title="Indice"
-            style={{ width: '44px', height: '44px', padding: 0 }}
           >
             <svg className="btn-icon" viewBox="0 0 24 24" style={{ width: '22px', height: '22px', fill: 'currentColor' }}>
               <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" />
@@ -2097,8 +2096,10 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
           {lost && mode === 'slide' && (
             <div style={{
               position: 'absolute',
-              top: '50%',
-              left: '50%',
+              width: 'max-content',
+              width: '50%',
+              top: '25%',
+              left: '25%',
               transform: 'translate(-50%, -50%)',
               background: 'rgba(10, 15, 30, 0.95)',
               color: '#ef4444',
@@ -2111,7 +2112,6 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
               zIndex: 9999,
               boxShadow: '0 0 30px rgba(239, 68, 68, 0.8), inset 0 0 15px rgba(239, 68, 68, 0.5)',
               animation: 'victory-bounce 1s infinite alternate',
-              width: 'max-content',
               pointerEvents: 'none',
               textTransform: 'uppercase'
             }}>

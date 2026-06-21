@@ -64,6 +64,13 @@ export default function GameHeader({
           border-bottom: 4px solid #a16207;
           animation: hint-pulse 2s infinite;
         }
+        .btn-hint{left:40%;}
+        .btn-shuffle {right:40%;}
+        .btn-hint, .btn-shuffle {
+          position: absolute;
+          z-index: 10;
+          width: 100px;
+        }
         @keyframes hint-pulse {
           0%, 100% { box-shadow: 0 8px 15px rgba(234, 179, 8, 0.4), inset 0 6px 8px rgba(255,255,255,0.6), inset 0 -4px 6px rgba(0,0,0,0.4); }
           50% { box-shadow: 0 8px 25px rgba(234, 179, 8, 0.8), inset 0 6px 8px rgba(255,255,255,0.8), inset 0 -4px 6px rgba(0,0,0,0.4); filter: brightness(1.1); }
@@ -93,9 +100,9 @@ export default function GameHeader({
           background: #ef4444;
           color: white;
           border-radius: 50%;
-          width: 22px;
-          height: 22px;
-          font-size: 0.8rem;
+          width: 26px;
+          height: 26px;
+          font-size: 1.2rem;
           font-weight: bold;
           display: flex;
           align-items: center;
