@@ -650,11 +650,6 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest 
         symIdx++;
       }
 
-      for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-
       const slots = [];
       for (let y = 1; y <= maxRows; y++) {
         for (let x = 1; x <= 6; x++) {
@@ -662,24 +657,42 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest 
         }
       }
 
-      for (let i = slots.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [slots[i], slots[j]] = [slots[j], slots[i]];
+      let boardTiles = [];
+      let attempts = 0;
+      let valid = false;
+
+      while (!valid && attempts < 20) {
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+
+        for (let i = slots.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [slots[i], slots[j]] = [slots[j], slots[i]];
+        }
+
+        boardTiles = [];
+        for (let i = 0; i < pool.length; i++) {
+          const slot = slots[i];
+          boardTiles.push({
+            id: i + 1,
+            x: slot.x,
+            y: slot.y,
+            z: 0,
+            sym: pool[i],
+            active: true,
+          });
+        }
+        
+        valid = hasAnyPossibleMovesSlider(boardTiles);
+        attempts++;
       }
 
-      const boardTiles = [];
-      for (let i = 0; i < pool.length; i++) {
-        const slot = slots[i];
-        boardTiles.push({
-          id: i + 1,
-          x: slot.x,
-          y: slot.y,
-          z: 0,
-          sym: pool[i],
-          active: true,
-        });
-      }
       setTiles(boardTiles);
+      if (!valid) {
+        setLost(true);
+      }
     }
   };
 
@@ -2086,7 +2099,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest 
                   position: 'absolute',
                   top: 0, left: 0, right: 0, bottom: 0,
                   background: 'rgba(0,0,0,0.5)',
-                  zIndex: 40,
+                  zIndex: 200,
                   borderRadius: 'inherit',
                   pointerEvents: 'none'
                 }} />
@@ -2107,7 +2120,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest 
                   fontSize: '1.8rem',
                   fontWeight: '900',
                   textAlign: 'center',
-                  zIndex: 50,
+                  zIndex: 210,
                   boxShadow: '0 0 30px rgba(239, 68, 68, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.3)',
                   animation: 'victory-bounce 1s infinite alternate',
                   width: 'max-content',
