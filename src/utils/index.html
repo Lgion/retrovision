@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Test</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; gap: 10px; padding: 20px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Test des sons de Retrovision</h1>
+    <button id="playLaser">Play Laser</button>
+    <button id="playScore">Play Score</button>
+    <button id="playExplosion">Play Explosion</button>
+    <button id="playPowerup">Play Powerup</button>
+    <button id="playClick">Play Click</button>
+    <button id="playWaterPour">Play Water Pour</button>
+    <button id="playBallDrop">Play Ball Drop</button>
+    <button id="playTubeComplete">Play Tube Complete</button>
+    <button id="startBGM">Start BGM</button>
+    <button id="stopBGM">Stop BGM</button>
+    <button id="toggleBGM">Toggle BGM</button>
+    <button id="playShake">Play Shake</button>
+    <button id="playBlockedAlert">Play Blocked Alert</button>
+    <button id="playProgressChime">Play Progress Chime (0.7)</button>
+    <button id="playWind">Play Wind</button>
+
+    <script type="module">
+        import { sound } from './sound.js';
+
+        document.getElementById('playLaser').addEventListener('click', () => sound.playLaser());
+        document.getElementById('playScore').addEventListener('click', () => sound.playScore());
+        document.getElementById('playExplosion').addEventListener('click', () => sound.playExplosion());
+        document.getElementById('playPowerup').addEventListener('click', () => sound.playPowerup());
+        document.getElementById('playClick').addEventListener('click', () => sound.playClick());
+        document.getElementById('playWaterPour').addEventListener('click', () => sound.playWaterPour());
+        document.getElementById('playBallDrop').addEventListener('click', () => sound.playBallDrop());
+        document.getElementById('playTubeComplete').addEventListener('click', () => sound.playTubeComplete());
+        document.getElementById('startBGM').addEventListener('click', () => sound.startBGM());
+        document.getElementById('stopBGM').addEventListener('click', () => sound.stopBGM());
+        document.getElementById('toggleBGM').addEventListener('click', () => sound.toggleBGM());
+        document.getElementById('playShake').addEventListener('click', () => sound.playShake());
+        document.getElementById('playBlockedAlert').addEventListener('click', () => sound.playBlockedAlert());
+        document.getElementById('playProgressChime').addEventListener('click', () => sound.playProgressChime(0.7)); // Example progress
+        document.getElementById('playWind').addEventListener('click', () => sound.playWind());
+    </script>
+</body>
+</html>

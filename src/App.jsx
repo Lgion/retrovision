@@ -24,12 +24,59 @@ function App() {
   const [returnView, setReturnView] = useState(null);
   const [skipNextIntro, setSkipNextIntro] = useState(false);
 
-  const intermissionGames = ['ball', 'water', 'mines', 'arrows'];
+  const [intermissionConfig, setIntermissionConfig] = useState(() => {
+    const saved = localStorage.getItem('retrovision_intermission_config');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return {
+      ball: { enabled: true, frequency: 'medium' },
+      water: { enabled: true, frequency: 'medium' },
+      mines: { enabled: true, frequency: 'medium' },
+      arrows: { enabled: true, frequency: 'medium' }
+    };
+  });
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [lastIntermissionGame, setLastIntermissionGame] = useState(() => {
+    return localStorage.getItem('retrovision_last_intermission_game') || null;
+  });
+
   const handleMahjongNextLevel = () => {
-    const randomGame = intermissionGames[Math.floor(Math.random() * intermissionGames.length)];
+    const enabledGames = Object.keys(intermissionConfig).filter(
+      key => intermissionConfig[key].enabled
+    );
+    const gamesToChooseFrom = enabledGames.length > 0 ? enabledGames : ['ball', 'water', 'mines', 'arrows'];
+    
+    let filteredGames = gamesToChooseFrom;
+    if (gamesToChooseFrom.length > 1 && lastIntermissionGame) {
+      filteredGames = gamesToChooseFrom.filter(g => g !== lastIntermissionGame);
+    }
+    
+    const weightMap = { low: 1, medium: 3, high: 5 };
+    const weightedList = [];
+    filteredGames.forEach(gameKey => {
+      const configEntry = intermissionConfig[gameKey] || { frequency: 'medium' };
+      const weight = weightMap[configEntry.frequency] || 3;
+      for (let i = 0; i < weight; i++) {
+        weightedList.push(gameKey);
+      }
+    });
+    
+    const chosenGame = weightedList.length > 0 
+      ? weightedList[Math.floor(Math.random() * weightedList.length)]
+      : filteredGames[Math.floor(Math.random() * filteredGames.length)];
+      
+    setLastIntermissionGame(chosenGame);
+    localStorage.setItem('retrovision_last_intermission_game', chosenGame);
+    
     setReturnView('mahjong');
     setIsIntermissionMode(true);
-    setView(randomGame);
+    setView(chosenGame);
   };
 
   const handleIntermissionComplete = () => {
@@ -218,30 +265,120 @@ function App() {
       case 'intermission-victory':
         return (
           <div style={{
-            width: '100%',
-            height: '100%',
+            position: 'fixed',
+            inset: 0,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            background: 'radial-gradient(circle at center, #1e293b, #020617)',
-            animation: 'fade-out-victory 0.5s ease-in 2.5s forwards'
+            background: 'radial-gradient(circle at center, #0f172a, #020617)',
+            zIndex: 9999,
+            animation: 'fadeInVictory 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards, fadeOutVictory 0.6s cubic-bezier(0.16, 1, 0.3, 1) 2.4s forwards',
+            opacity: 0,
+            fontFamily: "'Outfit', 'Inter', sans-serif"
           }}>
-            <div style={{ fontSize: '100px', animation: 'victory-bounce 1s infinite alternate' }}>🏆</div>
-            <h1 style={{ fontSize: '3.5rem', color: '#fcd34d', textShadow: '0 0 20px #f59e0b', margin: '20px 0', animation: 'float-up-fade 0.8s forwards' }}>ENTRACTE RÉUSSI !</h1>
-            <p style={{ fontSize: '1.5rem', color: '#cbd5e1', animation: 'float-up-fade 1s forwards' }}>Préparation du prochain défi...</p>
+            {/* Glow effect in background */}
+            <div style={{
+              position: 'absolute',
+              width: '300px',
+              height: '300px',
+              background: 'rgba(59, 130, 246, 0.15)',
+              borderRadius: '50%',
+              filter: 'blur(80px)',
+              pointerEvents: 'none',
+              animation: 'pulseGlow 2s infinite alternate'
+            }} />
+            
+            {/* Trophy emblem */}
+            <div style={{ 
+              fontSize: '80px', 
+              marginBottom: '24px',
+              filter: 'drop-shadow(0 0 15px rgba(245, 158, 11, 0.4))',
+              animation: 'victoryScale 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+            }}>
+              🏆
+            </div>
+            
+            {/* Sleek Text */}
+            <h1 style={{ 
+              fontSize: '2.8rem', 
+              fontWeight: '800',
+              letterSpacing: '2px',
+              background: 'linear-gradient(135deg, #fef08a 0%, #f59e0b 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              margin: '0 0 12px 0',
+              textAlign: 'center',
+              textTransform: 'uppercase',
+              animation: 'victorySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both'
+            }}>
+              Entracte Réussi
+            </h1>
+            
+            <div style={{
+              width: '80px',
+              height: '4px',
+              background: 'linear-gradient(90deg, transparent, #f59e0b, transparent)',
+              marginBottom: '20px',
+              borderRadius: '2px',
+              animation: 'victorySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both'
+            }} />
+            
+            <p style={{ 
+              fontSize: '1.2rem', 
+              color: '#94a3b8', 
+              margin: 0,
+              fontWeight: '500',
+              letterSpacing: '0.5px',
+              textAlign: 'center',
+              animation: 'victorySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both'
+            }}>
+              Retour au Mahjong Zen...
+            </p>
+
+            {/* Minimalist sleek progress bar loader */}
+            <div style={{
+              width: '160px',
+              height: '3px',
+              background: 'rgba(255,255,255,0.08)',
+              borderRadius: '2px',
+              marginTop: '32px',
+              overflow: 'hidden',
+              animation: 'victorySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both'
+            }}>
+              <div style={{
+                height: '100%',
+                background: 'linear-gradient(90deg, #3b82f6, #60a5fa)',
+                borderRadius: '2px',
+                animation: 'victoryProgressBar 2.2s linear forwards'
+              }} />
+            </div>
+
             <style>{`
-              @keyframes victory-bounce {
-                0% { transform: translateY(0) scale(1); }
-                100% { transform: translateY(-20px) scale(1.1); }
+              @keyframes fadeInVictory {
+                0% { opacity: 0; backdrop-filter: blur(0px); }
+                100% { opacity: 1; backdrop-filter: blur(12px); }
               }
-              @keyframes float-up-fade {
-                0% { opacity: 0; transform: translateY(20px); }
-                100% { opacity: 1; transform: translateY(0); }
-              }
-              @keyframes fade-out-victory {
+              @keyframes fadeOutVictory {
                 0% { opacity: 1; }
                 100% { opacity: 0; }
+              }
+              @keyframes victoryScale {
+                0% { transform: scale(0.5); opacity: 0; }
+                100% { transform: scale(1); opacity: 1; }
+              }
+              @keyframes victorySlideUp {
+                0% { transform: translateY(20px); opacity: 0; }
+                100% { transform: translateY(0); opacity: 1; }
+              }
+              @keyframes victoryProgressBar {
+                0% { width: 0%; }
+                100% { width: 100%; }
+              }
+              @keyframes pulseGlow {
+                0% { transform: scale(0.9); opacity: 0.12; }
+                100% { transform: scale(1.1); opacity: 0.2; }
+              }
             `}</style>
           </div>
         );
@@ -250,6 +387,7 @@ function App() {
           <Dashboard
             onSelectGame={(gameId) => setView(gameId)}
             statsUpdated={statsUpdated}
+            onOpenIntermissionSettings={() => setIsSettingsOpen(true)}
           />
         );
     }
@@ -276,8 +414,248 @@ function App() {
       <footer className="app-footer">
         RETROVISION © 2026 | CONÇU POUR LA RÉÉDUCATION COGNITIVE
       </footer>
+
+      {isSettingsOpen && (
+        <IntermissionSettingsModal
+          config={intermissionConfig}
+          onClose={() => setIsSettingsOpen(false)}
+          onSave={(newConfig) => {
+            setIntermissionConfig(newConfig);
+            localStorage.setItem('retrovision_intermission_config', JSON.stringify(newConfig));
+            setIsSettingsOpen(false);
+          }}
+        />
+      )}
     </>
   );
 }
+
+function IntermissionSettingsModal({ config, onClose, onSave }) {
+  const [tempConfig, setTempConfig] = useState(() => JSON.parse(JSON.stringify(config)));
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleToggle = (gameKey) => {
+    setTempConfig(prev => {
+      const next = { ...prev };
+      next[gameKey] = {
+        ...next[gameKey],
+        enabled: !next[gameKey].enabled
+      };
+      return next;
+    });
+    setErrorMsg('');
+  };
+
+  const handleFrequency = (gameKey, freq) => {
+    setTempConfig(prev => {
+      const next = { ...prev };
+      next[gameKey] = {
+        ...next[gameKey],
+        frequency: freq
+      };
+      return next;
+    });
+  };
+
+  const handleSave = () => {
+    const anyEnabled = Object.values(tempConfig).some(g => g.enabled);
+    if (!anyEnabled) {
+      setErrorMsg('Veuillez activer au moins un jeu pour les entractes.');
+      return;
+    }
+    onSave(tempConfig);
+  };
+
+  const gameNames = {
+    ball: { name: 'Tri de Billes', icon: '🔮', color: '#ff007f' },
+    water: { name: 'Tri de l\'Eau', icon: '🧪', color: '#00ff7f' },
+    mines: { name: 'Démineur', icon: '💣', color: '#ef4444' },
+    arrows: { name: 'Arrow Puzzle', icon: '⬆️', color: '#3b82f6' }
+  };
+
+  return (
+    <div style={modalBackdropStyle}>
+      <div style={modalContentStyle}>
+        <div style={modalHeaderStyle}>
+          <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-main)' }}>
+            ⚙️ PARAMÈTRES DES ENTRACTES
+          </h2>
+          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+        </div>
+        
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: '1.4' }}>
+          Sélectionnez les jeux qui apparaîtront en entracte après vos parties de Mahjong, et ajustez leur fréquence d'apparition.
+        </p>
+
+        {errorMsg && (
+          <div style={{ color: '#ef4444', background: '#fee2e2', padding: '10px 16px', borderRadius: '8px', marginBottom: '16px', fontWeight: 'bold', fontSize: '0.85rem' }}>
+            ⚠ {errorMsg}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+          {Object.keys(gameNames).map(gameKey => {
+            const gameInfo = gameNames[gameKey];
+            const gameConf = tempConfig[gameKey] || { enabled: false, frequency: 'medium' };
+
+            return (
+              <div 
+                key={gameKey} 
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '14px 18px',
+                  borderRadius: '16px',
+                  border: `1px solid ${gameConf.enabled ? 'rgba(59, 130, 246, 0.2)' : '#e2e8f0'}`,
+                  background: gameConf.enabled ? 'rgba(59, 130, 246, 0.03)' : '#f8fafc',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => handleToggle(gameKey)}>
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '6px',
+                    border: `2px solid ${gameConf.enabled ? gameInfo.color : '#94a3b8'}`,
+                    background: gameConf.enabled ? gameInfo.color : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    transition: 'all 0.15s ease'
+                  }}>
+                    {gameConf.enabled && '✓'}
+                  </div>
+                  <span style={{ fontSize: '20px' }}>{gameInfo.icon}</span>
+                  <span style={{
+                    fontWeight: '700',
+                    color: gameConf.enabled ? 'var(--text-main)' : '#64748b',
+                    fontSize: '0.95rem'
+                  }}>
+                    {gameInfo.name}
+                  </span>
+                </div>
+
+                {gameConf.enabled ? (
+                  <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '3px', borderRadius: '10px' }}>
+                    {['low', 'medium', 'high'].map(freq => {
+                      const label = freq === 'low' ? 'Rare' : freq === 'medium' ? 'Normal' : 'Fréquent';
+                      const isSelected = gameConf.frequency === freq;
+                      return (
+                        <button
+                          key={freq}
+                          onClick={() => handleFrequency(gameKey, freq)}
+                          style={{
+                            border: 'none',
+                            background: isSelected ? '#ffffff' : 'transparent',
+                            color: isSelected ? gameInfo.color : '#64748b',
+                            boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            fontSize: '0.75rem',
+                            fontWeight: '800',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600', paddingRight: '12px' }}>Désactivé</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <button 
+            onClick={onClose} 
+            className="retro-btn"
+            style={{
+              padding: '10px 20px',
+              borderColor: '#cbd5e1',
+              color: '#64748b',
+              background: '#ffffff',
+              fontSize: '0.9rem',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            Annuler
+          </button>
+          <button 
+            onClick={handleSave} 
+            className="retro-btn"
+            style={{
+              padding: '10px 24px',
+              borderColor: 'var(--primary)',
+              color: '#ffffff',
+              background: 'var(--primary)',
+              fontSize: '0.9rem',
+              fontWeight: '800',
+              cursor: 'pointer',
+              boxShadow: '0 4px 10px rgba(2, 132, 199, 0.2)'
+            }}
+          >
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const modalBackdropStyle = {
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(15, 23, 42, 0.65)',
+  backdropFilter: 'blur(8px)',
+  zIndex: 10000,
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: '16px'
+};
+
+const modalContentStyle = {
+  width: '520px',
+  maxWidth: '100%',
+  background: '#ffffff',
+  borderRadius: '24px',
+  boxShadow: '0 20px 50px rgba(15, 23, 42, 0.15)',
+  border: '1px solid rgba(226, 232, 240, 0.8)',
+  padding: '28px',
+  fontFamily: "'Outfit', 'Inter', sans-serif",
+  boxSizing: 'border-box',
+  position: 'relative',
+  animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both'
+};
+
+const modalHeaderStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '12px'
+};
+
+const closeBtnStyle = {
+  border: 'none',
+  background: 'transparent',
+  fontSize: '18px',
+  cursor: 'pointer',
+  color: '#94a3b8',
+  padding: '4px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'color 0.15s ease'
+};
 
 export default App;

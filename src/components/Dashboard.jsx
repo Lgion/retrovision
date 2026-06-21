@@ -3,7 +3,7 @@ import { sound } from '../utils/sound';
 import { getStats, saveStats, resetAllStats, getRecommendation } from '../utils/stats';
 import { getConfigs, saveConfigs, resetAllConfigs } from '../utils/config';
 
-export default function Dashboard({ onSelectGame, statsUpdated }) {
+export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissionSettings }) {
   const [profileName, setProfileName] = useState(() => {
     return localStorage.getItem('retrovision_player_name') || 'PATIENT_READY';
   });
@@ -415,6 +415,25 @@ export default function Dashboard({ onSelectGame, statsUpdated }) {
         <div style={controlsStyle}>
           <button onClick={toggleMuted} className="retro-btn" style={muteBtnStyle}>
             {muted ? '🔇 AUDIO : SOURDINE' : '🔊 AUDIO : ZEN'}
+          </button>
+          <button 
+            onClick={() => {
+              if (onOpenIntermissionSettings) {
+                sound.playClick();
+                onOpenIntermissionSettings();
+              }
+            }} 
+            className="retro-btn" 
+            style={{
+              padding: '10px 18px',
+              fontSize: '14px',
+              borderColor: 'var(--secondary)',
+              color: 'var(--secondary)',
+              background: 'transparent',
+              fontWeight: 'bold'
+            }}
+          >
+            ⚙️ Paramètres Entracte
           </button>
         </div>
       </div>

@@ -282,7 +282,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
       while (currentWire.length < targetLength && growAttempts < 80) {
         growAttempts++;
         const tail = currentWire[currentWire.length - 1];
-        
+
         const neighbors = [
           { dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 }
         ].sort(() => Math.random() - 0.5);
@@ -291,7 +291,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
         for (let n of neighbors) {
           const nr = tail.r + n.dr;
           const nc = tail.c + n.dc;
-          
+
           if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
             if (isValidCell(nr, nc, size) && newGrid[nr][nc] === null && !currentCells.has(`${nr},${nc}`)) {
               // Ensure we don't cross the head's exit ray
@@ -323,7 +323,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
 
       const wireId = `wire_${newWires.length}`;
       const color = WIRE_COLORS[newWires.length % WIRE_COLORS.length];
-      
+
       for (let cell of currentWire) {
         newGrid[cell.r][cell.c] = wireId;
       }
@@ -386,15 +386,15 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
 
     if (checkPath(r, c, arrow.dir, grid)) {
       sound.playBallDrop();
-      
+
       const newGrid = [...grid.map(row => [...row])];
       newGrid[r][c] = null;
       setGrid(newGrid);
       setMoves(m => m + 1);
-      
+
       const flyingId = Date.now() + Math.random();
       setFlyingArrows(prev => [...prev, { ...arrow, flyingId }]);
-      
+
       setTimeout(() => {
         setFlyingArrows(prev => prev.filter(f => f.flyingId !== flyingId));
       }, 400);
@@ -441,7 +441,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
 
     if (canFly) {
       sound.playBallDrop();
-      
+
       // Trigger slithering state
       setWires(prev => prev.map(w => w.id === wire.id ? { ...w, flying: true } : w));
 
@@ -506,7 +506,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
 
   const useHint = () => {
     if (hints <= 0 || victoryPhase !== 0) return;
-    
+
     // Find an arrow or wire that can fly
     if (mode === 'wire') {
       const flyable = wires.find(wire => {
@@ -560,7 +560,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
     const pts = [...wire.path].reverse(); // Reverse so we draw from tail to head
     const head = wire.path[0];
     const dir = DIRS[wire.dir];
-    
+
     // Add 15 extra cells in exit direction to go fully off-screen
     for (let i = 1; i <= 15; i++) {
       pts.push({
@@ -571,29 +571,28 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
 
     return pts.map((p, idx) => {
       const cmd = idx === 0 ? 'M' : 'L';
-      return `${cmd} ${p.c * CELL_SIZE + CELL_SIZE/2} ${p.r * CELL_SIZE + CELL_SIZE/2}`;
+      return `${cmd} ${p.c * CELL_SIZE + CELL_SIZE / 2} ${p.r * CELL_SIZE + CELL_SIZE / 2}`;
     }).join(' ');
   };
 
   return (
     <>
-      {showIntro && !isIntermission && <GameIntro 
-        gameName="ARROW PUZZLE" 
-        icon="⬆️" 
-        colors={['#3b82f6', '#10b981', '#ef4444']} 
-        particleType="arrows" 
-        onComplete={() => setShowIntro(false)} 
+      {showIntro && !isIntermission && <GameIntro
+        gameName="ARROW PUZZLE"
+        icon="⬆️"
+        colors={['#3b82f6', '#10b981', '#ef4444']}
+        particleType="arrows"
+        onComplete={() => setShowIntro(false)}
       />}
-      
+
       {isIntermission && gameState === 'playing' && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', background: 'rgba(0,0,0,0.5)', zIndex: 10 }}>
-          <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>
+        <div className="entract-header entractArrowHeader">
+          <div className="entract-header-text">
             Entracte ! Videz la grille pour retourner au Mahjong.
           </div>
           <button
             onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }}
-            className="retro-btn"
-            style={{ fontSize: '0.9rem', padding: '5px 15px', borderColor: '#3b82f6', color: '#3b82f6' }}
+            className="entract-header-btn"
           >
             Passer l'entracte ⏭
           </button>
@@ -601,343 +600,344 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
       )}
 
       <div style={containerStyle}>
-      {!isIntermission && (
-        <GameHeader
-          title="ARROW PUZZLE"
-          onBack={handleBackWithConfirm}
-          onRestart={gameState === 'playing' ? () => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250)) : undefined}
-          onHint={gameState === 'playing' ? useHint : undefined}
-          hintDisabled={hints <= 0}
-          hintsLeft={hints}
-          showBgmToggle={false} // bgm is managed elsewhere
-          centerContent={
-            gameState === 'playing' ? (
-              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                <div><span style={{color: '#8e8a9f'}}>Vies: </span><span style={{color: '#ef4444', fontSize: '1rem'}}>{'❤️'.repeat(lives)}{'🖤'.repeat(3 - lives)}</span></div>
-                <div><span style={{color: '#8e8a9f'}}>Restes: </span><span style={{color: '#fff', fontWeight: 'bold', fontSize: '1rem'}}>{arrowsLeft}</span></div>
-              </div>
-            ) : null
-          }
-          style={{ marginBottom: '20px' }}
-        />
-      )}
+        {!isIntermission && (
+          <GameHeader
+            title="ARROW PUZZLE"
+            onBack={handleBackWithConfirm}
+            onRestart={gameState === 'playing' ? () => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250)) : undefined}
+            onHint={gameState === 'playing' ? useHint : undefined}
+            hintDisabled={hints <= 0}
+            hintsLeft={hints}
+            showBgmToggle={false} // bgm is managed elsewhere
+            centerContent={
+              gameState === 'playing' ? (
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                  <div><span style={{ color: '#8e8a9f' }}>Vies: </span><span style={{ color: '#ef4444', fontSize: '1rem' }}>{'❤️'.repeat(lives)}{'🖤'.repeat(3 - lives)}</span></div>
+                  <div><span style={{ color: '#8e8a9f' }}>Restes: </span><span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>{arrowsLeft}</span></div>
+                </div>
+              ) : null
+            }
+            style={{ marginBottom: '20px' }}
+          />
+        )}
 
-      {gameState === 'menu' && (
-        <div style={menuStyle}>
-          <div style={{fontSize: '5rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.5))'}}>⬆️</div>
-          <h2 style={{color: '#fff', marginBottom: '30px', textAlign: 'center'}}>Démêlez les flèches !</h2>
-          
-          <div style={{display: 'flex', gap: '10px', marginBottom: '20px', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '30px', flexWrap: 'wrap', justifyContent: 'center'}}>
-            <button 
-              onClick={() => { setMode('scattered'); updateGameConfig('arrows', 'mode', 'scattered'); sound.playClick(); }}
-              style={{
-                background: mode === 'scattered' ? '#3b82f6' : 'transparent',
-                color: mode === 'scattered' ? 'white' : '#cbd5e1',
-                border: 'none', padding: '10px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold'
-              }}
-            >
-              Éparpillé
-            </button>
-            <button 
-              onClick={() => { setMode('dense'); updateGameConfig('arrows', 'mode', 'dense'); sound.playClick(); }}
-              style={{
-                background: mode === 'dense' ? '#10b981' : 'transparent',
-                color: mode === 'dense' ? 'white' : '#cbd5e1',
-                border: 'none', padding: '10px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold'
-              }}
-            >
-              Bloc Dense
-            </button>
-            <button 
-              onClick={() => { setMode('wire'); updateGameConfig('arrows', 'mode', 'wire'); sound.playClick(); }}
-              style={{
-                background: mode === 'wire' ? '#ec4899' : 'transparent',
-                color: mode === 'wire' ? 'white' : '#cbd5e1',
-                border: 'none', padding: '10px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold'
-              }}
-            >
-              Filaires
-            </button>
-          </div>
-          
-          <button 
-            onClick={() => startGame(16, mode === 'wire' ? 75 : 85)} 
-            className="retro-btn pulse-glow"
-            style={{padding: '15px 40px', fontSize: '20px', borderColor: '#3b82f6', color: '#3b82f6', marginBottom: '15px', width: '250px'}}
-          >
-            Facile (16x16)
-          </button>
-          <button 
-            onClick={() => startGame(32, mode === 'wire' ? 300 : 250)} 
-            className="retro-btn"
-            style={{padding: '15px 40px', fontSize: '20px', borderColor: '#10b981', color: '#10b981', width: '250px'}}
-          >
-            Moyen (32x32)
-          </button>
-          
-          <div style={{marginTop: '30px', color: '#cbd5e1', textAlign: 'center', fontSize: '14px', maxWidth: '300px'}}>
-            <strong>Règle :</strong> {mode === 'wire' ? "Touchez un fil pour le faire glisser. Il ne peut s'enfuir que si la sortie en face de sa tête est libre !" : "Touchez une flèche pour la faire voler. Elle ne peut partir que si son chemin est libre !"}
-          </div>
-        </div>
-      )}
+        {gameState === 'menu' && (
+          <div style={menuStyle}>
+            <div style={{ fontSize: '5rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.5))' }}>⬆️</div>
+            <h2 style={{ color: '#fff', marginBottom: '30px', textAlign: 'center' }}>Démêlez les flèches !</h2>
 
-      {gameState === 'playing' && (
-        <div style={gameplayContainerStyle}>
-          
-
-
-          <div style={{
-            position: 'relative', width: boardSize * CELL_SIZE, height: boardSize * CELL_SIZE,
-            backgroundColor: mode === 'wire' ? '#f8fafc' : '#1e293b', 
-            borderRadius: '12px', border: '2px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)', margin: '0 auto', overflow: 'hidden',
-            animation: 'boardEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both' // Staging & Appeal
-          }}>
-            <div style={{
-              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-              display: 'grid', gridTemplateColumns: `repeat(${boardSize}, 1fr)`, zIndex: 0
-            }}>
-              {Array.from({length: boardSize * boardSize}).map((_, i) => (
-                <div key={i} style={{ border: `1px ${mode === 'wire' ? 'solid transparent' : 'dashed rgba(255,255,255,0.05)'}` }} />
-              ))}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '30px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                onClick={() => { setMode('scattered'); updateGameConfig('arrows', 'mode', 'scattered'); sound.playClick(); }}
+                style={{
+                  background: mode === 'scattered' ? '#3b82f6' : 'transparent',
+                  color: mode === 'scattered' ? 'white' : '#cbd5e1',
+                  border: 'none', padding: '10px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                Éparpillé
+              </button>
+              <button
+                onClick={() => { setMode('dense'); updateGameConfig('arrows', 'mode', 'dense'); sound.playClick(); }}
+                style={{
+                  background: mode === 'dense' ? '#10b981' : 'transparent',
+                  color: mode === 'dense' ? 'white' : '#cbd5e1',
+                  border: 'none', padding: '10px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                Bloc Dense
+              </button>
+              <button
+                onClick={() => { setMode('wire'); updateGameConfig('arrows', 'mode', 'wire'); sound.playClick(); }}
+                style={{
+                  background: mode === 'wire' ? '#ec4899' : 'transparent',
+                  color: mode === 'wire' ? 'white' : '#cbd5e1',
+                  border: 'none', padding: '10px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                Filaires
+              </button>
             </div>
 
-            {mode === 'wire' ? (
-              <svg width={boardSize * CELL_SIZE} height={boardSize * CELL_SIZE} style={{position: 'absolute', top: 0, left: 0, zIndex: 10, overflow: 'visible'}}>
-                {wires.map(wire => {
-                  const head = wire.path[0];
-                  const dir = DIRS[wire.dir];
-                  const cx = head.c * CELL_SIZE + CELL_SIZE/2;
-                  const cy = head.r * CELL_SIZE + CELL_SIZE/2;
-                  const L_orig = (wire.path.length - 1) * CELL_SIZE;
-                  const L_exit = 15 * CELL_SIZE;
+            <button
+              onClick={() => startGame(16, mode === 'wire' ? 75 : 85)}
+              className="retro-btn pulse-glow"
+              style={{ padding: '15px 40px', fontSize: '20px', borderColor: '#3b82f6', color: '#3b82f6', marginBottom: '15px', width: '250px' }}
+            >
+              Facile (16x16)
+            </button>
+            <button
+              onClick={() => startGame(32, mode === 'wire' ? 300 : 250)}
+              className="retro-btn"
+              style={{ padding: '15px 40px', fontSize: '20px', borderColor: '#10b981', color: '#10b981', width: '250px' }}
+            >
+              Moyen (32x32)
+            </button>
 
-                  // Triangle arrowhead coordinates positioned at the tip of the line
-                  const size = arrowHeadSize;
-                  let arrowPoly = "";
-                  if (wire.dir === 'up') arrowPoly = `${cx-size*0.7},${cy+size*0.4} ${cx},${cy-size*0.8} ${cx+size*0.7},${cy+size*0.4}`;
-                  if (wire.dir === 'down') arrowPoly = `${cx-size*0.7},${cy-size*0.4} ${cx},${cy+size*0.8} ${cx+size*0.7},${cy-size*0.4}`;
-                  if (wire.dir === 'left') arrowPoly = `${cx+size*0.4},${cy-size*0.7} ${cx-size*0.8},${cy} ${cx+size*0.4},${cy+size*0.7}`;
-                  if (wire.dir === 'right') arrowPoly = `${cx-size*0.4},${cy-size*0.7} ${cx+size*0.8},${cy} ${cx-size*0.4},${cy+size*0.7}`;
+            <div style={{ marginTop: '30px', color: '#cbd5e1', textAlign: 'center', fontSize: '14px', maxWidth: '300px' }}>
+              <strong>Règle :</strong> {mode === 'wire' ? "Touchez un fil pour le faire glisser. Il ne peut s'enfuir que si la sortie en face de sa tête est libre !" : "Touchez une flèche pour la faire voler. Elle ne peut partir que si son chemin est libre !"}
+            </div>
+          </div>
+        )}
 
-                  return (
-                    <g 
-                      key={wire.id} 
-                      id={wire.id}
-                      onClick={() => handleWireTap(wire)}
-                      style={{ 
-                        cursor: 'pointer',
-                        filter: boardSize > 16 ? 'none' : 'drop-shadow(0 2px 3px rgba(0,0,0,0.15))'
-                      }}
-                    >
-                      <path 
-                        d={getPathD(wire)}
-                        fill="none" 
-                        stroke={wire.color} 
-                        strokeWidth={strokeWidth} 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
+        {gameState === 'playing' && (
+          <div style={gameplayContainerStyle}>
+
+
+
+            <div style={{
+              position: 'relative', width: boardSize * CELL_SIZE, height: boardSize * CELL_SIZE,
+              backgroundColor: mode === 'wire' ? '#f8fafc' : '#1e293b',
+              borderRadius: '12px', border: '2px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.5)', margin: '0 auto', overflow: 'hidden',
+              animation: 'boardEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both' // Staging & Appeal
+            }}>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                display: 'grid', gridTemplateColumns: `repeat(${boardSize}, 1fr)`, zIndex: 0
+              }}>
+                {Array.from({ length: boardSize * boardSize }).map((_, i) => (
+                  <div key={i} style={{ border: `1px ${mode === 'wire' ? 'solid transparent' : 'dashed rgba(255,255,255,0.05)'}` }} />
+                ))}
+              </div>
+
+              {mode === 'wire' ? (
+                <svg width={boardSize * CELL_SIZE} height={boardSize * CELL_SIZE} style={{ position: 'absolute', top: 0, left: 0, zIndex: 10, overflow: 'visible' }}>
+                  {wires.map(wire => {
+                    const head = wire.path[0];
+                    const dir = DIRS[wire.dir];
+                    const cx = head.c * CELL_SIZE + CELL_SIZE / 2;
+                    const cy = head.r * CELL_SIZE + CELL_SIZE / 2;
+                    const L_orig = (wire.path.length - 1) * CELL_SIZE;
+                    const L_exit = 15 * CELL_SIZE;
+
+                    // Triangle arrowhead coordinates positioned at the tip of the line
+                    const size = arrowHeadSize;
+                    let arrowPoly = "";
+                    if (wire.dir === 'up') arrowPoly = `${cx - size * 0.7},${cy + size * 0.4} ${cx},${cy - size * 0.8} ${cx + size * 0.7},${cy + size * 0.4}`;
+                    if (wire.dir === 'down') arrowPoly = `${cx - size * 0.7},${cy - size * 0.4} ${cx},${cy + size * 0.8} ${cx + size * 0.7},${cy - size * 0.4}`;
+                    if (wire.dir === 'left') arrowPoly = `${cx + size * 0.4},${cy - size * 0.7} ${cx - size * 0.8},${cy} ${cx + size * 0.4},${cy + size * 0.7}`;
+                    if (wire.dir === 'right') arrowPoly = `${cx - size * 0.4},${cy - size * 0.7} ${cx + size * 0.8},${cy} ${cx - size * 0.4},${cy + size * 0.7}`;
+
+                    return (
+                      <g
+                        key={wire.id}
+                        id={wire.id}
+                        onClick={() => handleWireTap(wire)}
                         style={{
-                          strokeDasharray: `${L_orig} 10000`,
-                          strokeDashoffset: wire.flying ? -L_exit : 0,
-                          transition: wire.flying ? 'stroke-dashoffset 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none'
+                          cursor: 'pointer',
+                          filter: boardSize > 16 ? 'none' : 'drop-shadow(0 2px 3px rgba(0,0,0,0.15))'
                         }}
-                      />
-                      <polygon 
-                        points={arrowPoly} 
-                        fill={wire.color} 
-                        stroke={wire.color}
-                        strokeWidth="1"
-                        strokeLinejoin="round"
+                      >
+                        <path
+                          d={getPathD(wire)}
+                          fill="none"
+                          stroke={wire.color}
+                          strokeWidth={strokeWidth}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{
+                            strokeDasharray: `${L_orig} 10000`,
+                            strokeDashoffset: wire.flying ? -L_exit : 0,
+                            transition: wire.flying ? 'stroke-dashoffset 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none'
+                          }}
+                        />
+                        <polygon
+                          points={arrowPoly}
+                          fill={wire.color}
+                          stroke={wire.color}
+                          strokeWidth="1"
+                          strokeLinejoin="round"
+                          style={{
+                            transform: wire.flying ? `translate(${dir.dc * L_exit}px, ${dir.dr * L_exit}px)` : 'none',
+                            transition: wire.flying ? 'transform 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none'
+                          }}
+                        />
+                      </g>
+                    );
+                  })}
+                </svg>
+              ) : (
+                <React.Fragment>
+                  {/* Static Arrows for scattered / dense modes */}
+                  {grid.map((row, r) => row.map((arrow, c) => {
+                    if (!arrow) return null;
+                    return (
+                      <div
+                        key={arrow.id}
+                        id={arrow.id}
+                        onClick={() => handleArrowTap(r, c)}
                         style={{
-                          transform: wire.flying ? `translate(${dir.dc * L_exit}px, ${dir.dr * L_exit}px)` : 'none',
-                          transition: wire.flying ? 'transform 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none'
+                          position: 'absolute', left: c * CELL_SIZE, top: r * CELL_SIZE,
+                          width: CELL_SIZE, height: CELL_SIZE, zIndex: 10,
+                          display: 'flex', justifyContent: 'center', alignItems: 'center',
+                          cursor: 'pointer', transition: 'transform 0.1s'
                         }}
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
-            ) : (
-              <React.Fragment>
-                {/* Static Arrows for scattered / dense modes */}
-                {grid.map((row, r) => row.map((arrow, c) => {
-                  if (!arrow) return null;
-                  return (
-                    <div 
-                      key={arrow.id}
-                      id={arrow.id}
-                      onClick={() => handleArrowTap(r, c)}
-                      style={{
-                        position: 'absolute', left: c * CELL_SIZE, top: r * CELL_SIZE,
-                        width: CELL_SIZE, height: CELL_SIZE, zIndex: 10,
-                        display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        cursor: 'pointer', transition: 'transform 0.1s'
-                      }}
-                    >
-                      <div style={{
-                        width: '80%', height: '80%', backgroundColor: arrow.color,
-                        borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        color: 'white', fontSize: `${fontSize}px`, fontWeight: 'bold',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.3)',
-                        border: '1px solid rgba(255,255,255,0.4)'
-                      }}>
-                        {arrow.symbol}
+                      >
+                        <div style={{
+                          width: '80%', height: '80%', backgroundColor: arrow.color,
+                          borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                          color: 'white', fontSize: `${fontSize}px`, fontWeight: 'bold',
+                          boxShadow: '0 4px 6px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.3)',
+                          border: '1px solid rgba(255,255,255,0.4)'
+                        }}>
+                          {arrow.symbol}
+                        </div>
                       </div>
-                    </div>
-                  );
-                }))}
-              </React.Fragment>
-            )}
+                    );
+                  }))}
+                </React.Fragment>
+              )}
 
-            {/* Flying Arrows */}
-            {mode !== 'wire' && flyingArrows.map(arrow => {
-              const dx = DIRS[arrow.dir].dc * 400; // Fly far away
-              const dy = DIRS[arrow.dir].dr * 400;
-              const isHoriz = DIRS[arrow.dir].dc !== 0;
-              return (
-                <div 
-                  key={arrow.flyingId}
-                  style={{
-                    position: 'absolute', left: arrow.c * CELL_SIZE, top: arrow.r * CELL_SIZE,
-                    width: CELL_SIZE, height: CELL_SIZE, zIndex: 20,
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    pointerEvents: 'none',
-                    animation: `flyAwaySquash 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards`,
-                    '--dx': `${dx}px`, '--dy': `${dy}px`,
-                    '--sx': isHoriz ? 1.8 : 0.4, // Stretch in flight direction
-                    '--sy': isHoriz ? 0.4 : 1.8,
-                    '--asx': isHoriz ? 0.7 : 1.3, // Squash for anticipation
-                    '--asy': isHoriz ? 1.3 : 0.7,
-                  }}
-                >
-                  <div style={{
-                    width: '80%', height: '80%', backgroundColor: arrow.color,
-                    borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    color: 'white', fontSize: `${fontSize}px`, fontWeight: 'bold',
-                    boxShadow: '0 10px 15px rgba(0,0,0,0.5)',
-                    opacity: 0.8
-                  }}>
-                    {arrow.symbol}
+              {/* Flying Arrows */}
+              {mode !== 'wire' && flyingArrows.map(arrow => {
+                const dx = DIRS[arrow.dir].dc * 400; // Fly far away
+                const dy = DIRS[arrow.dir].dr * 400;
+                const isHoriz = DIRS[arrow.dir].dc !== 0;
+                return (
+                  <div
+                    key={arrow.flyingId}
+                    style={{
+                      position: 'absolute', left: arrow.c * CELL_SIZE, top: arrow.r * CELL_SIZE,
+                      width: CELL_SIZE, height: CELL_SIZE, zIndex: 20,
+                      display: 'flex', justifyContent: 'center', alignItems: 'center',
+                      pointerEvents: 'none',
+                      animation: `flyAwaySquash 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards`,
+                      '--dx': `${dx}px`, '--dy': `${dy}px`,
+                      '--sx': isHoriz ? 1.8 : 0.4, // Stretch in flight direction
+                      '--sy': isHoriz ? 0.4 : 1.8,
+                      '--asx': isHoriz ? 0.7 : 1.3, // Squash for anticipation
+                      '--asy': isHoriz ? 1.3 : 0.7,
+                    }}
+                  >
+                    <div style={{
+                      width: '80%', height: '80%', backgroundColor: arrow.color,
+                      borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                      color: 'white', fontSize: `${fontSize}px`, fontWeight: 'bold',
+                      boxShadow: '0 10px 15px rgba(0,0,0,0.5)',
+                      opacity: 0.8
+                    }}>
+                      {arrow.symbol}
+                    </div>
                   </div>
-                </div>
-              );
+                );
+              })}
+            </div>
+
+          </div>
+        )}
+
+        {/* Immediate Confetti Explosion */}
+        {victoryPhase !== 0 && victoryPhase !== -2 && (
+          <div style={{ position: 'absolute', top: '50%', left: '50%', width: 0, height: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 1000 }}>
+            {Array.from({ length: 100 }, (_, i) => {
+              const angle = Math.random() * Math.PI * 2;
+              const velocity = 150 + Math.random() * 450; // spread
+              const tx = Math.cos(angle) * velocity;
+              const ty = Math.sin(angle) * velocity + 300; // gravity effect
+              return (
+                <div key={i} style={{
+                  position: 'absolute',
+                  width: '10px', height: '10px',
+                  background: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#a855f7'][i % 6],
+                  borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                  '--tx': `${tx}px`, '--ty': `${ty}px`, '--rot': `${Math.random() * 720}deg`,
+                  animation: `confettiExplode ${1 + Math.random() * 1.5}s cubic-bezier(0.25, 1, 0.5, 1) forwards`
+                }} />
+              )
             })}
           </div>
+        )}
 
-        </div>
-      )}
+        {/* Victory Overlays */}
+        {(victoryPhase > 0 || victoryPhase === -2) && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', flexDirection: 'column',
+            justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.5s'
+          }}>
+            {/* Removed old missing confettiFall element */}
 
-      {/* Immediate Confetti Explosion */}
-      {victoryPhase !== 0 && victoryPhase !== -2 && (
-        <div style={{ position: 'absolute', top: '50%', left: '50%', width: 0, height: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 1000 }}>
-          {Array.from({ length: 100 }, (_, i) => {
-            const angle = Math.random() * Math.PI * 2;
-            const velocity = 150 + Math.random() * 450; // spread
-            const tx = Math.cos(angle) * velocity;
-            const ty = Math.sin(angle) * velocity + 300; // gravity effect
-            return (
-              <div key={i} style={{
-                position: 'absolute',
-                width: '10px', height: '10px',
-                background: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#a855f7'][i % 6],
-                borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-                '--tx': `${tx}px`, '--ty': `${ty}px`, '--rot': `${Math.random() * 720}deg`,
-                animation: `confettiExplode ${1 + Math.random()*1.5}s cubic-bezier(0.25, 1, 0.5, 1) forwards`
-              }} />
-            )
-          })}
-        </div>
-      )}
-
-      {/* Victory Overlays */}
-      {(victoryPhase > 0 || victoryPhase === -2) && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', flexDirection: 'column',
-          justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.5s'
-        }}>
-          {/* Removed old missing confettiFall element */}
-
-          {victoryPhase === -2 && (
-            <div style={{
-              animation: 'dropInHeavy 0.8s cubic-bezier(0.25, 1, 0.5, 1) both', textAlign: 'center', background: 'white', padding: '50px',
-              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #ef4444', zIndex: 10
-            }}>
-              <div style={{ fontSize: '4rem', marginBottom: '10px' }}>💀</div>
-              <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Game Over !</h2>
-              <div style={{ fontSize: '1.2rem', color: '#666', marginBottom: '30px' }}>
-                Plus de vies restantes.
-              </div>
-              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                <button
-                  onClick={() => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250))}
-                  className="retro-btn pulse-glow"
-                  style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#f59e0b', color: '#f59e0b' }}
-                >
-                  Recommencer
-                </button>
-                {isIntermission ? (
+            {victoryPhase === -2 && (
+              <div style={{
+                animation: 'dropInHeavy 0.8s cubic-bezier(0.25, 1, 0.5, 1) both', textAlign: 'center', background: 'white', padding: '50px',
+                borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #ef4444', zIndex: 10
+              }}>
+                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>💀</div>
+                <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Game Over !</h2>
+                <div style={{ fontSize: '1.2rem', color: '#666', marginBottom: '30px' }}>
+                  Plus de vies restantes.
+                </div>
+                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
                   <button
-                    onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }}
-                    className="retro-btn"
-                    style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#3b82f6', color: '#3b82f6' }}
+                    onClick={() => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250))}
+                    className="retro-btn pulse-glow"
+                    style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#f59e0b', color: '#f59e0b' }}
                   >
-                    Passer l'entracte ⏭
+                    Recommencer
                   </button>
-                ) : (
+                  {isIntermission ? (
+                    <button
+                      onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }}
+                      className="retro-btn"
+                      style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#3b82f6', color: '#3b82f6' }}
+                    >
+                      Passer l'entracte ⏭
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
+                      className="retro-btn"
+                      style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#ef4444', color: '#ef4444' }}
+                    >
+                      Menu
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {victoryPhase === 1 && (
+              <h2 style={{ fontSize: '4rem', color: '#3b82f6', margin: 0, animation: 'textPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>ÉPURÉ !</h2>
+            )}
+
+            {victoryPhase === 3 && (
+              <div style={{
+                animation: 'popInBouncy 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both', textAlign: 'center', background: 'white', padding: '50px',
+                borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #3b82f6', zIndex: 10
+              }}>
+                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🎯</div>
+                <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Grille Vidée !</h2>
+                <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
+                  Score: <strong style={{ color: '#3b82f6', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
+                </div>
+                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
                   <button
-                    onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
+                    onClick={() => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250))}
                     className="retro-btn"
-                    style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#ef4444', color: '#ef4444' }}
+                    style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#f59e0b', color: '#f59e0b' }}
                   >
-                    Menu
+                    Recommencer
                   </button>
-                )}
+                  <button
+                    onClick={() => {
+                      if (isIntermission && onIntermissionComplete) onIntermissionComplete();
+                      else { setVictoryPhase(0); setGameState('menu'); }
+                    }}
+                    className="retro-btn"
+                    style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#3b82f6', color: '#3b82f6' }}
+                  >
+                    {isIntermission ? "Retour au Mahjong" : "Super !"}
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
-          {victoryPhase === 1 && (
-            <h2 style={{ fontSize: '4rem', color: '#3b82f6', margin: 0, animation: 'textPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>ÉPURÉ !</h2>
-          )}
-
-          {victoryPhase === 3 && (
-            <div style={{
-              animation: 'popInBouncy 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both', textAlign: 'center', background: 'white', padding: '50px',
-              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #3b82f6', zIndex: 10
-            }}>
-              <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🎯</div>
-              <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Grille Vidée !</h2>
-              <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
-                Score: <strong style={{ color: '#3b82f6', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
-              </div>
-              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                <button
-                  onClick={() => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250))}
-                  className="retro-btn"
-                  style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#f59e0b', color: '#f59e0b' }}
-                >
-                  Recommencer
-                </button>
-                <button
-                  onClick={() => {
-                    if (isIntermission && onIntermissionComplete) onIntermissionComplete();
-                    else { setVictoryPhase(0); setGameState('menu'); }
-                  }}
-                  className="retro-btn"
-                  style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#3b82f6', color: '#3b82f6' }}
-                >
-                  {isIntermission ? "Retour au Mahjong" : "Super !"}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <style dangerouslySetInnerHTML={{__html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
         @keyframes flyAwaySquash {
           0% { transform: translate(0, 0) scale(1, 1); opacity: 1; }
           25% { transform: translate(calc(var(--dx) * -0.05), calc(var(--dy) * -0.05)) scale(var(--asx), var(--asy)); opacity: 1; }

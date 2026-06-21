@@ -64,8 +64,8 @@ export default function GameHeader({
           border-bottom: 4px solid #a16207;
           animation: hint-pulse 2s infinite;
         }
-        .btn-hint{left:40%;}
-        .btn-shuffle {right:40%;}
+        .btn-hint{left:30%;}
+        .btn-shuffle {right:30%;}
         .btn-hint, .btn-shuffle {
           position: absolute;
           z-index: 10;

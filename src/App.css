@@ -765,3 +765,43 @@ body {
     min-height: 40px;
   }
 }
+
+/* Intermission header styles with improved contrast */
+.entract-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #0f172a !important; /* Rich Dark Slate 900 */
+  border-bottom: 2px solid #3b82f6 !important; /* Vivid blue border */
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  width: 100%;
+}
+
+.entract-header-text {
+  color: #f8fafc !important; /* High contrast bright white */
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  letter-spacing: 0.5px;
+  font-family: 'Outfit', sans-serif;
+}
+
+.entract-header-btn {
+  background: #ef4444 !important; /* High contrast Red button */
+  color: #ffffff !important; /* White text */
+  border: 2px solid #ffffff !important;
+  border-radius: 8px !important;
+  padding: 6px 16px !important;
+  font-size: 0.9rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5) !important;
+}
+
+.entract-header-btn:hover {
+  background: #dc2626 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.8) !important;
+}

@@ -2,9 +2,11 @@ class SoundController {
   constructor() {
     this.ctx = null;
     this.muted = false;
-    this.bgmNodes = null;
     this.bgmPlaying = false;
     this.bgmMuted = false;
+    this.bgmAudio = null;
+    this.bgmFadeInterval = null;
+    this.bgmTargetVolume = 0.25;
   }
 
   init() {
@@ -13,6 +15,11 @@ class SoundController {
     }
     if (this.ctx.state === 'suspended') {
       this.ctx.resume();
+    }
+    if (!this.bgmAudio) {
+      this.bgmAudio = new Audio('/bgm.mp3');
+      this.bgmAudio.loop = true;
+      this.bgmAudio.volume = 0; // Prepare for smooth fade in
     }
   }
 
@@ -258,78 +265,68 @@ class SoundController {
     }
   }
 
-  // ── Ambient BGM Pad ──────────────────────────────────────────────
+  // ── Ambient BGM: MP3 File ──────────────────────────────────────────────
   startBGM() {
     if (this.bgmPlaying || this.bgmMuted) return;
     try {
       this.init();
-      const now = this.ctx.currentTime;
-
-      // Master gain for the entire BGM
-      const masterGain = this.ctx.createGain();
-      masterGain.gain.setValueAtTime(0, now);
-      masterGain.gain.linearRampToValueAtTime(0.035, now + 3); // Slow fade in
-      masterGain.connect(this.ctx.destination);
-
-      // Low-pass filter with slow LFO modulation
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(400, now);
-      filter.Q.setValueAtTime(2, now);
-      filter.connect(masterGain);
-
-      // LFO to modulate filter cutoff (breathing effect)
-      const lfo = this.ctx.createOscillator();
-      const lfoGain = this.ctx.createGain();
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(0.08, now); // Very slow: ~8 second cycle
-      lfoGain.gain.setValueAtTime(200, now); // Modulation depth
-      lfo.connect(lfoGain);
-      lfoGain.connect(filter.frequency);
-      lfo.start(now);
-
-      // Chord: C3, E3, G3, B3 (Cmaj7) — warm, dreamy
-      const freqs = [130.81, 164.81, 196.00, 246.94];
-      const oscillators = [];
-
-      freqs.forEach((freq, i) => {
-        // Each note uses 2 slightly detuned oscillators for richness
-        for (let d = 0; d < 2; d++) {
-          const osc = this.ctx.createOscillator();
-          const oscGain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq + (d === 0 ? -0.5 : 0.5), now);
-          oscGain.gain.setValueAtTime(0.15, now);
-          osc.connect(oscGain);
-          oscGain.connect(filter);
-          osc.start(now);
-          oscillators.push({ osc, gain: oscGain });
-        }
+      this.bgmPlaying = true;
+      
+      if (this.bgmFadeInterval) {
+        clearInterval(this.bgmFadeInterval);
+        this.bgmFadeInterval = null;
+      }
+      
+      this.bgmAudio.play().catch(e => {
+        console.warn('Autoplay blocked for BGM:', e);
+        this.bgmPlaying = false; // Reset state if blocked by browser
       });
 
-      this.bgmNodes = { masterGain, filter, lfo, lfoGain, oscillators };
-      this.bgmPlaying = true;
+      // Smooth fade in over ~2 seconds
+      let vol = this.bgmAudio.volume;
+      this.bgmFadeInterval = setInterval(() => {
+        vol = Math.min(this.bgmTargetVolume, vol + 0.05); // Target volume dynamic
+        this.bgmAudio.volume = vol;
+        if (vol >= this.bgmTargetVolume) {
+          clearInterval(this.bgmFadeInterval);
+          this.bgmFadeInterval = null;
+        }
+      }, 100);
+
     } catch (e) {
       console.warn('BGM start failed', e);
     }
   }
 
-  stopBGM() {
-    if (!this.bgmPlaying || !this.bgmNodes) return;
-    try {
-      const now = this.ctx.currentTime;
-      // Fade out over 2 seconds
-      this.bgmNodes.masterGain.gain.linearRampToValueAtTime(0, now + 2);
+  setBgmVolume(vol) {
+    this.bgmTargetVolume = vol;
+    if (this.bgmAudio && this.bgmPlaying && !this.bgmMuted) {
+      this.bgmAudio.volume = vol;
+    }
+  }
 
-      // Clean up after fade
-      setTimeout(() => {
-        try {
-          this.bgmNodes.oscillators.forEach(({ osc }) => osc.stop());
-          this.bgmNodes.lfo.stop();
-        } catch (_) { /* already stopped */ }
-        this.bgmNodes = null;
-        this.bgmPlaying = false;
-      }, 2500);
+  stopBGM() {
+    if (!this.bgmPlaying || !this.bgmAudio) return;
+    try {
+      this.bgmPlaying = false;
+      
+      if (this.bgmFadeInterval) {
+        clearInterval(this.bgmFadeInterval);
+        this.bgmFadeInterval = null;
+      }
+
+      // Smooth fade out over ~1.5 seconds
+      let vol = this.bgmAudio.volume;
+      this.bgmFadeInterval = setInterval(() => {
+        vol = Math.max(0, vol - 0.05);
+        this.bgmAudio.volume = vol;
+        if (vol <= 0) {
+          clearInterval(this.bgmFadeInterval);
+          this.bgmFadeInterval = null;
+          this.bgmAudio.pause();
+        }
+      }, 100);
+
     } catch (e) {
       console.warn('BGM stop failed', e);
     }
@@ -351,23 +348,53 @@ class SoundController {
     if (this.muted) return;
     try {
       this.init();
-      const now = this.ctx.currentTime;
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.connect(gain);
       gain.connect(this.ctx.destination);
 
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(120, now);
-      osc.frequency.linearRampToValueAtTime(80, now + 0.08);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(240, this.ctx.currentTime); // Raised frequency for laptop speakers
+      osc.frequency.linearRampToValueAtTime(160, this.ctx.currentTime + 0.15);
 
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.08);
+      gain.gain.setValueAtTime(0.35, this.ctx.currentTime); // Increased gain
+      gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
 
-      osc.start(now);
-      osc.stop(now + 0.08);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.15);
     } catch (e) {
       console.warn('Shake sound failed', e);
+    }
+  }
+
+  // ── Blocked Board Alarm ──────────────────────────────────────────
+  playBlockedAlert() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      
+      const playChime = (freq, time, vol) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, time);
+
+        gain.gain.setValueAtTime(0, time);
+        gain.gain.linearRampToValueAtTime(vol, time + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.35);
+
+        osc.start(time);
+        osc.stop(time + 0.35);
+      };
+
+      playChime(587.33, now, 0.03); // D5
+      playChime(880.00, now + 0.1, 0.02); // A5 (a gentle fifth higher)
+    } catch (e) {
+      console.warn('Blocked alert sound failed', e);
     }
   }
 
@@ -422,13 +449,13 @@ class SoundController {
       filter.type = 'lowpass';
       // Animate filter frequency to create a "whoosh" wind sound
       filter.frequency.setValueAtTime(100, now);
-      filter.frequency.exponentialRampToValueAtTime(800, now + duration / 2);
+      filter.frequency.exponentialRampToValueAtTime(600, now + duration / 2);
       filter.frequency.exponentialRampToValueAtTime(100, now + duration);
-      filter.Q.value = 1.5;
+      filter.Q.value = 1.0;
       
       const gain = this.ctx.createGain();
       gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.06, now + duration / 3);
+      gain.gain.linearRampToValueAtTime(0.012, now + duration / 3);
       gain.gain.linearRampToValueAtTime(0, now + duration);
       
       noise.connect(filter);

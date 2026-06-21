@@ -356,6 +356,14 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
   const [confetti, setConfetti] = useState([]);
   const [matchSelection, setMatchSelection] = useState(null);
   const [windGust, setWindGust] = useState(false);
+  const [bgmOn, setBgmOn] = useState(!sound.bgmMuted);
+  const [bgmVolume, setBgmVolume] = useState(sound.bgmTargetVolume);
+
+  const handleBgmToggle = () => {
+    const newState = sound.toggleBGM();
+    setBgmOn(newState);
+  };
+
   const lastTouchTime = useRef(0);
   const containerRef = useRef(null);
   const [boardScale, setBoardScale] = useState(1);
@@ -474,10 +482,10 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
   useEffect(() => {
     let interval;
     if (lost && mode === 'slide') {
-      sound.playShake(); // play once immediately
+      sound.playBlockedAlert(); // play once immediately
       interval = setInterval(() => {
-        sound.playShake();
-      }, 800);
+        sound.playBlockedAlert();
+      }, 1500); // make it repeat less frequently (1.5s instead of 0.8s) for even less anxiety
     }
     return () => clearInterval(interval);
   }, [lost, mode]);
@@ -638,6 +646,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
   };
 
   const initGame = () => {
+    sound.startBGM();
     setHintIds([]);
     setSelectedTile(null);
     setMatchSelection(null);
@@ -2020,7 +2029,27 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
           onUndo={undo}
           undoDisabled={history.length === 0}
           onShop={() => setIsSettingsOpen(true)}
-          showBgmToggle={false} // bgm is not toggled here directly
+          showBgmToggle={true}
+          bgmOn={bgmOn}
+          onBgmToggle={handleBgmToggle}
+          extraControls={
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', marginLeft: '5px' }}>
+              <span style={{ fontSize: '10px', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold' }}>Volume</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={bgmVolume}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  setBgmVolume(v);
+                  sound.setBgmVolume(v);
+                }}
+                style={{ width: '60px', cursor: 'pointer', accentColor: '#ec4899' }}
+              />
+            </div>
+          }
           centerContent={
             <div className="stats_header" style={{ display: 'flex', gap: '10px', alignItems: 'center', fontFamily: 'Orbitron, sans-serif' }}>
               <div style={{

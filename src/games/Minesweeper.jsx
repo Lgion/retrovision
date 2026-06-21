@@ -267,8 +267,16 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
       />}
       
       {isIntermission && gameState === 'playing' && (
-        <div style={{ textAlign: 'center', color: '#39FF14', fontWeight: 'bold', padding: '10px', background: 'rgba(0,0,0,0.5)' }}>
-          Entracte ! Gagnez pour retourner au Mahjong.
+        <div className="entract-header">
+          <div className="entract-header-text">
+            Entracte ! Gagnez pour retourner au Mahjong.
+          </div>
+          <button
+            onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }}
+            className="entract-header-btn"
+          >
+            Passer l'entracte ⏭
+          </button>
         </div>
       )}
       
