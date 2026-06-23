@@ -11,6 +11,7 @@ import FreeCell from './games/FreeCell';
 import Minesweeper from './games/Minesweeper';
 import ArrowPuzzle from './games/ArrowPuzzle';
 import Hangman from './games/Hangman';
+import Sudoku from './games/Sudoku';
 import GameScaleWrapper from './components/GameScaleWrapper';
 import { recordPlay, recordTime, recordScore } from './utils/stats';
 import './App.css';
@@ -25,20 +26,23 @@ function App() {
   const [skipNextIntro, setSkipNextIntro] = useState(false);
 
   const [intermissionConfig, setIntermissionConfig] = useState(() => {
+    const defaultConfig = {
+      ball: { enabled: true, frequency: 'medium' },
+      water: { enabled: true, frequency: 'medium' },
+      mines: { enabled: true, frequency: 'medium' },
+      arrows: { enabled: true, frequency: 'medium' },
+      sudoku: { enabled: true, frequency: 'medium' }
+    };
     const saved = localStorage.getItem('retrovision_intermission_config');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return { ...defaultConfig, ...parsed };
       } catch (e) {
         // ignore
       }
     }
-    return {
-      ball: { enabled: true, frequency: 'medium' },
-      water: { enabled: true, frequency: 'medium' },
-      mines: { enabled: true, frequency: 'medium' },
-      arrows: { enabled: true, frequency: 'medium' }
-    };
+    return defaultConfig;
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -50,7 +54,7 @@ function App() {
     const enabledGames = Object.keys(intermissionConfig).filter(
       key => intermissionConfig[key].enabled
     );
-    const gamesToChooseFrom = enabledGames.length > 0 ? enabledGames : ['ball', 'water', 'mines', 'arrows'];
+    const gamesToChooseFrom = enabledGames.length > 0 ? enabledGames : ['ball', 'water', 'mines', 'arrows', 'sudoku'];
     
     let filteredGames = gamesToChooseFrom;
     if (gamesToChooseFrom.length > 1 && lastIntermissionGame) {
@@ -143,6 +147,8 @@ function App() {
       localStorage.setItem('retrovision_2048_highscore', score.toString());
     } else if (gameName === 'Le Pendu') {
       localStorage.setItem('retrovision_hangman_highscore', score.toString());
+    } else if (gameName === 'Sudoku') {
+      localStorage.setItem('retrovision_sudoku_highscore', score.toString());
     }
 
     setStatsUpdated((prev) => prev + 1);
@@ -258,6 +264,19 @@ function App() {
               <Hangman
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
+              />
+            </GameScaleWrapper>
+          </div>
+        );
+      case 'sudoku':
+        return (
+          <div className="game-wrapper">
+            <GameScaleWrapper designWidth={500} defaultHeight={850}>
+              <Sudoku
+                onBack={() => setView('dashboard')}
+                onScoreSave={handleScoreSave}
+                isIntermission={isIntermissionMode}
+                onIntermissionComplete={handleIntermissionComplete}
               />
             </GameScaleWrapper>
           </div>
@@ -437,9 +456,10 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
   const handleToggle = (gameKey) => {
     setTempConfig(prev => {
       const next = { ...prev };
+      const current = next[gameKey] || { enabled: false, frequency: 'medium' };
       next[gameKey] = {
-        ...next[gameKey],
-        enabled: !next[gameKey].enabled
+        ...current,
+        enabled: !current.enabled
       };
       return next;
     });
@@ -449,8 +469,9 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
   const handleFrequency = (gameKey, freq) => {
     setTempConfig(prev => {
       const next = { ...prev };
+      const current = next[gameKey] || { enabled: true, frequency: 'medium' };
       next[gameKey] = {
-        ...next[gameKey],
+        ...current,
         frequency: freq
       };
       return next;
@@ -470,7 +491,8 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
     ball: { name: 'Tri de Billes', icon: '🔮', color: '#ff007f' },
     water: { name: 'Tri de l\'Eau', icon: '🧪', color: '#00ff7f' },
     mines: { name: 'Démineur', icon: '💣', color: '#ef4444' },
-    arrows: { name: 'Arrow Puzzle', icon: '⬆️', color: '#3b82f6' }
+    arrows: { name: 'Arrow Puzzle', icon: '⬆️', color: '#3b82f6' },
+    sudoku: { name: 'Sudoku', icon: '🔢', color: '#8b5cf6' }
   };
 
   return (

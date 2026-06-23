@@ -7,7 +7,9 @@ const DEFAULT_GAMES = [
   { id: 'unblock', name: 'Débloque-moi' },
   { id: 'freecell', name: 'FreeCell' },
   { id: 'mines', name: 'Démineur' },
-  { id: 'arrows', name: 'Arrow Puzzle' }
+  { id: 'arrows', name: 'Arrow Puzzle' },
+  { id: 'hangman', name: 'Le Pendu' },
+  { id: 'sudoku', name: 'Sudoku' }
 ];
 
 // Map from the game name sent in onScoreSave to our game ID
@@ -20,7 +22,9 @@ const NAME_TO_ID = {
   'Débloque-Moi': 'unblock',
   'FreeCell': 'freecell',
   'Démineur': 'mines',
-  'Flèches': 'arrows'
+  'Flèches': 'arrows',
+  'Le Pendu': 'hangman',
+  'Sudoku': 'sudoku'
 };
 
 // Map from ID to the old highscore key
@@ -33,7 +37,9 @@ const ID_TO_LEGACY_KEY = {
   unblock: 'retrovision_unblock_highscore',
   freecell: 'retrovision_freecell_highscore',
   mines: 'retrovision_mines_highscore',
-  arrows: 'retrovision_arrows_highscore'
+  arrows: 'retrovision_arrows_highscore',
+  hangman: 'retrovision_hangman_highscore',
+  sudoku: 'retrovision_sudoku_highscore'
 };
 
 export function getStats() {

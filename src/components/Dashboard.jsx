@@ -28,7 +28,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     freecell: 0,
     mines: 0,
     arrows: 0,
-    hangman: 0
+    hangman: 0,
+    sudoku: 0
   });
 
   const avatars = ['✦', '♥', '★', '●', '☘', '☾', '☀'];
@@ -47,7 +48,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     const mines = detailedStats.mines?.highScore || 0;
     const arrows = detailedStats.arrows?.highScore || 0;
     const hangman = detailedStats.hangman?.highScore || 0;
-    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman });
+    const sudoku = detailedStats.sudoku?.highScore || 0;
+    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku });
   }, [statsUpdated]);
 
   const totalPlays = Object.values(stats).reduce((acc, curr) => acc + (curr.plays || 0), 0);
@@ -254,6 +256,15 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       unlocked: highScores.hangman > 0,
       color: '#8b5cf6',
       textColor: '#4c1d95'
+    },
+    {
+      id: 'sudoku',
+      title: 'Maître du Chiffre',
+      desc: 'Résoudre une grille de Sudoku',
+      icon: '🔢',
+      unlocked: highScores.sudoku > 0,
+      color: '#8b5cf6',
+      textColor: '#4c1d95'
     }
   ];
 
@@ -347,6 +358,15 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       color: '#8b5cf6',
       textColor: '#4c1d95',
       icon: '🎈'
+    },
+    {
+      id: 'sudoku',
+      title: 'SUDOKU',
+      desc: 'Remplissez la grille de chiffres uniques. Plusieurs modes de difficulté, dont un plateau de 4 carrés parfait pour les entractes.',
+      highscore: highScores.sudoku,
+      color: '#8b5cf6',
+      textColor: '#4c1d95',
+      icon: '🔢'
     }
   ];
 

@@ -6,7 +6,7 @@ class SoundController {
     this.bgmMuted = false;
     this.bgmAudio = null;
     this.bgmFadeInterval = null;
-    this.bgmTargetVolume = 0.25;
+    this.bgmTargetVolume = 1;
   }
 
   init() {
@@ -29,17 +29,17 @@ class SoundController {
       this.init();
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
-      
+
       osc.connect(gain);
       gain.connect(this.ctx.destination);
-      
+
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(600, this.ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.12);
-      
+
       gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
-      
+
       osc.start();
       osc.stop(this.ctx.currentTime + 0.12);
     } catch (e) {
@@ -58,15 +58,15 @@ class SoundController {
         const gain = this.ctx.createGain();
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        
+
         osc.type = 'sine';
         osc.frequency.value = freq;
-        
+
         const startTime = this.ctx.currentTime + (i * 0.08);
         gain.gain.setValueAtTime(0, startTime);
         gain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
-        
+
         osc.start(startTime);
         osc.stop(startTime + 0.3);
       });
@@ -84,14 +84,14 @@ class SoundController {
       const gain = this.ctx.createGain();
       osc.connect(gain);
       gain.connect(this.ctx.destination);
-      
+
       osc.type = 'sine';
       osc.frequency.setValueAtTime(800, this.ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.15);
-      
+
       gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
-      
+
       osc.start();
       osc.stop(this.ctx.currentTime + 0.15);
     } catch (e) {
@@ -108,15 +108,15 @@ class SoundController {
       const gain = this.ctx.createGain();
       osc.connect(gain);
       gain.connect(this.ctx.destination);
-      
+
       osc.type = 'sine';
       osc.frequency.setValueAtTime(600, this.ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(1800, this.ctx.currentTime + 0.15);
-      
+
       gain.gain.setValueAtTime(0, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.06, this.ctx.currentTime + 0.05);
       gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
-      
+
       osc.start();
       osc.stop(this.ctx.currentTime + 0.2);
     } catch (e) {
@@ -133,15 +133,15 @@ class SoundController {
       const gain = this.ctx.createGain();
       osc.connect(gain);
       gain.connect(this.ctx.destination);
-      
+
       osc.type = 'sine';
       osc.frequency.setValueAtTime(400, this.ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
-      
+
       gain.gain.setValueAtTime(0, this.ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
-      
+
       osc.start();
       osc.stop(this.ctx.currentTime + 0.05);
     } catch (e) {
@@ -159,19 +159,19 @@ class SoundController {
         const gain = this.ctx.createGain();
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        
+
         osc.type = 'sine';
         // Random cute high pitch bubble
         const freq = 600 + Math.random() * 400;
         const startTime = this.ctx.currentTime + (i * 0.08);
-        
+
         osc.frequency.setValueAtTime(freq, startTime);
         osc.frequency.exponentialRampToValueAtTime(freq + 300, startTime + 0.05);
-        
+
         gain.gain.setValueAtTime(0, startTime);
         gain.gain.linearRampToValueAtTime(0.05, startTime + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.06);
-        
+
         osc.start(startTime);
         osc.stop(startTime + 0.06);
       }
@@ -184,44 +184,44 @@ class SoundController {
     if (this.muted) return;
     try {
       this.init();
-      
+
       const playTok = (time, baseVol, freqStart = 800, freqEnd = 150) => {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        
+
         // A mix of sine and square for a hard plastic "tok"
         osc.type = 'square';
-        
+
         // Fast pitch drop
         osc.frequency.setValueAtTime(freqStart, time);
         osc.frequency.exponentialRampToValueAtTime(freqEnd, time + 0.03);
-        
+
         // Extremely fast volume envelope (percussive)
         gain.gain.setValueAtTime(0, time);
         gain.gain.linearRampToValueAtTime(baseVol, time + 0.002);
         gain.gain.exponentialRampToValueAtTime(0.001, time + 0.03);
-        
+
         // Lowpass filter to remove harsh high frequencies
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'lowpass';
         filter.frequency.setValueAtTime(1500, time);
         filter.frequency.exponentialRampToValueAtTime(300, time + 0.03);
-        
+
         osc.disconnect();
         osc.connect(filter);
         filter.connect(gain);
-        
+
         osc.start(time);
         osc.stop(time + 0.03);
       };
 
       const now = this.ctx.currentTime;
-      
+
       // Main impact
       playTok(now, 0.15, 900, 150);
-      
+
       // Rapid rattles (bounces)
       playTok(now + 0.05, 0.05, 1000, 200);
       playTok(now + 0.08, 0.02, 1100, 250);
@@ -236,20 +236,20 @@ class SoundController {
     try {
       this.init();
       const now = this.ctx.currentTime;
-      
+
       const playBell = (freq, time, vol) => {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        
+
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, time);
-        
+
         gain.gain.setValueAtTime(0, time);
         gain.gain.linearRampToValueAtTime(vol, time + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
-        
+
         osc.start(time);
         osc.stop(time + 0.8);
       };
@@ -259,7 +259,7 @@ class SoundController {
       playBell(830.61, now + 0.03, 0.06); // G#5
       playBell(987.77, now + 0.06, 0.06); // B5
       playBell(1318.51, now + 0.09, 0.08); // E6
-      
+
     } catch (e) {
       console.warn("Sound play failed", e);
     }
@@ -271,12 +271,12 @@ class SoundController {
     try {
       this.init();
       this.bgmPlaying = true;
-      
+
       if (this.bgmFadeInterval) {
         clearInterval(this.bgmFadeInterval);
         this.bgmFadeInterval = null;
       }
-      
+
       this.bgmAudio.play().catch(e => {
         console.warn('Autoplay blocked for BGM:', e);
         this.bgmPlaying = false; // Reset state if blocked by browser
@@ -309,7 +309,7 @@ class SoundController {
     if (!this.bgmPlaying || !this.bgmAudio) return;
     try {
       this.bgmPlaying = false;
-      
+
       if (this.bgmFadeInterval) {
         clearInterval(this.bgmFadeInterval);
         this.bgmFadeInterval = null;
@@ -373,7 +373,7 @@ class SoundController {
     try {
       this.init();
       const now = this.ctx.currentTime;
-      
+
       const playChime = (freq, time, vol) => {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -436,15 +436,15 @@ class SoundController {
       const bufferSize = this.ctx.sampleRate * duration;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const output = buffer.getChannelData(0);
-      
+
       // Generate white noise
       for (let i = 0; i < bufferSize; i++) {
         output[i] = Math.random() * 2 - 1;
       }
-      
+
       const noise = this.ctx.createBufferSource();
       noise.buffer = buffer;
-      
+
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
       // Animate filter frequency to create a "whoosh" wind sound
@@ -452,19 +452,69 @@ class SoundController {
       filter.frequency.exponentialRampToValueAtTime(600, now + duration / 2);
       filter.frequency.exponentialRampToValueAtTime(100, now + duration);
       filter.Q.value = 1.0;
-      
+
       const gain = this.ctx.createGain();
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(0.012, now + duration / 3);
       gain.gain.linearRampToValueAtTime(0, now + duration);
-      
+
       noise.connect(filter);
       filter.connect(gain);
       gain.connect(this.ctx.destination);
-      
+
       noise.start(now);
     } catch (e) {
       console.warn('Wind sound failed', e);
+    }
+  }
+
+  // ── Addictive Sudoku Success Chime ─────────────────────────────
+  playSudokuSuccess() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+
+      // Helper function to play a sweet sine chime
+      const playChime = (freq, time, duration, vol = 0.05) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, time);
+
+        gain.gain.setValueAtTime(0, time);
+        gain.gain.linearRampToValueAtTime(vol, time + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+        osc.start(time);
+        osc.stop(time + duration);
+      };
+
+      // 1. Instantly play a juicy, rounded bubble "pop" sweep
+      const oscPop = this.ctx.createOscillator();
+      const gainPop = this.ctx.createGain();
+      oscPop.connect(gainPop);
+      gainPop.connect(this.ctx.destination);
+      oscPop.type = 'sine';
+      oscPop.frequency.setValueAtTime(280, now);
+      oscPop.frequency.exponentialRampToValueAtTime(950, now + 0.065);
+      gainPop.gain.setValueAtTime(0, now);
+      gainPop.gain.linearRampToValueAtTime(0.07, now + 0.012);
+      gainPop.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+      oscPop.start(now);
+      oscPop.stop(now + 0.065);
+
+      // 2. Play a rapid, magical, ascending E-Major pentatonic cascade starting just as the pop peaks
+      playChime(659.25, now + 0.04, 0.35, 0.04);  // E5
+      playChime(830.61, now + 0.09, 0.42, 0.04);  // G#5
+      playChime(987.77, now + 0.14, 0.50, 0.04);  // B5
+      playChime(1318.51, now + 0.19, 0.62, 0.05); // E6
+
+    } catch (e) {
+      console.warn("Sudoku success sound play failed", e);
     }
   }
 }

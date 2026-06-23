@@ -252,7 +252,17 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
   };
 
   const getNumberColor = (num) => {
-    const colors = ['#cbd5e1', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6', '#f59e0b', '#06b6d4', '#000000', '#64748b'];
+    const colors = [
+      'rgba(255, 255, 255, 0)', // 0 (hidden)
+      '#60a5fa', // 1 (bright neon blue)
+      '#34d399', // 2 (bright emerald green)
+      '#f87171', // 3 (bright coral red)
+      '#c084fc', // 4 (bright purple/violet)
+      '#fbbf24', // 5 (bright amber yellow)
+      '#22d3ee', // 6 (bright electric cyan)
+      '#f472b6', // 7 (bright neon pink)
+      '#e2e8f0'  // 8 (bright cool silver)
+    ];
     return colors[num];
   };
 
@@ -353,9 +363,9 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
               display: 'grid',
               gridTemplateColumns: `repeat(${boardSize}, 1fr)`,
               gap: '2px',
-              backgroundColor: '#94a3b8',
-              border: '4px solid #475569',
-              borderRadius: '4px',
+              backgroundColor: '#0f172a',
+              border: '4px solid #1e293b',
+              borderRadius: '8px',
               width: '100%',
               maxWidth: '400px' // cap width so cells don't get too huge
             }}>
@@ -363,14 +373,15 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
                 <div 
                   key={`${r}-${c}`}
                   onClick={() => handleCellClick(r, c)}
+                  className={`minesweeper-cell ${cell.isRevealed ? 'revealed' : ''}`}
                   style={{
                     aspectRatio: '1/1',
-                    backgroundColor: cell.isRevealed ? '#e2e8f0' : '#cbd5e1',
+                    backgroundColor: cell.isRevealed ? '#020617' : '#334155',
                     borderStyle: 'solid',
                     borderWidth: cell.isRevealed ? '1px' : '3px',
                     borderColor: cell.isRevealed 
-                      ? '#94a3b8' 
-                      : '#f8fafc #94a3b8 #94a3b8 #f8fafc',
+                      ? '#1e293b' 
+                      : '#475569 #0f172a #0f172a #475569',
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     fontSize: boardSize === 9 ? '20px' : '14px',
                     fontWeight: 'bold', cursor: 'pointer',
