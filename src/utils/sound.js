@@ -6,7 +6,21 @@ class SoundController {
     this.bgmMuted = false;
     this.bgmAudio = null;
     this.bgmFadeInterval = null;
-    this.bgmTargetVolume = 1;
+    this.bgmTargetVolume = .05;
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (this.bgmAudio) {
+            this.bgmAudio.pause();
+          }
+        } else {
+          if (this.bgmPlaying && !this.bgmMuted && this.bgmAudio) {
+            this.bgmAudio.play().catch(e => console.warn('BGM resume blocked', e));
+          }
+        }
+      });
+    }
   }
 
   init() {
@@ -17,7 +31,8 @@ class SoundController {
       this.ctx.resume();
     }
     if (!this.bgmAudio) {
-      this.bgmAudio = new Audio('/bgm.mp3');
+      const basePath = window.location.pathname.split('/')[1];
+      this.bgmAudio = new Audio(`/${basePath ? basePath + "/" : ""}bgm.mp3`);
       this.bgmAudio.loop = true;
       this.bgmAudio.volume = 0; // Prepare for smooth fade in
     }

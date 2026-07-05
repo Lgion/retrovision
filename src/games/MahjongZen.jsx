@@ -455,6 +455,9 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
 
   useEffect(() => {
     initGame();
+    return () => {
+      sound.stopBGM();
+    };
   }, [mode, boardSize]);
 
   useEffect(() => {
