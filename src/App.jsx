@@ -20,7 +20,7 @@ function App() {
   const [view, setView] = useState('dashboard');
   const [statsUpdated, setStatsUpdated] = useState(0);
   const gameStartRef = useRef(0);
-  
+
   const [isIntermissionMode, setIsIntermissionMode] = useState(false);
   const [returnView, setReturnView] = useState(null);
   const [skipNextIntro, setSkipNextIntro] = useState(false);
@@ -55,12 +55,12 @@ function App() {
       key => intermissionConfig[key].enabled
     );
     const gamesToChooseFrom = enabledGames.length > 0 ? enabledGames : ['ball', 'water', 'mines', 'arrows', 'sudoku'];
-    
+
     let filteredGames = gamesToChooseFrom;
     if (gamesToChooseFrom.length > 1 && lastIntermissionGame) {
       filteredGames = gamesToChooseFrom.filter(g => g !== lastIntermissionGame);
     }
-    
+
     const weightMap = { low: 1, medium: 3, high: 5 };
     const weightedList = [];
     filteredGames.forEach(gameKey => {
@@ -70,14 +70,14 @@ function App() {
         weightedList.push(gameKey);
       }
     });
-    
-    const chosenGame = weightedList.length > 0 
+
+    const chosenGame = weightedList.length > 0
       ? weightedList[Math.floor(Math.random() * weightedList.length)]
       : filteredGames[Math.floor(Math.random() * filteredGames.length)];
-      
+
     setLastIntermissionGame(chosenGame);
     localStorage.setItem('retrovision_last_intermission_game', chosenGame);
-    
+
     setReturnView('mahjong');
     setIsIntermissionMode(true);
     setView(chosenGame);
@@ -174,6 +174,7 @@ function App() {
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
               isIntermission={isIntermissionMode}
+              intermissionDifficulty={intermissionConfig['water']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
             />
           </div>
@@ -185,6 +186,7 @@ function App() {
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
               isIntermission={isIntermissionMode}
+              intermissionDifficulty={intermissionConfig['ball']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
             />
           </div>
@@ -196,6 +198,9 @@ function App() {
               <Grid2048
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
+                isIntermission={isIntermissionMode}
+                intermissionDifficulty={intermissionConfig['2048']?.difficulty || 'facile'}
+                onIntermissionComplete={handleIntermissionComplete}
               />
             </GameScaleWrapper>
           </div>
@@ -207,6 +212,9 @@ function App() {
               <JigsawPuzzle
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
+                isIntermission={isIntermissionMode}
+                intermissionDifficulty={intermissionConfig['jigsaw']?.difficulty || 'facile'}
+                onIntermissionComplete={handleIntermissionComplete}
               />
             </GameScaleWrapper>
           </div>
@@ -228,6 +236,9 @@ function App() {
             <FreeCell
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
+              isIntermission={isIntermissionMode}
+              intermissionDifficulty={intermissionConfig['freecell']?.difficulty || 'facile'}
+              onIntermissionComplete={handleIntermissionComplete}
             />
           </div>
         );
@@ -239,6 +250,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
+                intermissionDifficulty={intermissionConfig['mines']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
               />
             </GameScaleWrapper>
@@ -252,6 +264,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
+                intermissionDifficulty={intermissionConfig['arrows']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
               />
             </GameScaleWrapper>
@@ -264,6 +277,9 @@ function App() {
               <Hangman
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
+                isIntermission={isIntermissionMode}
+                intermissionDifficulty={intermissionConfig['hangman']?.difficulty || 'facile'}
+                onIntermissionComplete={handleIntermissionComplete}
               />
             </GameScaleWrapper>
           </div>
@@ -276,6 +292,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
+                intermissionDifficulty={intermissionConfig['sudoku']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
               />
             </GameScaleWrapper>
@@ -307,20 +324,20 @@ function App() {
               pointerEvents: 'none',
               animation: 'pulseGlow 2s infinite alternate'
             }} />
-            
+
             {/* Trophy emblem */}
-            <div style={{ 
-              fontSize: '80px', 
+            <div style={{
+              fontSize: '80px',
               marginBottom: '24px',
               filter: 'drop-shadow(0 0 15px rgba(245, 158, 11, 0.4))',
               animation: 'victoryScale 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
             }}>
               🏆
             </div>
-            
+
             {/* Sleek Text */}
-            <h1 style={{ 
-              fontSize: '2.8rem', 
+            <h1 style={{
+              fontSize: '2.8rem',
               fontWeight: '800',
               letterSpacing: '2px',
               background: 'linear-gradient(135deg, #fef08a 0%, #f59e0b 100%)',
@@ -333,7 +350,7 @@ function App() {
             }}>
               Entracte Réussi
             </h1>
-            
+
             <div style={{
               width: '80px',
               height: '4px',
@@ -342,10 +359,10 @@ function App() {
               borderRadius: '2px',
               animation: 'victorySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both'
             }} />
-            
-            <p style={{ 
-              fontSize: '1.2rem', 
-              color: '#94a3b8', 
+
+            <p style={{
+              fontSize: '1.2rem',
+              color: '#94a3b8',
               margin: 0,
               fontWeight: '500',
               letterSpacing: '0.5px',
@@ -492,11 +509,15 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
     water: { name: 'Tri de l\'Eau', icon: '🧪', color: '#00ff7f' },
     mines: { name: 'Démineur', icon: '💣', color: '#ef4444' },
     arrows: { name: 'Arrow Puzzle', icon: '⬆️', color: '#3b82f6' },
-    sudoku: { name: 'Sudoku', icon: '🔢', color: '#8b5cf6' }
+    sudoku: { name: 'Sudoku', icon: '🔢', color: '#8b5cf6' },
+    '2048': { name: 'Neon 2048', icon: '✨', color: '#00f0ff' },
+    jigsaw: { name: 'Puzzle Magique', icon: '🧩', color: '#39FF14' },
+    freecell: { name: 'Freecell', icon: '🃏', color: '#c21807' },
+    hangman: { name: 'Le Pendu', icon: '🎈', color: '#ef4444' }
   };
 
   return (
-    <div style={modalBackdropStyle}>
+    <div className="modal-backdrop" style={modalBackdropStyle}>
       <div style={modalContentStyle}>
         <div style={modalHeaderStyle}>
           <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-main)' }}>
@@ -504,7 +525,7 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
           </h2>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
-        
+
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: '1.4' }}>
           Sélectionnez les jeux qui apparaîtront en entracte après vos parties de Mahjong, et ajustez leur fréquence d'apparition.
         </p>
@@ -521,8 +542,8 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
             const gameConf = tempConfig[gameKey] || { enabled: false, frequency: 'medium' };
 
             return (
-              <div 
-                key={gameKey} 
+              <div
+                key={gameKey}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -562,31 +583,64 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
                 </div>
 
                 {gameConf.enabled ? (
-                  <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '3px', borderRadius: '10px' }}>
-                    {['low', 'medium', 'high'].map(freq => {
-                      const label = freq === 'low' ? 'Rare' : freq === 'medium' ? 'Normal' : 'Fréquent';
-                      const isSelected = gameConf.frequency === freq;
-                      return (
-                        <button
-                          key={freq}
-                          onClick={() => handleFrequency(gameKey, freq)}
-                          style={{
-                            border: 'none',
-                            background: isSelected ? '#ffffff' : 'transparent',
-                            color: isSelected ? gameInfo.color : '#64748b',
-                            boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            fontSize: '0.75rem',
-                            fontWeight: '800',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                          }}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '3px', borderRadius: '10px' }}>
+                      {['low', 'medium', 'high'].map(freq => {
+                        const label = freq === 'low' ? 'Rare' : freq === 'medium' ? 'Normal' : 'Fréquent';
+                        const isSelected = gameConf.frequency === freq;
+                        return (
+                          <button
+                            key={freq}
+                            onClick={() => handleFrequency(gameKey, freq)}
+                            style={{
+                              border: 'none',
+                              background: isSelected ? '#ffffff' : 'transparent',
+                              color: isSelected ? gameInfo.color : '#64748b',
+                              boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              fontSize: '0.75rem',
+                              fontWeight: '800',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px', background: '#fef08a', padding: '3px', borderRadius: '10px' }}>
+                      {['facile', 'moyen', 'difficile'].map(diff => {
+                        const isSelected = (gameConf.difficulty || 'facile') === diff;
+                        return (
+                          <button
+                            key={diff}
+                            onClick={() => {
+                              setTempConfig(prev => ({
+                                ...prev,
+                                [gameKey]: { ...prev[gameKey], difficulty: diff }
+                              }));
+                            }}
+                            style={{
+                              border: 'none',
+                              background: isSelected ? '#eab308' : 'transparent',
+                              color: isSelected ? '#ffffff' : '#a16207',
+                              boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+                              padding: '4px 10px',
+                              borderRadius: '8px',
+                              fontSize: '0.7rem',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                              textTransform: 'capitalize'
+                            }}
+                          >
+                            {diff}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 ) : (
                   <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600', paddingRight: '12px' }}>Désactivé</span>
@@ -597,8 +651,8 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="retro-btn"
             style={{
               padding: '10px 20px',
@@ -612,8 +666,8 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
           >
             Annuler
           </button>
-          <button 
-            onClick={handleSave} 
+          <button
+            onClick={handleSave}
             className="retro-btn"
             style={{
               padding: '10px 24px',
@@ -649,6 +703,8 @@ const modalBackdropStyle = {
 const modalContentStyle = {
   width: '520px',
   maxWidth: '100%',
+  height: '100%',
+  overflowY: 'scroll',
   background: '#ffffff',
   borderRadius: '24px',
   boxShadow: '0 20px 50px rgba(15, 23, 42, 0.15)',

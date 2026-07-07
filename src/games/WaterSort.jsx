@@ -6,7 +6,7 @@ import GameIntro from '../components/GameIntro';
 import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 
-export default function WaterSort({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
+export default function WaterSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
@@ -21,7 +21,7 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, onInter
   const [hintTubes, setHintTubes] = useState(null);
   const [scale, setScale] = useState(1);
   const [showCollection, setShowCollection] = useState(false);
-  const [customizations, setCustomizations] = useState(() => getGameConfig('water', 'customizations', { tube: 'wt1', theme: 'bg1', color: 'wc1' }));
+  const [customizations, setCustomizations] = useState(() => getGameConfig('water', 'customizations', { tube: 'wt1', theme: 'bg1', color: 'wc1', difficulty: 'moyen' }));
   const [pourFromBottom, setPourFromBottom] = useState(false);
   const [completedTubeIndex, setCompletedTubeIndex] = useState(null);
 
@@ -57,17 +57,21 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, onInter
     M: { hex: currentPalette[8], grad: makeGradient(currentPalette[8]) }
   };
 
-  const initGame = () => {
+  const initGame = (overrideDiff = null) => {
     let numFilled;
     if (isIntermission) {
-      numFilled = 3;
-    } else {
+      let min = 3, max = 4;
+      if (intermissionDifficulty === 'facile') { min = 3; max = 4; }
+      else if (intermissionDifficulty === 'moyen') { min = 5; max = 6; }
+      else if (intermissionDifficulty === 'difficile') { min = 7; max = 9; }
       do {
-        numFilled = Math.floor(Math.random() * 6) + 4; // 4 to 9 tubes
-      } while (numFilled === lastNumFilledRef.current);
+        numFilled = Math.floor(Math.random() * (max - min + 1)) + min;
+      } while (numFilled === lastNumFilledRef.current && (max - min) > 0);
+    } else {
+      numFilled = parseInt(overrideDiff || customizations.difficulty) || 5;
     }
     lastNumFilledRef.current = numFilled;
-    const numEmpty = isIntermission ? 1 : 2;
+    const numEmpty = numFilled >= 7 ? 2 : 1;
     const activeColorsKeys = ['R', 'B', 'G', 'Y', 'P', 'O', 'W', 'D', 'M'].slice(0, numFilled);
 
     const liquidPool = [];
@@ -354,7 +358,10 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, onInter
   if (showCollection) {
     return (
       <WaterSortCollection
-        onClose={() => setShowCollection(false)}
+        onClose={() => {
+          setShowCollection(false);
+          initGame(); // Refresh game in case difficulty was changed
+        }}
         currentSelections={customizations}
         onSelect={(category, id) => {
           setCustomizations(prev => {
@@ -362,6 +369,10 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, onInter
             updateGameConfig('water', 'customizations', next);
             return next;
           });
+          if (category === 'difficulty') {
+            setShowCollection(false);
+            initGame(id);
+          }
         }}
       />
     );

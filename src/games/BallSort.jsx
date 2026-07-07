@@ -182,7 +182,7 @@ const BallSortIntro = ({ onComplete }) => {
 };
 
 
-export default function BallSort({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
+export default function BallSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
   // Game state
@@ -200,7 +200,7 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, onInterm
   const [particles, setParticles] = useState([]);
   const [scale, setScale] = useState(1);
   const [showCollection, setShowCollection] = useState(false);
-  const [customizations, setCustomizations] = useState(() => getGameConfig('ball', 'customizations', { tube: 't1', theme: 'bg1', ball: 'b1', color: 'c1' }));
+  const [customizations, setCustomizations] = useState(() => getGameConfig('ball', 'customizations', { tube: 't1', theme: 'bg1', ball: 'b1', color: 'c1', difficulty: 'moyen' }));
   const [shakingTube, setShakingTube] = useState(null);
   const [bgmOn, setBgmOn] = useState(false);
 
@@ -237,17 +237,21 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, onInterm
     M: { hex: currentPalette[8], grad: makeGradient(currentPalette[8]) }
   };
 
-  const initGame = () => {
+  const initGame = (overrideDiff = null) => {
     let numFilled;
     if (isIntermission) {
-      numFilled = 3; // Easy level
-    } else {
+      let min = 3, max = 4;
+      if (intermissionDifficulty === 'facile') { min = 3; max = 4; }
+      else if (intermissionDifficulty === 'moyen') { min = 5; max = 6; }
+      else if (intermissionDifficulty === 'difficile') { min = 7; max = 9; }
       do {
-        numFilled = Math.floor(Math.random() * 6) + 4; // 4 to 9 tubes
-      } while (numFilled === lastNumFilledRef.current);
+        numFilled = Math.floor(Math.random() * (max - min + 1)) + min;
+      } while (numFilled === lastNumFilledRef.current && (max - min) > 0);
+    } else {
+      numFilled = parseInt(overrideDiff || customizations.difficulty) || 5;
     }
     lastNumFilledRef.current = numFilled;
-    const numEmpty = isIntermission ? 1 : 2;
+    const numEmpty = numFilled >= 7 ? 2 : 1;
     const activeColorsKeys = ['R', 'B', 'G', 'Y', 'P', 'O', 'W', 'D', 'M'].slice(0, numFilled);
 
     const ballPool = [];
@@ -576,7 +580,10 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, onInterm
   if (showCollection) {
     return (
       <BallSortCollection
-        onClose={() => setShowCollection(false)}
+        onClose={() => {
+          setShowCollection(false);
+          initGame();
+        }}
         currentSelections={customizations}
         onSelect={(category, id) => {
           setCustomizations(prev => {
@@ -584,6 +591,10 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, onInterm
             updateGameConfig('ball', 'customizations', next);
             return next;
           });
+          if (category === 'difficulty') {
+            setShowCollection(false);
+            initGame(id);
+          }
         }}
       />
     );

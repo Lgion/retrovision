@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import Grid2048Collection from './Grid2048Collection';
+import { getGameConfig, updateGameConfig } from '../utils/config';
 
-export default function Grid2048({ onBack, onScoreSave }) {
+export default function Grid2048({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
   const [board, setBoard] = useState([]);
   const [score, setScore] = useState(0);
@@ -14,6 +16,22 @@ export default function Grid2048({ onBack, onScoreSave }) {
   const [victory, setVictory] = useState(false);
   const [keepPlaying, setKeepPlaying] = useState(false);
   const touchStartRef = useRef(null);
+  const [showCollection, setShowCollection] = useState(false);
+  const [customizations, setCustomizations] = useState(() => getGameConfig('2048', 'customizations', { difficulty: 'moyen', theme: 'neon' }));
+
+  const getGridSize = () => {
+    let diff = customizations.difficulty || 'moyen';
+    if (isIntermission) {
+      diff = intermissionDifficulty || 'facile';
+    }
+    if (diff === 'facile') return 5;
+    if (diff === 'moyen') return 4;
+    if (diff === 'difficile') return 3;
+    return 4;
+  };
+
+  const gridSize = getGridSize();
+  const totalCells = gridSize * gridSize;
 
   // Initialize board
   useEffect(() => {
@@ -46,7 +64,7 @@ export default function Grid2048({ onBack, onScoreSave }) {
   };
 
   const initGame = () => {
-    const emptyBoard = Array(16).fill(null);
+    const emptyBoard = Array(totalCells).fill(null);
     let b = addRandomTile(addRandomTile(emptyBoard));
     setBoard(b);
     setScore(0);
@@ -87,41 +105,45 @@ export default function Grid2048({ onBack, onScoreSave }) {
   };
 
   // Matrix utility methods
-  const getRow = (b, rowIdx) => b.slice(rowIdx * 4, rowIdx * 4 + 4);
-  const getCol = (b, colIdx) => [b[colIdx], b[colIdx + 4], b[colIdx + 8], b[colIdx + 12]];
+  const getRow = (b, rowIdx) => b.slice(rowIdx * gridSize, rowIdx * gridSize + gridSize);
+  const getCol = (b, colIdx) => {
+    const col = [];
+    for(let i=0; i<gridSize; i++) col.push(b[colIdx + i*gridSize]);
+    return col;
+  };
 
   const setRow = (b, rowIdx, row) => {
     const nextB = [...b];
-    for (let i = 0; i < 4; i++) nextB[rowIdx * 4 + i] = row[i];
+    for (let i = 0; i < gridSize; i++) nextB[rowIdx * gridSize + i] = row[i];
     return nextB;
   };
 
   const setCol = (b, colIdx, col) => {
     const nextB = [...b];
-    for (let i = 0; i < 4; i++) nextB[colIdx + i * 4] = col[i];
+    for (let i = 0; i < gridSize; i++) nextB[colIdx + i * gridSize] = col[i];
     return nextB;
   };
 
-  const slideAndMerge = (line, isLeftOrUp, scoreAdder) => {
+  const slideAndMerge = (line, isLeftOrUp) => {
     // Compress non-null values
     let compressed = line.filter((val) => val !== null);
     
     // Fill the rest with null
-    while (compressed.length < 4) compressed.push(null);
+    while (compressed.length < gridSize) compressed.push(null);
 
-    let newLine = Array(4).fill(null);
+    let newLine = Array(gridSize).fill(null);
     let scoreGained = 0;
     let mergedThisTurn = false;
 
     // Merge adjacent values
     let i = 0;
     let newIdx = 0;
-    while (i < 4) {
+    while (i < gridSize) {
       if (compressed[i] === null) {
         i++;
         continue;
       }
-      if (i < 3 && compressed[i] === compressed[i + 1]) {
+      if (i < gridSize - 1 && compressed[i] === compressed[i + 1]) {
         const mergedVal = compressed[i] * 2;
         newLine[newIdx] = mergedVal;
         scoreGained += mergedVal;
@@ -152,7 +174,7 @@ export default function Grid2048({ onBack, onScoreSave }) {
     // down: col-by-col, slide down (reverse, slide, reverse)
 
     if (direction === 'left') {
-      for (let r = 0; r < 4; r++) {
+      for (let r = 0; r < gridSize; r++) {
         const originalRow = getRow(nextBoard, r);
         const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(originalRow, true);
         nextBoard = setRow(nextBoard, r, newLine);
@@ -161,7 +183,7 @@ export default function Grid2048({ onBack, onScoreSave }) {
         if (JSON.stringify(originalRow) !== JSON.stringify(newLine)) boardChanged = true;
       }
     } else if (direction === 'right') {
-      for (let r = 0; r < 4; r++) {
+      for (let r = 0; r < gridSize; r++) {
         const originalRow = getRow(nextBoard, r);
         const reversedRow = [...originalRow].reverse();
         const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(reversedRow, true);
@@ -172,7 +194,7 @@ export default function Grid2048({ onBack, onScoreSave }) {
         if (JSON.stringify(originalRow) !== JSON.stringify(finalRow)) boardChanged = true;
       }
     } else if (direction === 'up') {
-      for (let c = 0; c < 4; c++) {
+      for (let c = 0; c < gridSize; c++) {
         const originalCol = getCol(nextBoard, c);
         const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(originalCol, true);
         nextBoard = setCol(nextBoard, c, newLine);
@@ -181,7 +203,7 @@ export default function Grid2048({ onBack, onScoreSave }) {
         if (JSON.stringify(originalCol) !== JSON.stringify(newLine)) boardChanged = true;
       }
     } else if (direction === 'down') {
-      for (let c = 0; c < 4; c++) {
+      for (let c = 0; c < gridSize; c++) {
         const originalCol = getCol(nextBoard, c);
         const reversedCol = [...originalCol].reverse();
         const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(reversedCol, true);
@@ -230,13 +252,13 @@ export default function Grid2048({ onBack, onScoreSave }) {
     if (b.includes(null)) return;
 
     // Check if adjacent tiles have identical values
-    for (let r = 0; r < 4; r++) {
-      for (let c = 0; c < 4; c++) {
-        const val = b[r * 4 + c];
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const val = b[r * gridSize + c];
         // Right neighbor
-        if (c < 3 && val === b[r * 4 + c + 1]) return;
+        if (c < gridSize - 1 && val === b[r * gridSize + c + 1]) return;
         // Bottom neighbor
-        if (r < 3 && val === b[(r + 1) * 4 + c]) return;
+        if (r < gridSize - 1 && val === b[(r + 1) * gridSize + c]) return;
       }
     }
 
@@ -300,6 +322,34 @@ export default function Grid2048({ onBack, onScoreSave }) {
     touchStartRef.current = null;
   };
 
+  if (showCollection) {
+    return (
+      <Grid2048Collection
+        onClose={() => {
+          setShowCollection(false);
+          initGame(); // Re-init game with new settings if they changed grid size
+        }}
+        currentSelections={customizations}
+        onSelect={(category, id) => {
+          setCustomizations(prev => {
+            const next = { ...prev, [category]: id };
+            updateGameConfig('2048', 'customizations', next);
+            return next;
+          });
+        }}
+      />
+    );
+  }
+
+  const getThemeStyles = () => {
+    switch(customizations.theme) {
+      case 'dark': return { bg: '#111', tileBg: 'rgba(255,255,255,0.05)', color: '#fff' };
+      case 'light': return { bg: '#f5f5f5', tileBg: 'rgba(0,0,0,0.05)', color: '#333' };
+      default: return { bg: 'rgba(10, 8, 19, 0.85)', tileBg: 'rgba(255, 255, 255, 0.02)', color: '#00f0ff' };
+    }
+  };
+  const theme = getThemeStyles();
+
   return (
     <>
       {showIntro && <GameIntro 
@@ -309,28 +359,40 @@ export default function Grid2048({ onBack, onScoreSave }) {
         particleType="blocks" 
         onComplete={() => setShowIntro(false)} 
       />}
-      <div className="game-container neon-border" style={containerStyle}>
-      <GameHeader
-        title="NEON 2048"
-        onBack={handleBackWithConfirm}
-        onRestart={initGame}
-        showBgmToggle={false} // BGM global
-        centerContent={
-          <div style={statsContainerStyle}>
-            <div style={statBoxStyle}>
-              <div style={statLabelStyle}>SCORE</div>
-              <div style={statValStyle}>{score}</div>
+      <div className="game-container neon-border" style={{...containerStyle, background: theme.bg}}>
+      {!isIntermission && (
+        <GameHeader
+          title="NEON 2048"
+          onBack={handleBackWithConfirm}
+          onRestart={initGame}
+          showBgmToggle={false} // BGM global
+          onShop={() => setShowCollection(true)}
+          centerContent={
+            <div style={statsContainerStyle}>
+              <div style={statBoxStyle}>
+                <div style={statLabelStyle}>SCORE</div>
+                <div style={statValStyle}>{score}</div>
+              </div>
+              <div style={statBoxStyle}>
+                <div style={statLabelStyle}>RECORD</div>
+                <div style={statValStyle}>{highScore}</div>
+              </div>
             </div>
-            <div style={statBoxStyle}>
-              <div style={statLabelStyle}>RECORD</div>
-              <div style={statValStyle}>{highScore}</div>
-            </div>
-          </div>
-        }
-      />
+          }
+        />
+      )}
+
+      {isIntermission && !victory && (
+        <div className="entract-header">
+          <div className="entract-header-text">Entracte ! Fusionnez jusqu'à 2048.</div>
+          <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }} className="entract-header-btn">
+            Passer l'entracte ⏭
+          </button>
+        </div>
+      )}
 
       <div 
-        style={gridContainerStyle}
+        style={{...gridContainerStyle, gridTemplateColumns: `repeat(${gridSize}, 1fr)`, gridTemplateRows: `repeat(${gridSize}, 1fr)`, background: theme.tileBg}}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -470,13 +532,11 @@ const statValStyle = {
 const gridContainerStyle = {
   position: 'relative',
   display: 'grid',
-  gridTemplateColumns: 'repeat(4, 1fr)',
-  gridTemplateRows: 'repeat(4, 1fr)',
   gap: '10px',
   width: '100%',
-  paddingBottom: '100%', // Perfect square trick
-  height: 0,
-  background: 'rgba(255, 255, 255, 0.02)',
+  paddingBottom: '0',
+  height: 'auto',
+  aspectRatio: '1 / 1',
   borderRadius: '8px',
   boxSizing: 'border-box',
   overflow: 'hidden',

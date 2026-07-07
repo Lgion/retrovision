@@ -144,10 +144,156 @@ function generatePuzzle(rowsPerBlock, colsPerBlock, size, targetClues) {
   return board;
 }
 
+
+const THEMES = {
+  classic: {
+    id: 'classic',
+    name: 'Classique',
+    price: 0,
+    icon: '📝',
+    bgClass: 'sudoku-classic-bg',
+    panelBg: 'rgba(255, 255, 255, 0.9)',
+    panelText: '#1e293b',
+    gridBg: '#ffffff',
+    cellBg: '#f8fafc',
+    borderThick: '3px solid #1e293b',
+    borderThin: '1px solid #cbd5e1',
+    selBg: 'rgba(59, 130, 246, 0.3)',
+    sameBg: 'rgba(59, 130, 246, 0.15)',
+    sameOutline: 'inset 0 0 0 2px rgba(59, 130, 246, 0.5)',
+    highEmptyBg: 'rgba(203, 213, 225, 0.3)',
+    highDigitBg: 'rgba(203, 213, 225, 0.6)',
+    completedBg: 'rgba(16, 185, 129, 0.15)',
+    completedOutline: 'inset 0 0 0 1px rgba(16, 185, 129, 0.5)',
+    textOriginal: '#0f172a',
+    textPlayer: '#2563eb',
+    textError: '#dc2626',
+    textShadow: 'none',
+    keypadNormalBorder: '2px solid #3b82f6',
+    keypadNormalBg: '#ffffff',
+    keypadNormalText: '#2563eb',
+    keypadNormalShadow: '0 4px 10px rgba(59, 130, 246, 0.15)',
+    keypadDisabledBorder: '2px solid #cbd5e1',
+    keypadDisabledBg: '#f1f5f9',
+    keypadDisabledText: '#94a3b8',
+    particleColors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+  },
+  neon: {
+    id: 'neon',
+    name: 'Néon Zen',
+    price: 1500,
+    icon: '🌌',
+    bgClass: 'sudoku-zen-bg',
+    panelBg: 'rgba(15, 23, 42, 0.65)',
+    panelText: '#ffffff',
+    gridBg: '#0f172a',
+    cellBg: '#1e293b',
+    borderThick: '3px solid #7c3aed',
+    borderThin: '1px solid rgba(139, 92, 246, 0.15)',
+    selBg: 'rgba(139, 92, 246, 0.45)',
+    sameBg: 'rgba(139, 92, 246, 0.3)',
+    sameOutline: 'inset 0 0 0 2px rgba(167, 139, 250, 0.8)',
+    highEmptyBg: 'rgba(13, 148, 136, 0.08)',
+    highDigitBg: 'rgba(139, 92, 246, 0.2)',
+    completedBg: 'rgba(16, 185, 129, 0.12)',
+    completedOutline: 'inset 0 0 0 1px rgba(16, 185, 129, 0.4)',
+    textOriginal: '#f8fafc',
+    textPlayer: '#c084fc',
+    textError: '#f87171',
+    textShadow: '0 0 8px rgba(248, 113, 113, 0.6)',
+    keypadNormalBorder: '2px solid #8b5cf6',
+    keypadNormalBg: 'rgba(30, 41, 59, 0.8)',
+    keypadNormalText: '#a78bfa',
+    keypadNormalShadow: '0 4px 10px rgba(139, 92, 246, 0.15)',
+    keypadDisabledBorder: '2px solid #334155',
+    keypadDisabledBg: 'rgba(15, 23, 42, 0.3)',
+    keypadDisabledText: '#475569',
+    particleColors: ['#a78bfa', '#8b5cf6', '#60a5fa', '#34d399', '#fbbf24']
+  },
+  wood: {
+    id: 'wood',
+    name: 'Bois Précieux',
+    price: 3000,
+    icon: '🪵',
+    bgClass: 'sudoku-wood-bg',
+    panelBg: 'rgba(93, 64, 55, 0.85)',
+    panelText: '#efebe9',
+    gridBg: '#4e342e', 
+    cellBg: '#d7ccc8', 
+    borderThick: '3px solid #3e2723', 
+    borderThin: '1px solid #a1887f',
+    selBg: 'rgba(141, 110, 99, 0.6)',
+    sameBg: 'rgba(141, 110, 99, 0.4)',
+    sameOutline: 'inset 0 0 0 2px #5d4037',
+    highEmptyBg: 'rgba(239, 235, 233, 0.3)',
+    highDigitBg: 'rgba(161, 136, 127, 0.5)',
+    completedBg: 'rgba(56, 142, 60, 0.25)',
+    completedOutline: 'inset 0 0 0 1px #2e7d32',
+    textOriginal: '#212121',
+    textPlayer: '#3e2723', 
+    textError: '#b71c1c',
+    textShadow: 'none',
+    keypadNormalBorder: '2px solid #5d4037',
+    keypadNormalBg: '#d7ccc8',
+    keypadNormalText: '#3e2723',
+    keypadNormalShadow: '0 4px 10px rgba(62, 39, 35, 0.3)',
+    keypadDisabledBorder: '2px solid #8d6e63',
+    keypadDisabledBg: '#a1887f',
+    keypadDisabledText: '#5d4037',
+    particleColors: ['#5d4037', '#8d6e63', '#a1887f', '#388e3c', '#ffb300']
+  },
+  colorful: {
+    id: 'colorful',
+    name: 'Arc-en-ciel',
+    price: 5000,
+    icon: '🎨',
+    bgClass: 'sudoku-colorful-bg',
+    panelBg: 'rgba(255, 255, 255, 0.95)',
+    panelText: '#2d3436',
+    gridBg: '#fef0f5',
+    cellBg: '#ffffff', 
+    borderThick: '3px solid #ff9ff3', 
+    borderThin: '1px solid #feca57', 
+    selBg: 'rgba(84, 160, 255, 0.3)', 
+    sameBg: 'rgba(84, 160, 255, 0.15)',
+    sameOutline: 'inset 0 0 0 2px #54a0ff',
+    highEmptyBg: 'rgba(200, 214, 229, 0.3)', 
+    highDigitBg: 'rgba(200, 214, 229, 0.6)', 
+    completedBg: 'rgba(29, 209, 161, 0.15)', 
+    completedOutline: 'inset 0 0 0 1px #1dd1a1',
+    textOriginal: '#5f27cd', 
+    textPlayer: '#ff6b6b', 
+    textError: '#ee5253', 
+    textShadow: 'none',
+    keypadNormalBorder: '2px solid #ff9ff3',
+    keypadNormalBg: '#ffffff',
+    keypadNormalText: '#ff6b6b',
+    keypadNormalShadow: '0 4px 10px rgba(255, 159, 243, 0.2)',
+    keypadDisabledBorder: '2px solid #c8d6e5',
+    keypadDisabledBg: '#f6f8fa',
+    keypadDisabledText: '#8395a7',
+    particleColors: ['#ff9ff3', '#feca57', '#ff6b6b', '#48dbfb', '#1dd1a1']
+  }
+};
+
 export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [difficulty, setDifficulty] = useState('facile'); // 'facile' | 'moyen' | 'difficile'
+
+  const [showStore, setShowStore] = useState(false);
+  const [activeThemeId, setActiveThemeId] = useState(() => {
+    return localStorage.getItem('retrovision_sudoku_theme') || 'classic';
+  });
+  
+  const currentTheme = THEMES[activeThemeId] || THEMES['classic'];
+
+  const handleSelectTheme = (themeId) => {
+    setActiveThemeId(themeId);
+    localStorage.setItem('retrovision_sudoku_theme', themeId);
+    sound.playClick();
+  };
+
 
   // Game parameters
   const [gridSize, setGridSize] = useState(4); // 4, 6, 9
@@ -164,6 +310,37 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
   const [history, setHistory] = useState([]); // for undo
   const [animatedCell, setAnimatedCell] = useState(null); // { r, c, ts }
   const [hoveredCell, setHoveredCell] = useState(null); // { r, c }
+  const [easiestCell, setEasiestCell] = useState(null); // { r, c }
+
+  // Calculate easiest cell whenever board changes
+  useEffect(() => {
+    if (gameState !== 'playing' || victory || board.length === 0) {
+      setEasiestCell(null);
+      return;
+    }
+    
+    const numberGrid = board.map(row => row.map(cell => cell.value));
+    let minCandidates = 10;
+    let bestCell = null;
+
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        if (board[r][c].value === 0) {
+          let candidatesCount = 0;
+          for (let val = 1; val <= gridSize; val++) {
+            if (isValid(numberGrid, r, c, val, rowsPerBlock, colsPerBlock, gridSize)) {
+              candidatesCount++;
+            }
+          }
+          if (candidatesCount < minCandidates) {
+            minCandidates = candidatesCount;
+            bestCell = { r, c };
+          }
+        }
+      }
+    }
+    setEasiestCell(bestCell);
+  }, [board, gameState, victory, gridSize, rowsPerBlock, colsPerBlock]);
 
   // Timer states
   const [time, setTime] = useState(0);
@@ -256,8 +433,10 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
   };
 
   const handleNumberInput = (num) => {
-    if (!selectedCell || victory) return;
-    const { r, c } = selectedCell;
+    let target = selectedCell;
+    if (!target) target = easiestCell;
+    if (!target || victory) return;
+    const { r, c } = target;
     const cell = board[r][c];
 
     if (cell.isOriginal) return;
@@ -310,8 +489,10 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
   };
 
   const handleErase = () => {
-    if (!selectedCell || victory) return;
-    const { r, c } = selectedCell;
+    let target = selectedCell;
+    if (!target) target = easiestCell;
+    if (!target || victory) return;
+    const { r, c } = target;
     const cell = board[r][c];
     if (cell.isOriginal) return;
 
@@ -401,6 +582,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
 
       setTimeout(() => {
         onScoreSave('Sudoku', Math.round(finalScore));
+
       }, 1500);
     }
   };
@@ -413,7 +595,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
 
   // Crosshighlighting check
   const isHighlighted = (r, c) => {
-    const activeCell = hoveredCell || selectedCell; // Hover takes priority, but selection stays locked
+    const activeCell = hoveredCell || selectedCell || easiestCell; // Hover takes priority, but selection stays locked
     if (!activeCell) return false;
     const { r: selR, c: selC } = activeCell;
     if (r === selR || c === selC) return true;
@@ -429,7 +611,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
 
   // Same number highlighting check
   const isSameNumber = (r, c) => {
-    const activeCell = hoveredCell || selectedCell; // Hover takes priority, but selection stays locked
+    const activeCell = hoveredCell || selectedCell || easiestCell; // Hover takes priority, but selection stays locked
     if (!activeCell) return false;
     const { r: selR, c: selC } = activeCell;
     const selVal = board[selR][selC].value;
@@ -447,7 +629,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
   return (
     <>
       {/* Zen Background with Glowing Orbs */}
-      <div className="sudoku-zen-bg">
+      <div className={currentTheme.bgClass}>
         <div className="sudoku-zen-orb sudoku-zen-orb-1"></div>
         <div className="sudoku-zen-orb sudoku-zen-orb-2"></div>
       </div>
@@ -476,6 +658,67 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
         </div>
       )}
 
+      
+        {/* Store Modal */}
+        {showStore && (
+          <div style={{...overlayStyle, zIndex: 200}}>
+            <div style={{...victoryCardStyle, width: '90%', maxWidth: '420px', background: currentTheme.panelBg, borderColor: currentTheme.borderThick.split(' ')[2]}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                <h2 style={{margin: 0, fontSize: '1.8rem', color: currentTheme.panelText}}>🛒 Boutique</h2>
+              </div>
+              
+              <div style={{display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px'}}>
+                {Object.values(THEMES).map(theme => {
+                  const isActive = activeThemeId === theme.id;
+                  
+                  return (
+                    <div key={theme.id} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '12px 16px', borderRadius: '16px',
+                      background: isActive ? currentTheme.selBg : 'rgba(15, 23, 42, 0.05)',
+                      border: `2px solid ${isActive ? currentTheme.borderThick.split(' ')[2] : 'rgba(148, 163, 184, 0.2)'}`,
+                      transition: 'all 0.2s'
+                    }}>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                        <span style={{fontSize: '24px'}}>{theme.icon}</span>
+                        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
+                          <span style={{fontWeight: 'bold', fontSize: '1.1rem', color: currentTheme.panelText}}>{theme.name}</span>
+                          {!isActive && <span style={{fontSize: '0.85rem', color: '#10b981', fontWeight: 'bold'}}>Gratuit</span>}
+                          {isActive && <span style={{fontSize: '0.85rem', color: currentTheme.borderThick.split(' ')[2], fontWeight: 'bold'}}>Actif</span>}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        {isActive ? (
+                          <button disabled style={{padding: '8px 16px', borderRadius: '12px', background: 'transparent', border: '2px solid transparent', color: currentTheme.panelText, fontWeight: 'bold'}}>
+                            Sélectionné
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleSelectTheme(theme.id)}
+                            className="retro-btn"
+                            style={{padding: '8px 16px', borderRadius: '12px', background: currentTheme.selBg, border: `2px solid ${currentTheme.borderThick.split(' ')[2]}`, color: currentTheme.panelText, cursor: 'pointer', fontWeight: 'bold'}}
+                          >
+                            Utiliser
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <button
+                onClick={() => { sound.playClick(); setShowStore(false); }}
+                className="retro-btn"
+                style={{ marginTop: '24px', width: '100%', padding: '12px', fontSize: '1.1rem', background: 'transparent', border: `2px solid ${currentTheme.panelText}`, color: currentTheme.panelText }}
+              >
+                Retour
+              </button>
+            </div>
+          </div>
+        )}
+
       <div style={containerStyle}>
         {!isIntermission && (
           <div style={unfocusedStyle}>
@@ -483,6 +726,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
               title="SUDOKU"
               onBack={handleBackWithConfirm}
               onRestart={gameState === 'playing' && !victory ? () => setGameState('menu') : undefined}
+              onShop={() => { sound.playClick(); setShowStore(true); }}
               showBgmToggle={false}
               centerContent={
                 gameState === 'playing' ? (
@@ -501,6 +745,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
             <h2 style={menuTitleStyle}>Entraînement Sudoku Zen</h2>
             <p style={menuSubtitleStyle}>Stimulez votre mémoire de travail et votre logique visuelle.</p>
 
+            
             <div style={btnGroupStyle}>
               <button
                 onClick={() => startGame('facile')}
@@ -552,8 +797,8 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
                 gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
                 width: '100%',
                 aspectRatio: '1/1',
-                backgroundColor: '#0f172a',
-                border: '3px solid #7c3aed',
+                backgroundColor: currentTheme.gridBg,
+                border: currentTheme.borderThick,
                 borderRadius: '12px',
                 overflow: 'hidden',
                 boxShadow: '0 8px 30px rgba(124, 58, 237, 0.3)'
@@ -580,47 +825,53 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
                   }
 
                   // Dynamic borders based on grid configuration
-                  let borderRight = '1px solid rgba(139, 92, 246, 0.15)';
-                  let borderBottom = '1px solid rgba(139, 92, 246, 0.15)';
+                  let borderRight = currentTheme.borderThin;
+                  let borderBottom = currentTheme.borderThin;
 
                   // Thicker boundaries between subgrids
                   if ((c + 1) % colsPerBlock === 0 && c < gridSize - 1) {
-                    borderRight = '3px solid #7c3aed';
+                    borderRight = currentTheme.borderThick;
                   }
                   if ((r + 1) % rowsPerBlock === 0 && r < gridSize - 1) {
-                    borderBottom = '3px solid #7c3aed';
+                    borderBottom = currentTheme.borderThick;
                   }
 
                   // Background coloring based on state
-                  let bgColor = '#1e293b';
+                  let bgColor = currentTheme.cellBg;
                   let cellBoxShadow = 'none';
 
                   const activeCell = hoveredCell || selectedCell; // Persist highlight if cell is selected
                   const isActiveCellEmpty = activeCell && board[activeCell.r] && board[activeCell.r][activeCell.c] && board[activeCell.r][activeCell.c].value === 0;
 
                   if (isSel) {
-                    bgColor = 'rgba(139, 92, 246, 0.45)';
+                    bgColor = currentTheme.selBg;
                   } else if (isSame) {
-                    bgColor = 'rgba(139, 92, 246, 0.3)';
+                    bgColor = currentTheme.sameBg;
                     // Strong outline for identical numbers to match user request
-                    cellBoxShadow = 'inset 0 0 0 2px rgba(167, 139, 250, 0.8)';
+                    cellBoxShadow = currentTheme.sameOutline;
                   } else if (isHigh) {
                     if (isActiveCellEmpty) {
                       // Empty cell highlight: less visible, subtle cool teal tint at 8% opacity
-                      bgColor = 'rgba(13, 148, 136, 0.08)';
+                      bgColor = currentTheme.highEmptyBg;
                     } else {
                       // Digit cell highlight: clearly visible vibrant violet at 20% opacity
-                      bgColor = 'rgba(139, 92, 246, 0.2)';
+                      bgColor = currentTheme.highDigitBg;
                     }
                   } else if (isCompletedNum) {
                     // Highlight for completely filled numbers (emerald success glow)
-                    bgColor = 'rgba(16, 185, 129, 0.12)';
-                    cellBoxShadow = 'inset 0 0 0 1px rgba(16, 185, 129, 0.4)';
+                    bgColor = currentTheme.completedBg;
+                    cellBoxShadow = currentTheme.completedOutline;
+                  }
+                  
+                  const isEasiest = easiestCell && easiestCell.r === r && easiestCell.c === c;
+                  if (isEasiest && !isSel) {
+                     cellBoxShadow = 'inset 0 0 15px rgba(234, 179, 8, 0.6)';
                   }
 
                   return (
                     <div
                       key={`${r}-${c}`}
+                      className={isEasiest ? 'easiest-cell-pulse' : ''}
                       onClick={() => selectCell(r, c)}
                       onMouseEnter={() => setHoveredCell({ r, c })}
                       onMouseLeave={() => setHoveredCell(null)}
@@ -647,7 +898,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
                             const distance = 20 + Math.random() * 15;
                             const dx = `${Math.cos(angle) * distance}px`;
                             const dy = `${Math.sin(angle) * distance}px`;
-                            const colors = ['#a78bfa', '#8b5cf6', '#60a5fa', '#34d399', '#fbbf24'];
+                            const colors = currentTheme.particleColors;
                             const randomColor = colors[i % colors.length];
                             return (
                               <div
@@ -675,11 +926,11 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
                             fontSize: gridSize === 9 ? '20px' : gridSize === 6 ? '24px' : '28px',
                             fontWeight: '800',
                             color: hasError
-                              ? '#f87171' // Error state (high contrast neon red)
+                              ? currentTheme.textError
                               : cell.isOriginal
-                                ? '#f8fafc' // Original clue color (pure bright white)
-                                : '#c084fc', // Player value color (neon lavender)
-                            textShadow: hasError ? '0 0 8px rgba(248, 113, 113, 0.6)' : 'none',
+                                ? currentTheme.textOriginal
+                                : currentTheme.textPlayer,
+                            textShadow: hasError ? currentTheme.textShadow : 'none',
                             display: 'inline-block'
                           }}
                         >
@@ -758,13 +1009,13 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
                     style={{
                       height: '50px',
                       borderRadius: '14px',
-                      border: complete ? '2px solid #334155' : '2px solid #8b5cf6',
-                      background: complete ? 'rgba(15, 23, 42, 0.3)' : 'rgba(30, 41, 59, 0.8)',
-                      color: complete ? '#475569' : '#a78bfa',
+                      border: complete ? currentTheme.keypadDisabledBorder : currentTheme.keypadNormalBorder,
+                      background: complete ? currentTheme.keypadDisabledBg : currentTheme.keypadNormalBg,
+                      color: complete ? currentTheme.keypadDisabledText : currentTheme.keypadNormalText,
                       fontSize: '22px',
                       fontWeight: '800',
                       cursor: complete ? 'not-allowed' : 'pointer',
-                      boxShadow: complete ? 'none' : '0 4px 10px rgba(139, 92, 246, 0.15)',
+                      boxShadow: complete ? 'none' : currentTheme.keypadNormalShadow,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -778,7 +1029,19 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
             </div>
 
             {/* Sudoku Controls (Pencil, Erase, Undo, Hint) */}
-            <div style={{ ...gridControlsStyle, ...unfocusedStyle }} className="sudoku_options">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', width: '100%', maxWidth: '380px', marginBottom: '5px' }}>
+              <button
+                onClick={() => setSelectedCell(null)}
+                className="retro-btn"
+                style={{
+                  ...actionBtnStyle,
+                  borderColor: 'rgba(139, 92, 246, 0.3)',
+                  color: '#f8fafc',
+                  backgroundColor: 'rgba(30, 41, 59, 0.6)',
+                }}
+              >
+                ✖️ Désélect
+              </button>
               <button
                 onClick={() => { sound.playClick(); setNoteMode(!noteMode); }}
                 className={`retro-btn ${noteMode ? 'pulse-glow' : ''}`}
@@ -789,7 +1052,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
                   backgroundColor: noteMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(30, 41, 59, 0.6)',
                 }}
               >
-                ✏️ Pencil {noteMode ? 'ON' : 'OFF'}
+                ✏️ {noteMode ? 'ON' : 'OFF'}
               </button>
               <button
                 onClick={handleErase}
@@ -828,7 +1091,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
                   backgroundColor: 'rgba(30, 41, 59, 0.6)'
                 }}
               >
-                💡 Indice ({hintsLeft})
+                💡 ({hintsLeft})
               </button>
             </div>
           </div>

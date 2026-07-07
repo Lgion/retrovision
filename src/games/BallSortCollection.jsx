@@ -45,6 +45,15 @@ const collections = {
     { id: 'c7', type: 'free', palette: ['#00BFFF', '#1E90FF', '#000080'], name: 'Océan Profond' },
     { id: 'c8', type: 'free', palette: ['#FF4500', '#FF8C00', '#FFD700'], name: 'Flammes' },
     { id: 'c9', type: 'free', palette: ['#000000', '#FFFFFF', '#FFFF00'], name: 'Haut Contraste' }
+  ],
+  difficulty: [
+    { id: '3', type: 'free', name: '3 Tubes pleins' },
+    { id: '4', type: 'free', name: '4 Tubes pleins' },
+    { id: '5', type: 'free', name: '5 Tubes pleins' },
+    { id: '6', type: 'free', name: '6 Tubes pleins' },
+    { id: '7', type: 'free', name: '7 Tubes pleins' },
+    { id: '8', type: 'free', name: '8 Tubes pleins' },
+    { id: '9', type: 'free', name: '9 Tubes pleins' }
   ]
 };
 
@@ -145,6 +154,11 @@ const BallSortCollection = ({ onClose, currentSelections, onSelect }) => {
               {item.palette?.map((color, i) => (
                 <div key={i} style={{ width: '15px', height: '15px', borderRadius: '50%', background: color, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
               ))}
+            </div>
+          )}
+          {category === 'difficulty' && (
+            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#1E90FF' }}>
+              {item.id}
             </div>
           )}
         </div>
@@ -333,7 +347,7 @@ const BallSortCollection = ({ onClose, currentSelections, onSelect }) => {
         padding: '10px 10px 0 10px',
         gap: '5px'
       }}>
-        {['tube', 'theme', 'ball', 'color'].map(tab => (
+        {['tube', 'theme', 'ball', 'color', 'difficulty'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -353,7 +367,7 @@ const BallSortCollection = ({ onClose, currentSelections, onSelect }) => {
               whiteSpace: 'nowrap'
             }}
           >
-            {tab === 'theme' ? 'Thème' : tab === 'ball' ? 'Balle' : tab === 'color' ? 'Couleur' : 'Tube'}
+            {tab === 'theme' ? 'Thème' : tab === 'ball' ? 'Balle' : tab === 'color' ? 'Couleur' : tab === 'difficulty' ? 'Niveau' : 'Tube'}
           </button>
         ))}
       </div>

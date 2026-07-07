@@ -3,37 +3,72 @@ import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import HangmanCollection from './HangmanCollection';
 import hangmanData from '../utils/hangmanData.json';
 
-export default function Hangman({ onBack, onScoreSave }) {
+export default function Hangman({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
-  
+
+  const [coins, setCoins] = useState(() => getGameConfig('hangman', 'coins', 100)); // Stars/coins
+  const [customizations, setCustomizations] = useState(() => getGameConfig('hangman', 'customizations', { difficulty: 'moyen', theme: 'chalk', category: 'mixte' }));
+  const [showCollection, setShowCollection] = useState(false);
+  const [showHintMessage, setShowHintMessage] = useState(false);
+
+  const getFilteredData = () => {
+    let cat = customizations.category || 'mixte';
+    if (cat === 'mixte') return hangmanData;
+    const filtered = hangmanData.filter(d => d.category === cat);
+    return filtered.length > 0 ? filtered : hangmanData;
+  };
+
+  const filteredData = getFilteredData();
+
   // Random order logic
   const [riddleOrder, setRiddleOrder] = useState(() => {
-    const savedOrder = localStorage.getItem('retrovision_hangman_order');
-    if (savedOrder) {
-      try {
-        return JSON.parse(savedOrder);
-      } catch(e) {}
-    }
-    const order = Array.from({ length: hangmanData.length }, (_, i) => i);
+    const order = Array.from({ length: filteredData.length }, (_, i) => i);
     for (let i = order.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [order[i], order[j]] = [order[j], order[i]];
     }
-    localStorage.setItem('retrovision_hangman_order', JSON.stringify(order));
     return order;
   });
+
+  useEffect(() => {
+    // When category changes, reset order and index
+    const order = Array.from({ length: filteredData.length }, (_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    setRiddleOrder(order);
+    setCurrentOrderIdx(0);
+    resetLevel();
+  }, [customizations.category]);
 
   const [currentOrderIdx, setCurrentOrderIdx] = useState(() => {
     return parseInt(localStorage.getItem('retrovision_hangman_idx') || '0', 10);
   });
 
-  const [coins, setCoins] = useState(() => getGameConfig('hangman', 'coins', 100)); // Stars/coins
-  const [lives, setLives] = useState(7);
+  const getInitialLives = () => {
+    let diff = customizations.difficulty || 'moyen';
+    if (isIntermission) {
+      diff = intermissionDifficulty || 'facile';
+    }
+    if (diff === 'facile') return 8;
+    if (diff === 'moyen') return 6;
+    if (diff === 'difficile') return 4;
+    return 6;
+  };
+
+  const initialLivesAmount = getInitialLives();
+  const [lives, setLives] = useState(initialLivesAmount);
   const [guessedLetters, setGuessedLetters] = useState([]);
   const [gameState, setGameState] = useState('playing'); // 'playing', 'won', 'lost'
   
+  // Visual FX states
+  const [isShaking, setIsShaking] = useState(false);
+  const [recentCorrectLetter, setRecentCorrectLetter] = useState(null);
+
   // Powerups logic
   const [magnifyUsed, setMagnifyUsed] = useState(false);
   const [bombUsed, setBombUsed] = useState(false);
@@ -41,7 +76,7 @@ export default function Hangman({ onBack, onScoreSave }) {
 
   // Current Level Data
   const currentRiddleIdx = riddleOrder[currentOrderIdx % riddleOrder.length];
-  const currentData = hangmanData[currentRiddleIdx];
+  const currentData = filteredData[currentRiddleIdx] || hangmanData[0];
   const targetWord = currentData.answer.toUpperCase();
 
   const handleBeforeUnload = (e) => {
@@ -74,15 +109,20 @@ export default function Hangman({ onBack, onScoreSave }) {
 
   const guessLetter = (letter) => {
     if (gameState !== 'playing' || guessedLetters.includes(letter)) return;
-    
+
     const newGuessed = [...guessedLetters, letter];
     setGuessedLetters(newGuessed);
 
     if (targetWord.includes(letter)) {
       sound.playBallDrop(); // Correct guess sound
+      setRecentCorrectLetter(letter);
+      setTimeout(() => setRecentCorrectLetter(null), 500); // Clear after animation
       checkWin(newGuessed);
     } else {
       sound.playShake(); // Wrong guess sound
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 400); // Clear after shake duration
+      
       const newLives = lives - 1;
       setLives(newLives);
       if (newLives <= 0) {
@@ -106,6 +146,9 @@ export default function Hangman({ onBack, onScoreSave }) {
       updateGameConfig('hangman', 'coins', nc);
       return nc;
     });
+    if (isIntermission && onIntermissionComplete) {
+      setTimeout(() => onIntermissionComplete(), 1500);
+    }
     if (onScoreSave) onScoreSave('Le Pendu', 100 + (lives * 10));
   };
 
@@ -122,12 +165,14 @@ export default function Hangman({ onBack, onScoreSave }) {
   };
 
   const resetLevel = () => {
-    setLives(7);
-    setGuessedLetters([]);
+    const diff = isIntermission ? (intermissionDifficulty || 'facile') : (customizations.difficulty || 'moyen');
+    setLives(getInitialLives());
+    setGuessedLetters(diff === 'facile' ? ['A', 'E', 'I', 'O', 'U', 'Y'] : []);
     setGameState('playing');
     setMagnifyUsed(false);
     setBombUsed(false);
     setHintUsed(false);
+    setShowHintMessage(false);
     sound.playClick();
   };
 
@@ -159,11 +204,10 @@ export default function Hangman({ onBack, onScoreSave }) {
   };
 
   const useHint = () => {
-    // Reveal a hint (for now just reveal a letter, or give an extra life)
-    if (gameState !== 'playing' || hintUsed || coins < 10) return;
-    setLives(l => Math.min(7, l + 2)); // Give 2 extra lives as a "hint/help"
-    setCoins(c => c - 10);
+    // Reveal a textual hint
+    if (gameState !== 'playing' || hintUsed || showHintMessage) return;
     setHintUsed(true);
+    setShowHintMessage(true);
     sound.playPowerup();
   };
 
@@ -173,10 +217,13 @@ export default function Hangman({ onBack, onScoreSave }) {
       if (char === ' ') return <span key={index} style={{ width: '20px' }}></span>;
       const isRevealed = guessedLetters.includes(char) || gameState === 'lost';
       const isMissed = gameState === 'lost' && !guessedLetters.includes(char);
+      const isJustGuessed = char === recentCorrectLetter;
+      
       return (
-        <div key={index} style={{
+        <div className={`hangman_letter_slot ${isJustGuessed ? 'letter-pop' : ''}`} key={index} style={{
           ...letterSlotStyle,
-          color: isMissed ? '#ef4444' : '#1e293b'
+          color: isMissed ? '#ef4444' : theme.color,
+          borderColor: isJustGuessed ? '#10b981' : theme.color
         }}>
           {isRevealed ? char : ''}
         </div>
@@ -188,22 +235,22 @@ export default function Hangman({ onBack, onScoreSave }) {
   const renderDrawing = () => {
     // Balloons logic
     const balloonPositions = [
-      {cx: 60, cy: 30, r: 12, color: '#ef4444'},
-      {cx: 40, cy: 35, r: 10, color: '#3b82f6'},
-      {cx: 80, cy: 35, r: 11, color: '#f59e0b'},
-      {cx: 50, cy: 20, r: 13, color: '#10b981'},
-      {cx: 70, cy: 22, r: 10, color: '#8b5cf6'},
-      {cx: 35, cy: 50, r: 11, color: '#ec4899'},
-      {cx: 85, cy: 50, r: 12, color: '#06b6d4'}
+      { cx: 60, cy: 30, r: 12, color: '#ef4444' },
+      { cx: 40, cy: 35, r: 10, color: '#3b82f6' },
+      { cx: 80, cy: 35, r: 11, color: '#f59e0b' },
+      { cx: 50, cy: 20, r: 13, color: '#10b981' },
+      { cx: 70, cy: 22, r: 10, color: '#8b5cf6' },
+      { cx: 35, cy: 50, r: 11, color: '#ec4899' },
+      { cx: 85, cy: 50, r: 12, color: '#06b6d4' }
     ];
-    
+
     return (
-      <svg width="120" height="150" viewBox="0 0 120 150" style={drawingStyle}>
+      <svg width="150" height="180" viewBox="0 0 120 150" style={drawingStyle}>
         {/* Shark & Water */}
-        <path d="M 10 130 Q 30 125 50 130 T 90 130 T 130 130" stroke="#1e3a8a" strokeWidth="2" fill="none" />
-        <path d="M 10 140 Q 30 135 50 140 T 90 140 T 130 140" stroke="#1e3a8a" strokeWidth="2" fill="none" />
+        <path d="M 10 130 Q 30 125 50 130 T 90 130 T 130 130" stroke={theme.color} strokeWidth="2" fill="none" opacity="0.6" />
+        <path d="M 10 140 Q 30 135 50 140 T 90 140 T 130 140" stroke={theme.color} strokeWidth="2" fill="none" opacity="0.4" />
         {/* Shark Fin */}
-        <path d="M 50 130 Q 60 110 70 130 Z" fill="#475569" stroke="#334155" strokeWidth="2" />
+        <path d="M 50 130 Q 60 110 70 130 Z" fill="#ef4444" stroke={theme.color} strokeWidth="2" />
 
         {/* Stickman */}
         <g style={{
@@ -227,9 +274,9 @@ export default function Hangman({ onBack, onScoreSave }) {
           if (i >= lives) return null; // Balloon popped
           return (
             <g key={i}>
-              <path d={`M ${b.cx} ${b.cy + b.r} Q ${(b.cx + 60)/2} 55 60 75`} stroke="#94a3b8" strokeWidth="1" fill="none" />
+              <path d={`M ${b.cx} ${b.cy + b.r} Q ${(b.cx + 60) / 2} 55 60 75`} stroke="#94a3b8" strokeWidth="1" fill="none" />
               <circle cx={b.cx} cy={b.cy} r={b.r} fill={b.color} stroke="#1e293b" strokeWidth="1" />
-              <path d={`M ${b.cx-2} ${b.cy+b.r} L ${b.cx+2} ${b.cy+b.r} L ${b.cx} ${b.cy+b.r+3} Z`} fill={b.color} />
+              <path d={`M ${b.cx - 2} ${b.cy + b.r} L ${b.cx + 2} ${b.cy + b.r} L ${b.cx} ${b.cy + b.r + 3} Z`} fill={b.color} />
             </g>
           );
         })}
@@ -237,35 +284,137 @@ export default function Hangman({ onBack, onScoreSave }) {
     );
   };
 
+  if (showCollection) {
+    return (
+      <HangmanCollection
+        onClose={() => {
+          setShowCollection(false);
+          resetLevel();
+        }}
+        currentSelections={customizations}
+        onSelect={(category, id) => {
+          setCustomizations(prev => {
+            const next = { ...prev, [category]: id };
+            updateGameConfig('hangman', 'customizations', next);
+            return next;
+          });
+        }}
+      />
+    );
+  }
+
+  const getThemeStyles = () => {
+    switch (customizations.theme) {
+      case 'chalk':
+        return {
+          bg: '#2d3748',
+          bgImage: 'none',
+          color: '#f8fafc',
+          riddleBg: 'rgba(255,255,255,0.1)',
+          border: '1px solid #cbd5e1',
+          keyBg: 'rgba(255,255,255,0.1)',
+          keyColor: '#f8fafc'
+        };
+      case 'neon':
+        return {
+          bg: '#0f172a',
+          bgImage: 'none',
+          color: '#38bdf8',
+          riddleBg: 'rgba(56, 189, 248, 0.1)',
+          border: '1px solid #38bdf8',
+          keyBg: 'rgba(56, 189, 248, 0.1)',
+          keyColor: '#38bdf8'
+        };
+      default:
+        return {
+          bg: '#fafafa',
+          bgImage: 'linear-gradient(rgba(59, 130, 246, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.2) 1px, transparent 1px)',
+          color: '#1e293b',
+          riddleBg: 'rgba(255,255,255,0.7)',
+          border: '1px dashed #cbd5e1',
+          keyBg: 'transparent',
+          keyColor: '#1e293b'
+        };
+    }
+  };
+
+  const theme = getThemeStyles();
+
   return (
     <>
-      {showIntro && <GameIntro 
-        gameName="LE PENDU" 
-        icon="🎈" 
-        colors={['#ef4444', '#3b82f6', '#10b981']} 
-        particleType="bubbles" 
-        onComplete={() => setShowIntro(false)} 
-      />}
+      <style>{`
+        .shake-error {
+          animation: shakeError 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shakeError {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .letter-pop {
+          animation: popLetter 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+          text-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+        }
+        @keyframes popLetter {
+          0% { transform: scale(0.5); opacity: 0; }
+          50% { transform: scale(1.5); color: #10b981; }
+          100% { transform: scale(1); }
+        }
+        .error-tint {
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(239, 68, 68, 0.2);
+          pointer-events: none;
+          z-index: 50;
+          animation: flashRed 0.4s ease-out;
+        }
+        @keyframes flashRed {
+          0% { opacity: 0; }
+          20% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `}</style>
       
-      <div style={containerStyle}>
-        
+      {showIntro && !isIntermission && <GameIntro
+        gameName="LE PENDU"
+        icon="🎈"
+        colors={['#ef4444', '#3b82f6', '#10b981']}
+        particleType="bubbles"
+        onComplete={() => setShowIntro(false)}
+      />}
+
+      <div style={{ ...containerStyle, background: theme.bg, backgroundImage: theme.bgImage, color: theme.color }} className={isShaking ? 'shake-error' : ''}>
+        {isShaking && <div className="error-tint"></div>}
+
         {/* Top Header */}
-        <GameHeader
-          title="DEVINETTE"
-          onBack={handleBackWithConfirm}
-          showBgmToggle={false} // bgm global
-          centerContent={
-            <div style={statsBoxStyle}>
-              <span style={{ fontSize: '18px' }}>😈</span>
-              <div style={coinsBadgeStyle}>
-                <span style={{ color: '#f59e0b', fontSize: '16px' }}>★</span> 
-                <span style={{ fontWeight: 'bold' }}>{coins}</span>
-                <button style={addCoinBtnStyle}>+</button>
+        {!isIntermission && (
+          <GameHeader
+            title="DEVINETTE"
+            onBack={handleBackWithConfirm}
+            showBgmToggle={false} // bgm global
+            onShop={() => setShowCollection(true)}
+            centerContent={
+              <div style={statsBoxStyle}>
+                <span style={{ fontSize: '18px' }}>😈</span>
+                <div style={{ ...coinsBadgeStyle, background: theme.bg === '#fafafa' ? '#fff' : 'rgba(255,255,255,0.1)', color: theme.color }}>
+                  <span style={{ color: '#f59e0b', fontSize: '16px' }}>★</span>
+                  <span style={{ fontWeight: 'bold' }}>{coins}</span>
+                </div>
               </div>
-            </div>
-          }
-          style={{ background: 'transparent', boxShadow: 'none', borderBottom: '2px dashed #cbd5e1' }}
-        />
+            }
+            style={{ background: 'transparent', boxShadow: 'none', borderBottom: `2px dashed ${theme.border.split(' ')[2] || '#cbd5e1'}` }}
+          />
+        )}
+
+        {isIntermission && gameState === 'playing' && (
+          <div className="entract-header">
+            <div className="entract-header-text">Entracte ! Devinez le mot.</div>
+            <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }} className="entract-header-btn">
+              Passer l'entracte ⏭
+            </button>
+          </div>
+        )}
 
         {/* Drawing & Riddle Section */}
         <div style={topSectionStyle}>
@@ -275,11 +424,18 @@ export default function Hangman({ onBack, onScoreSave }) {
               ❤️ x{lives}
             </div>
           </div>
-          <div style={riddleBoxStyle}>
-            <div style={riddleTypeBadge}>{currentData.type.toUpperCase()}</div>
-            {currentData.question.split('\\n').map((line, i) => (
-              <p key={i} style={{ margin: '5px 0' }}>{line}</p>
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '10px' }}>
+            <div className="riddleBox" style={{ ...riddleBoxStyle, flex: 'none', background: theme.riddleBg, border: theme.border, color: theme.color }}>
+              <div style={riddleTypeBadge}>{currentData.category ? currentData.category.toUpperCase() : 'MIXTE'}</div>
+              {currentData.question.split('\\n').map((line, i) => (
+                <p key={i} style={{ margin: '5px 0' }}>{line}</p>
+              ))}
+            </div>
+            {showHintMessage && (
+              <div className="hangman_tips" style={{ padding: '10px', background: 'rgba(245, 158, 11, 0.1)', border: '2px solid #f59e0b', borderRadius: '12px', color: '#f59e0b', fontWeight: 'bold', animation: 'fadeIn 0.3s' }}>
+                💡 Indice : {currentData.hint}
+              </div>
+            )}
           </div>
         </div>
 
@@ -295,8 +451,8 @@ export default function Hangman({ onBack, onScoreSave }) {
             const isCorrect = isGuessed && targetWord.includes(letter);
             const isWrong = isGuessed && !targetWord.includes(letter);
 
-            let bg = 'transparent';
-            let color = '#1e293b';
+            let bg = theme.keyBg;
+            let color = theme.keyColor;
             let opacity = 1;
 
             if (isCorrect) {
@@ -326,7 +482,7 @@ export default function Hangman({ onBack, onScoreSave }) {
 
         {/* Jokers Section */}
         <div style={jokersContainerStyle}>
-          <button 
+          <button
             onClick={useMagnify}
             disabled={magnifyUsed || coins < 30 || gameState !== 'playing'}
             style={{ ...jokerBtnStyle, opacity: (magnifyUsed || coins < 30) ? 0.5 : 1 }}
@@ -334,8 +490,8 @@ export default function Hangman({ onBack, onScoreSave }) {
             <div style={{ ...jokerIconBoxStyle, background: '#10b981' }}>🔍</div>
             <div style={jokerCostStyle}>★30</div>
           </button>
-          
-          <button 
+
+          <button
             onClick={useBomb}
             disabled={bombUsed || coins < 20 || gameState !== 'playing'}
             style={{ ...jokerBtnStyle, opacity: (bombUsed || coins < 20) ? 0.5 : 1 }}
@@ -343,20 +499,22 @@ export default function Hangman({ onBack, onScoreSave }) {
             <div style={{ ...jokerIconBoxStyle, background: '#3b82f6' }}>💣</div>
             <div style={jokerCostStyle}>★20</div>
           </button>
-          
-          <button 
+
+          <button
             onClick={useHint}
-            disabled={hintUsed || coins < 10 || gameState !== 'playing'}
-            style={{ ...jokerBtnStyle, opacity: (hintUsed || coins < 10) ? 0.5 : 1 }}
+            disabled={hintUsed || gameState !== 'playing'}
+            style={{ ...jokerBtnStyle, opacity: hintUsed ? 0.5 : 1 }}
           >
             <div style={{ ...jokerIconBoxStyle, background: '#f59e0b' }}>💡</div>
-            <div style={jokerCostStyle}>★10</div>
+            <div style={jokerCostStyle}>Indice</div>
           </button>
         </div>
 
+
+
         {/* Overlays */}
         {gameState === 'won' && (
-          <div style={{...overlayStyle, animation: 'delayFadeIn 1.5s forwards'}}>
+          <div style={{ ...overlayStyle, animation: 'delayFadeIn 1.5s forwards' }}>
             <div style={victoryTitleStyle}>Gagné !</div>
             <div style={{ color: '#1e293b', fontSize: '18px', marginBottom: '20px' }}>
               Le mot était bien <strong>{targetWord}</strong>
@@ -392,8 +550,6 @@ const containerStyle = {
   maxWidth: '430px',
   flex: 1,
   margin: '0 auto',
-  background: '#fafafa',
-  backgroundImage: 'linear-gradient(rgba(59, 130, 246, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.2) 1px, transparent 1px)',
   backgroundSize: '25px 25px',
   fontFamily: '"Comic Sans MS", "Chalkboard SE", "Marker Felt", sans-serif',
   position: 'relative',
@@ -471,15 +627,21 @@ const topSectionStyle = {
 };
 
 const drawingContainerStyle = {
-  flex: '0 0 120px',
+  flex: '0 0 150px',
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'center'
+  alignItems: 'center',
+  background: 'rgba(255, 255, 255, 0.1)',
+  borderRadius: '16px',
+  padding: '10px',
+  boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)',
+  border: '2px solid rgba(255,255,255,0.2)'
 };
 
 const drawingStyle = {
-  background: 'transparent'
+  background: 'transparent',
+  filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.25))'
 };
 
 const livesBadgeStyle = {

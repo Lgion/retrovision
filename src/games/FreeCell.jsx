@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
+import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
+import FreeCellCollection from './FreeCellCollection';
 
 const SUITS = [
   { id: '♥', color: '#c21807' },
@@ -35,12 +37,26 @@ const createDeck = () => {
   return deck;
 };
 
-export default function FreeCell({ onBack, onScoreSave }) {
+export default function FreeCell({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
-  const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
+  const [gameState, setGameState] = useState(isIntermission ? 'playing' : 'menu'); // 'menu' | 'playing'
   const containerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
   const lastTap = useRef({ time: 0, cardId: null });
+  const [showCollection, setShowCollection] = useState(false);
+  const [customizations, setCustomizations] = useState(() => getGameConfig('freecell', 'customizations', { difficulty: 'moyen', theme: 'classic' }));
+
+  const getNumFreeCells = () => {
+    let diff = customizations.difficulty || 'moyen';
+    if (isIntermission) {
+      diff = intermissionDifficulty || 'facile';
+    }
+    if (diff === 'facile') return 4;
+    if (diff === 'moyen') return 3;
+    if (diff === 'difficile') return 2;
+    return 4;
+  };
+  const numFreeCells = getNumFreeCells();
 
   useEffect(() => {
     const handleResize = () => {
@@ -73,7 +89,7 @@ export default function FreeCell({ onBack, onScoreSave }) {
 
   // Board State
   const [cascades, setCascades] = useState(Array(8).fill([]));
-  const [freeCells, setFreeCells] = useState(Array(4).fill(null));
+  const [freeCells, setFreeCells] = useState(Array(numFreeCells).fill(null));
   const [foundations, setFoundations] = useState({ '♥': 0, '♦': 0, '♣': 0, '♠': 0 }); // Stores max rank
 
   const [selectedCardInfo, setSelectedCardInfo] = useState(null); // { locType: 'cascade'|'freecell', index: number }
@@ -118,7 +134,7 @@ export default function FreeCell({ onBack, onScoreSave }) {
     }
 
     setCascades(newCascades);
-    setFreeCells(Array(4).fill(null));
+    setFreeCells(Array(getNumFreeCells()).fill(null));
     setFoundations({ '♥': 0, '♦': 0, '♣': 0, '♠': 0 });
     setSelectedCardInfo(null);
     setHistory([]);
@@ -127,6 +143,13 @@ export default function FreeCell({ onBack, onScoreSave }) {
     setGameState('playing');
     sound.startBGM();
   };
+  
+  // Auto-start for intermission
+  useEffect(() => {
+    if (isIntermission && gameState === 'playing' && history.length === 0) {
+      startNewGame();
+    }
+  }, [isIntermission]);
 
   const saveStateToHistory = () => {
     setHistory(prev => [...prev, JSON.stringify({ cascades, freeCells, foundations })]);
@@ -260,7 +283,7 @@ export default function FreeCell({ onBack, onScoreSave }) {
       }
     }
     if (srcType === null) {
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < numFreeCells; i++) {
         if (freeCells[i] && freeCells[i].id === card.id) {
           srcType = 'freecell';
           srcIdx = i;
@@ -296,7 +319,7 @@ export default function FreeCell({ onBack, onScoreSave }) {
     }
 
     // 4. Empty freecells
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < numFreeCells; i++) {
       if (freeCells[i] === null) {
         if (executeMove(srcType, srcIdx, 'freecell', i)) return;
       }
@@ -344,6 +367,9 @@ export default function FreeCell({ onBack, onScoreSave }) {
           setTimeout(() => {
             setVictoryPhase(3);
             sound.playScore();
+            if (isIntermission && onIntermissionComplete) {
+              setTimeout(() => onIntermissionComplete(), 1500);
+            }
             if (onScoreSave) {
               onScoreSave('FreeCell', Math.max(1000 - moves * 5, 100));
             }
@@ -604,11 +630,23 @@ export default function FreeCell({ onBack, onScoreSave }) {
     marginBottom: '15px', fontSize: theme.statusSize, padding: '0 10px', boxSizing: 'border-box'
   };
 
+  const getThemeColors = () => {
+    switch (customizations.theme) {
+      case 'dark':
+        return { bg: '#1e293b', border: '#0f172a', innerShadow: 'inset 0 0 50px rgba(0,0,0,0.8)' };
+      case 'royal':
+        return { bg: '#991b1b', border: '#7f1d1d', innerShadow: 'inset 0 0 50px rgba(0,0,0,0.6)' };
+      default:
+        return { bg: '#0a6c29', border: '#064018', innerShadow: 'inset 0 0 50px rgba(0,0,0,0.5)' };
+    }
+  };
+  const boardColors = getThemeColors();
+
   const boardWrapperStyle = {
-    width: '100%', background: '#0a6c29', // Classic casino green felt
+    width: '100%', background: boardColors.bg, // Dynamic background
     borderRadius: '12px', padding: isMobile ? '6px' : '20px', boxSizing: 'border-box',
-    boxShadow: 'inset 0 0 50px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.6)',
-    border: isMobile ? '3px solid #064018' : '6px solid #064018',
+    boxShadow: `${boardColors.innerShadow}, 0 10px 30px rgba(0,0,0,0.6)`,
+    border: isMobile ? `3px solid ${boardColors.border}` : `6px solid ${boardColors.border}`,
     minHeight: isMobile ? '380px' : '550px',
     overflowX: 'hidden',
     flexGrow: 1,
@@ -650,9 +688,28 @@ export default function FreeCell({ onBack, onScoreSave }) {
     minHeight: theme.cardHeight
   };
 
+  if (showCollection) {
+    return (
+      <FreeCellCollection
+        onClose={() => {
+          setShowCollection(false);
+          startNewGame();
+        }}
+        currentSelections={customizations}
+        onSelect={(category, id) => {
+          setCustomizations(prev => {
+            const next = { ...prev, [category]: id };
+            updateGameConfig('freecell', 'customizations', next);
+            return next;
+          });
+        }}
+      />
+    );
+  }
+
   return (
     <>
-      {showIntro && <GameIntro
+      {showIntro && !isIntermission && <GameIntro
         gameName="FREECELL"
         icon="🃏"
         colors={['#c21807', '#1a1a1a', '#ffffff']}
@@ -660,19 +717,34 @@ export default function FreeCell({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)}
       />}
       <div ref={containerRef} style={containerStyle}>
-        <GameHeader
-          title="FREECELL"
-          onBack={handleBackWithConfirm}
-          onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
-          onUndo={gameState === 'playing' ? undoMove : undefined}
-          undoDisabled={history.length === 0}
-          showBgmToggle={false} // bgm is managed automatically here or not togglable
-          centerContent={
-            gameState === 'playing' ? (
-              <div style={{ color: '#8e8a9f', fontSize: '1rem' }}>Coups: <span style={{ color: '#fff', fontWeight: 'bold' }}>{moves}</span></div>
-            ) : null
-          }
-        />
+        {!isIntermission && (
+          <GameHeader
+            title="FREECELL"
+            onBack={handleBackWithConfirm}
+            onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
+            onUndo={gameState === 'playing' ? undoMove : undefined}
+            onShop={() => setShowCollection(true)}
+            undoDisabled={history.length === 0}
+            showBgmToggle={false} // bgm is managed automatically here or not togglable
+            centerContent={
+              gameState === 'playing' ? (
+                <div style={{ color: '#8e8a9f', fontSize: '1rem' }}>Coups: <span style={{ color: '#fff', fontWeight: 'bold' }}>{moves}</span></div>
+              ) : null
+            }
+          />
+        )}
+        
+        {isIntermission && gameState === 'playing' && (
+          <div className="entract-header">
+            <div className="entract-header-text">Entracte ! Triez les cartes (Annuler dispo).</div>
+            <button onClick={undoMove} disabled={history.length === 0} className="entract-header-btn" style={{marginRight: '10px', opacity: history.length === 0 ? 0.5 : 1}}>
+              ↩️
+            </button>
+            <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }} className="entract-header-btn">
+              ⏭
+            </button>
+          </div>
+        )}
 
         {gameState === 'menu' && (
           <div style={menuStyle}>

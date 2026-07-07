@@ -4,7 +4,7 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 
-export default function JigsawPuzzle({ onBack, onScoreSave }) {
+export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [gridSize, setGridSize] = useState(() => getGameConfig('jigsaw', 'difficulty', 3)); // 3x3, 4x4
@@ -21,6 +21,17 @@ export default function JigsawPuzzle({ onBack, onScoreSave }) {
     { id: 'forest', url: '/puzzles/forest.png', name: 'Forêt Magique' },
     { id: 'cat', url: '/puzzles/cat.png', name: 'Chat Zen' },
   ];
+
+  useEffect(() => {
+    if (isIntermission && gameState === 'menu') {
+      const randomImg = images[Math.floor(Math.random() * images.length)];
+      let diff = 3;
+      if (intermissionDifficulty === 'facile') diff = 3;
+      else if (intermissionDifficulty === 'moyen') diff = 4;
+      else if (intermissionDifficulty === 'difficile') diff = 5;
+      startGame(randomImg, diff);
+    }
+  }, [isIntermission]);
 
   // Protection against leaving during game
   useEffect(() => {
@@ -134,6 +145,9 @@ export default function JigsawPuzzle({ onBack, onScoreSave }) {
           setTimeout(() => {
             setVictoryPhase(3);
             sound.playScore();
+            if (isIntermission && onIntermissionComplete) {
+              setTimeout(() => onIntermissionComplete(), 1500);
+            }
             if (onScoreSave) {
               const score = Math.max(1000 - moves * 5, 100);
               onScoreSave('Puzzle Magique', score);
@@ -150,7 +164,7 @@ export default function JigsawPuzzle({ onBack, onScoreSave }) {
 
   return (
     <>
-      {showIntro && <GameIntro 
+      {showIntro && !isIntermission && <GameIntro 
         gameName="JIGSAW PUZZLE" 
         icon="🧩" 
         colors={['#00F0FF', '#39FF14', '#FFD700']} 
@@ -158,20 +172,31 @@ export default function JigsawPuzzle({ onBack, onScoreSave }) {
         onComplete={() => setShowIntro(false)} 
       />}
       <div style={containerStyle}>
-      <GameHeader
-        title="PUZZLE MAGIQUE"
-        onBack={handleBackWithConfirm}
-        onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
-        showBgmToggle={false} // bgm global
-        centerContent={
-          gameState === 'playing' ? (
-            <div style={statusRowStyle}>
-              <span style={{color: '#8e8a9f'}}>Coups: </span>
-              <span style={{color: '#fff', fontWeight: 'bold'}}>{moves}</span>
-            </div>
-          ) : null
-        }
-      />
+      {!isIntermission && (
+        <GameHeader
+          title="PUZZLE MAGIQUE"
+          onBack={handleBackWithConfirm}
+          onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
+          showBgmToggle={false} // bgm global
+          centerContent={
+            gameState === 'playing' ? (
+              <div style={statusRowStyle}>
+                <span style={{color: '#8e8a9f'}}>Coups: </span>
+                <span style={{color: '#fff', fontWeight: 'bold'}}>{moves}</span>
+              </div>
+            ) : null
+          }
+        />
+      )}
+
+      {isIntermission && gameState === 'playing' && (
+        <div className="entract-header">
+          <div className="entract-header-text">Entracte ! Reconstituez l'image.</div>
+          <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }} className="entract-header-btn">
+            Passer l'entracte ⏭
+          </button>
+        </div>
+      )}
 
       {gameState === 'menu' && (
         <div style={menuStyle}>
@@ -200,6 +225,13 @@ export default function JigsawPuzzle({ onBack, onScoreSave }) {
               onClick={() => { setGridSize(4); updateGameConfig('jigsaw', 'difficulty', 4); sound.playClick(); }}
             >
               Moyen (16 pièces)
+            </button>
+            <button 
+              className="retro-btn" 
+              style={{...diffBtnStyle, borderColor: gridSize === 5 ? '#FFD700' : '#cbd5e1', color: gridSize === 5 ? '#FFD700' : '#475569'}}
+              onClick={() => { setGridSize(5); updateGameConfig('jigsaw', 'difficulty', 5); sound.playClick(); }}
+            >
+              Difficile (25 pièces)
             </button>
           </div>
         </div>

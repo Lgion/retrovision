@@ -3,8 +3,9 @@ import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import MinesweeperCollection from './MinesweeperCollection';
 
-export default function Minesweeper({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
+export default function Minesweeper({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mines', 'boardSize', 9)); // 9 or 12
@@ -17,6 +18,17 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
   const [victoryPhase, setVictoryPhase] = useState(0);
   const [minesLeft, setMinesLeft] = useState(0);
   const [moves, setMoves] = useState(0);
+  const [showCollection, setShowCollection] = useState(false);
+  const [customizations, setCustomizations] = useState(() => getGameConfig('mines', 'customizations', { difficulty: 'moyen', theme: 'classic' }));
+
+  const getDifficultySettings = (diffId) => {
+    switch(diffId) {
+      case 'facile': return { size: 9, mines: 10 };
+      case 'moyen': return { size: 12, mines: 25 };
+      case 'difficile': return { size: 16, mines: 40 };
+      default: return { size: 12, mines: 25 };
+    }
+  };
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -32,8 +44,9 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
 
   useEffect(() => {
     if (isIntermission && gameState === 'menu') {
-      // Small delay to allow intro to show properly
-      setTimeout(() => startGame(9, 10), 100);
+      const diff = intermissionDifficulty || 'facile';
+      const settings = getDifficultySettings(diff);
+      setTimeout(() => startGame(settings.size, settings.mines), 100);
     }
   }, [isIntermission, gameState]);
 
@@ -266,6 +279,40 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
     return colors[num];
   };
 
+  if (showCollection) {
+    return (
+      <MinesweeperCollection
+        onClose={() => {
+          setShowCollection(false);
+          const settings = getDifficultySettings(customizations.difficulty);
+          startGame(settings.size, settings.mines);
+        }}
+        currentSelections={customizations}
+        onSelect={(category, id) => {
+          setCustomizations(prev => {
+            const next = { ...prev, [category]: id };
+            updateGameConfig('mines', 'customizations', next);
+            return next;
+          });
+          if (category === 'difficulty') {
+            setShowCollection(false);
+            const settings = getDifficultySettings(id);
+            startGame(settings.size, settings.mines);
+          }
+        }}
+      />
+    );
+  }
+
+  const getThemeStyles = () => {
+    switch (customizations.theme) {
+      case 'dark': return { bg: '#0f172a', cellRevealed: '#020617', cellHidden: '#1e293b', border: '#334155 #020617 #020617 #334155' };
+      case 'neon': return { bg: '#000000', cellRevealed: '#111111', cellHidden: '#222222', border: '#00f0ff #000000 #000000 #00f0ff' };
+      default: return { bg: '#0f172a', cellRevealed: '#020617', cellHidden: '#334155', border: '#475569 #0f172a #0f172a #475569' };
+    }
+  };
+  const theme = getThemeStyles();
+
   return (
     <>
       {showIntro && !isIntermission && <GameIntro 
@@ -290,12 +337,13 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
         </div>
       )}
       
-      <div style={containerStyle}>
+      <div style={{ ...containerStyle, background: theme.bg === '#000000' ? '#111' : 'rgba(15, 23, 42, 0.85)' }}>
       {!isIntermission && (
         <GameHeader
           title="DÉMINEUR"
           onBack={handleBackWithConfirm}
-          onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
+          onRestart={gameState === 'playing' ? () => { const s = getDifficultySettings(customizations.difficulty); startGame(s.size, s.mines); } : undefined}
+          onShop={() => setShowCollection(true)}
           showBgmToggle={false} // BGM handled elsewhere
           centerContent={
             gameState === 'playing' ? (
@@ -376,12 +424,12 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, onInt
                   className={`minesweeper-cell ${cell.isRevealed ? 'revealed' : ''}`}
                   style={{
                     aspectRatio: '1/1',
-                    backgroundColor: cell.isRevealed ? '#020617' : '#334155',
+                    backgroundColor: cell.isRevealed ? theme.cellRevealed : theme.cellHidden,
                     borderStyle: 'solid',
                     borderWidth: cell.isRevealed ? '1px' : '3px',
                     borderColor: cell.isRevealed 
                       ? '#1e293b' 
-                      : '#475569 #0f172a #0f172a #475569',
+                      : theme.border,
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     fontSize: boardSize === 9 ? '20px' : '14px',
                     fontWeight: 'bold', cursor: 'pointer',

@@ -3,6 +3,8 @@ import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import ArrowPuzzleCollection from './ArrowPuzzleCollection';
+
 const DIRS = {
   'up': { dr: -1, dc: 0, symbol: '▲', color: '#ef4444' }, // Red
   'down': { dr: 1, dc: 0, symbol: '▼', color: '#3b82f6' }, // Blue
@@ -80,7 +82,7 @@ const isValidCell = (r, c, size) => {
   return true;
 };
 
-export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
+export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [mode, setMode] = useState(() => getGameConfig('arrows', 'mode', 'dense')); // 'scattered' | 'dense' | 'wire'
@@ -93,6 +95,17 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
   const [flyingArrows, setFlyingArrows] = useState([]); // Array of flying animations for standard mode
   const [lives, setLives] = useState(3);
   const [hints, setHints] = useState(3);
+  const [showCollection, setShowCollection] = useState(false);
+  const [customizations, setCustomizations] = useState(() => getGameConfig('arrows', 'customizations', { difficulty: 'moyen', theme: 'classic' }));
+
+  const getDifficultySettings = (diffId, gameMode) => {
+    switch(diffId) {
+      case 'facile': return { size: 16, arrows: gameMode === 'wire' ? 75 : 85 };
+      case 'moyen': return { size: 24, arrows: gameMode === 'wire' ? 150 : 150 };
+      case 'difficile': return { size: 32, arrows: gameMode === 'wire' ? 300 : 250 };
+      default: return { size: 24, arrows: gameMode === 'wire' ? 150 : 150 };
+    }
+  };
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -108,8 +121,11 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
 
   useEffect(() => {
     if (isIntermission && gameState === 'menu') {
-      setMode('wire');
-      startGame(8, 12, 'wire'); // 8x8 grid, 12 wires
+      const diff = intermissionDifficulty || 'facile';
+      const activeMode = 'wire';
+      setMode(activeMode);
+      const settings = getDifficultySettings(diff, activeMode);
+      startGame(settings.size, settings.arrows, activeMode);
     }
   }, [isIntermission, gameState]);
 
@@ -575,6 +591,40 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
     }).join(' ');
   };
 
+  if (showCollection) {
+    return (
+      <ArrowPuzzleCollection
+        onClose={() => {
+          setShowCollection(false);
+          const settings = getDifficultySettings(customizations.difficulty, mode);
+          startGame(settings.size, settings.arrows);
+        }}
+        currentSelections={customizations}
+        onSelect={(category, id) => {
+          setCustomizations(prev => {
+            const next = { ...prev, [category]: id };
+            updateGameConfig('arrows', 'customizations', next);
+            return next;
+          });
+          if (category === 'difficulty') {
+            setShowCollection(false);
+            const settings = getDifficultySettings(id, mode);
+            startGame(settings.size, settings.arrows);
+          }
+        }}
+      />
+    );
+  }
+
+  const getThemeStyles = () => {
+    switch(customizations.theme) {
+      case 'neon': return { bg: '#2e1065', wireBg: '#1e1b4b', container: 'rgba(46, 16, 101, 0.85)' };
+      case 'forest': return { bg: '#064e3b', wireBg: '#022c22', container: 'rgba(6, 78, 59, 0.85)' };
+      default: return { bg: '#1e293b', wireBg: '#f8fafc', container: 'rgba(15, 23, 42, 0.85)' };
+    }
+  };
+  const theme = getThemeStyles();
+
   return (
     <>
       {showIntro && !isIntermission && <GameIntro
@@ -599,13 +649,19 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
         </div>
       )}
 
-      <div style={containerStyle}>
+      <div style={{
+        display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '800px',
+        background: theme.container, backdropFilter: 'blur(10px)',
+        borderRadius: '16px', padding: '20px', boxSizing: 'border-box',
+        margin: '0 auto', flex: 1, position: 'relative', overflowX: 'hidden'
+      }}>
         {!isIntermission && (
           <GameHeader
             title="ARROW PUZZLE"
             onBack={handleBackWithConfirm}
-            onRestart={gameState === 'playing' ? () => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250)) : undefined}
+            onRestart={gameState === 'playing' ? () => { const s = getDifficultySettings(customizations.difficulty, mode); startGame(s.size, s.arrows); } : undefined}
             onHint={gameState === 'playing' ? useHint : undefined}
+            onShop={() => setShowCollection(true)}
             hintDisabled={hints <= 0}
             hintsLeft={hints}
             showBgmToggle={false} // bgm is managed elsewhere
@@ -659,20 +715,15 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
               </button>
             </div>
 
-            <button
-              onClick={() => startGame(16, mode === 'wire' ? 75 : 85)}
-              className="retro-btn pulse-glow"
-              style={{ padding: '15px 40px', fontSize: '20px', borderColor: '#3b82f6', color: '#3b82f6', marginBottom: '15px', width: '250px' }}
-            >
-              Facile (16x16)
-            </button>
-            <button
-              onClick={() => startGame(32, mode === 'wire' ? 300 : 250)}
-              className="retro-btn"
-              style={{ padding: '15px 40px', fontSize: '20px', borderColor: '#10b981', color: '#10b981', width: '250px' }}
-            >
-              Moyen (32x32)
-            </button>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button
+                onClick={() => { const s = getDifficultySettings(customizations.difficulty, mode); startGame(s.size, s.arrows); }}
+                className="retro-btn pulse-glow"
+                style={{ padding: '15px 40px', fontSize: '20px', borderColor: '#3b82f6', color: '#3b82f6', width: '250px' }}
+              >
+                Jouer ({customizations.difficulty})
+              </button>
+            </div>
 
             <div style={{ marginTop: '30px', color: '#cbd5e1', textAlign: 'center', fontSize: '14px', maxWidth: '300px' }}>
               <strong>Règle :</strong> {mode === 'wire' ? "Touchez un fil pour le faire glisser. Il ne peut s'enfuir que si la sortie en face de sa tête est libre !" : "Touchez une flèche pour la faire voler. Elle ne peut partir que si son chemin est libre !"}
@@ -687,7 +738,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, onInt
 
             <div style={{
               position: 'relative', width: boardSize * CELL_SIZE, height: boardSize * CELL_SIZE,
-              backgroundColor: mode === 'wire' ? '#f8fafc' : '#1e293b',
+              backgroundColor: mode === 'wire' ? theme.wireBg : theme.bg,
               borderRadius: '12px', border: '2px solid rgba(255,255,255,0.1)',
               boxShadow: '0 10px 30px rgba(0,0,0,0.5)', margin: '0 auto', overflow: 'hidden',
               animation: 'boardEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both' // Staging & Appeal
