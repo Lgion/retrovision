@@ -12,6 +12,7 @@ import Minesweeper from './games/Minesweeper';
 import ArrowPuzzle from './games/ArrowPuzzle';
 import Hangman from './games/Hangman';
 import Sudoku from './games/Sudoku';
+import BlockFantasy from './games/BlockFantasy';
 import GameScaleWrapper from './components/GameScaleWrapper';
 import { recordPlay, recordTime, recordScore } from './utils/stats';
 import './App.css';
@@ -31,7 +32,8 @@ function App() {
       water: { enabled: true, frequency: 'medium' },
       mines: { enabled: true, frequency: 'medium' },
       arrows: { enabled: true, frequency: 'medium' },
-      sudoku: { enabled: true, frequency: 'medium' }
+      sudoku: { enabled: true, frequency: 'medium' },
+      blockfantasy: { enabled: true, frequency: 'medium' }
     };
     const saved = localStorage.getItem('retrovision_intermission_config');
     if (saved) {
@@ -50,11 +52,13 @@ function App() {
     return localStorage.getItem('retrovision_last_intermission_game') || null;
   });
 
-  const handleMahjongNextLevel = () => {
+  const handleIntermissionRequest = (fromGameKey) => {
     const enabledGames = Object.keys(intermissionConfig).filter(
-      key => intermissionConfig[key].enabled
+      key => intermissionConfig[key].enabled && key !== fromGameKey
     );
-    const gamesToChooseFrom = enabledGames.length > 0 ? enabledGames : ['ball', 'water', 'mines', 'arrows', 'sudoku'];
+    const gamesToChooseFrom = enabledGames.length > 0 
+      ? enabledGames 
+      : ['ball', 'water', 'mines', 'arrows', 'sudoku', 'blockfantasy'].filter(g => g !== fromGameKey);
 
     let filteredGames = gamesToChooseFrom;
     if (gamesToChooseFrom.length > 1 && lastIntermissionGame) {
@@ -75,13 +79,17 @@ function App() {
       ? weightedList[Math.floor(Math.random() * weightedList.length)]
       : filteredGames[Math.floor(Math.random() * filteredGames.length)];
 
+    if (!chosenGame) return;
+
     setLastIntermissionGame(chosenGame);
     localStorage.setItem('retrovision_last_intermission_game', chosenGame);
 
-    setReturnView('mahjong');
+    setReturnView(fromGameKey);
     setIsIntermissionMode(true);
     setView(chosenGame);
   };
+
+  const handleMahjongNextLevel = () => handleIntermissionRequest('mahjong');
 
   const handleIntermissionComplete = () => {
     setView('intermission-victory');
@@ -149,9 +157,29 @@ function App() {
       localStorage.setItem('retrovision_hangman_highscore', score.toString());
     } else if (gameName === 'Sudoku') {
       localStorage.setItem('retrovision_sudoku_highscore', score.toString());
+    } else if (gameName === 'Block Fantasy') {
+      localStorage.setItem('retrovision_blockfantasy_highscore', score.toString());
     }
 
     setStatsUpdated((prev) => prev + 1);
+  };
+
+  const getGameName = (gameKey) => {
+    switch (gameKey) {
+      case 'mahjong': return 'Mahjong Zen';
+      case 'water': return 'Tri Eau';
+      case 'ball': return 'Tri Billes';
+      case 'jigsaw': return 'Puzzle Magique';
+      case 'unblock': return 'Débloque-Moi';
+      case 'freecell': return 'FreeCell';
+      case 'mines': return 'Démineur';
+      case 'arrows': return 'Flèches';
+      case '2048': return 'Neon 2048';
+      case 'hangman': return 'Le Pendu';
+      case 'sudoku': return 'Sudoku';
+      case 'blockfantasy': return 'Block Fantasy';
+      default: return 'Jeu';
+    }
   };
 
   const renderContent = () => {
@@ -176,6 +204,7 @@ function App() {
               isIntermission={isIntermissionMode}
               intermissionDifficulty={intermissionConfig['water']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
+              onIntermissionRequest={() => handleIntermissionRequest('water')}
             />
           </div>
         );
@@ -188,6 +217,7 @@ function App() {
               isIntermission={isIntermissionMode}
               intermissionDifficulty={intermissionConfig['ball']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
+              onIntermissionRequest={() => handleIntermissionRequest('ball')}
             />
           </div>
         );
@@ -201,6 +231,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={intermissionConfig['2048']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
+                onIntermissionRequest={() => handleIntermissionRequest('2048')}
               />
             </GameScaleWrapper>
           </div>
@@ -215,6 +246,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={intermissionConfig['jigsaw']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
+                onIntermissionRequest={() => handleIntermissionRequest('jigsaw')}
               />
             </GameScaleWrapper>
           </div>
@@ -226,6 +258,7 @@ function App() {
               <UnblockMe
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
+                onIntermissionRequest={() => handleIntermissionRequest('unblock')}
               />
             </GameScaleWrapper>
           </div>
@@ -239,6 +272,7 @@ function App() {
               isIntermission={isIntermissionMode}
               intermissionDifficulty={intermissionConfig['freecell']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
+              onIntermissionRequest={() => handleIntermissionRequest('freecell')}
             />
           </div>
         );
@@ -252,6 +286,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={intermissionConfig['mines']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
+                onIntermissionRequest={() => handleIntermissionRequest('mines')}
               />
             </GameScaleWrapper>
           </div>
@@ -266,6 +301,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={intermissionConfig['arrows']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
+                onIntermissionRequest={() => handleIntermissionRequest('arrows')}
               />
             </GameScaleWrapper>
           </div>
@@ -280,6 +316,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={intermissionConfig['hangman']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
+                onIntermissionRequest={() => handleIntermissionRequest('hangman')}
               />
             </GameScaleWrapper>
           </div>
@@ -294,6 +331,22 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={intermissionConfig['sudoku']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
+                onIntermissionRequest={() => handleIntermissionRequest('sudoku')}
+              />
+            </GameScaleWrapper>
+          </div>
+        );
+      case 'blockfantasy':
+        return (
+          <div className="game-wrapper">
+            <GameScaleWrapper designWidth={450} defaultHeight={800}>
+              <BlockFantasy
+                onBack={() => setView('dashboard')}
+                onScoreSave={handleScoreSave}
+                isIntermission={isIntermissionMode}
+                intermissionDifficulty={intermissionConfig['blockfantasy']?.difficulty || 'facile'}
+                onIntermissionComplete={handleIntermissionComplete}
+                onIntermissionRequest={() => handleIntermissionRequest('blockfantasy')}
               />
             </GameScaleWrapper>
           </div>
@@ -369,7 +422,7 @@ function App() {
               textAlign: 'center',
               animation: 'victorySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both'
             }}>
-              Retour au Mahjong Zen...
+              Retour au {getGameName(returnView)}...
             </p>
 
             {/* Minimalist sleek progress bar loader */}
@@ -513,7 +566,8 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
     '2048': { name: 'Neon 2048', icon: '✨', color: '#00f0ff' },
     jigsaw: { name: 'Puzzle Magique', icon: '🧩', color: '#39FF14' },
     freecell: { name: 'Freecell', icon: '🃏', color: '#c21807' },
-    hangman: { name: 'Le Pendu', icon: '🎈', color: '#ef4444' }
+    hangman: { name: 'Le Pendu', icon: '🎈', color: '#ef4444' },
+    blockfantasy: { name: 'Block Fantasy', icon: '🧱', color: '#39FF14' }
   };
 
   return (

@@ -1,3 +1,4 @@
 # TODOs
-- Il me faut arranger les contrastes dans démineur, et sudoku
+- https://poki.com/fr/g/impossible-13
+- https://poki.com/fr/g/bubble-storm
 - 

@@ -6,7 +6,7 @@ import GameHeader from '../components/GameHeader';
 import HangmanCollection from './HangmanCollection';
 import hangmanData from '../utils/hangmanData.json';
 
-export default function Hangman({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
+export default function Hangman({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
 
   const [coins, setCoins] = useState(() => getGameConfig('hangman', 'coins', 100)); // Stars/coins
@@ -158,10 +158,14 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
   };
 
   const nextLevel = () => {
-    const nextIdx = currentOrderIdx + 1;
-    setCurrentOrderIdx(nextIdx);
-    localStorage.setItem('retrovision_hangman_idx', nextIdx.toString());
-    resetLevel();
+    if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
+      onIntermissionRequest();
+    } else {
+      const nextIdx = currentOrderIdx + 1;
+      setCurrentOrderIdx(nextIdx);
+      localStorage.setItem('retrovision_hangman_idx', nextIdx.toString());
+      resetLevel();
+    }
   };
 
   const resetLevel = () => {

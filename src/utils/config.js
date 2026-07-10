@@ -11,7 +11,8 @@ const DEFAULT_CONFIGS = {
     unblock: { levelProgress: 0 },
     freecell: { layout: 'standard' },
     mines: { boardSize: 9, numMines: 10, flagModeDefault: false },
-    arrows: { mode: 'dense' }
+    arrows: { mode: 'dense' },
+    blockfantasy: { theme: 'fantasy', mode: 'classic', gridSize: 10 }
   }
 };
 

@@ -4,7 +4,7 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 
-export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
+export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [gridSize, setGridSize] = useState(() => getGameConfig('jigsaw', 'difficulty', 3)); // 3x3, 4x4
@@ -411,7 +411,14 @@ export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, inte
                 Score: <strong style={{ color: '#00F0FF', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
               </div>
               <button
-                onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
+                onClick={() => {
+                  setVictoryPhase(0);
+                  if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
+                    onIntermissionRequest();
+                  } else {
+                    setGameState('menu');
+                  }
+                }}
                 className="retro-btn pulse-glow"
                 style={{ fontSize: '1.5rem', padding: '15px 40px', borderRadius: '50px', borderColor: '#39FF14', color: '#39FF14', background: 'transparent' }}
               >

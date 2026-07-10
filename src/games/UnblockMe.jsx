@@ -5,7 +5,7 @@ import LEVELS from '../utils/unblockLevels.json';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 
-export default function UnblockMe({ onBack, onScoreSave }) {
+export default function UnblockMe({ onBack, onScoreSave, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing' | 'levelSelect'
   const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(() => {
@@ -429,7 +429,14 @@ export default function UnblockMe({ onBack, onScoreSave }) {
                 </button>
                 {currentLevelIdx < LEVELS.length - 1 && (
                   <button
-                    onClick={() => { setVictoryPhase(0); loadLevel(currentLevelIdx + 1); }}
+                    onClick={() => {
+                      setVictoryPhase(0);
+                      if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
+                        onIntermissionRequest();
+                      } else {
+                        loadLevel(currentLevelIdx + 1);
+                      }
+                    }}
                     className="retro-btn pulse-glow"
                     style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#E53E3E', color: '#E53E3E' }}
                   >

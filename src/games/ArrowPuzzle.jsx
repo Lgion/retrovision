@@ -82,7 +82,7 @@ const isValidCell = (r, c, size) => {
   return true;
 };
 
-export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
+export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [mode, setMode] = useState(() => getGameConfig('arrows', 'mode', 'dense')); // 'scattered' | 'dense' | 'wire'
@@ -974,6 +974,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
                   <button
                     onClick={() => {
                       if (isIntermission && onIntermissionComplete) onIntermissionComplete();
+                      else if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') onIntermissionRequest();
                       else { setVictoryPhase(0); setGameState('menu'); }
                     }}
                     className="retro-btn"

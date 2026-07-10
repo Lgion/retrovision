@@ -5,7 +5,7 @@ import GameHeader from '../components/GameHeader';
 import Grid2048Collection from './Grid2048Collection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 
-export default function Grid2048({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
+export default function Grid2048({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const [board, setBoard] = useState([]);
   const [score, setScore] = useState(0);
@@ -430,7 +430,13 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
                 Continuer
               </button>
               <button 
-                onClick={initGame} 
+                onClick={() => {
+                  if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
+                    onIntermissionRequest();
+                  } else {
+                    initGame();
+                  }
+                }} 
                 className="retro-btn pulse-glow"
                 style={overlayBtnStyle}
               >

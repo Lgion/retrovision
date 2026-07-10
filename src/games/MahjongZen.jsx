@@ -4,6 +4,7 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import WinLossTransition from '../components/WinLossTransition';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import MahjongCollection from './MahjongCollection';
 
 // --- DIMENSIONS & THEME CONFIGURATION ---
 const MAHJONG_THEME = {
@@ -30,8 +31,75 @@ const MAHJONG_THEME = {
   }
 };
 
-function MahjongIcon({ name }) {
+function MahjongIcon({ name, tileset }) {
   const size = MAHJONG_THEME.icon.size;
+
+  if (tileset === 'nature') {
+    const emojiMap = {
+      fa: '🌿',
+      xi: '🏔️',
+      six: '🌊',
+      two: '🍃',
+      circles: '🌻',
+      eight_dots: '🍄',
+      one_circle: '☀️',
+      bamboo_green_3: '🎋',
+      bamboo_red_3: '🌹',
+      bamboo_green_4: '🌲',
+      flower: '🌸',
+      leaf: '🍁'
+    };
+    return (
+      <span style={{ fontSize: '32px', lineHeight: '1', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>
+        {emojiMap[name] || '🌸'}
+      </span>
+    );
+  }
+
+  if (tileset === 'cyber') {
+    const emojiMap = {
+      fa: '⚡',
+      xi: '👾',
+      six: '🤖',
+      two: '💾',
+      circles: '🔮',
+      eight_dots: '🌌',
+      one_circle: '💿',
+      bamboo_green_3: '🧬',
+      bamboo_red_3: '💻',
+      bamboo_green_4: '🔋',
+      flower: '🌀',
+      leaf: '⚙️'
+    };
+    return (
+      <span style={{ fontSize: '32px', lineHeight: '1', filter: 'drop-shadow(0 2px 4px rgba(0,255,255,0.4))' }}>
+        {emojiMap[name] || '⚡'}
+      </span>
+    );
+  }
+
+  if (tileset === 'modern') {
+    const emojiMap = {
+      fa: '🟥',
+      xi: '🟡',
+      six: '🔺',
+      two: '🔷',
+      circles: '9️⃣',
+      eight_dots: '8️⃣',
+      one_circle: '1️⃣',
+      bamboo_green_3: '3️⃣',
+      bamboo_red_3: '6️⃣',
+      bamboo_green_4: '4️⃣',
+      flower: '⭐️',
+      leaf: '🍀'
+    };
+    return (
+      <span style={{ fontSize: '32px', lineHeight: '1', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>
+        {emojiMap[name] || '🟥'}
+      </span>
+    );
+  }
+
   switch (name) {
     case 'fa': // Green Dragon
       return (
@@ -331,8 +399,9 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
   const [showIntro, setShowIntro] = useState(!skipIntro);
   const [mode, setMode] = useState(() => getGameConfig('mahjong', 'mode', 'slide'));
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mahjong', 'boardSize', 'large'));
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showArrows, setShowArrows] = useState(false); // Hidden by default to match reference
+  const [tileset, setTileset] = useState(() => getGameConfig('mahjong', 'tileset', 'classic'));
+  const [showCollection, setShowCollection] = useState(false);
+  const [showArrows, setShowArrows] = useState(() => getGameConfig('mahjong', 'showArrows', false)); // Hidden by default to match reference
 
   const [tiles, setTiles] = useState([]);
   const [selectedTile, setSelectedTile] = useState(null);
@@ -1657,14 +1726,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
     sound.playPowerup();
   };
 
-  const saveSettings = (newMode, newSize, newShowArrows) => {
-    setMode(newMode);
-    setBoardSize(newSize);
-    setShowArrows(newShowArrows);
-    updateGameConfig('mahjong', 'mode', newMode);
-    updateGameConfig('mahjong', 'boardSize', newSize);
-    setIsSettingsOpen(false);
-  };
+
 
   const resetInteraction = () => {
     lastTouchTime.current = Date.now();
@@ -1678,7 +1740,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
 
   useEffect(() => {
     const checkDiscreetHint = () => {
-      if (won || lost || showIntro || isSettingsOpen || discreetHintId) return;
+      if (won || lost || showIntro || showCollection || discreetHintId) return;
       const now = Date.now();
       if (now - lastTouchTime.current > nextDiscreetHintThreshold.current) {
         const active = tiles.filter(t => t.active);
@@ -1771,7 +1833,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
 
     discreetHintTimer.current = setInterval(checkDiscreetHint, 1000);
     return () => clearInterval(discreetHintTimer.current);
-  }, [tiles, won, lost, showIntro, isSettingsOpen, mode]);
+  }, [tiles, won, lost, showIntro, showCollection, mode]);
 
   // Grid dimensions
   const cellWidth = MAHJONG_THEME.board.cellWidth;
@@ -2031,7 +2093,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
           onRestart={initGame}
           onUndo={undo}
           undoDisabled={history.length === 0}
-          onShop={() => setIsSettingsOpen(true)}
+          onShop={() => setShowCollection(true)}
           showBgmToggle={true}
           bgmOn={bgmOn}
           onBgmToggle={handleBgmToggle}
@@ -2558,7 +2620,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
                       touchAction: 'none',
                     }}
                   >
-                    <MahjongIcon name={tile.sym.name} />
+                    <MahjongIcon name={tile.sym.name} tileset={tileset} />
 
                     {isMatchOption && (
                       <div style={{
@@ -2659,7 +2721,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '240px', zIndex: 10 }}>
               <button
                 onClick={() => {
-                  if (onIntermissionRequest) onIntermissionRequest();
+                  if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') onIntermissionRequest();
                   else initGame();
                 }}
                 className="retro-btn pulse-glow"
@@ -2701,78 +2763,31 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
 
         {/* 'lost' overlay removed as user cannot 'lose' anymore, only shuffle. */}
 
-        {isSettingsOpen && (
-          <div className="accessibility-modal-backdrop" onClick={() => setIsSettingsOpen(false)}>
-            <div className="accessibility-modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3 className="accessibility-modal-title">Paramètres de Mahjong</h3>
-
-              <div className="accessibility-setting-row">
-                <span className="accessibility-setting-label">Mode de Jeu :</span>
-                <div className="accessibility-setting-options">
-                  <button
-                    className={`accessibility-setting-btn ${mode === 'zen' ? 'active' : ''}`}
-                    onClick={() => saveSettings('zen', boardSize, showArrows)}
-                  >
-                    Zen (Solitaire)
-                  </button>
-                  <button
-                    className={`accessibility-setting-btn ${mode === 'slide' ? 'active' : ''}`}
-                    onClick={() => saveSettings('slide', boardSize, showArrows)}
-                  >
-                    Slider (Glisser/Aligner)
-                  </button>
-                </div>
-              </div>
-
-              <div className="accessibility-setting-row">
-                <span className="accessibility-setting-label">Taille / Tuiles :</span>
-                <div className="accessibility-setting-options">
-                  <button
-                    className={`accessibility-setting-btn ${boardSize === 'small' ? 'active' : ''}`}
-                    onClick={() => saveSettings(mode, 'small', showArrows)}
-                  >
-                    Petite ({mode === 'zen' ? '36' : '24'} tuiles)
-                  </button>
-                  <button
-                    className={`accessibility-setting-btn ${boardSize === 'medium' ? 'active' : ''}`}
-                    onClick={() => saveSettings(mode, 'medium', showArrows)}
-                  >
-                    Moyenne ({mode === 'zen' ? '72' : '36'} tuiles)
-                  </button>
-                  <button
-                    className={`accessibility-setting-btn ${boardSize === 'large' ? 'active' : ''}`}
-                    onClick={() => saveSettings(mode, 'large', showArrows)}
-                  >
-                    Grande ({mode === 'zen' ? '144' : '48'} tuiles)
-                  </button>
-                </div>
-              </div>
-
-              <div className="accessibility-setting-row">
-                <span className="accessibility-setting-label">Flèches d'aide :</span>
-                <div className="accessibility-setting-options">
-                  <button
-                    className={`accessibility-setting-btn ${showArrows ? 'active' : ''}`}
-                    onClick={() => saveSettings(mode, boardSize, true)}
-                  >
-                    Afficher
-                  </button>
-                  <button
-                    className={`accessibility-setting-btn ${!showArrows ? 'active' : ''}`}
-                    onClick={() => saveSettings(mode, boardSize, false)}
-                  >
-                    Masquer
-                  </button>
-                </div>
-              </div>
-
-              <div className="accessibility-modal-footer">
-                <button className="retro-btn" onClick={() => setIsSettingsOpen(false)}>
-                  Fermer
-                </button>
-              </div>
-            </div>
-          </div>
+        {showCollection && (
+          <MahjongCollection
+            onClose={() => setShowCollection(false)}
+            currentSelections={{
+              mode,
+              boardSize,
+              tileset,
+              showArrows
+            }}
+            onSelect={(category, value) => {
+              if (category === 'mode') {
+                setMode(value);
+                updateGameConfig('mahjong', 'mode', value);
+              } else if (category === 'boardSize') {
+                setBoardSize(value);
+                updateGameConfig('mahjong', 'boardSize', value);
+              } else if (category === 'tileset') {
+                setTileset(value);
+                updateGameConfig('mahjong', 'tileset', value);
+              } else if (category === 'showArrows') {
+                setShowArrows(value);
+                updateGameConfig('mahjong', 'showArrows', value);
+              }
+            }}
+          />
         )}
 
         <div style={{ padding: '0 20px 20px 20px' }}>

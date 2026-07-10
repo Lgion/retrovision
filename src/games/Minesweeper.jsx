@@ -5,7 +5,7 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import MinesweeperCollection from './MinesweeperCollection';
 
-export default function Minesweeper({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
+export default function Minesweeper({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mines', 'boardSize', 9)); // 9 or 12
@@ -509,6 +509,7 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
               <button
                 onClick={() => {
                   if (isIntermission && onIntermissionComplete) onIntermissionComplete();
+                  else if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') onIntermissionRequest();
                   else { setVictoryPhase(0); setGameState('menu'); }
                 }}
                 className="retro-btn pulse-glow"

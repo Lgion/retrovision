@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 
 export default function GameIntro({ 
@@ -9,6 +9,15 @@ export default function GameIntro({
     onComplete 
 }) {
   const canvasRef = useRef(null);
+  const [intermissionEnabled, setIntermissionEnabled] = useState(() => {
+    return localStorage.getItem('retrovision_intermission_enabled') !== 'false';
+  });
+
+  const toggleIntermission = () => {
+    const nextVal = !intermissionEnabled;
+    setIntermissionEnabled(nextVal);
+    localStorage.setItem('retrovision_intermission_enabled', nextVal ? 'true' : 'false');
+  };
 
   useEffect(() => {
     const tl = gsap.timeline();
@@ -30,6 +39,7 @@ export default function GameIntro({
     gsap.set(".intro-logo-container", { visibility: "visible", opacity: 1 });
     gsap.set(".intro-icon", { scale: 0, opacity: 0 });
     gsap.set(".intro-btn-play", { visibility: "visible", scale: 0, opacity: 0 });
+    gsap.set(".intro-intermission-container", { visibility: "visible", scale: 0, opacity: 0 });
 
     // 2. Animate letters (Anticipation + Squash/Stretch)
     tl.to(".letter-v2", {
@@ -71,6 +81,12 @@ export default function GameIntro({
       opacity: 1,
       ease: "back.out(1.5)"
     }, 1.7)
+    .to(".intro-intermission-container", {
+      duration: 0.8,
+      scale: 1,
+      opacity: 1,
+      ease: "back.out(1.5)"
+    }, 1.8)
     // 7. Secondary Action: Floating letters
     .to(".letter-v2", {
       duration: 1.2,
@@ -280,6 +296,55 @@ export default function GameIntro({
         .intro-icon { font-size: 6rem; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6)); margin-bottom: -10px; }
         .intro-btn-play { position: absolute; bottom: 15%; background: linear-gradient(to bottom, ${mainColor}, ${secColor}); border: 2px solid #FFF; border-radius: 50px; padding: 15px 40px; font-size: 2rem; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,255,255,0.4); z-index: 20; opacity: 0; visibility: hidden; text-transform: uppercase; transition: filter 0.2s; font-family: '"Orbitron", sans-serif'; letter-spacing: 2px; }
         .intro-btn-play:hover { filter: brightness(1.2); }
+        .intro-intermission-container {
+          position: absolute;
+          bottom: 6%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: rgba(15, 23, 42, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          padding: 8px 16px;
+          border-radius: 20px;
+          backdrop-filter: blur(10px);
+          color: white;
+          font-family: 'Orbitron', sans-serif;
+          font-size: 0.9rem;
+          z-index: 20;
+          cursor: pointer;
+          user-select: none;
+          transition: all 0.3s ease;
+          visibility: hidden;
+        }
+        .intro-intermission-container:hover {
+          border-color: ${mainColor};
+          box-shadow: 0 0 10px ${mainColor}80;
+        }
+        .retro-switch {
+          position: relative;
+          width: 50px;
+          height: 24px;
+          background: #334155;
+          border-radius: 12px;
+          transition: background 0.3s;
+        }
+        .retro-switch.active {
+          background: #10b981;
+          box-shadow: 0 0 10px #10b98180;
+        }
+        .retro-switch-handle {
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 20px;
+          height: 20px;
+          background: white;
+          border-radius: 50%;
+          transition: transform 0.3s;
+        }
+        .retro-switch.active .retro-switch-handle {
+          transform: translateX(26px);
+        }
 
       `}</style>
       <div className="intro-bg-sphere intro-sphere-1" />
@@ -327,6 +392,15 @@ export default function GameIntro({
         </div>
       </div>
       <button className="intro-btn-play" onClick={onComplete}>JOUER</button>
+      <div className="intro-intermission-container" onClick={toggleIntermission}>
+        <span>Entracte :</span>
+        <div className={`retro-switch ${intermissionEnabled ? 'active' : ''}`}>
+          <div className="retro-switch-handle" />
+        </div>
+        <span style={{ fontWeight: 'bold', color: intermissionEnabled ? '#10b981' : '#ef4444', minWidth: '45px' }}>
+          {intermissionEnabled ? 'AVEC' : 'SANS'}
+        </span>
+      </div>
       <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 15, pointerEvents: 'none' }} />
     </div>
   );

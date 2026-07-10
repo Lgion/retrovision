@@ -276,7 +276,7 @@ const THEMES = {
   }
 };
 
-export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
+export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermissionComplete, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [difficulty, setDifficulty] = useState('facile'); // 'facile' | 'moyen' | 'difficile'
@@ -1131,7 +1131,14 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
               </div>
 
               <button
-                onClick={() => { setVictory(false); setGameState('menu'); }}
+                onClick={() => {
+                  setVictory(false);
+                  if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
+                    onIntermissionRequest();
+                  } else {
+                    setGameState('menu');
+                  }
+                }}
                 className="retro-btn pulse-glow"
                 style={{ fontSize: '1.1rem', padding: '12px 36px', borderColor: '#8b5cf6', color: '#8b5cf6', width: '100%' }}
               >

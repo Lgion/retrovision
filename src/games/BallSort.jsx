@@ -182,7 +182,7 @@ const BallSortIntro = ({ onComplete }) => {
 };
 
 
-export default function BallSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
+export default function BallSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
   // Game state
@@ -931,6 +931,7 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, intermis
                   <button
                     onClick={() => {
                       if (isIntermission && onIntermissionComplete) onIntermissionComplete();
+                      else if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') onIntermissionRequest();
                       else initGame();
                     }}
                     style={{

@@ -29,7 +29,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     mines: 0,
     arrows: 0,
     hangman: 0,
-    sudoku: 0
+    sudoku: 0,
+    blockfantasy: 0
   });
 
   const avatars = ['✦', '♥', '★', '●', '☘', '☾', '☀'];
@@ -49,7 +50,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     const arrows = detailedStats.arrows?.highScore || 0;
     const hangman = detailedStats.hangman?.highScore || 0;
     const sudoku = detailedStats.sudoku?.highScore || 0;
-    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku });
+    const blockfantasy = detailedStats.blockfantasy?.highScore || 0;
+    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku, blockfantasy });
   }, [statsUpdated]);
 
   const totalPlays = Object.values(stats).reduce((acc, curr) => acc + (curr.plays || 0), 0);
@@ -265,6 +267,15 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       unlocked: highScores.sudoku > 0,
       color: '#8b5cf6',
       textColor: '#4c1d95'
+    },
+    {
+      id: 'blockfantasy_champion',
+      title: 'Architecte Fantastique',
+      desc: 'Dépasser 1000 points sur Block Fantasy',
+      icon: '🧱',
+      unlocked: highScores.blockfantasy >= 1000,
+      color: '#39FF14',
+      textColor: '#15803d'
     }
   ];
 
@@ -367,6 +378,15 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       color: '#8b5cf6',
       textColor: '#4c1d95',
       icon: '🔢'
+    },
+    {
+      id: 'blockfantasy',
+      title: 'BLOCK FANTASY',
+      desc: 'Placez stratégiquement des blocs de formes variées sur la grille pour compléter des lignes et des colonnes sans vous faire bloquer.',
+      highscore: highScores.blockfantasy,
+      color: '#39FF14',
+      textColor: '#15803d',
+      icon: '🧱'
     }
   ];
 

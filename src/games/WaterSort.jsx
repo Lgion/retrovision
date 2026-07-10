@@ -6,7 +6,7 @@ import GameIntro from '../components/GameIntro';
 import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 
-export default function WaterSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
+export default function WaterSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
@@ -689,6 +689,7 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
                   <button
                     onClick={() => {
                       if (isIntermission && onIntermissionComplete) onIntermissionComplete();
+                      else if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') onIntermissionRequest();
                       else initGame();
                     }}
                     style={{

@@ -37,7 +37,7 @@ const createDeck = () => {
   return deck;
 };
 
-export default function FreeCell({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete }) {
+export default function FreeCell({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState(isIntermission ? 'playing' : 'menu'); // 'menu' | 'playing'
   const containerRef = useRef(null);
@@ -928,7 +928,14 @@ export default function FreeCell({ onBack, onScoreSave, isIntermission, intermis
                   Score: <strong style={{ color: '#F59E0B', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
                 </div>
                 <button
-                  onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
+                  onClick={() => {
+                    setVictoryPhase(0);
+                    if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
+                      onIntermissionRequest();
+                    } else {
+                      setGameState('menu');
+                    }
+                  }}
                   className="retro-btn pulse-glow"
                   style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#F59E0B', color: '#F59E0B' }}
                 >
