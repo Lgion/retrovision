@@ -12,9 +12,11 @@ const collections = {
   ],
   tileset: [
     { id: 'classic', type: 'free', name: 'Classique', icon: '🀄', desc: 'Symboles chinois traditionnels et bambous.' },
-    { id: 'nature', type: 'free', name: 'Nature & Zen', icon: '🌸', desc: 'Fleurs, feuilles, vagues et montagnes.' },
-    { id: 'cyber', type: 'free', name: 'Cyber Néon', icon: '⚡', desc: 'Éclairs néon, robots et gadgets futuristes.' },
-    { id: 'modern', type: 'free', name: 'Formes & Chiffres', icon: '🟥', desc: 'Formes colorées et chiffres modernes.' }
+    { id: 'nature', type: 'free', name: 'Nature & Zen (Jade)', icon: '💎', desc: 'Tuiles en jade translucide, liserés dorés & symboles 3D.' },
+    { id: 'cyber', type: 'free', name: 'Cyber Néon (Holo)', icon: '⚡', desc: 'Tuiles Dark Hologram Glass, circuits neon, robots mecha & glitch animés.' },
+    { id: 'modern', type: 'free', name: 'Chiffres Kanjis (Bois)', icon: '🪵', desc: 'Kanjis d\'honneur (Daiji 1-5) & classiques gravés à la feuille d\'or sur bois noble.' },
+    { id: 'mosaic', type: 'free', name: 'Mosaïques & Vitraux', icon: '🏛️', desc: 'Pavés romains, vitraux antiques et fresques gravées sur pierre précieuse.' },
+    { id: 'luxury_marble_2', type: 'free', name: 'Marbre & Joaillerie Royale', icon: '👑', desc: 'Marbre blanc de Carrare, émail saphir et symboles géants en jade émeraude & or 24K.' }
   ],
   showArrows: [
     { id: 'show', type: 'free', name: 'Afficher', icon: '➡️', desc: 'Flèches de glissement en mode Slider.' },

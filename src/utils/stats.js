@@ -10,7 +10,8 @@ const DEFAULT_GAMES = [
   { id: 'arrows', name: 'Arrow Puzzle' },
   { id: 'hangman', name: 'Le Pendu' },
   { id: 'sudoku', name: 'Sudoku' },
-  { id: 'blockfantasy', name: 'Block Fantasy' }
+  { id: 'blockfantasy', name: 'Block Fantasy' },
+  { id: 'impossible13', name: 'Impossible 13' }
 ];
 
 // Map from the game name sent in onScoreSave to our game ID
@@ -26,7 +27,8 @@ const NAME_TO_ID = {
   'Flèches': 'arrows',
   'Le Pendu': 'hangman',
   'Sudoku': 'sudoku',
-  'Block Fantasy': 'blockfantasy'
+  'Block Fantasy': 'blockfantasy',
+  'Impossible 13': 'impossible13'
 };
 
 // Map from ID to the old highscore key
@@ -42,7 +44,8 @@ const ID_TO_LEGACY_KEY = {
   arrows: 'retrovision_arrows_highscore',
   hangman: 'retrovision_hangman_highscore',
   sudoku: 'retrovision_sudoku_highscore',
-  blockfantasy: 'retrovision_blockfantasy_highscore'
+  blockfantasy: 'retrovision_blockfantasy_highscore',
+  impossible13: 'retrovision_impossible13_highscore'
 };
 
 export function getStats() {

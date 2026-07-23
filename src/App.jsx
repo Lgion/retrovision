@@ -13,6 +13,7 @@ import ArrowPuzzle from './games/ArrowPuzzle';
 import Hangman from './games/Hangman';
 import Sudoku from './games/Sudoku';
 import BlockFantasy from './games/BlockFantasy';
+import Impossible13 from './games/Impossible13';
 import GameScaleWrapper from './components/GameScaleWrapper';
 import { recordPlay, recordTime, recordScore } from './utils/stats';
 import './App.css';
@@ -351,6 +352,19 @@ function App() {
             </GameScaleWrapper>
           </div>
         );
+      case 'impossible13':
+        return (
+          <div className="game-wrapper">
+            <GameScaleWrapper designWidth={430} defaultHeight={800}>
+              <Impossible13
+                onBack={() => setView('dashboard')}
+                onScoreSave={handleScoreSave}
+                isIntermission={isIntermissionMode}
+                onIntermissionComplete={handleIntermissionComplete}
+              />
+            </GameScaleWrapper>
+          </div>
+        );
       case 'intermission-victory':
         return (
           <div style={{
@@ -567,7 +581,8 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
     jigsaw: { name: 'Puzzle Magique', icon: '🧩', color: '#39FF14' },
     freecell: { name: 'Freecell', icon: '🃏', color: '#c21807' },
     hangman: { name: 'Le Pendu', icon: '🎈', color: '#ef4444' },
-    blockfantasy: { name: 'Block Fantasy', icon: '🧱', color: '#39FF14' }
+    blockfantasy: { name: 'Block Fantasy', icon: '🧱', color: '#39FF14' },
+    impossible13: { name: 'Impossible 13', icon: '1️⃣3️⃣', color: '#EAB308' }
   };
 
   return (

@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Base Marble Texture Gradient -->
+    <linearGradient id="marbleBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="35%" stop-color="#f8fafc" />
+      <stop offset="70%" stop-color="#f1f5f9" />
+      <stop offset="100%" stop-color="#e2e8f0" />
+    </linearGradient>
+
+    <!-- Metallic Gold Filigree Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffeb3" />
+      <stop offset="25%" stop-color="#fbbf24" />
+      <stop offset="60%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#78350f" />
+    </linearGradient>
+
+    <!-- Imperial Emerald Green Gradient (Dragon Body) -->
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#86efac" />
+      <stop offset="30%" stop-color="#22c55e" />
+      <stop offset="70%" stop-color="#15803d" />
+      <stop offset="100%" stop-color="#052e16" />
+    </linearGradient>
+
+    <!-- Radiant Ruby Red Gradient (Flames & Accent) -->
+    <linearGradient id="rubyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fca5a5" />
+      <stop offset="40%" stop-color="#ef4444" />
+      <stop offset="80%" stop-color="#b91c1c" />
+      <stop offset="100%" stop-color="#450a0a" />
+    </linearGradient>
+
+    <!-- Royal Sapphire Blue Gradient (Clouds & Accents) -->
+    <linearGradient id="sapphireGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7dd3fc" />
+      <stop offset="50%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="tileShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.35" />
+    </filter>
+
+    <!-- Metallic Glow Filter -->
+    <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.4" />
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#fbbf24" flood-opacity="0.7" />
+    </filter>
+
+    <clipPath id="tileClip">
+      <rect x="10" y="10" width="480" height="480" rx="36" ry="36" />
+    </clipPath>
+  </defs>
+
+  <!-- Tile Outer Shadow & Base Frame -->
+  <rect x="10" y="10" width="480" height="480" rx="36" ry="36" fill="url(#marbleBg)" filter="url(#tileShadow)" stroke="url(#goldGrad)" stroke-width="4" />
+
+  <!-- Marble Texture Veins (Vector Paths) -->
+  <path d="M 40 80 Q 150 140 280 90 T 460 160" stroke="#cbd5e1" stroke-width="1.8" fill="none" opacity="0.4" />
+  <path d="M 20 320 Q 140 260 290 380 T 450 310" stroke="#cbd5e1" stroke-width="2" fill="none" opacity="0.4" />
+
+  <!-- Inner Art Deco Gold Border Frame -->
+  <rect x="35" y="35" width="430" height="430" rx="24" ry="24" fill="none" stroke="url(#goldGrad)" stroke-width="4" />
+  <rect x="45" y="45" width="410" height="410" rx="18" ry="18" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" />
+
+  <!-- Art Deco Corner Fill Accents (Ruby & Gold) -->
+  <g fill="url(#rubyGrad)" stroke="url(#goldGrad)" stroke-width="1">
+    <!-- Top Left Corner -->
+    <path d="M 45 45 L 90 45 C 70 70 70 70 45 90 Z" />
+    <circle cx="65" cy="65" r="5" fill="url(#goldGrad)" />
+    
+    <!-- Top Right Corner -->
+    <path d="M 455 45 L 410 45 C 430 70 430 70 455 90 Z" />
+    <circle cx="435" cy="65" r="5" fill="url(#goldGrad)" />
+
+    <!-- Bottom Left Corner -->
+    <path d="M 45 455 L 90 455 C 70 430 70 430 45 410 Z" />
+    <circle cx="65" cy="435" r="5" fill="url(#goldGrad)" />
+
+    <!-- Bottom Right Corner -->
+    <path d="M 455 455 L 410 455 C 430 430 430 430 455 410 Z" />
+    <circle cx="435" cy="435" r="5" fill="url(#goldGrad)" />
+  </g>
+
+  <!-- Sapphire Blue Cloud Base Ornaments -->
+  <g fill="url(#sapphireGrad)" stroke="url(#goldGrad)" stroke-width="1.2">
+    <path d="M 110 405 C 140 375 190 375 220 405 C 200 435 130 435 110 405 Z" opacity="0.9" />
+    <path d="M 280 405 C 310 375 360 375 390 405 C 370 435 300 435 280 405 Z" opacity="0.9" />
+  </g>
+
+  <!-- Imperial Emerald Dragon Body (Vector Coils & Scales) -->
+  <g filter="url(#goldGlow)">
+    <!-- Dragon Body Main S-Curve Coil -->
+    <path d="M 340 140 C 440 220 380 340 280 320 C 180 300 120 200 220 140 C 290 100 360 160 300 240 C 260 290 180 280 160 220" 
+          fill="none" stroke="url(#emeraldGrad)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Gold Scale Overlay Line Accents -->
+    <path d="M 340 140 C 440 220 380 340 280 320 C 180 300 120 200 220 140 C 290 100 360 160 300 240 C 260 290 180 280 160 220" 
+          fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-dasharray="6 8" stroke-linecap="round" />
+
+    <!-- Dragon Head (Emerald & Ruby Eye) -->
+    <path d="M 220 135 C 200 110 160 110 140 130 C 130 140 145 160 165 155 C 185 150 205 160 220 145 Z" fill="url(#emeraldGrad)" stroke="url(#goldGrad)" stroke-width="2.5" />
+    <!-- Horns (Gold) -->
+    <path d="M 205 125 C 215 95 240 85 260 80 M 190 120 C 195 95 215 90 230 85" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <!-- Ruby Eye -->
+    <circle cx="170" cy="132" r="4.5" fill="url(#rubyGrad)" stroke="url(#goldGrad)" stroke-width="1" />
+    <circle cx="168.5" cy="130.5" r="1.5" fill="#ffffff" />
+    <!-- Snort Flame (Ruby Red) -->
+    <path d="M 135 135 C 110 130 95 145 105 155 C 120 150 130 145 138 140 Z" fill="url(#rubyGrad)" stroke="url(#goldGrad)" stroke-width="1.2" />
+
+    <!-- Dragon Claws (Gold) -->
+    <g fill="none" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linecap="round">
+      <path d="M 330 290 L 360 310 M 330 290 L 355 325 M 330 290 L 335 330" />
+      <path d="M 170 230 L 140 245 M 170 230 L 145 260 M 170 230 L 155 265" />
+    </g>
+
+    <!-- Traditional Character Badge (龍 - Dragon) -->
+    <circle cx="250" cy="240" r="38" fill="url(#marbleBg)" stroke="url(#goldGrad)" stroke-width="3.5" filter="url(#goldGlow)" />
+    <text x="250" y="240" font-size="34" font-weight="900" fill="url(#rubyGrad)" stroke="url(#goldGrad)" stroke-width="0.8" text-anchor="middle" dominant-baseline="central" font-family="'Kaiti SC', 'STKaiti', 'Microsoft YaHei', sans-serif">
+      龍
+    </text>
+  </g>
+</svg>

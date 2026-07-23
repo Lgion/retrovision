@@ -30,7 +30,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     arrows: 0,
     hangman: 0,
     sudoku: 0,
-    blockfantasy: 0
+    blockfantasy: 0,
+    impossible13: 0
   });
 
   const avatars = ['✦', '♥', '★', '●', '☘', '☾', '☀'];
@@ -51,7 +52,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     const hangman = detailedStats.hangman?.highScore || 0;
     const sudoku = detailedStats.sudoku?.highScore || 0;
     const blockfantasy = detailedStats.blockfantasy?.highScore || 0;
-    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku, blockfantasy });
+    const impossible13 = detailedStats.impossible13?.highScore || 0;
+    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku, blockfantasy, impossible13 });
   }, [statsUpdated]);
 
   const totalPlays = Object.values(stats).reduce((acc, curr) => acc + (curr.plays || 0), 0);
@@ -276,6 +278,15 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       unlocked: highScores.blockfantasy >= 1000,
       color: '#39FF14',
       textColor: '#15803d'
+    },
+    {
+      id: 'impossible13_champion',
+      title: 'Le Nombre d\'Or',
+      desc: 'Atteindre le nombre 13 sur Impossible 13',
+      icon: '🌟',
+      unlocked: highScores.impossible13 >= 13,
+      color: '#EAB308',
+      textColor: '#ca8a04'
     }
   ];
 
@@ -387,6 +398,15 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       color: '#39FF14',
       textColor: '#15803d',
       icon: '🧱'
+    },
+    {
+      id: 'impossible13',
+      title: 'IMPOSSIBLE 13',
+      desc: 'Reliez au moins 3 chiffres identiques pour les fusionner en un chiffre supérieur. Atteignez le 13 !',
+      highscore: highScores.impossible13,
+      color: '#EAB308',
+      textColor: '#ca8a04',
+      icon: '1️⃣3️⃣'
     }
   ];
 

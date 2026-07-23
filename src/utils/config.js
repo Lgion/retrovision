@@ -12,7 +12,8 @@ const DEFAULT_CONFIGS = {
     freecell: { layout: 'standard' },
     mines: { boardSize: 9, numMines: 10, flagModeDefault: false },
     arrows: { mode: 'dense' },
-    blockfantasy: { theme: 'fantasy', mode: 'classic', gridSize: 10 }
+    blockfantasy: { theme: 'fantasy', mode: 'classic', gridSize: 10 },
+    impossible13: { customizations: { theme: 'neon' } }
   }
 };
 

@@ -524,6 +524,197 @@ body {
   z-index: 999 !important;
 }
 
+/* Special Nature Jade Glass Tile Styling (Option 3) */
+.mahjong-tile-3d.nature-jade-tile {
+  backdrop-filter: blur(4px);
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.mahjong-tile-3d.nature-jade-tile:hover:not(.blocked) {
+  transform: translateY(-4px) scale(1.03) !important;
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.6), inset 0 -2px 6px rgba(0, 0, 0, 0.4), 0 8px 18px rgba(16, 185, 129, 0.45) !important;
+  z-index: 100 !important;
+}
+
+.mahjong-tile-3d.nature-jade-tile.selected {
+  border-top-color: #fbbf24 !important;
+  border-left-color: #fbbf24 !important;
+  border-bottom-color: #d97706 !important;
+  border-right-color: #b45309 !important;
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.85), inset 0 0 12px rgba(251, 191, 36, 0.6) !important;
+  z-index: 105 !important;
+}
+
+.mahjong-tile-3d.nature-jade-tile.blocked {
+  opacity: 0.45 !important;
+  background: linear-gradient(145deg, rgba(6, 78, 59, 0.5) 0%, rgba(4, 120, 87, 0.4) 100%) !important;
+  filter: brightness(0.6) grayscale(40%) !important;
+}
+
+/* Kawaii Micro-Animations for select tiles */
+@keyframes kawaiiBlink {
+  0%, 88%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.1); }
+}
+
+@keyframes kawaiiSway {
+  0%, 100% { transform: rotate(0deg) translateY(0px); }
+  50% { transform: rotate(5deg) translateY(-2px); }
+}
+
+@keyframes kawaiiRotateSlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes kawaiiGlowPulse {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(192, 132, 252, 0.4)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.9)); transform: scale(1.05); }
+}
+
+@keyframes kawaiiFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes kawaiiSparkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.25) rotate(15deg); }
+}
+
+.anim-kawaii-blink {
+  animation: kawaiiBlink 4s infinite ease-in-out;
+  transform-origin: center;
+}
+
+.anim-kawaii-sway {
+  animation: kawaiiSway 3.5s infinite ease-in-out;
+  transform-origin: bottom center;
+}
+
+.anim-kawaii-spin {
+  animation: kawaiiRotateSlow 16s linear infinite;
+  transform-origin: 24px 19px;
+}
+
+.anim-kawaii-pulse {
+  animation: kawaiiGlowPulse 2.5s infinite ease-in-out;
+  transform-origin: center;
+}
+
+.anim-kawaii-float {
+  animation: kawaiiFloat 3s infinite ease-in-out;
+}
+
+.anim-kawaii-sparkle {
+  animation: kawaiiSparkle 2s infinite ease-in-out;
+}
+
+/* Special Cyber Neon Tile Styling (Sleek, High Contrast, Vibrant & Minimal) */
+.mahjong-tile-3d.cyber-neon-tile {
+  background: linear-gradient(145deg, #0d111d 0%, #170d24 100%) !important;
+  border-top: 1.5px solid rgba(0, 240, 255, 0.9) !important;
+  border-left: 1.5px solid rgba(0, 240, 255, 0.7) !important;
+  border-right: 3px solid #1a102f !important;
+  border-bottom: 5px solid #0f091f !important;
+  box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.15), 0 4px 10px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.mahjong-tile-3d.cyber-neon-tile:hover:not(.blocked) {
+  transform: translateY(-4px) scale(1.03) !important;
+  box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.4), 0 0 20px rgba(0, 240, 255, 0.6), 0 0 35px rgba(255, 0, 127, 0.4) !important;
+  border-top-color: #00f0ff !important;
+  border-left-color: #00f0ff !important;
+  z-index: 100 !important;
+}
+
+.mahjong-tile-3d.cyber-neon-tile.selected {
+  border-top-color: #ff007f !important;
+  border-left-color: #ff007f !important;
+  border-bottom-color: #58002c !important;
+  border-right-color: #800040 !important;
+  box-shadow: 0 0 25px #ff007f, inset 0 0 12px #ff007f, 0 0 40px #00f0ff !important;
+  animation: cyberSelectPulse 1.2s infinite alternate !important;
+  z-index: 105 !important;
+}
+
+.mahjong-tile-3d.cyber-neon-tile.blocked {
+  opacity: 0.35 !important;
+  background: #090d16 !important;
+  filter: brightness(0.4) grayscale(80%) !important;
+}
+
+/* Animations: Elegant Neon Glow & Smooth Motion */
+@keyframes cyberSelectPulse {
+  0% { box-shadow: 0 0 18px #ff007f, inset 0 0 8px #ff007f; }
+  100% { box-shadow: 0 0 30px #00f0ff, inset 0 0 14px #ff007f, 0 0 40px #ffe600; }
+}
+
+@keyframes cyberNeonGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px #00f0ff) drop-shadow(0 0 10px rgba(0, 240, 255, 0.4)); }
+  50% { filter: drop-shadow(0 0 8px #ff007f) drop-shadow(0 0 16px rgba(255, 0, 127, 0.6)); }
+}
+
+@keyframes cyberBob {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+.anim-cyber-neon {
+  animation: cyberNeonGlow 3s infinite ease-in-out;
+  transform-origin: center;
+}
+
+.anim-cyber-bob {
+  animation: cyberBob 3s infinite ease-in-out;
+}
+
+.anim-cyber-spin {
+  animation: kawaiiRotateSlow 14s linear infinite;
+  transform-origin: 24px 24px;
+}
+
+/* Realistic Sophisticated Wood Tile Styling */
+.mahjong-tile-3d.modern-wood-tile {
+  background: linear-gradient(145deg, #3e1f17 0%, #28130d 50%, #170905 100%) !important;
+  border-top: 1.5px solid rgba(251, 191, 36, 0.85) !important;
+  border-left: 1.5px solid rgba(251, 191, 36, 0.65) !important;
+  border-right: 3.5px solid #140704 !important;
+  border-bottom: 5.5px solid #0a0302 !important;
+  box-shadow: inset 0 1px 3px rgba(254, 240, 138, 0.35), inset 0 -3px 8px rgba(0, 0, 0, 0.7), 0 5px 12px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.mahjong-tile-3d.modern-wood-tile:hover:not(.blocked) {
+  transform: translateY(-4px) scale(1.03) !important;
+  box-shadow: inset 0 0 15px rgba(251, 191, 36, 0.4), 0 0 20px rgba(245, 158, 11, 0.6), 0 0 35px rgba(180, 83, 9, 0.5) !important;
+  border-top-color: #fef08a !important;
+  border-left-color: #fef08a !important;
+  z-index: 100 !important;
+}
+
+.mahjong-tile-3d.modern-wood-tile.selected {
+  border-top-color: #fef08a !important;
+  border-left-color: #fef08a !important;
+  border-bottom-color: #78350f !important;
+  border-right-color: #92400e !important;
+  box-shadow: 0 0 25px #f59e0b, inset 0 0 12px #fef08a, 0 0 45px rgba(245, 158, 11, 0.8) !important;
+  animation: woodGoldShimmer 1.5s infinite alternate !important;
+  z-index: 105 !important;
+}
+
+.mahjong-tile-3d.modern-wood-tile.blocked {
+  opacity: 0.4 !important;
+  background: #170905 !important;
+  filter: brightness(0.4) grayscale(70%) !important;
+}
+
+@keyframes woodGoldShimmer {
+  0% { box-shadow: 0 0 18px #f59e0b, inset 0 0 8px #fef08a; }
+  100% { box-shadow: 0 0 32px #fef08a, inset 0 0 16px #f59e0b, 0 0 40px #d97706; }
+}
+
 /* Premium 3D Marble Balls (Ball Sort) */
 .marble-ball-3d {
   width: 42px;
