@@ -844,7 +844,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
                   return (
                     <div
                       key={`${r}-${c}`}
-                      className={isEasiest ? 'easiest-cell-pulse' : ''}
+                      className={isEasiest ? 'easiest-cell-pulse' : isAnimated ? 'sudoku-cell-hint-shake' : ''}
                       onClick={() => selectCell(r, c)}
                       onMouseEnter={() => setHoveredCell({ r, c })}
                       onMouseLeave={() => setHoveredCell(null)}
