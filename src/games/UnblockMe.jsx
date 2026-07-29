@@ -244,7 +244,7 @@ export default function UnblockMe({ onBack, onScoreSave, onIntermissionRequest }
 
   return (
     <>
-      {showIntro && <GameIntro 
+      {showIntro && !isIntermission && <GameIntro 
         gameName="DÉBLOQUE-MOI" 
         icon="🧱" 
         colors={['#E53E3E', '#F59E0B', '#3B82F6']} 

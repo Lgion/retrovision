@@ -3,6 +3,7 @@ import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import Boutique from '../components/Boutique';
 
 // ── CONSTANTES DES FORMES DE BLOCS ──────────────────────────────────────────
 const SHAPE_TEMPLATES = [
@@ -604,93 +605,78 @@ export default function BlockFantasy({
   };
 
   if (showCustomization) {
-    const tabs = ['theme', 'mode'];
-    if (activeMode === 'classic') tabs.push('grid');
-    if (activeMode === 'arcade') tabs.push('level');
+    const categories = [
+      {
+        id: 'theme',
+        name: 'Thème Visuel',
+        icon: '🎨',
+        items: [
+          { id: 'fantasy', name: 'Néon Fantasy', icon: '✨' },
+          { id: 'wood', name: 'Bois Cosy', icon: '🪵' },
+          { id: 'jewel', name: 'Gemmes Translucides', icon: '💎' }
+        ]
+      },
+      {
+        id: 'mode',
+        name: 'Mode de Jeu',
+        icon: '🎮',
+        items: [
+          { id: 'classic', name: 'Classique Sans Fin', icon: '♾️' },
+          { id: 'arcade', name: 'Aventure Arcade', icon: '🚩' }
+        ]
+      }
+    ];
+
+    if (activeMode === 'classic') {
+      categories.push({
+        id: 'gridSize',
+        name: 'Taille de Grille',
+        icon: '📐',
+        items: [
+          { id: 12, name: 'Géant (12x12)', icon: '📏' },
+          { id: 10, name: 'Standard (10x10)', icon: '📐' },
+          { id: 8, name: 'Mini (8x8)', icon: '🧩' }
+        ]
+      });
+    } else {
+      categories.push({
+        id: 'level',
+        name: 'Niveau Arcade',
+        icon: '🚩',
+        layout: 'buttons',
+        items: ARCADE_LEVELS.map(lvl => ({
+          id: lvl.level,
+          name: `${lvl.level}`
+        }))
+      });
+    }
 
     return (
-      <div className="collection-panel" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: '#1A1C29', zIndex: 1000, display: 'flex', flexDirection: 'column', color: 'white', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button onClick={() => setShowCustomization(false)} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#39FF14', color: '#000', border: 'none', cursor: 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>◀</button>
-          <h2 style={{ margin: 0, color: '#39FF14' }}>BOUTIQUE BLOCK</h2>
-          <div style={{ width: '40px' }} />
-        </div>
-
-        <div style={{ display: 'flex', padding: '0 20px', gap: '10px', marginBottom: '20px', overflowX: 'auto' }}>
-          {tabs.map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{ flex: 1, minWidth: '80px', padding: '10px', background: activeTab === tab ? '#39FF14' : '#333', color: activeTab === tab ? '#000' : 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', textTransform: 'capitalize', whiteSpace: 'nowrap' }}>
-              {tab === 'theme' ? 'Thème' : tab === 'mode' ? 'Mode' : tab === 'grid' ? 'Taille' : 'Niveau'}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-          
-          {activeTab === 'theme' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '15px' }}>
-              {[{ id: 'fantasy', name: 'Néon Fantasy', preview: '✨' }, { id: 'wood', name: 'Bois Cosy', preview: '🪵' }, { id: 'jewel', name: 'Gemmes Translucides', preview: '💎' }].map(themeItem => {
-                const isSelected = activeTheme === themeItem.id;
-                return (
-                  <div key={themeItem.id} onClick={() => { setCustomizations(prev => { const next = { ...prev, theme: themeItem.id }; updateGameConfig('blockfantasy', 'customizations', next); return next; }); sound.playClick(); }} style={{ background: '#2A2C39', padding: '15px', borderRadius: '12px', border: `2px solid ${isSelected ? '#39FF14' : 'transparent'}`, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '10px' }}>{themeItem.preview}</div>
-                    <div style={{ fontWeight: 'bold', textAlign: 'center' }}>{themeItem.name}</div>
-                    {isSelected && <div style={{ color: '#39FF14', marginTop: '5px', fontWeight: 'bold' }}>✅ Actif</div>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {activeTab === 'mode' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '15px' }}>
-              {[{ id: 'classic', name: 'Classique Sans Fin', preview: '♾️' }, { id: 'arcade', name: 'Aventure Arcade', preview: '🚩' }].map(modeItem => {
-                const isSelected = activeMode === modeItem.id;
-                return (
-                  <div key={modeItem.id} onClick={() => { setCustomizations(prev => { const next = { ...prev, mode: modeItem.id }; updateGameConfig('blockfantasy', 'customizations', next); return next; }); setActiveTab(modeItem.id === 'classic' ? 'grid' : 'level'); sound.playClick(); }} style={{ background: '#2A2C39', padding: '15px', borderRadius: '12px', border: `2px solid ${isSelected ? '#39FF14' : 'transparent'}`, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '10px' }}>{modeItem.preview}</div>
-                    <div style={{ fontWeight: 'bold', textAlign: 'center' }}>{modeItem.name}</div>
-                    {isSelected && <div style={{ color: '#39FF14', marginTop: '5px', fontWeight: 'bold' }}>✅ Actif</div>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {activeTab === 'grid' && activeMode === 'classic' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '15px' }}>
-              {[{ size: 12, name: 'Géant (12x12)' }, { size: 10, name: 'Standard (10x10)' }, { size: 8, name: 'Mini (8x8)' }].map(gridSizeItem => {
-                const isSelected = gridSize === gridSizeItem.size;
-                return (
-                  <div key={gridSizeItem.size} onClick={() => { setCustomizations(prev => { const next = { ...prev, gridSize: gridSizeItem.size }; updateGameConfig('blockfantasy', 'customizations', next); return next; }); sound.playClick(); }} style={{ background: '#2A2C39', padding: '15px', borderRadius: '12px', border: `2px solid ${isSelected ? '#39FF14' : 'transparent'}`, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '10px' }}>📏</div>
-                    <div style={{ fontWeight: 'bold', textAlign: 'center' }}>{gridSizeItem.name}</div>
-                    {isSelected && <div style={{ color: '#39FF14', marginTop: '5px', fontWeight: 'bold' }}>✅ Actif</div>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {activeTab === 'level' && activeMode === 'arcade' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '15px' }}>
-              {ARCADE_LEVELS.map(lvl => {
-                const isSelected = currentLevelIndex === lvl.level;
-                return (
-                  <button key={lvl.level} onClick={() => { setCustomizations(prev => { const next = { ...prev, level: lvl.level }; updateGameConfig('blockfantasy', 'customizations', next); return next; }); sound.playClick(); }} style={{ height: '60px', borderRadius: '12px', border: `2px solid ${isSelected ? '#39FF14' : 'transparent'}`, backgroundColor: isSelected ? '#39FF14' : '#2A2C39', color: isSelected ? '#000' : '#fff', fontWeight: 'bold', fontSize: '20px', cursor: 'pointer', transition: 'all 0.2s' }}>
-                    {lvl.level}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+      <Boutique
+        title="BOUTIQUE BLOCK"
+        icon="🧱"
+        categories={categories}
+        currentSelections={{
+          theme: activeTheme,
+          mode: activeMode,
+          gridSize: gridSize,
+          level: currentLevelIndex
+        }}
+        onSelect={(cat, val) => {
+          setCustomizations(prev => {
+            const next = { ...prev, [cat]: val };
+            updateGameConfig('blockfantasy', 'customizations', next);
+            return next;
+          });
+        }}
+        onClose={() => setShowCustomization(false)}
+      />
     );
   }
 
   return (
     <>
-      {showIntro && (
+      {showIntro && !isIntermission && (
         <GameIntro gameName="BLOCK FANTASY" icon="🧱" colors={['#39FF14', '#FF3366', '#3399FF']} particleType="blocks" onComplete={() => setShowIntro(false)} />
       )}
 

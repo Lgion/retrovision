@@ -15,6 +15,7 @@ import Sudoku from './games/Sudoku';
 import BlockFantasy from './games/BlockFantasy';
 import Impossible13 from './games/Impossible13';
 import GameScaleWrapper from './components/GameScaleWrapper';
+import IntermissionIntroModal from './components/IntermissionIntroModal';
 import { recordPlay, recordTime, recordScore } from './utils/stats';
 import './App.css';
 
@@ -26,9 +27,13 @@ function App() {
   const [isIntermissionMode, setIsIntermissionMode] = useState(false);
   const [returnView, setReturnView] = useState(null);
   const [skipNextIntro, setSkipNextIntro] = useState(false);
+  const [showIntermissionIntro, setShowIntermissionIntro] = useState(false);
+  const [intermissionResult, setIntermissionResult] = useState('success'); // 'success' | 'passed'
+  const [sessionIntermissionDifficulty, setSessionIntermissionDifficulty] = useState('facile');
 
   const [intermissionConfig, setIntermissionConfig] = useState(() => {
     const defaultConfig = {
+      showIntroModal: false,
       ball: { enabled: true, frequency: 'medium' },
       water: { enabled: true, frequency: 'medium' },
       mines: { enabled: true, frequency: 'medium' },
@@ -54,12 +59,16 @@ function App() {
   });
 
   const handleIntermissionRequest = (fromGameKey) => {
+    const mainGame = isIntermissionMode ? (returnView || 'mahjong') : fromGameKey;
+    const currentGame = isIntermissionMode ? view : null;
+
+    const allGames = ['ball', 'water', 'mines', 'arrows', 'sudoku', 'blockfantasy', '2048', 'hangman', 'freecell', 'jigsaw'];
     const enabledGames = Object.keys(intermissionConfig).filter(
-      key => intermissionConfig[key].enabled && key !== fromGameKey
+      key => intermissionConfig[key]?.enabled && key !== mainGame && key !== currentGame
     );
     const gamesToChooseFrom = enabledGames.length > 0 
       ? enabledGames 
-      : ['ball', 'water', 'mines', 'arrows', 'sudoku', 'blockfantasy'].filter(g => g !== fromGameKey);
+      : allGames.filter(g => g !== mainGame && g !== currentGame);
 
     let filteredGames = gamesToChooseFrom;
     if (gamesToChooseFrom.length > 1 && lastIntermissionGame) {
@@ -78,21 +87,28 @@ function App() {
 
     const chosenGame = weightedList.length > 0
       ? weightedList[Math.floor(Math.random() * weightedList.length)]
-      : filteredGames[Math.floor(Math.random() * filteredGames.length)];
-
-    if (!chosenGame) return;
+      : filteredGames[Math.floor(Math.random() * filteredGames.length)] || 'water';
 
     setLastIntermissionGame(chosenGame);
     localStorage.setItem('retrovision_last_intermission_game', chosenGame);
 
-    setReturnView(fromGameKey);
-    setIsIntermissionMode(true);
+    if (!isIntermissionMode) {
+      setReturnView(fromGameKey);
+      setIsIntermissionMode(true);
+    }
+
+    // Set temporary session difficulty without persisting to localStorage
+    const defaultDiff = intermissionConfig[chosenGame]?.difficulty || 'facile';
+    setSessionIntermissionDifficulty(defaultDiff);
+    setShowIntermissionIntro(!!intermissionConfig.showIntroModal);
     setView(chosenGame);
   };
 
   const handleMahjongNextLevel = () => handleIntermissionRequest('mahjong');
 
-  const handleIntermissionComplete = () => {
+  const handleIntermissionComplete = (isSuccess = true) => {
+    setIntermissionResult(isSuccess === false ? 'passed' : 'success');
+    setShowIntermissionIntro(false);
     setView('intermission-victory');
     setSkipNextIntro(true);
   };
@@ -100,11 +116,13 @@ function App() {
   useEffect(() => {
     if (view === 'dashboard') {
       setSkipNextIntro(false);
+      setShowIntermissionIntro(false);
     } else if (view === 'intermission-victory') {
       const timer = setTimeout(() => {
         setView(returnView || 'dashboard');
         setIsIntermissionMode(false);
         setReturnView(null);
+        setShowIntermissionIntro(false);
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -183,6 +201,25 @@ function App() {
     }
   };
 
+  const getGameIcon = (gameKey) => {
+    switch (gameKey) {
+      case 'mahjong': return '🀄';
+      case 'water': return '💧';
+      case 'ball': return '🔮';
+      case 'jigsaw': return '🧩';
+      case 'unblock': return '🚪';
+      case 'freecell': return '🃏';
+      case 'mines': return '💣';
+      case 'arrows': return '🏹';
+      case '2048': return '🔢';
+      case 'hangman': return '🔤';
+      case 'sudoku': return '🔢';
+      case 'blockfantasy': return '🧱';
+      case 'impossible13': return '1️⃣3️⃣';
+      default: return '🎮';
+    }
+  };
+
   const renderContent = () => {
     switch (view) {
       case 'mahjong':
@@ -203,7 +240,7 @@ function App() {
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
               isIntermission={isIntermissionMode}
-              intermissionDifficulty={intermissionConfig['water']?.difficulty || 'facile'}
+              intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['water']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
               onIntermissionRequest={() => handleIntermissionRequest('water')}
             />
@@ -216,7 +253,7 @@ function App() {
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
               isIntermission={isIntermissionMode}
-              intermissionDifficulty={intermissionConfig['ball']?.difficulty || 'facile'}
+              intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['ball']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
               onIntermissionRequest={() => handleIntermissionRequest('ball')}
             />
@@ -230,7 +267,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
-                intermissionDifficulty={intermissionConfig['2048']?.difficulty || 'facile'}
+                intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['2048']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('2048')}
               />
@@ -245,7 +282,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
-                intermissionDifficulty={intermissionConfig['jigsaw']?.difficulty || 'facile'}
+                intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['jigsaw']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('jigsaw')}
               />
@@ -271,7 +308,7 @@ function App() {
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
               isIntermission={isIntermissionMode}
-              intermissionDifficulty={intermissionConfig['freecell']?.difficulty || 'facile'}
+              intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['freecell']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
               onIntermissionRequest={() => handleIntermissionRequest('freecell')}
             />
@@ -285,7 +322,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
-                intermissionDifficulty={intermissionConfig['mines']?.difficulty || 'facile'}
+                intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['mines']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('mines')}
               />
@@ -300,7 +337,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
-                intermissionDifficulty={intermissionConfig['arrows']?.difficulty || 'facile'}
+                intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['arrows']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('arrows')}
               />
@@ -315,7 +352,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
-                intermissionDifficulty={intermissionConfig['hangman']?.difficulty || 'facile'}
+                intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['hangman']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('hangman')}
               />
@@ -330,7 +367,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
-                intermissionDifficulty={intermissionConfig['sudoku']?.difficulty || 'facile'}
+                intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['sudoku']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('sudoku')}
               />
@@ -345,7 +382,7 @@ function App() {
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
-                intermissionDifficulty={intermissionConfig['blockfantasy']?.difficulty || 'facile'}
+                intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['blockfantasy']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('blockfantasy')}
               />
@@ -366,6 +403,7 @@ function App() {
           </div>
         );
       case 'intermission-victory':
+        const isPassed = intermissionResult === 'passed';
         return (
           <div style={{
             position: 'fixed',
@@ -385,29 +423,31 @@ function App() {
               position: 'absolute',
               width: '300px',
               height: '300px',
-              background: 'rgba(59, 130, 246, 0.15)',
+              background: isPassed ? 'rgba(239, 68, 68, 0.18)' : 'rgba(59, 130, 246, 0.15)',
               borderRadius: '50%',
               filter: 'blur(80px)',
               pointerEvents: 'none',
               animation: 'pulseGlow 2s infinite alternate'
             }} />
 
-            {/* Trophy emblem */}
+            {/* Emblem */}
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
-              filter: 'drop-shadow(0 0 15px rgba(245, 158, 11, 0.4))',
+              filter: isPassed ? 'drop-shadow(0 0 15px rgba(239, 68, 68, 0.5))' : 'drop-shadow(0 0 15px rgba(245, 158, 11, 0.4))',
               animation: 'victoryScale 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
             }}>
-              🏆
+              {isPassed ? '⏭️' : '🏆'}
             </div>
 
-            {/* Sleek Text */}
+            {/* Title Text */}
             <h1 style={{
               fontSize: '2.8rem',
               fontWeight: '800',
               letterSpacing: '2px',
-              background: 'linear-gradient(135deg, #fef08a 0%, #f59e0b 100%)',
+              background: isPassed 
+                ? 'linear-gradient(135deg, #fca5a5 0%, #ef4444 100%)' 
+                : 'linear-gradient(135deg, #fef08a 0%, #f59e0b 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               margin: '0 0 12px 0',
@@ -415,13 +455,15 @@ function App() {
               textTransform: 'uppercase',
               animation: 'victorySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both'
             }}>
-              Entracte Réussi
+              {isPassed ? 'Entracte Passé' : 'Entracte Réussi'}
             </h1>
 
             <div style={{
               width: '80px',
               height: '4px',
-              background: 'linear-gradient(90deg, transparent, #f59e0b, transparent)',
+              background: isPassed 
+                ? 'linear-gradient(90deg, transparent, #ef4444, transparent)' 
+                : 'linear-gradient(90deg, transparent, #f59e0b, transparent)',
               marginBottom: '20px',
               borderRadius: '2px',
               animation: 'victorySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both'
@@ -451,7 +493,7 @@ function App() {
             }}>
               <div style={{
                 height: '100%',
-                background: 'linear-gradient(90deg, #3b82f6, #60a5fa)',
+                background: isPassed ? 'linear-gradient(90deg, #ef4444, #f87171)' : 'linear-gradient(90deg, #3b82f6, #60a5fa)',
                 borderRadius: '2px',
                 animation: 'victoryProgressBar 2.2s linear forwards'
               }} />
@@ -518,6 +560,20 @@ function App() {
         RETROVISION © 2026 | CONÇU POUR LA RÉÉDUCATION COGNITIVE
       </footer>
 
+      {isIntermissionMode && showIntermissionIntro && (
+        <IntermissionIntroModal
+          gameKey={view}
+          gameName={getGameName(view)}
+          gameIcon={getGameIcon(view)}
+          returnGameName={getGameName(returnView)}
+          currentDifficulty={sessionIntermissionDifficulty}
+          onDifficultyChange={(newDiff) => setSessionIntermissionDifficulty(newDiff)}
+          onStart={() => setShowIntermissionIntro(false)}
+          onSkip={() => handleIntermissionComplete(false)}
+          onChangeRandomGame={() => handleIntermissionRequest(returnView)}
+        />
+      )}
+
       {isSettingsOpen && (
         <IntermissionSettingsModal
           config={intermissionConfig}
@@ -563,7 +619,9 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
   };
 
   const handleSave = () => {
-    const anyEnabled = Object.values(tempConfig).some(g => g.enabled);
+    const anyEnabled = Object.keys(tempConfig)
+      .filter(k => k !== 'showIntroModal')
+      .some(g => tempConfig[g]?.enabled);
     if (!anyEnabled) {
       setErrorMsg('Veuillez activer au moins un jeu pour les entractes.');
       return;
@@ -598,6 +656,53 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: '1.4' }}>
           Sélectionnez les jeux qui apparaîtront en entracte après vos parties de Mahjong, et ajustez leur fréquence d'apparition.
         </p>
+
+        {/* Global Intro Modal Toggle */}
+        <div 
+          style={{
+            background: 'rgba(59, 130, 246, 0.05)',
+            border: '1px solid rgba(59, 130, 246, 0.2)',
+            borderRadius: '16px',
+            padding: '16px 18px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px'
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '2px' }}>
+              🎬 Panneau de Pré-configuration
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.3' }}>
+              Afficher le modal de réglage temporaire avant le début de chaque entracte (désactivé par défaut).
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setTempConfig(prev => ({
+                ...prev,
+                showIntroModal: !prev.showIntroModal
+              }));
+            }}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '12px',
+              border: `2px solid ${tempConfig.showIntroModal ? '#10B981' : '#CBD5E1'}`,
+              background: tempConfig.showIntroModal ? '#10B98122' : '#F1F5F9',
+              color: tempConfig.showIntroModal ? '#059669' : '#64748B',
+              fontWeight: '800',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {tempConfig.showIntroModal ? '🟢 Activé' : '⚪ Désactivé'}
+          </button>
+        </div>
 
         {errorMsg && (
           <div style={{ color: '#ef4444', background: '#fee2e2', padding: '10px 16px', borderRadius: '8px', marginBottom: '16px', fontWeight: 'bold', fontSize: '0.85rem' }}>

@@ -1,149 +1,73 @@
-import React, { useState } from 'react';
+import React from 'react';
+import Boutique from '../components/Boutique';
 
-const collections = {
-  mode: [
-    { id: 'zen', type: 'free', name: 'Zen (Solitaire)', icon: '🧘', desc: 'Associez les tuiles libres sur plusieurs niveaux Z.' },
-    { id: 'slide', type: 'free', name: 'Slider (Alignement)', icon: '↕️', desc: 'Glissez les tuiles pour connecter 2 symboles identiques.' }
-  ],
-  boardSize: [
-    { id: 'small', type: 'free', name: 'Petite', icon: '🟢', desc: 'Parfait pour des parties courtes et rapides.' },
-    { id: 'medium', type: 'free', name: 'Moyenne', icon: '🟡', desc: 'Équilibre idéal entre fun et réflexion.' },
-    { id: 'large', type: 'free', name: 'Grande', icon: '🔴', desc: 'Pour les vrais amateurs de Mahjong.' }
-  ],
-  tileset: [
-    { id: 'classic', type: 'free', name: 'Classique', icon: '🀄', desc: 'Symboles chinois traditionnels et bambous.' },
-    { id: 'nature', type: 'free', name: 'Nature & Zen (Jade)', icon: '💎', desc: 'Tuiles en jade translucide, liserés dorés & symboles 3D.' },
-    { id: 'cyber', type: 'free', name: 'Cyber Néon (Holo)', icon: '⚡', desc: 'Tuiles Dark Hologram Glass, circuits neon, robots mecha & glitch animés.' },
-    { id: 'modern', type: 'free', name: 'Chiffres Kanjis (Bois)', icon: '🪵', desc: 'Kanjis d\'honneur (Daiji 1-5) & classiques gravés à la feuille d\'or sur bois noble.' },
-    { id: 'mosaic', type: 'free', name: 'Mosaïques & Vitraux', icon: '🏛️', desc: 'Pavés romains, vitraux antiques et fresques gravées sur pierre précieuse.' },
-    { id: 'luxury_marble_2', type: 'free', name: 'Marbre & Joaillerie Royale', icon: '👑', desc: 'Marbre blanc de Carrare, émail saphir et symboles géants en jade émeraude & or 24K.' }
-  ],
-  showArrows: [
-    { id: 'show', type: 'free', name: 'Afficher', icon: '➡️', desc: 'Flèches de glissement en mode Slider.' },
-    { id: 'hide', type: 'free', name: 'Masquer', icon: '❌', desc: 'Masquer les flèches d\'aide pour plus de défi.' }
-  ]
-};
+const categories = [
+  {
+    id: 'tileset',
+    name: 'Sets de Tuiles',
+    icon: '🀄',
+    items: [
+      { id: 'classic', name: 'Classique', icon: '🀄', description: 'Symboles chinois traditionnels et bambous.' },
+      { id: 'nature', name: 'Créatures Mythiques A (SVG)', icon: '🐉', description: 'Créatures mythologiques gravées sur laqué noir & or 24K.' },
+      { id: 'creatures_b', name: 'Créatures Mythiques B (PNG)', icon: '🦅', description: 'Illustrations PNG HD 2D expressives avec contours contrastés.' },
+      { id: 'cyber', name: 'Cyber Néon (Holo)', icon: '⚡', description: 'Tuiles Dark Hologram Glass, circuits neon & glitch animés.' },
+      { id: 'modern', name: 'Chiffres Kanjis (Bois)', icon: '🪵', description: 'Kanjis d\'honneur (Daiji 1-5) gravés sur bois noble.' },
+      { id: 'mosaic', name: 'Mosaïques & Vitraux', icon: '🏛️', description: 'Pavés romains et fresques gravées sur pierre précieuse.' },
+      { id: 'luxury_marble_2', name: 'Marbre & Joaillerie', icon: '👑', description: 'Marbre blanc de Carrare, émail saphir et jade émeraude.' }
+    ]
+  },
+  {
+    id: 'mode',
+    name: 'Modes de Jeu',
+    icon: '🎮',
+    items: [
+      { id: 'zen', name: 'Zen (Solitaire)', icon: '🧘', description: 'Associez les tuiles libres sur plusieurs niveaux Z.' },
+      { id: 'slide', name: 'Slider (Alignement)', icon: '↕️', description: 'Glissez les tuiles pour connecter 2 symboles identiques.' }
+    ]
+  },
+  {
+    id: 'boardSize',
+    name: 'Tailles de Grille',
+    icon: '📐',
+    items: [
+      { id: 'small', name: 'Petite', icon: '🟢', description: 'Parfait pour des parties courtes et rapides.' },
+      { id: 'medium', name: 'Moyenne', icon: '🟡', description: 'Équilibre idéal entre fun et réflexion.' },
+      { id: 'large', name: 'Grande', icon: '🔴', description: 'Pour les vrais amateurs de Mahjong.' }
+    ]
+  },
+  {
+    id: 'showArrows',
+    name: 'Flèches d\'Aide',
+    icon: '➡️',
+    items: [
+      { id: 'show', name: 'Afficher', icon: '➡️', description: 'Flèches de glissement en mode Slider.' },
+      { id: 'hide', name: 'Masquer', icon: '❌', description: 'Masquer les flèches d\'aide pour plus de défi.' }
+    ]
+  }
+];
 
-const MahjongCollection = ({ onClose, currentSelections, onSelect }) => {
-  const [activeTab, setActiveTab] = useState('tileset');
+export default function MahjongCollection({ onClose, currentSelections, onSelect }) {
+  const selections = {
+    ...currentSelections,
+    showArrows: currentSelections.showArrows ? 'show' : 'hide'
+  };
+
+  const handleSelect = (categoryKey, itemId) => {
+    if (categoryKey === 'showArrows') {
+      onSelect('showArrows', itemId === 'show');
+    } else {
+      onSelect(categoryKey, itemId);
+    }
+  };
 
   return (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      background: '#0a101d',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      color: 'white',
-      fontFamily: 'system-ui, sans-serif'
-    }}>
-      {/* Title Header */}
-      <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1a2936' }}>
-        <button onClick={onClose} style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          background: '#ef4444',
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: '1.2rem',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
-        }}>◀</button>
-        <h2 style={{ margin: 0, color: '#10b981', fontFamily: 'Orbitron, sans-serif', textShadow: '0 0 10px rgba(16,185,129,0.3)' }}>BOUTIQUE MAHJONG</h2>
-        <div style={{ width: '40px' }} />
-      </div>
-
-      {/* Tabs Menu */}
-      <div style={{ display: 'flex', padding: '15px 20px', gap: '8px', overflowX: 'auto', background: '#0e1726' }}>
-        {[
-          { id: 'tileset', label: 'Sets de Tuiles' },
-          { id: 'mode', label: 'Modes de Jeu' },
-          { id: 'boardSize', label: 'Tailles de Grille' },
-          { id: 'showArrows', label: 'Flèches d\'aide' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              flex: 1,
-              padding: '10px 15px',
-              background: activeTab === tab.id ? '#10b981' : '#1f2937',
-              color: activeTab === tab.id ? '#FFF' : '#cbd5e1',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              whiteSpace: 'nowrap',
-              fontSize: '0.9rem',
-              transition: 'all 0.2s'
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Grid Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '15px' }}>
-          {collections[activeTab].map(item => {
-            let isSelected = false;
-            if (activeTab === 'showArrows') {
-              const currentVal = currentSelections.showArrows ? 'show' : 'hide';
-              isSelected = currentVal === item.id;
-            } else {
-              isSelected = currentSelections[activeTab] === item.id;
-            }
-
-            return (
-              <div
-                key={item.id}
-                onClick={() => {
-                  if (activeTab === 'showArrows') {
-                    onSelect('showArrows', item.id === 'show');
-                  } else {
-                    onSelect(activeTab, item.id);
-                  }
-                }}
-                style={{
-                  background: '#1e293b',
-                  padding: '20px 15px',
-                  borderRadius: '16px',
-                  border: `2px solid ${isSelected ? '#10b981' : 'transparent'}`,
-                  boxShadow: isSelected ? '0 0 15px rgba(16,185,129,0.2)' : '0 4px 6px rgba(0,0,0,0.1)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <div style={{ fontSize: '3rem', marginBottom: '12px', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }}>
-                  {item.icon}
-                </div>
-                <div style={{ fontWeight: 'bold', textAlign: 'center', color: '#f8fafc', marginBottom: '6px', fontSize: '1rem' }}>
-                  {item.name}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', lineHeight: '1.3', flexGrow: 1 }}>
-                  {item.desc}
-                </div>
-                {isSelected && (
-                  <div style={{ color: '#10b981', marginTop: '10px', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                    ✅ Actif
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+    <Boutique
+      title="BOUTIQUE MAHJONG"
+      icon="🀄"
+      categories={categories}
+      currentSelections={selections}
+      onSelect={handleSelect}
+      onClose={onClose}
+    />
   );
-};
-
-export default MahjongCollection;
+}

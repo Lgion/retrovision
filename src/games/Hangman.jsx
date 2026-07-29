@@ -63,8 +63,8 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
   const initialLivesAmount = getInitialLives();
   const [lives, setLives] = useState(initialLivesAmount);
   const [guessedLetters, setGuessedLetters] = useState([]);
-  const [gameState, setGameState] = useState('playing'); // 'playing', 'won', 'lost'
-  
+  const [gameState, setGameState] = useState('playing'); // 'playing', 'won', 'lost', 'solution'
+
   // Visual FX states
   const [isShaking, setIsShaking] = useState(false);
   const [recentCorrectLetter, setRecentCorrectLetter] = useState(null);
@@ -122,7 +122,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
       sound.playShake(); // Wrong guess sound
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 400); // Clear after shake duration
-      
+
       const newLives = lives - 1;
       setLives(newLives);
       if (newLives <= 0) {
@@ -161,11 +161,15 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
       onIntermissionRequest();
     } else {
-      const nextIdx = currentOrderIdx + 1;
-      setCurrentOrderIdx(nextIdx);
-      localStorage.setItem('retrovision_hangman_idx', nextIdx.toString());
-      resetLevel();
+      forceNextQuestion();
     }
+  };
+
+  const forceNextQuestion = () => {
+    const nextIdx = currentOrderIdx + 1;
+    setCurrentOrderIdx(nextIdx);
+    localStorage.setItem('retrovision_hangman_idx', nextIdx.toString());
+    resetLevel();
   };
 
   const resetLevel = () => {
@@ -215,24 +219,93 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     sound.playPowerup();
   };
 
+  const useLangueAuChat = () => {
+    // Give up and reveal solution directly in letter slots without modal
+    if (gameState !== 'playing') return;
+    sound.playPowerup();
+    setGameState('solution');
+  };
+
   // Render Word
   const renderWord = () => {
     return targetWord.split('').map((char, index) => {
       if (char === ' ') return <span key={index} style={{ width: '20px' }}></span>;
-      const isRevealed = guessedLetters.includes(char) || gameState === 'lost';
+      const isRevealed = guessedLetters.includes(char) || gameState === 'lost' || gameState === 'solution';
       const isMissed = gameState === 'lost' && !guessedLetters.includes(char);
+      const isCatSolution = gameState === 'solution' && !guessedLetters.includes(char);
       const isJustGuessed = char === recentCorrectLetter;
-      
+
       return (
         <div className={`hangman_letter_slot ${isJustGuessed ? 'letter-pop' : ''}`} key={index} style={{
           ...letterSlotStyle,
-          color: isMissed ? '#ef4444' : theme.color,
-          borderColor: isJustGuessed ? '#10b981' : theme.color
+          color: isCatSolution ? '#8b5cf6' : (isMissed ? '#ef4444' : theme.color),
+          borderColor: isCatSolution ? '#8b5cf6' : (isJustGuessed ? '#10b981' : theme.color),
+          background: isCatSolution ? 'rgba(139, 92, 246, 0.15)' : 'transparent'
         }}>
           {isRevealed ? char : ''}
         </div>
       );
     });
+  };
+
+  // Header Center Content
+  const renderHeaderCenter = () => {
+    if (gameState === 'solution') {
+      return (
+        <button
+          onClick={forceNextQuestion}
+          className="retro-btn"
+          style={{
+            background: '#8b5cf6',
+            color: '#ffffff',
+            fontSize: '15px',
+            padding: '6px 14px',
+            borderRadius: '20px',
+            border: 'none',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 3px 8px rgba(139, 92, 246, 0.4)',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          Question Suivante ⏭
+        </button>
+      );
+    }
+
+    if (isIntermission) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '15px', fontWeight: 'bold', color: theme.color }}>Entracte !</span>
+          {onIntermissionRequest && (
+            <button
+              onClick={() => onIntermissionRequest()}
+              className="entract-header-btn"
+              style={{ fontSize: '13px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+            >
+              🎲 Autre
+            </button>
+          )}
+          <button
+            onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
+            className="entract-header-btn"
+            style={{ fontSize: '13px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+          >
+            Passer ⏭
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div style={statsBoxStyle}>
+        <span style={{ fontSize: '20px' }}>😈</span>
+        <div style={{ ...coinsBadgeStyle, background: theme.bg === '#fafafa' ? '#fff' : 'rgba(255,255,255,0.1)', color: theme.color }}>
+          <span style={{ color: '#f59e0b', fontSize: '18px' }}>★</span>
+          <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{coins}</span>
+        </div>
+      </div>
+    );
   };
 
   // Render SVG Drawing (Stickman + Balloons + Shark)
@@ -302,6 +375,8 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
             updateGameConfig('hangman', 'customizations', next);
             return next;
           });
+          setShowCollection(false);
+          resetLevel();
         }}
       />
     );
@@ -316,7 +391,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           color: '#f8fafc',
           riddleBg: 'rgba(255,255,255,0.1)',
           border: '1px solid #cbd5e1',
-          keyBg: 'rgba(255,255,255,0.1)',
+          keyBg: 'rgba(255,255,255,0.15)',
           keyColor: '#f8fafc'
         };
       case 'neon':
@@ -326,7 +401,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           color: '#38bdf8',
           riddleBg: 'rgba(56, 189, 248, 0.1)',
           border: '1px solid #38bdf8',
-          keyBg: 'rgba(56, 189, 248, 0.1)',
+          keyBg: 'rgba(56, 189, 248, 0.15)',
           keyColor: '#38bdf8'
         };
       default:
@@ -336,13 +411,20 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           color: '#1e293b',
           riddleBg: 'rgba(255,255,255,0.7)',
           border: '1px dashed #cbd5e1',
-          keyBg: 'transparent',
+          keyBg: '#ffffff',
           keyColor: '#1e293b'
         };
     }
   };
 
   const theme = getThemeStyles();
+  const currentDiff = isIntermission ? (intermissionDifficulty || 'facile') : (customizations.difficulty || 'moyen');
+  const getDifficultyInfo = () => {
+    if (currentDiff === 'facile') return { label: 'FACILE', icon: '🟢', color: '#10b981' };
+    if (currentDiff === 'difficile') return { label: 'DIFFICILE', icon: '🔴', color: '#ef4444' };
+    return { label: 'MOYEN', icon: '🟡', color: '#f59e0b' };
+  };
+  const diffInfo = getDifficultyInfo();
 
   return (
     <>
@@ -379,7 +461,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           100% { opacity: 0; }
         }
       `}</style>
-      
+
       {showIntro && !isIntermission && <GameIntro
         gameName="LE PENDU"
         icon="🎈"
@@ -392,33 +474,21 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
         {isShaking && <div className="error-tint"></div>}
 
         {/* Top Header */}
-        {!isIntermission && (
-          <GameHeader
-            title="DEVINETTE"
-            onBack={handleBackWithConfirm}
-            showBgmToggle={false} // bgm global
-            onShop={() => setShowCollection(true)}
-            centerContent={
-              <div style={statsBoxStyle}>
-                <span style={{ fontSize: '18px' }}>😈</span>
-                <div style={{ ...coinsBadgeStyle, background: theme.bg === '#fafafa' ? '#fff' : 'rgba(255,255,255,0.1)', color: theme.color }}>
-                  <span style={{ color: '#f59e0b', fontSize: '16px' }}>★</span>
-                  <span style={{ fontWeight: 'bold' }}>{coins}</span>
-                </div>
-              </div>
-            }
-            style={{ background: 'transparent', boxShadow: 'none', borderBottom: `2px dashed ${theme.border.split(' ')[2] || '#cbd5e1'}` }}
-          />
-        )}
-
-        {isIntermission && gameState === 'playing' && (
-          <div className="entract-header">
-            <div className="entract-header-text">Entracte ! Devinez le mot.</div>
-            <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }} className="entract-header-btn">
-              Passer l'entracte ⏭
-            </button>
-          </div>
-        )}
+        <GameHeader
+          title={
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: '1.2' }}>
+              <span>DEVINETTE</span>
+              <span style={{ fontSize: '11px', color: diffInfo.color, fontWeight: 'bold' }}>
+                {diffInfo.icon} {diffInfo.label}
+              </span>
+            </div>
+          }
+          onBack={handleBackWithConfirm}
+          showBgmToggle={false} // bgm global
+          onShop={() => setShowCollection(true)}
+          centerContent={renderHeaderCenter()}
+          style={{ background: 'transparent', boxShadow: 'none', borderBottom: `2px dashed ${theme.border.split(' ')[2] || '#cbd5e1'}` }}
+        />
 
         {/* Drawing & Riddle Section */}
         <div style={topSectionStyle}>
@@ -432,11 +502,11 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
             <div className="riddleBox" style={{ ...riddleBoxStyle, flex: 'none', background: theme.riddleBg, border: theme.border, color: theme.color }}>
               <div style={riddleTypeBadge}>{currentData.category ? currentData.category.toUpperCase() : 'MIXTE'}</div>
               {currentData.question.split('\\n').map((line, i) => (
-                <p key={i} style={{ margin: '5px 0' }}>{line}</p>
+                <p key={i} style={{ margin: '4px 0' }}>{line}</p>
               ))}
             </div>
             {showHintMessage && (
-              <div className="hangman_tips" style={{ padding: '10px', background: 'rgba(245, 158, 11, 0.1)', border: '2px solid #f59e0b', borderRadius: '12px', color: '#f59e0b', fontWeight: 'bold', animation: 'fadeIn 0.3s' }}>
+              <div className="hangman_tips" style={{ padding: '12px 16px', background: 'rgba(245, 158, 11, 0.15)', border: '2px solid #f59e0b', borderRadius: '12px', color: '#d97706', fontWeight: 'bold', fontSize: '20px', animation: 'fadeIn 0.3s' }}>
                 💡 Indice : {currentData.hint}
               </div>
             )}
@@ -447,6 +517,47 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
         <div style={wordContainerStyle}>
           {renderWord()}
         </div>
+
+        {/* Action button when solution is revealed */}
+        {gameState === 'solution' && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', padding: '0 15px', marginBottom: '10px' }}>
+            <button
+              onClick={forceNextQuestion}
+              className="retro-btn"
+              style={{
+                background: '#8b5cf6',
+                color: '#ffffff',
+                fontSize: '18px',
+                padding: '10px 24px',
+                borderRadius: '25px',
+                border: 'none',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(139, 92, 246, 0.4)'
+              }}
+            >
+              Question Suivante ⏭
+            </button>
+            {isIntermission && onIntermissionComplete && (
+              <button
+                onClick={onIntermissionComplete}
+                className="retro-btn"
+                style={{
+                  background: '#3b82f6',
+                  color: '#ffffff',
+                  fontSize: '16px',
+                  padding: '10px 18px',
+                  borderRadius: '25px',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Terminer l'entracte 🏁
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Keyboard Section */}
         <div style={keyboardContainerStyle}>
@@ -489,7 +600,8 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           <button
             onClick={useMagnify}
             disabled={magnifyUsed || coins < 30 || gameState !== 'playing'}
-            style={{ ...jokerBtnStyle, opacity: (magnifyUsed || coins < 30) ? 0.5 : 1 }}
+            style={{ ...jokerBtnStyle, opacity: (magnifyUsed || coins < 30 || gameState !== 'playing') ? 0.5 : 1 }}
+            title="Dévoiler une lettre"
           >
             <div style={{ ...jokerIconBoxStyle, background: '#10b981' }}>🔍</div>
             <div style={jokerCostStyle}>★30</div>
@@ -498,7 +610,8 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           <button
             onClick={useBomb}
             disabled={bombUsed || coins < 20 || gameState !== 'playing'}
-            style={{ ...jokerBtnStyle, opacity: (bombUsed || coins < 20) ? 0.5 : 1 }}
+            style={{ ...jokerBtnStyle, opacity: (bombUsed || coins < 20 || gameState !== 'playing') ? 0.5 : 1 }}
+            title="Éliminer 3 fausses lettres"
           >
             <div style={{ ...jokerIconBoxStyle, background: '#3b82f6' }}>💣</div>
             <div style={jokerCostStyle}>★20</div>
@@ -507,37 +620,62 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           <button
             onClick={useHint}
             disabled={hintUsed || gameState !== 'playing'}
-            style={{ ...jokerBtnStyle, opacity: hintUsed ? 0.5 : 1 }}
+            style={{ ...jokerBtnStyle, opacity: (hintUsed || gameState !== 'playing') ? 0.5 : 1 }}
+            title="Afficher un indice"
           >
             <div style={{ ...jokerIconBoxStyle, background: '#f59e0b' }}>💡</div>
-            <div style={jokerCostStyle}>Indice</div>
+            <div style={{ ...jokerCostStyle, background: '#f59e0b' }}>Indice</div>
+          </button>
+
+          <button
+            onClick={useLangueAuChat}
+            disabled={gameState !== 'playing'}
+            style={{ ...jokerBtnStyle, opacity: gameState !== 'playing' ? 0.5 : 1 }}
+            title="Donner sa langue au chat (afficher la solution)"
+          >
+            <div style={{ ...jokerIconBoxStyle, background: '#8b5cf6' }}>🐱</div>
+            <div style={{ ...jokerCostStyle, background: '#8b5cf6' }}>Langue au chat</div>
           </button>
         </div>
 
-
-
-        {/* Overlays */}
+        {/* Overlays for Win/Loss only */}
         {gameState === 'won' && (
           <div style={{ ...overlayStyle, animation: 'delayFadeIn 1.5s forwards' }}>
+            <div style={{ fontSize: '50px', marginBottom: '5px' }}>🎉</div>
             <div style={victoryTitleStyle}>Gagné !</div>
-            <div style={{ color: '#1e293b', fontSize: '18px', marginBottom: '20px' }}>
-              Le mot était bien <strong>{targetWord}</strong>
+            <div style={{ color: '#1e293b', fontSize: '22px', marginBottom: '20px', textAlign: 'center', fontWeight: 'bold' }}>
+              Le mot était bien <br />
+              <span style={{ color: '#10b981', fontSize: '30px', letterSpacing: '2px' }}>{targetWord}</span>
             </div>
-            <button onClick={nextLevel} className="retro-btn" style={nextLevelBtnStyle}>
-              Devinette Suivante
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '85%', maxWidth: '300px' }}>
+              <button onClick={nextLevel} className="retro-btn" style={{ ...nextLevelBtnStyle, fontSize: '20px', padding: '12px 20px', cursor: 'pointer' }}>
+                Devinette Suivante ⏭
+              </button>
+              {isIntermission && onIntermissionComplete && (
+                <button onClick={onIntermissionComplete} className="retro-btn" style={{ ...nextLevelBtnStyle, background: '#3b82f6', fontSize: '18px', padding: '10px 18px', cursor: 'pointer' }}>
+                  Terminer l'entracte 🏁
+                </button>
+              )}
+            </div>
           </div>
         )}
 
         {gameState === 'lost' && (
           <div style={overlayStyle}>
+            <div style={{ fontSize: '50px', marginBottom: '5px' }}>🦈</div>
             <div style={{ ...victoryTitleStyle, color: '#ef4444' }}>Plouf !</div>
-            <div style={{ color: '#1e293b', fontSize: '18px', marginBottom: '20px' }}>
-              Le mot était <strong>{targetWord}</strong>
+            <div style={{ color: '#1e293b', fontSize: '22px', marginBottom: '20px', textAlign: 'center', fontWeight: 'bold' }}>
+              Le mot était <br />
+              <span style={{ color: '#ef4444', fontSize: '30px', letterSpacing: '2px' }}>{targetWord}</span>
             </div>
-            <button onClick={resetLevel} className="retro-btn" style={{ ...nextLevelBtnStyle, background: '#ef4444' }}>
-              Réessayer
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '85%', maxWidth: '300px' }}>
+              <button onClick={forceNextQuestion} className="retro-btn" style={{ ...nextLevelBtnStyle, background: '#8b5cf6', fontSize: '20px', padding: '12px 20px', cursor: 'pointer' }}>
+                Question Suivante ⏭
+              </button>
+              <button onClick={resetLevel} className="retro-btn" style={{ ...nextLevelBtnStyle, background: '#ef4444', fontSize: '18px', padding: '10px 18px', cursor: 'pointer' }}>
+                Réessayer 🔄
+              </button>
+            </div>
           </div>
         )}
 
@@ -561,36 +699,6 @@ const containerStyle = {
   boxSizing: 'border-box'
 };
 
-const headerStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '15px 20px',
-  zIndex: 10
-};
-
-const backBtnStyle = {
-  background: '#ffffff',
-  border: '2px solid #1e293b',
-  borderRadius: '50%',
-  width: '40px',
-  height: '40px',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  fontSize: '20px',
-  color: '#1e293b',
-  padding: 0,
-  cursor: 'pointer'
-};
-
-const levelTextStyle = {
-  fontSize: '22px',
-  fontWeight: 'bold',
-  color: '#1e293b',
-  letterSpacing: '1px'
-};
-
 const statsBoxStyle = {
   display: 'flex',
   alignItems: 'center',
@@ -604,41 +712,26 @@ const coinsBadgeStyle = {
   background: '#ffffff',
   border: '2px solid #d1d5db',
   borderRadius: '20px',
-  padding: '4px 10px',
+  padding: '4px 12px',
   color: '#1e293b'
-};
-
-const addCoinBtnStyle = {
-  background: '#f59e0b',
-  border: 'none',
-  borderRadius: '50%',
-  width: '20px',
-  height: '20px',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  color: 'white',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  marginLeft: '5px'
 };
 
 const topSectionStyle = {
   display: 'flex',
-  padding: '10px 20px',
-  gap: '10px',
+  padding: '10px 15px',
+  gap: '12px',
   alignItems: 'flex-start'
 };
 
 const drawingContainerStyle = {
-  flex: '0 0 150px',
+  flex: '0 0 140px',
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   background: 'rgba(255, 255, 255, 0.1)',
   borderRadius: '16px',
-  padding: '10px',
+  padding: '8px',
   boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)',
   border: '2px solid rgba(255,255,255,0.2)'
 };
@@ -651,24 +744,24 @@ const drawingStyle = {
 const livesBadgeStyle = {
   background: '#ef4444',
   color: '#ffffff',
-  padding: '2px 8px',
-  borderRadius: '10px',
-  fontSize: '12px',
+  padding: '4px 12px',
+  borderRadius: '12px',
+  fontSize: '15px',
   fontWeight: 'bold',
-  marginTop: '5px',
+  marginTop: '6px',
   boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
 };
 
 const riddleBoxStyle = {
   flex: 1,
-  fontSize: '18px',
-  fontWeight: '600',
+  fontSize: '27px',
+  fontWeight: '700',
   color: '#1e293b',
   textAlign: 'center',
   lineHeight: '1.4',
-  padding: '10px',
+  padding: '14px 16px',
   background: 'rgba(255,255,255,0.7)',
-  borderRadius: '12px',
+  borderRadius: '16px',
   boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
   border: '1px dashed #cbd5e1',
   position: 'relative'
@@ -676,66 +769,70 @@ const riddleBoxStyle = {
 
 const riddleTypeBadge = {
   position: 'absolute',
-  top: '-10px',
-  right: '10px',
+  top: '-12px',
+  right: '12px',
   background: '#8b5cf6',
   color: '#ffffff',
-  fontSize: '10px',
-  padding: '2px 6px',
-  borderRadius: '4px',
-  fontWeight: 'bold'
+  fontSize: '13px',
+  padding: '4px 10px',
+  borderRadius: '6px',
+  fontWeight: 'bold',
+  letterSpacing: '0.5px'
 };
 
 const wordContainerStyle = {
   display: 'flex',
   justifyContent: 'center',
   gap: '8px',
-  padding: '30px 20px',
+  padding: '24px 15px',
   flexWrap: 'wrap'
 };
 
 const letterSlotStyle = {
-  width: '24px',
-  height: '34px',
-  borderBottom: '3px solid #10b981',
+  minWidth: '34px',
+  height: '48px',
+  borderBottom: '4px solid #10b981',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'flex-end',
-  fontSize: '24px',
+  fontSize: '32px',
   fontWeight: 'bold',
   textTransform: 'uppercase',
-  paddingBottom: '2px'
+  padding: '0 4px 2px 4px',
+  borderRadius: '4px 4px 0 0'
 };
 
 const keyboardContainerStyle = {
   display: 'flex',
   flexWrap: 'wrap',
   justifyContent: 'center',
-  gap: '10px',
-  padding: '0 20px',
-  marginTop: '20px'
+  gap: '8px',
+  padding: '0 12px',
+  marginTop: '15px'
 };
 
 const keyBtnStyle = {
-  width: '38px',
-  height: '42px',
+  width: '40px',
+  height: '40px',
   border: 'none',
-  fontSize: '22px',
+  fontSize: '26px',
   fontWeight: 'bold',
   fontFamily: '"Comic Sans MS", "Chalkboard SE", "Marker Felt", sans-serif',
   cursor: 'pointer',
-  transition: 'transform 0.1s',
+  transition: 'transform 0.1s, background 0.2s',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  borderRadius: '6px'
+  borderRadius: '8px',
+  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
 };
 
 const jokersContainerStyle = {
   display: 'flex',
-  justifyContent: 'center',
-  gap: '25px',
-  padding: '30px 20px',
+  justifyContent: 'space-evenly',
+  alignItems: 'center',
+  gap: '10px',
+  padding: '15px 12px',
   marginTop: 'auto'
 };
 
@@ -751,13 +848,13 @@ const jokerBtnStyle = {
 };
 
 const jokerIconBoxStyle = {
-  width: '50px',
-  height: '50px',
+  width: '52px',
+  height: '52px',
   borderRadius: '50%',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  fontSize: '24px',
+  fontSize: '26px',
   color: 'white',
   boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
   border: '2px solid #ffffff'
@@ -766,17 +863,18 @@ const jokerIconBoxStyle = {
 const jokerCostStyle = {
   background: '#f59e0b',
   color: '#ffffff',
-  fontSize: '12px',
+  fontSize: '13px',
   fontWeight: 'bold',
-  padding: '2px 8px',
-  borderRadius: '10px',
-  border: '1px solid #ffffff'
+  padding: '3px 10px',
+  borderRadius: '12px',
+  border: '1px solid #ffffff',
+  whiteSpace: 'nowrap'
 };
 
 const overlayStyle = {
   position: 'absolute',
   top: 0, left: 0, right: 0, bottom: 0,
-  background: 'rgba(255, 255, 255, 0.9)',
+  background: 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(5px)',
   display: 'flex',
   flexDirection: 'column',
@@ -787,7 +885,7 @@ const overlayStyle = {
 };
 
 const victoryTitleStyle = {
-  fontSize: '48px',
+  fontSize: '46px',
   color: '#10b981',
   fontWeight: 'bold',
   marginBottom: '10px',
@@ -798,10 +896,14 @@ const nextLevelBtnStyle = {
   background: '#10b981',
   color: '#ffffff',
   fontSize: '20px',
-  padding: '12px 30px',
+  padding: '12px 24px',
+  borderRadius: '30px',
   border: 'none',
-  borderRadius: '25px',
-  cursor: 'pointer',
   fontWeight: 'bold',
-  boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
+  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+  width: '100%',
+  textAlign: 'center'
 };
+
+
+

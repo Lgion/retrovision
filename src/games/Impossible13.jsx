@@ -3,6 +3,7 @@ import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import Boutique from '../components/Boutique';
 
 // --- CONFIGURATION ---
 const GRID_SIZE = 5;
@@ -378,34 +379,37 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, onIn
 
   if (showStore) {
     return (
-      <div className="collection-panel" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: '#1A1C29', zIndex: 1000, display: 'flex', flexDirection: 'column', color: 'white', fontFamily: 'system-ui, sans-serif' }}>
-        <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button onClick={() => setShowStore(false)} style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#39FF14', color: '#000', border: 'none', cursor: 'pointer', fontSize: '1.2rem', fontWeight: 'bold' }}>◀</button>
-          <h2 style={{ margin: 0, color: '#39FF14' }}>BOUTIQUE IMPOSSIBLE 13</h2>
-          <div style={{ width: '40px' }} />
-        </div>
-        <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
-          <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>🎨 THÈMES VISUELS</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '15px', marginTop: '15px' }}>
-            {[{ id: 'neon', name: 'Néon Fantasy', icon: '✨' }, { id: 'wood', name: 'Bois Cosy', icon: '🪵' }, { id: 'jewel', name: 'Gemmes Translucides', icon: '💎' }].map(theme => {
-              const isActive = activeTheme === theme.id;
-              return (
-                <div key={theme.id} onClick={() => { setCustomizations(prev => { const next = { ...prev, theme: theme.id }; updateGameConfig('impossible13', 'customizations', next); return next; }); sound.playClick(); }} style={{ background: '#2A2C39', padding: '15px', borderRadius: '12px', border: `2px solid ${isActive ? '#39FF14' : 'transparent'}`, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>{theme.icon}</div>
-                  <div style={{ fontWeight: 'bold' }}>{theme.name}</div>
-                  {isActive && <div style={{ color: '#39FF14', marginTop: '5px', fontWeight: 'bold' }}>✅ Actif</div>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <Boutique
+        title="BOUTIQUE IMPOSSIBLE 13"
+        icon="1️⃣3️⃣"
+        categories={[
+          {
+            id: 'theme',
+            name: 'Thèmes Visuels',
+            icon: '🎨',
+            items: [
+              { id: 'neon', name: 'Néon Fantasy', icon: '✨' },
+              { id: 'wood', name: 'Bois Cosy', icon: '🪵' },
+              { id: 'jewel', name: 'Gemmes Translucides', icon: '💎' }
+            ]
+          }
+        ]}
+        currentSelections={{ theme: activeTheme }}
+        onSelect={(_, themeId) => {
+          setCustomizations(prev => {
+            const next = { ...prev, theme: themeId };
+            updateGameConfig('impossible13', 'customizations', next);
+            return next;
+          });
+        }}
+        onClose={() => setShowStore(false)}
+      />
     );
   }
 
   return (
     <>
-      {showIntro && (
+      {showIntro && !isIntermission && (
         <GameIntro gameName="IMPOSSIBLE 13" icon="1️⃣3️⃣" colors={['#EF4444', '#FBBF24', '#10B981', '#39FF14']} particleType="bubbles" onComplete={() => setShowIntro(false)} />
       )}
 

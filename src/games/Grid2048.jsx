@@ -336,6 +336,7 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
             updateGameConfig('2048', 'customizations', next);
             return next;
           });
+          setShowCollection(false);
         }}
       />
     );
@@ -352,7 +353,7 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
 
   return (
     <>
-      {showIntro && <GameIntro 
+      {showIntro && !isIntermission && <GameIntro 
         gameName="NEON 2048" 
         icon="🔢" 
         colors={['#00f0ff', '#ff007f', '#ffd700']} 
@@ -383,11 +384,18 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
       )}
 
       {isIntermission && !victory && (
-        <div className="entract-header">
-          <div className="entract-header-text">Entracte ! Fusionnez jusqu'à 2048.</div>
-          <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }} className="entract-header-btn">
-            Passer l'entracte ⏭
-          </button>
+        <div className="entract-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
+          <div className="entract-header-text">Entracte ! Fusionnez les tuiles pour retourner au jeu principal.</div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {onIntermissionRequest && (
+              <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
+                🎲 Autre jeu
+              </button>
+            )}
+            <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }} className="entract-header-btn" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
+              Passer l'entracte ⏭
+            </button>
+          </div>
         </div>
       )}
 

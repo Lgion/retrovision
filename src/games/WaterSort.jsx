@@ -369,8 +369,8 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
             updateGameConfig('water', 'customizations', next);
             return next;
           });
+          setShowCollection(false);
           if (category === 'difficulty') {
-            setShowCollection(false);
             initGame(id);
           }
         }}
@@ -469,16 +469,24 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
         )}
 
         {isIntermission && victoryPhase === 0 && (
-          <div className="entract-header">
+          <div className="entract-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
             <div className="entract-header-text">
-              Entracte ! Triez l'eau pour retourner au Mahjong.
+              Entracte ! Triez l'eau pour retourner au jeu principal.
             </div>
-            <button
-              onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }}
-              className="entract-header-btn"
-            >
-              Passer l'entracte ⏭
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {onIntermissionRequest && (
+                <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
+                  🎲 Autre jeu
+                </button>
+              )}
+              <button
+                onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
+                className="entract-header-btn"
+                style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+              >
+                Passer l'entracte ⏭
+              </button>
+            </div>
           </div>
         )}
 

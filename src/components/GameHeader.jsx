@@ -200,7 +200,7 @@ export default function GameHeader({
 
         {/* Center Area: Custom content like Score, Timer, Lives */}
         {centerContent && (
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="gh-center" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             {centerContent}
           </div>
         )}

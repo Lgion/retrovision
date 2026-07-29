@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import Boutique from '../components/Boutique';
 
 // Generic Sudoku helper functions
 function isValid(grid, r, c, val, rowsPerBlock, colsPerBlock, size) {
@@ -292,6 +293,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
     setActiveThemeId(themeId);
     localStorage.setItem('retrovision_sudoku_theme', themeId);
     sound.playClick();
+    setShowStore(false);
   };
 
 
@@ -645,78 +647,49 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
       )}
 
       {isIntermission && gameState === 'playing' && (
-        <div className="entract-header">
+        <div className="entract-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
           <div className="entract-header-text">
-            Entracte ! Complétez ce Sudoku pour retourner au Mahjong.
+            Entracte ! Complétez ce Sudoku pour retourner au jeu principal.
           </div>
-          <button
-            onClick={() => { if (onIntermissionComplete) onIntermissionComplete(); }}
-            className="entract-header-btn"
-          >
-            Passer l'entracte ⏭
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {onIntermissionRequest && (
+              <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
+                🎲 Autre jeu
+              </button>
+            )}
+            <button
+              onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
+              className="entract-header-btn"
+              style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+            >
+              Passer l'entracte ⏭
+            </button>
+          </div>
         </div>
       )}
 
       
         {/* Store Modal */}
         {showStore && (
-          <div style={{...overlayStyle, zIndex: 200}}>
-            <div style={{...victoryCardStyle, width: '90%', maxWidth: '420px', background: currentTheme.panelBg, borderColor: currentTheme.borderThick.split(' ')[2]}}>
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-                <h2 style={{margin: 0, fontSize: '1.8rem', color: currentTheme.panelText}}>🛒 Boutique</h2>
-              </div>
-              
-              <div style={{display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px'}}>
-                {Object.values(THEMES).map(theme => {
-                  const isActive = activeThemeId === theme.id;
-                  
-                  return (
-                    <div key={theme.id} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '12px 16px', borderRadius: '16px',
-                      background: isActive ? currentTheme.selBg : 'rgba(15, 23, 42, 0.05)',
-                      border: `2px solid ${isActive ? currentTheme.borderThick.split(' ')[2] : 'rgba(148, 163, 184, 0.2)'}`,
-                      transition: 'all 0.2s'
-                    }}>
-                      <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-                        <span style={{fontSize: '24px'}}>{theme.icon}</span>
-                        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
-                          <span style={{fontWeight: 'bold', fontSize: '1.1rem', color: currentTheme.panelText}}>{theme.name}</span>
-                          {!isActive && <span style={{fontSize: '0.85rem', color: '#10b981', fontWeight: 'bold'}}>Gratuit</span>}
-                          {isActive && <span style={{fontSize: '0.85rem', color: currentTheme.borderThick.split(' ')[2], fontWeight: 'bold'}}>Actif</span>}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        {isActive ? (
-                          <button disabled style={{padding: '8px 16px', borderRadius: '12px', background: 'transparent', border: '2px solid transparent', color: currentTheme.panelText, fontWeight: 'bold'}}>
-                            Sélectionné
-                          </button>
-                        ) : (
-                          <button 
-                            onClick={() => handleSelectTheme(theme.id)}
-                            className="retro-btn"
-                            style={{padding: '8px 16px', borderRadius: '12px', background: currentTheme.selBg, border: `2px solid ${currentTheme.borderThick.split(' ')[2]}`, color: currentTheme.panelText, cursor: 'pointer', fontWeight: 'bold'}}
-                          >
-                            Utiliser
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <button
-                onClick={() => { sound.playClick(); setShowStore(false); }}
-                className="retro-btn"
-                style={{ marginTop: '24px', width: '100%', padding: '12px', fontSize: '1.1rem', background: 'transparent', border: `2px solid ${currentTheme.panelText}`, color: currentTheme.panelText }}
-              >
-                Retour
-              </button>
-            </div>
-          </div>
+          <Boutique
+            title="BOUTIQUE SUDOKU"
+            icon="🔢"
+            categories={[
+              {
+                id: 'theme',
+                name: 'Thèmes Visuels',
+                icon: '🎨',
+                items: Object.values(THEMES).map(t => ({
+                  id: t.id,
+                  name: t.name,
+                  icon: t.icon
+                }))
+              }
+            ]}
+            currentSelections={{ theme: activeThemeId }}
+            onSelect={(_, themeId) => handleSelectTheme(themeId)}
+            onClose={() => setShowStore(false)}
+          />
         )}
 
       <div style={containerStyle}>

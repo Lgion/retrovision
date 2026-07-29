@@ -6,1070 +6,170 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import MahjongCollection from './MahjongCollection';
 
-// --- DIMENSIONS & THEME CONFIGURATION ---
-const MAHJONG_THEME = {
-  icon: {
-    size: 50,
-    fontSize: '40px'
-  },
-  board: {
-    cellWidth: 64,
-    cellHeight: 67,
-    tileWidth: 64,
-    tileHeight: 67
-  },
-  fonts: {
-    roundTitleSize: '19px',
-    statLabelSize: '11px',
-    statValueSize: '18px',
-    helperBtnSize: '13px',
-    hintBulbSize: '30px',
-    badgeSize: '13px',
-    descSize: '17px',
-    restartBtnSize: '16px',
-    footerHelpSize: '12px'
-  }
-};
+import MahjongIcon, { MAHJONG_THEME } from './MahjongIcon';
 
-function MahjongIcon({ name, tileset }) {
-  const size = MAHJONG_THEME.icon.size;
 
-  if (tileset === 'nature') {
-    switch (name) {
-      case 'fa': // Lotus-Chan (Lotus Flower with blinking anime eyes)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="lotusPetalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#fca5a5" />
-                <stop offset="50%" stopColor="#f472b6" />
-                <stop offset="100%" stopColor="#ec4899" />
-              </linearGradient>
-              <linearGradient id="lotusPadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#6ee7b7" />
-                <stop offset="100%" stopColor="#10b981" />
-              </linearGradient>
-            </defs>
-            {/* Lily Pad Base */}
-            <path d="M 6 33 C 10 25, 38 25, 42 33 C 35 39, 13 39, 6 33 Z" fill="url(#lotusPadGrad)" stroke="#047857" strokeWidth="1.2" />
-            {/* Petals */}
-            <path d="M 24 9 C 17 15, 12 25, 8 27 C 16 28, 21 24, 24 9 Z" fill="url(#lotusPetalGrad)" />
-            <path d="M 24 9 C 31 15, 36 25, 40 27 C 32 28, 27 24, 24 9 Z" fill="url(#lotusPetalGrad)" />
-            <path d="M 24 5 C 15 13, 17 24, 24 28 C 31 24, 33 13, 24 5 Z" fill="#fce7f3" stroke="#f472b6" strokeWidth="1" />
+const MahjongTile = React.memo(function MahjongTile({
+  tile,
+  mode,
+  tileset,
+  isSelected,
+  isHint,
+  isFree,
+  isGreyedOut,
+  isMatchOption,
+  isVibrating,
+  isHintSimulating,
+  isDiscreetHint,
+  isDragging,
+  hintMove,
+  cellWidth,
+  cellHeight,
+  tileWidth,
+  tileHeight,
+  onClick,
+  onMouseDown,
+  onTouchStart,
+}) {
+  let left = 0;
+  let top = 0;
+  let zIndex = 80;
 
-            {/* Kawaii Face on Center Petal */}
-            <g className="anim-kawaii-blink">
-              <circle cx="20" cy="17" r="1.6" fill="#1e1b4b" />
-              <circle cx="19.4" cy="16.4" r="0.6" fill="#ffffff" />
-              <circle cx="28" cy="17" r="1.6" fill="#1e1b4b" />
-              <circle cx="27.4" cy="16.4" r="0.6" fill="#ffffff" />
-            </g>
-            {/* Blushing Cheeks */}
-            <ellipse cx="17.5" cy="19.5" rx="1.8" ry="1.2" fill="#fb7185" opacity="0.85" />
-            <ellipse cx="30.5" cy="19.5" rx="1.8" ry="1.2" fill="#fb7185" opacity="0.85" />
-            {/* Cute Smile */}
-            <path d="M 22.5 20 C 23.5 21.3, 24.5 21.3, 25.5 20" stroke="#1e1b4b" strokeWidth="1" strokeLinecap="round" fill="none" />
-
-            {/* Sparkles */}
-            <path className="anim-kawaii-sparkle" d="M 37 10 L 38 12 L 40 13 L 38 14 L 37 16 L 36 14 L 34 13 L 36 12 Z" fill="#fef08a" />
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#fbbf24" textAnchor="middle" fontFamily="sans-serif" letterSpacing="0.5">蓮</text>
-          </svg>
-        );
-      case 'xi': // Fuji-Kun & Smiling Sun
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="sunGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#fef08a" />
-                <stop offset="100%" stopColor="#f59e0b" />
-              </linearGradient>
-              <linearGradient id="fujiGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#38bdf8" />
-                <stop offset="100%" stopColor="#0284c7" />
-              </linearGradient>
-            </defs>
-            {/* Happy Sun behind Fuji */}
-            <circle cx="34" cy="13" r="7" fill="url(#sunGrad)" />
-            {/* Sun Face */}
-            <circle cx="32" cy="12" r="0.9" fill="#78350f" />
-            <circle cx="36" cy="12" r="0.9" fill="#78350f" />
-            <ellipse cx="30.5" cy="13.8" rx="1" ry="0.6" fill="#f43f5e" />
-            <ellipse cx="37.5" cy="13.8" rx="1" ry="0.6" fill="#f43f5e" />
-            <path d="M 33 14 C 34 15, 35 15, 36 14" stroke="#78350f" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-
-            {/* Mt. Fuji Body */}
-            <path d="M 8 35 L 18 16 L 28 16 L 38 35 Z" fill="url(#fujiGrad)" stroke="#0369a1" strokeWidth="1" />
-            {/* Snow Cap Hat */}
-            <path d="M 18 16 L 28 16 L 31 22 C 29 20, 27 23, 24 21 C 21 23, 19 20, 16 22 Z" fill="#ffffff" stroke="#e0f2fe" strokeWidth="0.8" />
-
-            {/* Fuji Sleepy Happy Face (◡ ‿ ◡) */}
-            <path d="M 20 25 C 21 23.5, 22 23.5, 23 25" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-            <path d="M 26 25 C 27 23.5, 28 23.5, 29 25" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-            {/* Rosy Cheeks */}
-            <ellipse cx="18" cy="27" rx="2" ry="1.2" fill="#fb7185" />
-            <ellipse cx="31" cy="27" rx="2" ry="1.2" fill="#fb7185" />
-            <path d="M 23.5 27 C 24.5 28.2, 25.5 28.2, 26.5 27" stroke="#0f172a" strokeWidth="1" strokeLinecap="round" fill="none" />
-
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#fbbf24" textAnchor="middle" fontFamily="sans-serif">日山</text>
-          </svg>
-        );
-      case 'six': // Wavey-Chan (Ocean Wave with Swaying Animation)
-        return (
-          <svg className="anim-kawaii-sway" width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#38bdf8" />
-                <stop offset="60%" stopColor="#0284c7" />
-                <stop offset="100%" stopColor="#0369a1" />
-              </linearGradient>
-            </defs>
-            {/* Wave Body */}
-            <path d="M 5 33 C 13 33, 15 18, 25 18 C 34 18, 36 8, 43 8 C 40 16, 32 20, 27 20 C 17 20, 15 35, 5 35 Z" fill="url(#waveGrad)" stroke="#e0f2fe" strokeWidth="1" />
-            {/* Wave Foam Crest */}
-            <circle cx="43" cy="8" r="3" fill="#ffffff" />
-            <circle cx="39" cy="11" r="2.5" fill="#ffffff" />
-            <circle cx="35" cy="14" r="2" fill="#ffffff" />
-
-            {/* Kawaii Face on Wave Curve */}
-            <circle cx="19" cy="25" r="1.5" fill="#0f172a" />
-            <circle cx="18.5" cy="24.4" r="0.5" fill="#ffffff" />
-            <circle cx="26" cy="25" r="1.5" fill="#0f172a" />
-            <circle cx="25.5" cy="24.4" r="0.5" fill="#ffffff" />
-            {/* Blushing Cheeks */}
-            <ellipse cx="16.5" cy="27" rx="1.6" ry="1" fill="#f43f5e" opacity="0.8" />
-            <ellipse cx="28.5" cy="27" rx="1.6" ry="1" fill="#f43f5e" opacity="0.8" />
-            {/* Smile */}
-            <path d="M 21.5 27.5 C 22.5 28.8, 23.5 28.8, 24.5 27.5" stroke="#0f172a" strokeWidth="1" strokeLinecap="round" fill="none" />
-
-            {/* Little Splash Hearts/Drops */}
-            <path d="M 37 5 C 37 3, 39 3, 39 5 C 39 7, 37 8, 37 5 Z" fill="#7dd3fc" />
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#38bdf8" textAnchor="middle" fontFamily="sans-serif">浪</text>
-          </svg>
-        );
-      case 'two': // Leafy Twins (Two Hugging Leaves, One Winking)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="leaf1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#a7f3d0" />
-                <stop offset="100%" stopColor="#10b981" />
-              </linearGradient>
-              <linearGradient id="leaf2Grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#6ee7b7" />
-                <stop offset="100%" stopColor="#047857" />
-              </linearGradient>
-            </defs>
-            {/* Stem */}
-            <path d="M 24 36 C 24 26, 24 16, 24 7" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" />
-
-            {/* Left Leaf (Winking) */}
-            <path d="M 24 27 C 13 25, 9 13, 17 9 C 22 13, 24 20, 24 27 Z" fill="url(#leaf1Grad)" stroke="#fbbf24" strokeWidth="0.9" />
-            <path d="M 14 16 L 17 17.5 L 14 19" stroke="#064e3b" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none" /> {/* Winking eye */}
-            <circle cx="20" cy="16" r="1.3" fill="#064e3b" />
-            <circle cx="19.5" cy="15.5" r="0.4" fill="#ffffff" />
-            <ellipse cx="14" cy="19.5" rx="1.3" ry="0.8" fill="#fb7185" />
-            <ellipse cx="21" cy="19.5" rx="1.3" ry="0.8" fill="#fb7185" />
-
-            {/* Right Leaf (Happy) */}
-            <path d="M 24 21 C 35 19, 39 7, 31 3 C 26 7, 24 14, 24 21 Z" fill="url(#leaf2Grad)" stroke="#fbbf24" strokeWidth="0.9" />
-            <circle cx="28" cy="11" r="1.3" fill="#064e3b" />
-            <circle cx="27.5" cy="10.5" r="0.4" fill="#ffffff" />
-            <circle cx="34" cy="11" r="1.3" fill="#064e3b" />
-            <circle cx="33.5" cy="10.5" r="0.4" fill="#ffffff" />
-            <ellipse cx="26.5" cy="13" rx="1.2" ry="0.8" fill="#fb7185" />
-            <ellipse cx="35" cy="13" rx="1.2" ry="0.8" fill="#fb7185" />
-            <path d="M 30.5 13 C 31 14, 32 14, 32.5 13" stroke="#064e3b" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-
-            {/* Golden Star Sparkle */}
-            <path className="anim-kawaii-sparkle" d="M 38 22 L 39 24 L 41 25 L 39 26 L 38 28 L 37 26 L 35 25 L 37 24 Z" fill="#fef08a" />
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#fbbf24" textAnchor="middle" fontFamily="sans-serif">葉</text>
-          </svg>
-        );
-      case 'circles': // Sunny Sunflower (Slow Rotating Petals + Joyful Face)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="sunflowerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fef08a" />
-                <stop offset="50%" stopColor="#f59e0b" />
-                <stop offset="100%" stopColor="#d97706" />
-              </linearGradient>
-            </defs>
-            {/* Rotating Petals Group */}
-            <g className="anim-kawaii-spin">
-              {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-                <ellipse key={i} cx="24" cy="10" rx="3.5" ry="8" fill="url(#sunflowerGrad)" stroke="#d97706" strokeWidth="0.6" transform={`rotate(${angle} 24 19)`} />
-              ))}
-            </g>
-
-            {/* Static Joyful Face Center */}
-            <circle cx="24" cy="19" r="7.5" fill="#78350f" stroke="#fbbf24" strokeWidth="1.2" />
-            {/* Kawaii Face (o ^ ▽ ^ o) */}
-            <circle cx="20.5" cy="17.5" r="1.4" fill="#fef08a" />
-            <circle cx="27.5" cy="17.5" r="1.4" fill="#fef08a" />
-            <ellipse cx="18.5" cy="19.5" rx="1.5" ry="1" fill="#f43f5e" opacity="0.9" />
-            <ellipse cx="29.5" cy="19.5" rx="1.5" ry="1" fill="#f43f5e" opacity="0.9" />
-            {/* Open Happy Mouth */}
-            <path d="M 22 20 C 22 22.5, 26 22.5, 26 20 Z" fill="#fef08a" />
-
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#fbbf24" textAnchor="middle" fontFamily="sans-serif">葵</text>
-          </svg>
-        );
-      case 'eight_dots': // Shroomie Family (Bioluminescent Glow Animation)
-        return (
-          <svg className="anim-kawaii-pulse" width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            <defs>
-              <linearGradient id="mushCap" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#e879f9" />
-                <stop offset="60%" stopColor="#c084fc" />
-                <stop offset="100%" stopColor="#7e22ce" />
-              </linearGradient>
-            </defs>
-            {/* Parent Mushroom */}
-            <path d="M 11 22 C 11 9, 37 9, 37 22 Z" fill="url(#mushCap)" stroke="#f5d0fe" strokeWidth="1.2" />
-            <path d="M 19 22 L 20 33 C 20 34, 28 34, 28 33 L 29 22 Z" fill="#faf5ff" stroke="#c084fc" strokeWidth="0.9" />
-            {/* White Spots */}
-            <circle cx="19" cy="15" r="2.2" fill="#ffffff" opacity="0.95" />
-            <circle cx="29" cy="14" r="2.8" fill="#ffffff" opacity="0.95" />
-            <circle cx="24" cy="18" r="1.8" fill="#ffffff" opacity="0.95" />
-
-            {/* Parent Kawaii Face */}
-            <circle cx="22" cy="26" r="1.3" fill="#3b0764" />
-            <circle cx="26" cy="26" r="1.3" fill="#3b0764" />
-            <ellipse cx="20" cy="27.5" rx="1.2" ry="0.8" fill="#f43f5e" />
-            <ellipse cx="28" cy="27.5" rx="1.2" ry="0.8" fill="#f43f5e" opacity="0.9" />
-            <path d="M 23.2 27.5 C 24 28.5, 24.8 28.5, 25.6 27.5" stroke="#3b0764" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-
-            {/* Baby Mushroom */}
-            <path d="M 5 28 C 5 19, 19 19, 19 28 Z" fill="#38bdf8" stroke="#e0f2fe" strokeWidth="0.9" />
-            <path d="M 10 28 L 11 35 L 13 35 L 14 28 Z" fill="#f0f9ff" />
-            <circle cx="10" cy="31" r="0.9" fill="#0c4a6e" />
-            <circle cx="13" cy="31" r="0.9" fill="#0c4a6e" />
-            <ellipse cx="9" cy="32" rx="0.8" ry="0.5" fill="#f43f5e" />
-            <ellipse cx="14" cy="32" rx="0.8" ry="0.5" fill="#f43f5e" />
-
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#e9d5ff" textAnchor="middle" fontFamily="sans-serif">茸</text>
-          </svg>
-        );
-      case 'one_circle': // Drop-Kun (Floating Water Drop with Glossy Eyes)
-        return (
-          <svg className="anim-kawaii-float" width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#bae6fd" />
-                <stop offset="40%" stopColor="#38bdf8" />
-                <stop offset="100%" stopColor="#0284c7" />
-              </linearGradient>
-            </defs>
-            {/* Water Drop Shape */}
-            <path d="M 24 4 C 24 4, 39 20, 39 27 C 39 35, 32 41, 24 41 C 16 41, 9 35, 9 27 C 9 20, 24 4, 24 4 Z" fill="url(#dropGrad)" stroke="#e0f2fe" strokeWidth="1.3" />
-            {/* Highlight Shine */}
-            <path d="M 17 18 C 14 22, 14 28, 17 32" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" opacity="0.9" />
-
-            {/* Glossy Anime Eyes (◕ ∇ ◕) */}
-            <circle cx="19" cy="24" r="2" fill="#0f172a" />
-            <circle cx="18.2" cy="23.2" r="0.8" fill="#ffffff" />
-            <circle cx="19.5" cy="24.8" r="0.4" fill="#ffffff" />
-
-            <circle cx="29" cy="24" r="2" fill="#0f172a" />
-            <circle cx="28.2" cy="23.2" r="0.8" fill="#ffffff" />
-            <circle cx="29.5" cy="24.8" r="0.4" fill="#ffffff" />
-
-            {/* Cheeks */}
-            <ellipse cx="16" cy="26.5" rx="1.8" ry="1.1" fill="#f43f5e" opacity="0.85" />
-            <ellipse cx="32" cy="26.5" rx="1.8" ry="1.1" fill="#f43f5e" opacity="0.85" />
-
-            {/* Cute Open Mouth */}
-            <path d="M 22 26 C 22 28.2, 26 28.2, 26 26 Z" fill="#ffffff" stroke="#0f172a" strokeWidth="0.8" />
-          </svg>
-        );
-      case 'bamboo_green_3': // Bambu Trio (Cute Panda Bamboo)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="bambooGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#34d399" />
-                <stop offset="50%" stopColor="#10b981" />
-                <stop offset="100%" stopColor="#047857" />
-              </linearGradient>
-            </defs>
-            {/* Stalk 1 */}
-            <rect x="9" y="5" width="6.5" height="28" rx="3" fill="url(#bambooGrad)" stroke="#064e3b" strokeWidth="0.9" />
-            <line x1="9" y1="13" x2="15.5" y2="13" stroke="#fbbf24" strokeWidth="1.2" />
-            <line x1="9" y1="22" x2="15.5" y2="22" stroke="#fbbf24" strokeWidth="1.2" />
-
-            {/* Stalk 2 (Center Main Stalk with Panda Face) */}
-            <rect x="20.5" y="2" width="7" height="31" rx="3" fill="url(#bambooGrad)" stroke="#064e3b" strokeWidth="0.9" />
-            <line x1="20.5" y1="10" x2="27.5" y2="10" stroke="#fbbf24" strokeWidth="1.2" />
-            <line x1="20.5" y1="20" x2="27.5" y2="20" stroke="#fbbf24" strokeWidth="1.2" />
-
-            {/* Panda Ears on Main Stalk */}
-            <circle cx="20.5" cy="2.5" r="1.8" fill="#064e3b" />
-            <circle cx="27.5" cy="2.5" r="1.8" fill="#064e3b" />
-            {/* Panda Eyes */}
-            <ellipse cx="22.5" cy="6" rx="1.3" ry="1.6" fill="#064e3b" />
-            <circle cx="22.5" cy="5.8" r="0.5" fill="#ffffff" />
-            <ellipse cx="25.5" cy="6" rx="1.3" ry="1.6" fill="#064e3b" />
-            <circle cx="25.5" cy="5.8" r="0.5" fill="#ffffff" />
-            <ellipse cx="21" cy="7.2" rx="1" ry="0.6" fill="#fb7185" />
-            <ellipse cx="27" cy="7.2" rx="1" ry="0.6" fill="#fb7185" />
-
-            {/* Stalk 3 */}
-            <rect x="32" y="7" width="6.5" height="26" rx="3" fill="url(#bambooGrad)" stroke="#064e3b" strokeWidth="0.9" />
-            <line x1="32" y1="15" x2="38.5" y2="15" stroke="#fbbf24" strokeWidth="1.2" />
-
-            {/* Leaves */}
-            <path d="M 15.5 13 C 19 9, 21 5, 23 7 C 19 11, 17 13, 15.5 13 Z" fill="#6ee7b7" />
-            <path d="M 27.5 10 C 32 6, 36 2, 38 4 C 33 8, 30 10, 27.5 10 Z" fill="#6ee7b7" />
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#34d399" textAnchor="middle" fontFamily="sans-serif">竹</text>
-          </svg>
-        );
-      case 'bamboo_red_3': // Rosey-Chan (Blushing Blossom Branch)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="roseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fda4af" />
-                <stop offset="50%" stopColor="#f43f5e" />
-                <stop offset="100%" stopColor="#e11d48" />
-              </linearGradient>
-            </defs>
-            <path d="M 7 33 C 15 29, 27 21, 40 7" stroke="#78350f" strokeWidth="2.5" strokeLinecap="round" />
-
-            {/* Main Blossom with Face */}
-            <circle cx="27" cy="16" r="6.5" fill="url(#roseGrad)" stroke="#fbbf24" strokeWidth="0.9" />
-            <circle cx="25" cy="15" r="1.1" fill="#4c0519" />
-            <circle cx="29" cy="15" r="1.1" fill="#4c0519" />
-            <ellipse cx="23.5" cy="16.5" rx="1.1" ry="0.7" fill="#fef08a" />
-            <ellipse cx="30.5" cy="16.5" rx="1.1" ry="0.7" fill="#fef08a" />
-            <path d="M 26 17 C 27 17.8, 28 17.8, 29 17" stroke="#4c0519" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-
-            {/* Smaller Flower */}
-            <circle cx="15" cy="24" r="5" fill="url(#roseGrad)" stroke="#fbbf24" strokeWidth="0.8" />
-            <circle cx="15" cy="24" r="1.8" fill="#fef08a" />
-
-            {/* Bud */}
-            <circle cx="36" cy="10" r="3.5" fill="#f43f5e" stroke="#fbbf24" strokeWidth="0.8" />
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#fb7185" textAnchor="middle" fontFamily="sans-serif">華</text>
-          </svg>
-        );
-      case 'bamboo_green_4': // Piny-Kun (Bonsai Pine with Sleepy Face)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="pineNeedles" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#34d399" />
-                <stop offset="100%" stopColor="#065f46" />
-              </linearGradient>
-            </defs>
-            {/* Trunk */}
-            <path d="M 24 34 L 24 21 C 24 17, 20 15, 16 13" stroke="#78350f" strokeWidth="3.2" strokeLinecap="round" />
-
-            {/* Needle Clusters */}
-            <circle cx="13" cy="11" r="7" fill="url(#pineNeedles)" stroke="#fbbf24" strokeWidth="0.9" />
-            <circle cx="24" cy="13" r="8.5" fill="url(#pineNeedles)" stroke="#fbbf24" strokeWidth="0.9" />
-            <circle cx="34" cy="17" r="6" fill="url(#pineNeedles)" stroke="#fbbf24" strokeWidth="0.9" />
-
-            {/* Sleepy Kawaii Face on Center Needle Cluster */}
-            <path d="M 21 12 C 22 10.8, 23 10.8, 24 12" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" fill="none" />
-            <path d="M 26 12 C 27 10.8, 28 10.8, 29 12" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" fill="none" />
-            <ellipse cx="19.5" cy="14" rx="1.3" ry="0.8" fill="#fb7185" />
-            <ellipse cx="30.5" cy="14" rx="1.3" ry="0.8" fill="#fb7185" />
-
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#34d399" textAnchor="middle" fontFamily="sans-serif">松</text>
-          </svg>
-        );
-      case 'flower': // Sakura-Chan (Cherry Blossom with Winking Face & Floating Sparkles)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="sakuraGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fbcfe8" />
-                <stop offset="50%" stopColor="#f472b6" />
-                <stop offset="100%" stopColor="#db2777" />
-              </linearGradient>
-            </defs>
-            {/* 5 Petals */}
-            {[0, 72, 144, 216, 288].map((angle, i) => (
-              <path key={i} d="M 24 19 C 20 9, 28 7, 24 1 C 20 7, 28 9, 24 19 Z" fill="url(#sakuraGrad)" stroke="#fbcfe8" strokeWidth="0.6" transform={`rotate(${angle} 24 19)`} />
-            ))}
-            {/* Center Disk */}
-            <circle cx="24" cy="19" r="4.5" fill="#fef08a" stroke="#d97706" strokeWidth="1" />
-
-            {/* Kawaii Face (Winking) */}
-            <circle cx="22.2" cy="18.2" r="0.9" fill="#78350f" />
-            <path d="M 25 17.5 L 27 18.5 L 25 19.5" stroke="#78350f" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <ellipse cx="21" cy="19.5" rx="0.9" ry="0.6" fill="#f43f5e" />
-            <ellipse cx="27" cy="19.5" rx="0.9" ry="0.6" fill="#f43f5e" />
-
-            {/* Sparkle */}
-            <path className="anim-kawaii-sparkle" d="M 37 8 L 38 10 L 40 11 L 38 12 L 37 14 L 36 12 L 34 11 L 36 10 Z" fill="#fef08a" />
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#f472b6" textAnchor="middle" fontFamily="sans-serif">桜</text>
-          </svg>
-        );
-      case 'leaf': // Ginkgo-Chan (Golden Fan Leaf with Happy Smile)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}>
-            <defs>
-              <linearGradient id="ginkgoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fef08a" />
-                <stop offset="50%" stopColor="#f59e0b" />
-                <stop offset="100%" stopColor="#d97706" />
-              </linearGradient>
-            </defs>
-            {/* Fan Leaf Shape */}
-            <path d="M 24 33 L 24 24 C 10 22, 6 6, 24 10 C 42 6, 38 22, 24 24 Z" fill="url(#ginkgoGrad)" stroke="#fbbf24" strokeWidth="1.1" />
-            <path d="M 24 24 L 24 35" stroke="#d97706" strokeWidth="2.2" strokeLinecap="round" />
-
-            {/* Kawaii Face (° ◡ °) */}
-            <circle cx="19" cy="16" r="1.3" fill="#78350f" />
-            <circle cx="18.5" cy="15.5" r="0.4" fill="#ffffff" />
-            <circle cx="29" cy="16" r="1.3" fill="#78350f" />
-            <circle cx="28.5" cy="15.5" r="0.4" fill="#ffffff" />
-            <ellipse cx="17" cy="18" rx="1.4" ry="0.9" fill="#f43f5e" opacity="0.85" />
-            <ellipse cx="31" cy="18" rx="1.4" ry="0.9" fill="#f43f5e" opacity="0.85" />
-            <path d="M 22.5 18 C 23.5 19.3, 24.5 19.3, 25.5 18" stroke="#78350f" strokeWidth="1" strokeLinecap="round" fill="none" />
-
-            <text x="24" y="44" fontSize="8.5" fontWeight="900" fill="#fbbf24" textAnchor="middle" fontFamily="sans-serif">銀杏</text>
-          </svg>
-        );
-      default:
-        return null;
-    }
+  if (mode === 'zen') {
+    left = (tile.x - 1) * 30 + tile.z * 5;
+    top = (tile.y - 1) * 44 - tile.z * 7;
+    zIndex = 80 + tile.z + (isSelected ? 50 : 0);
+  } else {
+    left = (tile.x - 1) * cellWidth;
+    top = (tile.y - 1) * cellHeight;
+    zIndex = 80 + (isSelected ? 50 : 0) + (isMatchOption ? 40 : 0);
   }
 
-  if (tileset === 'cyber') {
-    switch (name) {
-      case 'fa': // Minimal Electric Bolt (Vibrant Yellow & Cyan)
-        return (
-          <svg className="anim-cyber-neon" width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            {/* Bold Neon Bolt */}
-            <path d="M 28 4 L 11 25 H 25 L 19 44 L 37 21 H 23 L 28 4 Z" fill="#ffe600" stroke="#00f0ff" strokeWidth="1.5" strokeLinejoin="round" />
-            {/* Minimal Face */}
-            <circle cx="21" cy="22" r="1.5" fill="#0d111d" />
-            <circle cx="27" cy="22" r="1.5" fill="#0d111d" />
-            <path d="M 22.5 24.5 C 23.5 25.5, 24.5 25.5, 25.5 24.5" stroke="#0d111d" strokeWidth="1" strokeLinecap="round" fill="none" />
-          </svg>
-        );
-      case 'xi': // Minimal 8-Bit Invader (Vibrant Magenta & Cyan)
-        return (
-          <svg className="anim-cyber-bob" width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            {/* Invader Body */}
-            <path d="M 14 12 H 34 V 16 H 38 V 28 H 34 V 32 H 30 V 28 H 18 V 32 H 14 V 28 H 10 V 16 H 14 V 12 Z" fill="#ff007f" stroke="#00f0ff" strokeWidth="1.5" />
-            {/* Antennas */}
-            <path d="M 12 12 L 8 6 M 36 12 L 40 6" stroke="#00f0ff" strokeWidth="2.5" strokeLinecap="round" />
-            {/* Bright Cyan Eyes */}
-            <rect x="16" y="18" width="5" height="5" rx="1" fill="#00f0ff" />
-            <rect x="27" y="18" width="5" height="5" rx="1" fill="#00f0ff" />
-            <rect x="18" y="20" width="2" height="2" fill="#ffffff" />
-            <rect x="29" y="20" width="2" height="2" fill="#ffffff" />
-          </svg>
-        );
-      case 'six': // Minimal Cyber Bot Head (Vibrant Cyan & Pink)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            {/* Head Contour */}
-            <rect x="10" y="10" width="28" height="26" rx="6" fill="#151b2c" stroke="#00f0ff" strokeWidth="2" />
-            {/* Earpieces */}
-            <rect x="5" y="18" width="5" height="10" rx="2" fill="#ff007f" />
-            <rect x="38" y="18" width="5" height="10" rx="2" fill="#ff007f" />
-            {/* Visor */}
-            <rect x="14" y="15" width="20" height="10" rx="3" fill="#00f0ff" stroke="#ffffff" strokeWidth="1" />
-            {/* Visor Eyes */}
-            <circle cx="19" cy="20" r="2.2" fill="#0d111d" />
-            <circle cx="29" cy="20" r="2.2" fill="#0d111d" />
-            <circle cx="18.3" cy="19.3" r="0.8" fill="#00f0ff" />
-            <circle cx="28.3" cy="19.3" r="0.8" fill="#00f0ff" />
-            {/* Smile */}
-            <path d="M 21.5 29 C 22.5 30.5, 25.5 30.5, 26.5 29" stroke="#ff007f" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-          </svg>
-        );
-      case 'two': // Minimal Floppy Disk (Vibrant Neon Purple & Cyan)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            {/* Disk Body */}
-            <rect x="9" y="8" width="30" height="32" rx="4" fill="#a855f7" stroke="#00f0ff" strokeWidth="1.8" />
-            {/* Shutter */}
-            <rect x="15" y="8" width="18" height="12" fill="#ffffff" rx="1" />
-            <rect x="19" y="10" width="5" height="8" rx="1" fill="#0d111d" />
-            {/* Label Window */}
-            <rect x="14" y="24" width="20" height="12" rx="2" fill="#0d111d" stroke="#00f0ff" strokeWidth="1" />
-            {/* Cute Face on Label */}
-            <circle cx="19" cy="29" r="1.5" fill="#00f0ff" />
-            <circle cx="29" cy="29" r="1.5" fill="#00f0ff" />
-            <path d="M 22 31.5 C 23 32.5, 25 32.5, 26 31.5" stroke="#ff007f" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-          </svg>
-        );
-      case 'circles': // Minimal Plasma Orb (Vibrant Cyan Sphere & Pink Orbital Ring)
-        return (
-          <svg className="anim-cyber-neon" width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            {/* Orbital Ring */}
-            <ellipse cx="24" cy="24" rx="19" ry="7" stroke="#ff007f" strokeWidth="2.5" transform="rotate(-20 24 24)" />
-            {/* Core Sphere */}
-            <circle cx="24" cy="24" r="12" fill="#00f0ff" stroke="#ffffff" strokeWidth="1.5" />
-            {/* Face in Core */}
-            <circle cx="20" cy="23" r="1.5" fill="#0d111d" />
-            <circle cx="28" cy="23" r="1.5" fill="#0d111d" />
-            <path d="M 22 26 C 23 27, 25 27, 26 26" stroke="#0d111d" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-          </svg>
-        );
-      case 'eight_dots': // Minimal Neon Matrix Diamond (Cyan & Yellow)
-        return (
-          <svg className="anim-cyber-bob" width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            {/* Center Diamond */}
-            <path d="M 24 6 L 38 24 L 24 42 L 10 24 Z" fill="#00f0ff" stroke="#ffffff" strokeWidth="1.5" />
-            {/* Inner Diamond Face */}
-            <path d="M 24 14 L 31 24 L 24 34 L 17 24 Z" fill="#0d111d" />
-            <circle cx="21" cy="23" r="1.2" fill="#ffe600" />
-            <circle cx="27" cy="23" r="1.2" fill="#ffe600" />
-            <path d="M 22.5 25.5 C 23.5 26.5, 24.5 26.5, 25.5 25.5" stroke="#ffe600" strokeWidth="1" strokeLinecap="round" fill="none" />
-          </svg>
-        );
-      case 'one_circle': // Minimal Laser Ring / CD (Vibrant Rainbow Concentric Rings)
-        return (
-          <svg className="anim-cyber-spin" width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="18" fill="#ff007f" stroke="#00f0ff" strokeWidth="2" />
-            <circle cx="24" cy="24" r="12" fill="#ffe600" />
-            <circle cx="24" cy="24" r="6" fill="#00f0ff" />
-            <circle cx="24" cy="24" r="3" fill="#0d111d" />
-          </svg>
-        );
-      case 'bamboo_green_3': // Minimal Neon DNA Helix (Vibrant Neon Green & Cyan)
-        return (
-          <svg className="anim-cyber-bob" width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            {/* DNA Waves */}
-            <path d="M 14 8 C 14 18, 34 22, 34 32 C 34 38, 14 40, 14 40" stroke="#00ff66" strokeWidth="3" strokeLinecap="round" />
-            <path d="M 34 8 C 34 18, 14 22, 14 32 C 14 38, 34 40, 34 40" stroke="#00f0ff" strokeWidth="3" strokeLinecap="round" />
-            {/* Nodes */}
-            <circle cx="24" cy="20" r="4.5" fill="#ff007f" stroke="#ffffff" strokeWidth="1" />
-            <circle cx="22.5" cy="19.5" r="0.8" fill="#ffffff" />
-            <circle cx="25.5" cy="19.5" r="0.8" fill="#ffffff" />
-          </svg>
-        );
-      case 'bamboo_red_3': // Minimal Terminal Laptop (Vibrant Pink & Cyan)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            {/* Screen */}
-            <rect x="10" y="8" width="28" height="20" rx="4" fill="#ff007f" stroke="#00f0ff" strokeWidth="1.8" />
-            <rect x="14" y="11" width="20" height="14" rx="2" fill="#0d111d" />
-            {/* Screen Face <◕‿◕> */}
-            <text x="24" y="21" fontSize="9" fontWeight="900" fill="#00f0ff" textAnchor="middle" fontFamily="sans-serif">&lt;◕‿◕&gt;</text>
-            {/* Keyboard Base */}
-            <path d="M 6 34 L 11 28 H 37 L 42 34 H 6 Z" fill="#00f0ff" />
-          </svg>
-        );
-      case 'bamboo_green_4': // Minimal Neon Battery (Vibrant Green & Yellow)
-        return (
-          <svg className="anim-cyber-neon" width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            {/* Battery Cap */}
-            <rect x="20" y="5" width="8" height="4" rx="1.5" fill="#00ff66" />
-            {/* Battery Body */}
-            <rect x="12" y="9" width="24" height="32" rx="5" fill="#0d111d" stroke="#00ff66" strokeWidth="2" />
-            {/* Energy Bars */}
-            <rect x="16" y="29" width="16" height="8" rx="2" fill="#00ff66" />
-            <rect x="16" y="19" width="16" height="8" rx="2" fill="#00ff66" />
-            <rect x="16" y="13" width="16" height="4" rx="1" fill="#ffe600" />
-          </svg>
-        );
-      case 'flower': // Minimal Neon Spiral Vortex (Vibrant Pink & Cyan Spin)
-        return (
-          <svg className="anim-cyber-spin" width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            <path d="M 24 24 C 32 12, 44 24, 24 40 C 4 24, 16 12, 24 24 Z" fill="#ff007f" stroke="#00f0ff" strokeWidth="2" />
-            <path d="M 24 24 C 16 36, 4 24, 24 8 C 44 24, 32 36, 24 24 Z" fill="#00f0ff" opacity="0.8" />
-            <circle cx="24" cy="24" r="4" fill="#ffe600" />
-          </svg>
-        );
-      case 'leaf': // Minimal Neon Gear (Vibrant Electric Yellow & Cyan)
-        return (
-          <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="13" fill="#ffe600" stroke="#00f0ff" strokeWidth="2" />
-            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-              <rect key={i} x="22.5" y="6" width="3" height="6" rx="1.5" fill="#ffe600" stroke="#00f0ff" strokeWidth="1" transform={`rotate(${angle} 24 24)`} />
-            ))}
-            <circle cx="24" cy="24" r="6" fill="#0d111d" stroke="#00f0ff" strokeWidth="1.5" />
-            <circle cx="24" cy="24" r="2" fill="#ff007f" />
-          </svg>
-        );
-      default:
-        return null;
-    }
-  }
-
-  if (tileset === 'modern') {
-    // Classic Kanji for ALL numbers (1-5 classic, not Daiji honorifique)
-    let kanjiChar = '一';
-    let isOdd = true;
-    let shadeIdx = 0; // 0-5 index for nuance within each parity group
-
-    switch (name) {
-      case 'fa': kanjiChar = '一'; isOdd = true; shadeIdx = 0; break; // 1 (Ichi)
-      case 'xi': kanjiChar = '二'; isOdd = false; shadeIdx = 0; break; // 2 (Ni)
-      case 'six': kanjiChar = '三'; isOdd = true; shadeIdx = 1; break; // 3 (San)
-      case 'two': kanjiChar = '四'; isOdd = false; shadeIdx = 1; break; // 4 (Shi)
-      case 'circles': kanjiChar = '五'; isOdd = true; shadeIdx = 2; break; // 5 (Go)
-      case 'eight_dots': kanjiChar = '六'; isOdd = false; shadeIdx = 2; break; // 6 (Roku)
-      case 'one_circle': kanjiChar = '七'; isOdd = true; shadeIdx = 3; break; // 7 (Nana)
-      case 'bamboo_green_3': kanjiChar = '八'; isOdd = false; shadeIdx = 3; break; // 8 (Hachi)
-      case 'bamboo_red_3': kanjiChar = '九'; isOdd = true; shadeIdx = 4; break; // 9 (Kyu)
-      case 'bamboo_green_4': kanjiChar = '十'; isOdd = false; shadeIdx = 4; break; // 10 (Ju)
-      case 'flower': kanjiChar = '百'; isOdd = false; shadeIdx = 5; break; // 100 (Hyaku) - even
-      case 'leaf': kanjiChar = '千'; isOdd = true; shadeIdx = 5; break; // 1000 (Sen) - odd
-      default: kanjiChar = '一'; isOdd = true; shadeIdx = 0; break;
-    }
-
-    // Odd = Warm Saturated Wood (rich mahogany/amber)
-    // Even = Cool Desaturated Wood (ashen grey-brown)
-    // Each shadeIdx gives a progressively lighter nuance within its parity
-    const oddShades = [
-      ['#4a1c14', '#330e0a', '#200604'], // 一 (1) deepest warm
-      ['#552318', '#3c130c', '#280806'], // 三 (3)
-      ['#602a1c', '#481810', '#300c08'], // 五 (5)
-      ['#6b3120', '#501d14', '#38100a'], // 七 (7)
-      ['#763824', '#582218', '#40140c'], // 九 (9)
-      ['#813f28', '#60271c', '#48180e'], // 千 (1000) lightest warm
-    ];
-    const evenShades = [
-      ['#2c2426', '#1e1718', '#120e10'], // 二 (2) deepest cool
-      ['#342a2e', '#241c20', '#181214'], // 四 (4)
-      ['#3c3036', '#2a2028', '#1e1618'], // 六 (6)
-      ['#44363e', '#302430', '#24181c'], // 八 (8)
-      ['#4c3c46', '#362838', '#2a1e20'], // 十 (10)
-      ['#54424e', '#3c2c40', '#302224'], // 百 (100) lightest cool
-    ];
-
-    const shades = isOdd ? oddShades[shadeIdx] : evenShades[shadeIdx];
-    const grainStroke = isOdd ? 'rgba(130, 50, 15, 0.35)' : 'rgba(90, 75, 90, 0.3)';
-    const bevelStroke = isOdd ? 'rgba(245, 158, 11, 0.5)' : 'rgba(148, 163, 184, 0.4)';
-    const pearlFill = isOdd ? '#f59e0b' : '#94a3b8';
-
-    // Gold leaf (odd) vs Platinum leaf (even) gradient stops
-    const gradStops = isOdd
-      ? { a: '#fffeb3', b: '#f59e0b', c: '#d97706', d: '#78350f' }
-      : { a: '#f1f5f9', b: '#cbd5e1', c: '#94a3b8', d: '#475569' };
-    const glowColor = isOdd ? '#fef08a' : '#e2e8f0';
-
-    return (
-      <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none">
-        <defs>
-          {/* Parity-Specific Metallic Leaf Gradient */}
-          <linearGradient id={`goldKanjiGrad_${name}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={gradStops.a} />
-            <stop offset="35%" stopColor={gradStops.b} />
-            <stop offset="75%" stopColor={gradStops.c} />
-            <stop offset="100%" stopColor={gradStops.d} />
-          </linearGradient>
-          {/* Carved Inlay Shadow */}
-          <filter id={`carvedFilter_${name}`} x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1.5" stdDeviation="0.6" floodColor="#000000" floodOpacity="0.95" />
-            <feDropShadow dx="0" dy="-0.5" stdDeviation="0.4" floodColor={glowColor} floodOpacity="0.4" />
-          </filter>
-          {/* Per-Tile Wood Background */}
-          <linearGradient id={`woodBg_${name}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={shades[0]} />
-            <stop offset="50%" stopColor={shades[1]} />
-            <stop offset="100%" stopColor={shades[2]} />
-          </linearGradient>
-        </defs>
-
-        {/* Wood Background (parity-nuanced) */}
-        <rect x="0" y="0" width="48" height="48" rx="4" fill={`url(#woodBg_${name})`} />
-
-        {/* Delicate Wood Grain Lines */}
-        <path d="M 6 8 C 16 6, 32 10, 42 8 M 4 24 C 18 22, 30 26, 44 24 M 6 40 C 20 38, 34 42, 42 40" stroke={grainStroke} strokeWidth="0.8" fill="none" />
-
-        {/* Outer Carved Bevel Line */}
-        <rect x="4" y="4" width="40" height="40" rx="6" stroke={bevelStroke} strokeWidth="0.5" fill="none" />
-
-        {/* Carved Metallic Leaf Kanji Calligraphy */}
-        <text
-          x="24"
-          y="27"
-          fontSize="26"
-          fontWeight="900"
-          fill={`url(#goldKanjiGrad_${name})`}
-          filter={`url(#carvedFilter_${name})`}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontFamily='"Kaiti SC", "STKaiti", "Yu Mincho", "Hiragino Mincho ProN", "Microsoft YaHei", "serif"'
-          letterSpacing="-1"
-        >
-          {kanjiChar}
-        </text>
-
-        {/* Inlaid Pearl Dot Accent */}
-        <circle cx="24" cy="41" r="1.5" fill={pearlFill} />
-      </svg>
-    );
-  }
-
-  if (tileset === 'luxury_marble_2') {
-    const iconMap = {
-      fa: 'fa.png',
-      xi: 'xi.png',
-      flower: 'flower.png',
-      circles: 'circles.png',
-      six: 'six.png',
-      two: 'two.png',
-      eight_dots: 'eight_dots.png',
-      one_circle: 'one_circle.png',
-      bamboo_green_3: 'bamboo_green_3.png',
-      bamboo_red_3: 'bamboo_red_3.png',
-      bamboo_green_4: 'bamboo_green_4.png',
-      leaf: 'leaf.png'
-    };
-    const fileName = iconMap[name] || `${name}.png`;
-
-    return (
-      <div style={{
-        width: '100%',
-        height: '100%',
+  return (
+    <div
+      onClick={onClick}
+      onMouseDown={onMouseDown}
+      onTouchStart={onTouchStart}
+      className={`mahjong-tile-3d ${tileset === 'nature' ? 'nature-jade-tile' : ''} ${tileset === 'cyber' ? 'cyber-neon-tile' : ''} ${tileset === 'modern' ? 'modern-wood-tile' : ''} ${tileset === 'mosaic' ? 'mosaic-stone-tile' : ''} ${tileset === 'luxury_marble_2' ? 'luxury-marble-tile' : ''} ${isSelected ? 'selected' : ''} ${isHint ? 'hinted' : ''} ${!isFree && mode === 'zen' ? 'blocked' : ''} ${isVibrating ? 'tile-vibrating' : ''} ${isHintSimulating ? 'hint-simulating' : ''} ${isDiscreetHint ? 'discreet-hint-glow' : ''}`}
+      style={{
+        position: 'absolute',
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${mode === 'zen' ? 44 : tileWidth}px`,
+        height: `${mode === 'zen' ? 56 : tileHeight}px`,
+        zIndex,
+        transform: isSelected ? 'translate3d(0, -8px, 10px)' : 'none',
+        cursor: isGreyedOut ? 'not-allowed' : (isFree ? 'pointer' : 'not-allowed'),
+        opacity: isGreyedOut ? 0.25 : (tile.matching ? 0.7 : isFree ? 1 : 0.6),
+        filter: isGreyedOut ? 'grayscale(100%) brightness(0.6)' : (isFree ? 'none' : 'brightness(0.85) grayscale(10%)'),
+        pointerEvents: isGreyedOut ? 'none' : 'auto',
+        willChange: isDragging ? 'left, top' : 'auto',
+        '--hint-dx': isHintSimulating && hintMove ? hintMove.dx * cellWidth : 0,
+        '--hint-dy': isHintSimulating && hintMove ? hintMove.dy * cellHeight : 0,
+        background: tileset === 'nature' || tileset === 'creatures_b'
+          ? 'linear-gradient(145deg, #18181b 0%, #0f0f11 50%, #000000 100%)'
+          : tileset === 'cyber'
+            ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 27, 75, 0.95) 50%, rgba(13, 148, 136, 0.2) 100%)'
+            : tileset === 'modern'
+              ? 'linear-gradient(145deg, #3e1f17 0%, #28130d 50%, #170905 100%)'
+              : tileset === 'mosaic'
+                ? 'linear-gradient(145deg, #33261f 0%, #211813 50%, #120d0a 100%)'
+                : tileset === 'luxury_marble_2'
+                  ? 'linear-gradient(145deg, #ffffff 0%, #f3f4f6 60%, #e5e7eb 100%)'
+                  : '#ffffff',
+        borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative',
-        padding: '1px'
-      }}>
-        <img
-          src={`./tales/luxury_marble_2/${fileName}`}
-          alt={name}
-          style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain',
-            filter: 'drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4))',
-            borderRadius: '6px'
-          }}
-          onError={(e) => {
-            e.target.style.display = 'none';
-          }}
-        />
-      </div>
-    );
-  }
+        boxSizing: 'border-box',
+        borderTop: tileset === 'nature' || tileset === 'creatures_b' || tileset === 'modern' || tileset === 'mosaic' || tileset === 'luxury_marble_2'
+          ? '1.5px solid rgba(251, 191, 36, 0.85)'
+          : tileset === 'cyber'
+            ? '1px solid rgba(0, 240, 255, 0.85)'
+            : 'none',
+        borderLeft: tileset === 'nature' || tileset === 'creatures_b' || tileset === 'modern' || tileset === 'mosaic' || tileset === 'luxury_marble_2'
+          ? '1.5px solid rgba(251, 191, 36, 0.65)'
+          : tileset === 'cyber'
+            ? '1px solid rgba(0, 240, 255, 0.65)'
+            : 'none',
+        borderBottom: isVibrating
+          ? '5px solid #ef4444'
+          : tileset === 'nature' || tileset === 'creatures_b'
+            ? '5.5px solid #09090b'
+            : tileset === 'cyber'
+              ? '5px solid #1e1b4b'
+              : tileset === 'modern' || tileset === 'mosaic'
+                ? '5.5px solid #0a0302'
+                : tileset === 'luxury_marble_2'
+                  ? '5.5px solid #d1d5db'
+                  : '5px solid #16a34a',
+        borderRight: isVibrating
+          ? '3px solid #dc2626'
+          : tileset === 'nature' || tileset === 'creatures_b'
+            ? '3.5px solid #121215'
+            : tileset === 'cyber'
+              ? '3px solid #312e81'
+              : tileset === 'modern' || tileset === 'mosaic'
+                ? '3.5px solid #140704'
+                : tileset === 'luxury_marble_2'
+                  ? '3.5px solid #9ca3af'
+                  : '3px solid #15803d',
+        boxShadow: isVibrating
+          ? '0 0 20px #ef4444'
+          : isSelected
+            ? (tileset === 'nature' || tileset === 'creatures_b' ? '0 0 22px #fbbf24, inset 0 0 10px #fbbf24' : tileset === 'modern' || tileset === 'mosaic' || tileset === 'luxury_marble_2' ? '0 0 25px #f59e0b, inset 0 0 12px #fef08a' : '0 0 25px #00f0ff, inset 0 0 12px #f43f5e')
+            : isMatchOption
+              ? '0 0 20px #38bdf8, inset 0 0 10px #38bdf8'
+              : isHint
+                ? '0 0 20px #facc15, inset 0 0 10px #facc15'
+                : tileset === 'nature' || tileset === 'creatures_b'
+                  ? `inset 0 1px 2px rgba(255, 255, 255, 0.35), inset 0 -3px 8px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.35), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.3)`
+                  : tileset === 'cyber'
+                    ? `inset 0 0 12px rgba(0, 240, 255, 0.25), inset 0 -2px 6px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 240, 255, 0.2), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.4)`
+                    : tileset === 'modern' || tileset === 'mosaic'
+                      ? `inset 0 1px 3px rgba(254, 240, 138, 0.35), inset 0 -3px 8px rgba(0, 0, 0, 0.7), 0 4px 10px rgba(0, 0, 0, 0.4), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.5)`
+                      : tileset === 'luxury_marble_2'
+                        ? `inset 0 1px 3px rgba(255, 255, 255, 0.9), inset 0 -3px 6px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.25), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.2)`
+                        : `0 4px 6px rgba(0, 0, 0, 0.15), ${tile.z * 2}px ${tile.z * 2 + 2}px 6px rgba(0,0,0,0.18)`,
+        outline: isSelected
+          ? (tileset === 'nature' || tileset === 'creatures_b' ? '3px solid #fbbf24' : '3px solid #00f0ff')
+          : isMatchOption
+            ? '3px solid #38bdf8'
+            : isHint
+              ? '3px dashed #facc15'
+              : 'none',
+        outlineOffset: '2px',
+        transition: isDragging ? 'none' : 'left 0.2s cubic-bezier(0.25, 1, 0.5, 1), top 0.2s cubic-bezier(0.25, 1, 0.5, 1), transform 0.15s, opacity 0.2s',
+        userSelect: 'none',
+        touchAction: 'none',
+      }}
+    >
+      <MahjongIcon name={tile.sym.name} tileset={tileset} />
 
-  if (tileset === 'mosaic') {
-    return (
-      <div style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        padding: '2px'
-      }}>
-        <img
-          src={`/tales/mosaics/tiles/${name}.png`}
-          alt={name}
-          style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain',
-            filter: 'drop-shadow(0 3px 6px rgba(0, 0, 0, 0.7))',
-            borderRadius: '4px'
-          }}
-          onError={(e) => {
-            e.target.style.display = 'none';
-          }}
-        />
-      </div>
-    );
-  }
-
-  switch (name) {
-    case 'fa': // Green Dragon
-      return (
-        <svg width={size} height={size} viewBox="-2 -2 28 28" fill="none" style={{ display: 'block', overflow: 'visible' }}>
-          <defs>
-            {/* Rich Emerald Gradient for the body */}
-            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#4ade80" />
-              <stop offset="50%" stopColor="#15803d" />
-              <stop offset="100%" stopColor="#022c22" />
-            </linearGradient>
-
-            {/* Shimmering Gold Gradient for the stroke */}
-            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fef08a">
-                <animate attributeName="stop-color" values="#fef08a;#ca8a04;#fef08a" dur="2s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="50%" stopColor="#ca8a04" />
-              <stop offset="100%" stopColor="#fef08a">
-                <animate attributeName="stop-color" values="#fef08a;#eab308;#fef08a" dur="2s" repeatCount="indefinite" />
-              </stop>
-            </linearGradient>
-
-            {/* Glow Filter for magic effects */}
-            <filter id="dragonGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="1.2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Intense Eye Glow */}
-            <filter id="eyeGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="0.6" result="blur" />
-              <feComponentTransfer in="blur" result="glow">
-                <feFuncA type="linear" slope="2.5" />
-              </feComponentTransfer>
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          <style>
-            {`
-              @keyframes dragonIdle {
-                0%, 85%, 100% { transform: scale(1) translateY(0) rotate(0deg); filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5)); }
-                90% { transform: scale(1.12) translateY(-2px) rotate(4deg); filter: drop-shadow(0px 10px 15px rgba(250,204,21,0.5)); }
-                95% { transform: scale(1.12) translateY(-2px) rotate(-4deg); filter: drop-shadow(0px 10px 15px rgba(250,204,21,0.5)); }
-              }
-              @keyframes dashAnim {
-                from { stroke-dashoffset: 20; }
-                to { stroke-dashoffset: 0; }
-              }
-              @keyframes fierceEye {
-                0%, 100% { fill: #fef08a; }
-                50% { fill: #ffffff; }
-              }
-              @keyframes floatSparkle {
-                0%, 100% { opacity: 0.2; transform: translateY(0) scale(1); }
-                50% { opacity: 1; transform: translateY(-3px) scale(1.5); }
-              }
-              .dragon-expert {
-                animation: dragonIdle 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
-                transform-origin: 12px 12px;
-              }
-              .magic-contour {
-                stroke-dasharray: 4 6;
-                animation: dashAnim 2s linear infinite;
-              }
-              .dragon-eye-expert {
-                animation: fierceEye 3.5s ease-in-out infinite;
-                filter: url(#eyeGlow);
-              }
-              .sparkle {
-                animation: floatSparkle 2s ease-in-out infinite;
-              }
-            `}
-          </style>
-
-          <g className="dragon-expert">
-            {/* Ambient Aura */}
-            <circle cx="12" cy="12" r="10" fill="url(#emeraldGrad)" opacity="0.2" filter="url(#dragonGlow)" />
-
-            {/* Main Silhouette with Emerald Gradient */}
-            <path id="dragon-path"
-              d="M12 1 L14.5 5.5 L20 4 L17.5 9.5 L22 13 L16.5 15.5 L18 21 L12 18.5 L6 21 L7.5 15.5 L2 13 L6.5 9.5 L4 4 L9.5 5.5 Z"
-              fill="url(#emeraldGrad)"
-              stroke="#022c22"
-              strokeWidth="0.5"
-              strokeLinejoin="round"
-            />
-
-            {/* Scintillating Golden Contour */}
-            <path
-              d="M12 1 L14.5 5.5 L20 4 L17.5 9.5 L22 13 L16.5 15.5 L18 21 L12 18.5 L6 21 L7.5 15.5 L2 13 L6.5 9.5 L4 4 L9.5 5.5 Z"
-              fill="none"
-              stroke="url(#goldGrad)"
-              strokeWidth="1.2"
-              strokeLinejoin="round"
-              className="magic-contour"
-              filter="url(#dragonGlow)"
-            />
-
-            {/* Inner Emerald Scales */}
-            <path d="M12 4 L13 6 L12 7 L11 6 Z M12 8 L13.5 10 L12 11 L10.5 10 Z" fill="#86efac" opacity="0.6" />
-
-            {/* Angry Fiery Eyes */}
-            <path className="dragon-eye-expert" d="M7 11 L11 12.5 L7 14 Z" />
-            <path className="dragon-eye-expert" d="M17 11 L13 12.5 L17 14 Z" />
-
-            {/* Sharp Fangs */}
-            <path d="M10 18.5 L10.5 20 L11 18.5 Z" fill="#ffffff" />
-            <path d="M14 18.5 L13.5 20 L13 18.5 Z" fill="#ffffff" />
-
-            {/* Glowing Nostrils */}
-            <circle cx="10" cy="16.5" r="1.2" fill="#022c22" />
-            <circle cx="14" cy="16.5" r="1.2" fill="#022c22" />
-
-            {/* Glowing Traditional Character */}
-            <text x="12" y="7.5" fontSize="4.8" fontWeight="900" fill="url(#goldGrad)" filter="url(#dragonGlow)" textAnchor="middle" dominantBaseline="middle" fontFamily='"Microsoft YaHei", "SimHei", sans-serif'>
-              發
-            </text>
-
-            {/* Floating Magic Sparkles */}
-            <circle cx="4" cy="4" r="0.6" fill="#fef08a" className="sparkle" style={{ animationDelay: '0s' }} />
-            <circle cx="20" cy="20" r="0.8" fill="#4ade80" className="sparkle" style={{ animationDelay: '0.5s' }} />
-            <circle cx="21" cy="5" r="0.5" fill="#fef08a" className="sparkle" style={{ animationDelay: '1s' }} />
-            <circle cx="3" cy="18" r="0.7" fill="#4ade80" className="sparkle" style={{ animationDelay: '1.5s' }} />
-          </g>
-        </svg>
-      );
-    case 'xi': // West Wind
-      return (
-        <span style={{
-          fontSize: MAHJONG_THEME.icon.fontSize,
-          color: '#1f2937', // Very Dark Grey/Black
+      {isMatchOption && (
+        <div style={{
+          position: 'absolute',
+          top: '-15px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#ef4444',
+          color: '#ffffff',
+          fontSize: '9px',
           fontWeight: '900',
-          fontFamily: '"Microsoft YaHei", "SimHei", "Noto Sans TC", sans-serif',
-          lineHeight: '1',
-          textShadow: '1px 1px 0px rgba(0,0,0,0.1)'
+          padding: '1px 5px',
+          borderRadius: '6px',
+          border: '1.5px solid #ffffff',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
+          whiteSpace: 'nowrap',
+          zIndex: 100,
+          animation: 'victory-bounce 0.6s infinite alternate'
         }}>
-          西
-        </span>
-      );
-    case 'six': // Six
-      return (
-        <span style={{
-          fontSize: MAHJONG_THEME.icon.fontSize,
-          color: '#1e3a8a', // Dark Navy Blue
-          fontWeight: '900',
-          fontFamily: '"Microsoft YaHei", "SimHei", "Noto Sans TC", sans-serif',
-          lineHeight: '1',
-          textShadow: '1px 1px 0px rgba(0,0,0,0.1)'
-        }}>
-          六
-        </span>
-      );
-    case 'two': // Two
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: 'block' }}>
-          <rect x="3" y="6" width="18" height="3" rx="1.5" fill="#1e3a8a" />
-          <rect x="3" y="15" width="18" height="3" rx="1.5" fill="#1e3a8a" />
-        </svg>
-      );
-    case 'circles': // 9 Dots (all blue like reference)
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: 'block' }}>
-          <circle cx="5" cy="5" r="3" fill="#1e3a8a" />
-          <circle cx="5" cy="5" r="1" fill="#ffffff" />
-          <circle cx="12" cy="5" r="3" fill="#1e3a8a" />
-          <circle cx="12" cy="5" r="1" fill="#ffffff" />
-          <circle cx="19" cy="5" r="3" fill="#1e3a8a" />
-          <circle cx="19" cy="5" r="1" fill="#ffffff" />
-
-          <circle cx="5" cy="12" r="3" fill="#1e3a8a" />
-          <circle cx="5" cy="12" r="1" fill="#ffffff" />
-          <circle cx="12" cy="12" r="3" fill="#1e3a8a" />
-          <circle cx="12" cy="12" r="1" fill="#ffffff" />
-          <circle cx="19" cy="12" r="3" fill="#1e3a8a" />
-          <circle cx="19" cy="12" r="1" fill="#ffffff" />
-
-          <circle cx="5" cy="19" r="3" fill="#1e3a8a" />
-          <circle cx="5" cy="19" r="1" fill="#ffffff" />
-          <circle cx="12" cy="19" r="3" fill="#1e3a8a" />
-          <circle cx="12" cy="19" r="1" fill="#ffffff" />
-          <circle cx="19" cy="19" r="3" fill="#1e3a8a" />
-          <circle cx="19" cy="19" r="1" fill="#ffffff" />
-        </svg>
-      );
-    case 'eight_dots': // 8 Dots (all blue like reference)
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: 'block' }}>
-          <circle cx="8" cy="3.5" r="2.8" fill="#1e3a8a" />
-          <circle cx="8" cy="3.5" r="1" fill="#ffffff" />
-          <circle cx="16" cy="3.5" r="2.8" fill="#1e3a8a" />
-          <circle cx="16" cy="3.5" r="1" fill="#ffffff" />
-
-          <circle cx="8" cy="9.1" r="2.8" fill="#1e3a8a" />
-          <circle cx="8" cy="9.1" r="1" fill="#ffffff" />
-          <circle cx="16" cy="9.1" r="2.8" fill="#1e3a8a" />
-          <circle cx="16" cy="9.1" r="1" fill="#ffffff" />
-
-          <circle cx="8" cy="14.8" r="2.8" fill="#1e3a8a" />
-          <circle cx="8" cy="14.8" r="1" fill="#ffffff" />
-          <circle cx="16" cy="14.8" r="2.8" fill="#1e3a8a" />
-          <circle cx="16" cy="14.8" r="1" fill="#ffffff" />
-
-          <circle cx="8" cy="20.5" r="2.8" fill="#1e3a8a" />
-          <circle cx="8" cy="20.5" r="1" fill="#ffffff" />
-          <circle cx="16" cy="20.5" r="2.8" fill="#1e3a8a" />
-          <circle cx="16" cy="20.5" r="1" fill="#ffffff" />
-        </svg>
-      );
-    case 'one_circle': // 1 Dot (Rosette)
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: 'block' }}>
-          <circle cx="12" cy="12" r="10" fill="#1e3a8a" />
-          <circle cx="12" cy="12" r="7.5" fill="#16a34a" />
-          <circle cx="12" cy="12" r="4.5" fill="#dc2626" />
-          <circle cx="12" cy="12" r="1.5" fill="#ffffff" />
-        </svg>
-      );
-    case 'bamboo_green_3': // 3 green bamboos
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          <rect x="4" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
-          <rect x="10.25" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
-          <rect x="16.5" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
-          <line x1="4" y1="9" x2="7.5" y2="9" stroke="#ffffff" strokeWidth="1" />
-          <line x1="4" y1="15" x2="7.5" y2="15" stroke="#ffffff" strokeWidth="1" />
-          <line x1="10.25" y1="9" x2="13.75" y2="9" stroke="#ffffff" strokeWidth="1" />
-          <line x1="10.25" y1="15" x2="13.75" y2="15" stroke="#ffffff" strokeWidth="1" />
-          <line x1="16.5" y1="9" x2="20" y2="9" stroke="#ffffff" strokeWidth="1" />
-          <line x1="16.5" y1="15" x2="20" y2="15" stroke="#ffffff" strokeWidth="1" />
-        </svg>
-      );
-    case 'bamboo_green_4': // 2 bamboos with a red bar (like the reference's "2 bamboo")
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          <rect x="7" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
-          <rect x="13.5" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
-          <line x1="7" y1="9" x2="10.5" y2="9" stroke="#ffffff" strokeWidth="1" />
-          <line x1="7" y1="15" x2="10.5" y2="15" stroke="#ffffff" strokeWidth="1" />
-          <line x1="13.5" y1="9" x2="17" y2="9" stroke="#ffffff" strokeWidth="1" />
-          <line x1="13.5" y1="15" x2="17" y2="15" stroke="#ffffff" strokeWidth="1" />
-          <rect x="9.5" y="10.5" width="5" height="3" rx="1" fill="#dc2626" />
-        </svg>
-      );
-    case 'bamboo_red_3': // 3 bamboos with alternating colors
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          <rect x="4" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
-          <rect x="10.25" y="3" width="3.5" height="18" rx="1.5" fill="#dc2626" />
-          <rect x="16.5" y="3" width="3.5" height="18" rx="1.5" fill="#16a34a" />
-          <line x1="4" y1="9" x2="7.5" y2="9" stroke="#ffffff" strokeWidth="1" />
-          <line x1="4" y1="15" x2="7.5" y2="15" stroke="#ffffff" strokeWidth="1" />
-          <line x1="10.25" y1="9" x2="13.75" y2="9" stroke="#ffffff" strokeWidth="1" />
-          <line x1="10.25" y1="15" x2="13.75" y2="15" stroke="#ffffff" strokeWidth="1" />
-          <line x1="16.5" y1="9" x2="20" y2="9" stroke="#ffffff" strokeWidth="1" />
-          <line x1="16.5" y1="15" x2="20" y2="15" stroke="#ffffff" strokeWidth="1" />
-        </svg>
-      );
-    case 'flower': // Pink Sakura Blossom
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          {/* Leaves at bottom */}
-          <path d="M7 17C4 17 2 13 4 11C6 9 9 14 7 17Z" fill="#16a34a" />
-          <path d="M17 17C20 17 22 13 20 11C18 9 15 14 17 17Z" fill="#16a34a" />
-          {/* Flower Petals */}
-          <circle cx="12" cy="7" r="4.5" fill="#f472b6" />
-          <circle cx="7" cy="11" r="4.5" fill="#f472b6" />
-          <circle cx="17" cy="11" r="4.5" fill="#f472b6" />
-          <circle cx="9.5" cy="16" r="4.5" fill="#f472b6" />
-          <circle cx="14.5" cy="16" r="4.5" fill="#f472b6" />
-          <circle cx="12" cy="11" r="5" fill="#fbcfe8" />
-          {/* Yellow Center */}
-          <circle cx="12" cy="11.5" r="2.5" fill="#eab308" />
-        </svg>
-      );
-    case 'leaf': // Orange Maple Leaf on yellow plate
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'block' }}>
-          <circle cx="12" cy="12" r="10" fill="#fde047" />
-          <path d="M12 4L14.5 9H19L16 12L17.5 17L12 14L6.5 17L8 12L5 9H9.5L12 4Z" fill="#f97316" />
-          <path d="M12 14V19" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      );
-    default:
-      return null;
-  }
-}
+          CHOISIR
+        </div>
+      )}
+    </div>
+  );
+});
 
 export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest, skipIntro }) {
   const [showIntro, setShowIntro] = useState(!skipIntro);
@@ -1115,6 +215,9 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
   const discreetHintTimer = useRef(null);
   const nextDiscreetHintThreshold = useRef(60000);
   const [discreetHintId, setDiscreetHintId] = useState(null);
+  const dragRafRef = useRef(null);
+  const latestDragPosRef = useRef(null);
+  const cachedScaleRef = useRef(1);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1681,9 +784,22 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
     nextCoords.set(tileId, { x: nextX, y: nextY });
   };
 
+  const measureBoardScale = () => {
+    const boardEl = document.querySelector('.board-scaler');
+    if (boardEl) {
+      const rect = boardEl.getBoundingClientRect();
+      if (rect.width && boardEl.offsetWidth) {
+        cachedScaleRef.current = rect.width / boardEl.offsetWidth;
+        return;
+      }
+    }
+    cachedScaleRef.current = 1;
+  };
+
   const handleTileMouseDown = (e, tile) => {
     if (Date.now() - lastTouchTime.current < 500) return; // Prevent ghost click
     if (mode !== 'slide' || won || lost || matchingLines.length > 0) return;
+    measureBoardScale();
     setHintIds([]);
     setHintMove(null);
     setDragStart({
@@ -1698,6 +814,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
   const handleTileTouchStart = (e, tile) => {
     lastTouchTime.current = Date.now();
     if (mode !== 'slide' || won || lost || matchingLines.length > 0) return;
+    measureBoardScale();
     setHintIds([]);
     setHintMove(null);
     if (e.cancelable) {
@@ -1715,28 +832,33 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
 
   const handleTileMouseMove = (e) => {
     if (!dragStart || !initialTilesForDrag) return;
-    const dx = e.clientX - dragStart.screenX;
-    const dy = e.clientY - dragStart.screenY;
-    processDrag(dx, dy);
+    latestDragPosRef.current = { dx: e.clientX - dragStart.screenX, dy: e.clientY - dragStart.screenY };
+    if (!dragRafRef.current) {
+      dragRafRef.current = requestAnimationFrame(() => {
+        if (latestDragPosRef.current) {
+          processDrag(latestDragPosRef.current.dx, latestDragPosRef.current.dy);
+        }
+        dragRafRef.current = null;
+      });
+    }
   };
 
   const handleTileTouchMove = (e) => {
     if (!dragStart || !initialTilesForDrag) return;
     const touch = e.touches[0];
-    const dx = touch.clientX - dragStart.screenX;
-    const dy = touch.clientY - dragStart.screenY;
-    processDrag(dx, dy);
+    latestDragPosRef.current = { dx: touch.clientX - dragStart.screenX, dy: touch.clientY - dragStart.screenY };
+    if (!dragRafRef.current) {
+      dragRafRef.current = requestAnimationFrame(() => {
+        if (latestDragPosRef.current) {
+          processDrag(latestDragPosRef.current.dx, latestDragPosRef.current.dy);
+        }
+        dragRafRef.current = null;
+      });
+    }
   };
 
   const processDrag = (dx, dy) => {
-    const boardEl = document.querySelector('.board-scaler');
-    let scale = 1;
-    if (boardEl) {
-      const rect = boardEl.getBoundingClientRect();
-      if (rect.width && boardEl.offsetWidth) {
-        scale = rect.width / boardEl.offsetWidth;
-      }
-    }
+    const scale = cachedScaleRef.current || 1;
     const adjustedDx = dx / scale;
     const adjustedDy = dy / scale;
 
@@ -1795,6 +917,12 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
   };
 
   const handleDragRelease = () => {
+    if (dragRafRef.current) {
+      cancelAnimationFrame(dragRafRef.current);
+      dragRafRef.current = null;
+    }
+    latestDragPosRef.current = null;
+
     if (!dragStart) return;
     const finalTiles = [...tiles];
     const originalTiles = initialTilesForDrag;
@@ -2416,7 +1544,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
 
   useEffect(() => {
     const checkDiscreetHint = () => {
-      if (won || lost || showIntro || showCollection || discreetHintId) return;
+      if (won || lost || showIntro || showCollection || discreetHintId || dragStart) return;
       const now = Date.now();
       if (now - lastTouchTime.current > nextDiscreetHintThreshold.current) {
         const active = tiles.filter(t => t.active);
@@ -2507,9 +1635,9 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
       }
     };
 
-    discreetHintTimer.current = setInterval(checkDiscreetHint, 1000);
+    discreetHintTimer.current = setInterval(checkDiscreetHint, 5000);
     return () => clearInterval(discreetHintTimer.current);
-  }, [tiles, won, lost, showIntro, showCollection, mode]);
+  }, [tiles, won, lost, showIntro, showCollection, mode, dragStart]);
 
   // Grid dimensions
   const cellWidth = MAHJONG_THEME.board.cellWidth;
@@ -3221,7 +2349,6 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
                 const isHint = hintIds.includes(tile.id);
                 const isFree = mode === 'zen' ? isTileFree(tile) : true;
 
-                // Determine if this tile is grayed out/unclickable due to matchSelection
                 let isGreyedOut = false;
                 let isMatchOption = false;
                 if (matchSelection !== null) {
@@ -3235,147 +2362,30 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
                   }
                 }
 
-                let left = 0;
-                let top = 0;
-                let zIndex = 80;
-
-                if (mode === 'zen') {
-                  left = (tile.x - 1) * 30 + tile.z * 5;
-                  top = (tile.y - 1) * 44 - tile.z * 7;
-                  zIndex = 80 + tile.z + (isSelected ? 50 : 0);
-                } else {
-                  left = (tile.x - 1) * cellWidth;
-                  top = (tile.y - 1) * cellHeight;
-                  zIndex = 80 + (isSelected ? 50 : 0) + (isMatchOption ? 40 : 0);
-                }
-
                 return (
-                  <div
+                  <MahjongTile
                     key={tile.id}
+                    tile={tile}
+                    mode={mode}
+                    tileset={tileset}
+                    isSelected={isSelected}
+                    isHint={isHint}
+                    isFree={isFree}
+                    isGreyedOut={isGreyedOut}
+                    isMatchOption={isMatchOption}
+                    isVibrating={tile.sym.name === vibratingSymbol}
+                    isHintSimulating={Boolean(hintMove && hintMove.tileId === tile.id)}
+                    isDiscreetHint={discreetHintId === tile.id}
+                    isDragging={Boolean(dragStart)}
+                    hintMove={hintMove}
+                    cellWidth={cellWidth}
+                    cellHeight={cellHeight}
+                    tileWidth={tileWidth}
+                    tileHeight={tileHeight}
                     onClick={() => mode === 'zen' ? handleZenTileClick(tile) : null}
                     onMouseDown={(e) => handleTileMouseDown(e, tile)}
                     onTouchStart={(e) => handleTileTouchStart(e, tile)}
-                    className={`mahjong-tile-3d ${tileset === 'nature' ? 'nature-jade-tile' : ''} ${tileset === 'cyber' ? 'cyber-neon-tile' : ''} ${tileset === 'modern' ? 'modern-wood-tile' : ''} ${tileset === 'mosaic' ? 'mosaic-stone-tile' : ''} ${tileset === 'luxury_marble_2' ? 'luxury-marble-tile' : ''} ${isSelected ? 'selected' : ''} ${isHint ? 'hinted' : ''} ${!isFree && mode === 'zen' ? 'blocked' : ''} ${tile.sym.name === vibratingSymbol ? 'tile-vibrating' : ''} ${hintMove && hintMove.tileId === tile.id ? 'hint-simulating' : ''} ${discreetHintId === tile.id ? 'discreet-hint-glow' : ''}`}
-                    style={{
-                      position: 'absolute',
-                      left: `${left}px`,
-                      top: `${top}px`,
-                      width: `${mode === 'zen' ? 44 : tileWidth}px`,
-                      height: `${mode === 'zen' ? 56 : tileHeight}px`,
-                      zIndex,
-                      transform: isSelected ? 'translate3d(0, -8px, 10px)' : 'none',
-                      cursor: isGreyedOut ? 'not-allowed' : (isFree ? 'pointer' : 'not-allowed'),
-                      opacity: isGreyedOut ? 0.25 : (tile.matching ? 0.7 : isFree ? 1 : 0.6),
-                      filter: isGreyedOut ? 'grayscale(100%) brightness(0.6)' : (isFree ? 'none' : 'brightness(0.85) grayscale(10%)'),
-                      pointerEvents: isGreyedOut ? 'none' : 'auto',
-                      '--hint-dx': hintMove && hintMove.tileId === tile.id ? hintMove.dx * cellWidth : 0,
-                      '--hint-dy': hintMove && hintMove.tileId === tile.id ? hintMove.dy * cellHeight : 0,
-                      background: tileset === 'nature'
-                        ? 'linear-gradient(145deg, rgba(6, 78, 59, 0.95) 0%, rgba(4, 120, 87, 0.98) 50%, rgba(2, 44, 34, 1) 100%)'
-                        : tileset === 'cyber'
-                          ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 27, 75, 0.95) 50%, rgba(13, 148, 136, 0.2) 100%)'
-                          : tileset === 'modern'
-                            ? 'linear-gradient(145deg, #3e1f17 0%, #28130d 50%, #170905 100%)'
-                            : tileset === 'mosaic'
-                              ? 'linear-gradient(145deg, #33261f 0%, #211813 50%, #120d0a 100%)'
-                              : tileset === 'luxury_marble_2'
-                                ? 'linear-gradient(145deg, #ffffff 0%, #f3f4f6 60%, #e5e7eb 100%)'
-                                : '#ffffff',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxSizing: 'border-box',
-                      borderTop: tileset === 'nature'
-                        ? '1px solid rgba(251, 191, 36, 0.75)'
-                        : tileset === 'cyber'
-                          ? '1px solid rgba(0, 240, 255, 0.85)'
-                          : tileset === 'modern' || tileset === 'mosaic' || tileset === 'luxury_marble_2'
-                            ? '1.5px solid rgba(251, 191, 36, 0.85)'
-                            : 'none',
-                      borderLeft: tileset === 'nature'
-                        ? '1px solid rgba(251, 191, 36, 0.55)'
-                        : tileset === 'cyber'
-                          ? '1px solid rgba(0, 240, 255, 0.65)'
-                          : tileset === 'modern' || tileset === 'mosaic' || tileset === 'luxury_marble_2'
-                            ? '1.5px solid rgba(251, 191, 36, 0.65)'
-                            : 'none',
-                      borderBottom: tile.sym.name === vibratingSymbol
-                        ? '5px solid #ef4444'
-                        : tileset === 'nature'
-                          ? '5px solid #022c22'
-                          : tileset === 'cyber'
-                            ? '5px solid #1e1b4b'
-                            : tileset === 'modern' || tileset === 'mosaic'
-                              ? '5.5px solid #0a0302'
-                              : tileset === 'luxury_marble_2'
-                                ? '5.5px solid #d1d5db'
-                                : '5px solid #16a34a',
-                      borderRight: tile.sym.name === vibratingSymbol
-                        ? '3px solid #dc2626'
-                        : tileset === 'nature'
-                          ? '3px solid #064e3b'
-                          : tileset === 'cyber'
-                            ? '3px solid #312e81'
-                            : tileset === 'modern' || tileset === 'mosaic'
-                              ? '3.5px solid #140704'
-                              : tileset === 'luxury_marble_2'
-                                ? '3.5px solid #9ca3af'
-                                : '3px solid #15803d',
-                      boxShadow: tile.sym.name === vibratingSymbol
-                        ? '0 0 20px #ef4444'
-                        : isSelected
-                          ? (tileset === 'nature' ? '0 0 22px #fbbf24, inset 0 0 10px #fbbf24' : tileset === 'modern' || tileset === 'mosaic' || tileset === 'luxury_marble_2' ? '0 0 25px #f59e0b, inset 0 0 12px #fef08a' : '0 0 25px #00f0ff, inset 0 0 12px #f43f5e')
-                          : isMatchOption
-                            ? '0 0 20px #38bdf8, inset 0 0 10px #38bdf8'
-                            : isHint
-                              ? '0 0 20px #facc15, inset 0 0 10px #facc15'
-                              : tileset === 'nature'
-                                ? `inset 0 1px 2px rgba(255, 255, 255, 0.35), inset 0 -3px 8px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.35), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.3)`
-                                : tileset === 'cyber'
-                                  ? `inset 0 0 12px rgba(0, 240, 255, 0.25), inset 0 -2px 6px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 240, 255, 0.2), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.4)`
-                                  : tileset === 'modern' || tileset === 'mosaic'
-                                    ? `inset 0 1px 3px rgba(254, 240, 138, 0.35), inset 0 -3px 8px rgba(0, 0, 0, 0.7), 0 4px 10px rgba(0, 0, 0, 0.4), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.5)`
-                                    : tileset === 'luxury_marble_2'
-                                      ? `inset 0 1px 3px rgba(255, 255, 255, 0.9), inset 0 -3px 6px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.25), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.2)`
-                                      : `0 4px 6px rgba(0, 0, 0, 0.15), ${tile.z * 2}px ${tile.z * 2 + 2}px 6px rgba(0,0,0,0.18)`,
-                      outline: isSelected
-                        ? (tileset === 'nature' ? '3px solid #fbbf24' : '3px solid #00f0ff')
-                        : isMatchOption
-                          ? '3px solid #38bdf8'
-                          : isHint
-                            ? '3px dashed #facc15'
-                            : 'none',
-                      outlineOffset: '2px',
-                      transition: dragStart ? 'none' : 'left 0.2s cubic-bezier(0.25, 1, 0.5, 1), top 0.2s cubic-bezier(0.25, 1, 0.5, 1), transform 0.15s, opacity 0.2s',
-                      userSelect: 'none',
-                      touchAction: 'none',
-                    }}
-                  >
-                    <MahjongIcon name={tile.sym.name} tileset={tileset} />
-
-                    {isMatchOption && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '-15px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: '#ef4444',
-                        color: '#ffffff',
-                        fontSize: '9px',
-                        fontWeight: '900',
-                        padding: '1px 5px',
-                        borderRadius: '6px',
-                        border: '1.5px solid #ffffff',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
-                        whiteSpace: 'nowrap',
-                        zIndex: 100,
-                        animation: 'victory-bounce 0.6s infinite alternate'
-                      }}>
-                        CHOISIR
-                      </div>
-                    )}
-                  </div>
+                  />
                 );
               })}
 
@@ -3518,6 +2528,7 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
                 setShowArrows(value);
                 updateGameConfig('mahjong', 'showArrows', value);
               }
+              setShowCollection(false);
             }}
           />
         )}
