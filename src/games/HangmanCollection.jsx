@@ -10,7 +10,11 @@ const categories = [
       { id: 'mixte', name: 'Mélange (Aléatoire)', icon: '🎲' },
       { id: 'logique', name: 'Logique & Énigmes', icon: '🧠' },
       { id: 'science', name: 'Science & Espace', icon: '🚀' },
-      { id: 'mythes', name: 'Mythes & Légendes', icon: '🐉' }
+      { id: 'mythes', name: 'Mythes & Légendes', icon: '🐉' },
+      { id: 'gastronomie', name: 'Gastronomie & Cuisine', icon: '🍳' },
+      { id: 'cinema', name: 'Cinéma & Séries', icon: '🎬' },
+      { id: 'nature', name: 'Nature & Animaux', icon: '🌿' },
+      { id: 'histoire', name: 'Histoire & Époques', icon: '🏛️' }
     ]
   },
   {

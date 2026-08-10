@@ -67,12 +67,11 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
 
   // Visual FX states
   const [isShaking, setIsShaking] = useState(false);
-  const [recentCorrectLetter, setRecentCorrectLetter] = useState(null);
-
   // Powerups logic
   const [magnifyUsed, setMagnifyUsed] = useState(false);
   const [bombUsed, setBombUsed] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
+  const [isCatSolutionShown, setIsCatSolutionShown] = useState(false);
 
   // Current Level Data
   const currentRiddleIdx = riddleOrder[currentOrderIdx % riddleOrder.length];
@@ -91,6 +90,8 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, guessedLetters]);
+
+  const [recentCorrectLetter, setRecentCorrectLetter] = useState(null);
 
   const handleBackWithConfirm = () => {
     if (gameState === 'playing' && guessedLetters.length > 0) {
@@ -180,6 +181,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     setMagnifyUsed(false);
     setBombUsed(false);
     setHintUsed(false);
+    setIsCatSolutionShown(false);
     setShowHintMessage(false);
     sound.playClick();
   };
@@ -220,27 +222,43 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
   };
 
   const useLangueAuChat = () => {
-    // Give up and reveal solution directly in letter slots without modal
-    if (gameState !== 'playing') return;
+    // Reveal solution letters indicatively in mauve without stopping the game
+    if (gameState !== 'playing' || isCatSolutionShown) return;
     sound.playPowerup();
-    setGameState('solution');
+    setIsCatSolutionShown(true);
   };
 
   // Render Word
   const renderWord = () => {
     return targetWord.split('').map((char, index) => {
       if (char === ' ') return <span key={index} style={{ width: '20px' }}></span>;
-      const isRevealed = guessedLetters.includes(char) || gameState === 'lost' || gameState === 'solution';
-      const isMissed = gameState === 'lost' && !guessedLetters.includes(char);
-      const isCatSolution = gameState === 'solution' && !guessedLetters.includes(char);
+      const isGuessed = guessedLetters.includes(char);
+      const isRevealed = isGuessed || gameState === 'lost' || isCatSolutionShown;
+      const isMissed = gameState === 'lost' && !isGuessed;
+      const isCatSuggestion = isCatSolutionShown && !isGuessed && gameState === 'playing';
       const isJustGuessed = char === recentCorrectLetter;
+
+      let color = theme.color;
+      let borderColor = theme.color;
+      let background = 'transparent';
+
+      if (isCatSuggestion) {
+        color = '#8b5cf6';
+        borderColor = '#8b5cf6';
+        background = 'rgba(139, 92, 246, 0.15)';
+      } else if (isMissed) {
+        color = '#ef4444';
+      } else if (isJustGuessed) {
+        borderColor = '#10b981';
+      }
 
       return (
         <div className={`hangman_letter_slot ${isJustGuessed ? 'letter-pop' : ''}`} key={index} style={{
           ...letterSlotStyle,
-          color: isCatSolution ? '#8b5cf6' : (isMissed ? '#ef4444' : theme.color),
-          borderColor: isCatSolution ? '#8b5cf6' : (isJustGuessed ? '#10b981' : theme.color),
-          background: isCatSolution ? 'rgba(139, 92, 246, 0.15)' : 'transparent'
+          color,
+          borderColor,
+          background,
+          fontWeight: isCatSuggestion ? '700' : '800'
         }}>
           {isRevealed ? char : ''}
         </div>
@@ -518,62 +536,29 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           {renderWord()}
         </div>
 
-        {/* Action button when solution is revealed */}
-        {gameState === 'solution' && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', padding: '0 15px', marginBottom: '10px' }}>
-            <button
-              onClick={forceNextQuestion}
-              className="retro-btn"
-              style={{
-                background: '#8b5cf6',
-                color: '#ffffff',
-                fontSize: '18px',
-                padding: '10px 24px',
-                borderRadius: '25px',
-                border: 'none',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 4px 10px rgba(139, 92, 246, 0.4)'
-              }}
-            >
-              Question Suivante ⏭
-            </button>
-            {isIntermission && onIntermissionComplete && (
-              <button
-                onClick={onIntermissionComplete}
-                className="retro-btn"
-                style={{
-                  background: '#3b82f6',
-                  color: '#ffffff',
-                  fontSize: '16px',
-                  padding: '10px 18px',
-                  borderRadius: '25px',
-                  border: 'none',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
-              >
-                Terminer l'entracte 🏁
-              </button>
-            )}
-          </div>
-        )}
-
         {/* Keyboard Section */}
         <div style={keyboardContainerStyle}>
           {alphabet.map((letter) => {
             const isGuessed = guessedLetters.includes(letter);
             const isCorrect = isGuessed && targetWord.includes(letter);
             const isWrong = isGuessed && !targetWord.includes(letter);
+            const isCatSuggestedKey = isCatSolutionShown && !isGuessed && targetWord.includes(letter);
 
             let bg = theme.keyBg;
             let color = theme.keyColor;
+            let border = 'none';
             let opacity = 1;
+            let boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
 
             if (isCorrect) {
               bg = '#10b981'; color = '#fff';
             } else if (isWrong) {
               opacity = 0.3;
+            } else if (isCatSuggestedKey) {
+              border = '2px solid #8b5cf6';
+              color = '#8b5cf6';
+              bg = 'rgba(139, 92, 246, 0.15)';
+              boxShadow = '0 0 10px rgba(139, 92, 246, 0.3)';
             }
 
             return (
@@ -585,6 +570,8 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
                   ...keyBtnStyle,
                   background: bg,
                   color: color,
+                  border: border,
+                  boxShadow: boxShadow,
                   opacity: opacity,
                   pointerEvents: isGuessed || gameState !== 'playing' ? 'none' : 'auto'
                 }}
@@ -629,9 +616,9 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
 
           <button
             onClick={useLangueAuChat}
-            disabled={gameState !== 'playing'}
-            style={{ ...jokerBtnStyle, opacity: gameState !== 'playing' ? 0.5 : 1 }}
-            title="Donner sa langue au chat (afficher la solution)"
+            disabled={isCatSolutionShown || gameState !== 'playing'}
+            style={{ ...jokerBtnStyle, opacity: (isCatSolutionShown || gameState !== 'playing') ? 0.5 : 1 }}
+            title="Donner sa langue au chat (solution indicative)"
           >
             <div style={{ ...jokerIconBoxStyle, background: '#8b5cf6' }}>🐱</div>
             <div style={{ ...jokerCostStyle, background: '#8b5cf6' }}>Langue au chat</div>
