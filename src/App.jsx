@@ -14,6 +14,7 @@ import Hangman from './games/Hangman';
 import Sudoku from './games/Sudoku';
 import BlockFantasy from './games/BlockFantasy';
 import Impossible13 from './games/Impossible13';
+import BubbleCool from './games/BubbleCool';
 import GameScaleWrapper from './components/GameScaleWrapper';
 import IntermissionIntroModal from './components/IntermissionIntroModal';
 import { recordPlay, recordTime, recordScore } from './utils/stats';
@@ -62,7 +63,7 @@ function App() {
     const mainGame = isIntermissionMode ? (returnView || 'mahjong') : fromGameKey;
     const currentGame = isIntermissionMode ? view : null;
 
-    const allGames = ['ball', 'water', 'mines', 'arrows', 'sudoku', 'blockfantasy', '2048', 'hangman', 'freecell', 'jigsaw'];
+    const allGames = ['ball', 'water', 'mines', 'arrows', 'sudoku', 'blockfantasy', '2048', 'hangman', 'freecell', 'jigsaw', 'bubblecool'];
     const enabledGames = Object.keys(intermissionConfig).filter(
       key => intermissionConfig[key]?.enabled && key !== mainGame && key !== currentGame
     );
@@ -178,6 +179,8 @@ function App() {
       localStorage.setItem('retrovision_sudoku_highscore', score.toString());
     } else if (gameName === 'Block Fantasy') {
       localStorage.setItem('retrovision_blockfantasy_highscore', score.toString());
+    } else if (gameName === 'Bubble Cool') {
+      localStorage.setItem('retrovision_bubblecool_highscore', score.toString());
     }
 
     setStatsUpdated((prev) => prev + 1);
@@ -197,6 +200,8 @@ function App() {
       case 'hangman': return 'Le Pendu';
       case 'sudoku': return 'Sudoku';
       case 'blockfantasy': return 'Block Fantasy';
+      case 'impossible13': return 'Impossible 13';
+      case 'bubblecool': return 'Bubble Cool';
       default: return 'Jeu';
     }
   };
@@ -212,10 +217,11 @@ function App() {
       case 'mines': return '💣';
       case 'arrows': return '🏹';
       case '2048': return '🔢';
-      case 'hangman': return '🔤';
+      case 'hangman': return '🎈';
       case 'sudoku': return '🔢';
       case 'blockfantasy': return '🧱';
       case 'impossible13': return '1️⃣3️⃣';
+      case 'bubblecool': return '🫧';
       default: return '🎮';
     }
   };
@@ -394,6 +400,19 @@ function App() {
           <div className="game-wrapper">
             <GameScaleWrapper designWidth={430} defaultHeight={800}>
               <Impossible13
+                onBack={() => setView('dashboard')}
+                onScoreSave={handleScoreSave}
+                isIntermission={isIntermissionMode}
+                onIntermissionComplete={handleIntermissionComplete}
+              />
+            </GameScaleWrapper>
+          </div>
+        );
+      case 'bubblecool':
+        return (
+          <div className="game-wrapper">
+            <GameScaleWrapper designWidth={460} defaultHeight={820}>
+              <BubbleCool
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
@@ -640,7 +659,8 @@ function IntermissionSettingsModal({ config, onClose, onSave }) {
     freecell: { name: 'Freecell', icon: '🃏', color: '#c21807' },
     hangman: { name: 'Le Pendu', icon: '🎈', color: '#ef4444' },
     blockfantasy: { name: 'Block Fantasy', icon: '🧱', color: '#39FF14' },
-    impossible13: { name: 'Impossible 13', icon: '1️⃣3️⃣', color: '#EAB308' }
+    impossible13: { name: 'Impossible 13', icon: '1️⃣3️⃣', color: '#EAB308' },
+    bubblecool: { name: 'Bubble Cool', icon: '🫧', color: '#38BDF8' }
   };
 
   return (

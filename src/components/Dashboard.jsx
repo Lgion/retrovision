@@ -31,7 +31,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     hangman: 0,
     sudoku: 0,
     blockfantasy: 0,
-    impossible13: 0
+    impossible13: 0,
+    bubblecool: 0
   });
 
   const avatars = ['✦', '♥', '★', '●', '☘', '☾', '☀'];
@@ -53,7 +54,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     const sudoku = detailedStats.sudoku?.highScore || 0;
     const blockfantasy = detailedStats.blockfantasy?.highScore || 0;
     const impossible13 = detailedStats.impossible13?.highScore || 0;
-    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku, blockfantasy, impossible13 });
+    const bubblecool = detailedStats.bubblecool?.highScore || 0;
+    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku, blockfantasy, impossible13, bubblecool });
   }, [statsUpdated]);
 
   const totalPlays = Object.values(stats).reduce((acc, curr) => acc + (curr.plays || 0), 0);
@@ -287,6 +289,15 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       unlocked: highScores.impossible13 >= 13,
       color: '#EAB308',
       textColor: '#ca8a04'
+    },
+    {
+      id: 'bubblecool_master',
+      title: 'Maître Bulles',
+      desc: 'Dépasser 1000 points sur Bubble Cool',
+      icon: '🫧',
+      unlocked: highScores.bubblecool >= 1000,
+      color: '#38BDF8',
+      textColor: '#0284C7'
     }
   ];
 
@@ -370,7 +381,7 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       highscore: highScores.arrows,
       color: '#3b82f6',
       textColor: '#1e3a8a',
-      icon: '⬆️'
+      icon: '🎯'
     },
     {
       id: 'hangman',
@@ -407,6 +418,15 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       color: '#EAB308',
       textColor: '#ca8a04',
       icon: '1️⃣3️⃣'
+    },
+    {
+      id: 'bubblecool',
+      title: 'BUBBLE COOL',
+      desc: 'Visez et tirez des bulles colorées pour créer des alignements Match-3. Stimule le suivi visuel et la coordination.',
+      highscore: highScores.bubblecool,
+      color: '#38BDF8',
+      textColor: '#0284C7',
+      icon: '🫧'
     }
   ];
 
