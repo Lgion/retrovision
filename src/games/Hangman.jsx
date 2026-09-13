@@ -5,8 +5,9 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import HangmanCollection from './HangmanCollection';
 import hangmanData from '../utils/hangmanData.json';
+import IntermissionHeader from '../components/IntermissionHeader';
 
-export default function Hangman({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
+export default function Hangman({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
 
   const [coins, setCoins] = useState(() => getGameConfig('hangman', 'coins', 100)); // Stars/coins
@@ -148,7 +149,12 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
       return nc;
     });
     if (isIntermission && onIntermissionComplete) {
-      setTimeout(() => onIntermissionComplete(), 1500);
+      if (replaySameIntermission) {
+        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+        setTimeout(() => resetLevel(), 1500);
+      } else {
+        setTimeout(() => onIntermissionComplete(), 1500);
+      }
     }
     if (onScoreSave) onScoreSave('Le Pendu', 100 + (lives * 10));
   };
@@ -292,26 +298,19 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     }
 
     if (isIntermission) {
+      const wordLetters = word ? Array.from(new Set(word.split(''))) : [];
+      const guessed = wordLetters.filter(l => guessedLetters.includes(l)).length;
+      const hmProgress = gameState === 'won' ? 1.0 : (wordLetters.length > 0 ? guessed / wordLetters.length : 0);
       return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '15px', fontWeight: 'bold', color: theme.color }}>Entracte !</span>
-          {onIntermissionRequest && (
-            <button
-              onClick={() => onIntermissionRequest()}
-              className="entract-header-btn"
-              style={{ fontSize: '13px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}
-            >
-              🎲 Autre
-            </button>
-          )}
-          <button
-            onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
-            className="entract-header-btn"
-            style={{ fontSize: '13px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-          >
-            Passer ⏭
-          </button>
-        </div>
+        <IntermissionHeader
+          instructionText="Devinez le mot pour retourner au jeu principal."
+          onRestart={resetLevel}
+          onOtherGame={onIntermissionRequest}
+          onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+          replaySame={replaySameIntermission}
+          onToggleReplaySame={onToggleReplaySameIntermission}
+          progress={hmProgress}
+        />
       );
     }
 

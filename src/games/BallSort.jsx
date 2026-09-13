@@ -5,6 +5,7 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import { gsap } from 'gsap';
 import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
+import IntermissionHeader from '../components/IntermissionHeader';
 
 const BallSortIntro = ({ onComplete }) => {
   const canvasRef = useRef(null);
@@ -182,7 +183,7 @@ const BallSortIntro = ({ onComplete }) => {
 };
 
 
-export default function BallSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
+export default function BallSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
   // Game state
@@ -534,6 +535,11 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, intermis
 
     if (isWon && victoryPhase === 0) {
       if (isIntermission && onIntermissionComplete) {
+        if (replaySameIntermission) {
+          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+          setTimeout(() => initGame(), 1000);
+          return;
+        }
         setTimeout(() => onIntermissionComplete(), 1000);
         return;
       }
@@ -682,27 +688,22 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, intermis
           />
         )}
         
-        {isIntermission && victoryPhase === 0 && (
-          <div className="entract-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
-            <div className="entract-header-text">
-              Entracte ! Triez les billes pour retourner au jeu principal.
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {onIntermissionRequest && (
-                <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-                  🎲 Autre jeu
-                </button>
-              )}
-              <button
-                onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
-                className="entract-header-btn"
-                style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-              >
-                Passer l'entracte ⏭
-              </button>
-            </div>
-          </div>
-        )}
+        {isIntermission && victoryPhase === 0 && (() => {
+          const totalColors = tubes && tubes.length > 0 ? Math.max(1, tubes.length - 1) : 4;
+          const completedCount = tubes ? tubes.filter(t => t.length === defaultCap && t.every(b => b === t[0])).length : 0;
+          const bsProgress = completedCount / totalColors;
+          return (
+            <IntermissionHeader
+              instructionText="Triez les billes pour retourner au jeu principal."
+              onRestart={initGame}
+              onOtherGame={onIntermissionRequest}
+              onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+              replaySame={replaySameIntermission}
+              onToggleReplaySame={onToggleReplaySameIntermission}
+              progress={bsProgress}
+            />
+          );
+        })()}
 
         {/* Main Game Area */}
         <div style={{

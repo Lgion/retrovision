@@ -5,6 +5,7 @@ import GameIntro from '../components/GameIntro';
 import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 import FreeCellCollection from './FreeCellCollection';
+import IntermissionHeader from '../components/IntermissionHeader';
 
 const SUITS = [
   { id: '♥', color: '#c21807' },
@@ -37,7 +38,7 @@ const createDeck = () => {
   return deck;
 };
 
-export default function FreeCell({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
+export default function FreeCell({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState(isIntermission ? 'playing' : 'menu'); // 'menu' | 'playing'
   const containerRef = useRef(null);
@@ -368,7 +369,12 @@ export default function FreeCell({ onBack, onScoreSave, isIntermission, intermis
             setVictoryPhase(3);
             sound.playScore();
             if (isIntermission && onIntermissionComplete) {
-              setTimeout(() => onIntermissionComplete(), 1500);
+              if (replaySameIntermission) {
+                if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+                setTimeout(() => startNewGame(), 1500);
+              } else {
+                setTimeout(() => onIntermissionComplete(), 1500);
+              }
             }
             if (onScoreSave) {
               onScoreSave('FreeCell', Math.max(1000 - moves * 5, 100));
@@ -735,24 +741,26 @@ export default function FreeCell({ onBack, onScoreSave, isIntermission, intermis
           />
         )}
         
-        {isIntermission && gameState === 'playing' && (
-          <div className="entract-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
-            <div className="entract-header-text">Entracte ! Triez les cartes pour retourner au jeu principal.</div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={undoMove} disabled={history.length === 0} className="entract-header-btn" style={{ opacity: history.length === 0 ? 0.5 : 1 }}>
-                ↩️ Annuler
-              </button>
-              {onIntermissionRequest && (
-                <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-                  🎲 Autre jeu
+        {isIntermission && gameState === 'playing' && (() => {
+          const totalFoundations = foundations ? foundations.reduce((acc, f) => acc + (f ? f.length : 0), 0) : 0;
+          const fcProgress = victoryPhase > 0 ? 1.0 : (totalFoundations / 52);
+          return (
+            <IntermissionHeader
+              instructionText="Triez les cartes pour retourner au jeu principal."
+              onRestart={startNewGame}
+              onOtherGame={onIntermissionRequest}
+              onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+              replaySame={replaySameIntermission}
+              onToggleReplaySame={onToggleReplaySameIntermission}
+              progress={fcProgress}
+              extraControls={
+                <button onClick={undoMove} disabled={history.length === 0} className="entract-header-btn" style={{ opacity: history.length === 0 ? 0.5 : 1 }}>
+                  ↩️ Annuler
                 </button>
-              )}
-              <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }} className="entract-header-btn" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
-                Passer l'entracte ⏭
-              </button>
-            </div>
-          </div>
-        )}
+              }
+            />
+          );
+        })()}
 
         {gameState === 'menu' && (
           <div style={menuStyle}>

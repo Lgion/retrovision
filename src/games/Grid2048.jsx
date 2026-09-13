@@ -4,8 +4,9 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import Grid2048Collection from './Grid2048Collection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
+import IntermissionHeader from '../components/IntermissionHeader';
 
-export default function Grid2048({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
+export default function Grid2048({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
   const [board, setBoard] = useState([]);
   const [score, setScore] = useState(0);
@@ -240,6 +241,14 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
       if (!victory && !keepPlaying && finalBoard.includes(2048)) {
         setVictory(true);
         sound.playPowerup();
+        if (isIntermission && onIntermissionComplete) {
+          if (replaySameIntermission) {
+            if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+            setTimeout(() => initGame(), 1500);
+            return;
+          }
+          setTimeout(() => onIntermissionComplete(), 1500);
+        }
       }
 
       // Check game over
@@ -383,21 +392,21 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
         />
       )}
 
-      {isIntermission && !victory && (
-        <div className="entract-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
-          <div className="entract-header-text">Entracte ! Fusionnez les tuiles pour retourner au jeu principal.</div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {onIntermissionRequest && (
-              <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-                🎲 Autre jeu
-              </button>
-            )}
-            <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }} className="entract-header-btn" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
-              Passer l'entracte ⏭
-            </button>
-          </div>
-        </div>
-      )}
+      {isIntermission && !victory && (() => {
+        const maxVal = board ? Math.max(...board.map(v => v || 0)) : 0;
+        const g2048Progress = maxVal >= 2048 ? 1.0 : maxVal >= 1024 ? 0.85 : maxVal >= 512 ? 0.6 : (score / 3000);
+        return (
+          <IntermissionHeader
+            instructionText="Fusionnez les tuiles pour retourner au jeu principal."
+            onRestart={initGame}
+            onOtherGame={onIntermissionRequest}
+            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+            replaySame={replaySameIntermission}
+            onToggleReplaySame={onToggleReplaySameIntermission}
+            progress={g2048Progress}
+          />
+        );
+      })()}
 
       <div 
         style={{...gridContainerStyle, gridTemplateColumns: `repeat(${gridSize}, 1fr)`, gridTemplateRows: `repeat(${gridSize}, 1fr)`, background: theme.tileBg}}

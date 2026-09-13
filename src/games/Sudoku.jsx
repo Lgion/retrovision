@@ -276,8 +276,9 @@ const THEMES = {
     particleColors: ['#ff9ff3', '#feca57', '#ff6b6b', '#48dbfb', '#1dd1a1']
   }
 };
+import IntermissionHeader from '../components/IntermissionHeader';
 
-export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermissionComplete, onIntermissionRequest }) {
+export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [difficulty, setDifficulty] = useState('facile'); // 'facile' | 'moyen' | 'difficile'
@@ -571,6 +572,13 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
     sound.playScore();
 
     if (isIntermission && onIntermissionComplete) {
+      if (replaySameIntermission) {
+        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+        setTimeout(() => {
+          startGame(gridSize, difficulty);
+        }, 1500);
+        return;
+      }
       setTimeout(() => {
         onIntermissionComplete();
       }, 2000);
@@ -646,27 +654,23 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
         />
       )}
 
-      {isIntermission && gameState === 'playing' && (
-        <div className="entract-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
-          <div className="entract-header-text">
-            Entracte ! Complétez ce Sudoku pour retourner au jeu principal.
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {onIntermissionRequest && (
-              <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-                🎲 Autre jeu
-              </button>
-            )}
-            <button
-              onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
-              className="entract-header-btn"
-              style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-            >
-              Passer l'entracte ⏭
-            </button>
-          </div>
-        </div>
-      )}
+      {isIntermission && gameState === 'playing' && (() => {
+        const initialCount = board ? board.filter(c => c.initial).length : 0;
+        const currentCount = board ? board.filter(c => c.val !== 0).length : 0;
+        const target = board ? board.length - initialCount : 1;
+        const progressVal = victory ? 1.0 : (target > 0 ? (currentCount - initialCount) / target : 0);
+        return (
+          <IntermissionHeader
+            instructionText="Complétez ce Sudoku pour retourner au jeu principal."
+            onRestart={() => startGame(gridSize, difficulty)}
+            onOtherGame={onIntermissionRequest}
+            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+            replaySame={replaySameIntermission}
+            onToggleReplaySame={onToggleReplaySameIntermission}
+            progress={progressVal}
+          />
+        );
+      })()}
 
       
         {/* Store Modal */}

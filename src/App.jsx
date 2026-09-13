@@ -59,6 +59,12 @@ function App() {
     return localStorage.getItem('retrovision_last_intermission_game') || null;
   });
 
+  const [replaySameIntermission, setReplaySameIntermission] = useState(false);
+
+  const handleToggleReplaySameIntermission = (enabled) => {
+    setReplaySameIntermission(enabled);
+  };
+
   const handleIntermissionRequest = (fromGameKey) => {
     const mainGame = isIntermissionMode ? (returnView || 'mahjong') : fromGameKey;
     const currentGame = isIntermissionMode ? view : null;
@@ -97,6 +103,9 @@ function App() {
       setReturnView(fromGameKey);
       setIsIntermissionMode(true);
     }
+
+    // Reset replay same intermission toggle to false for new intermission
+    setReplaySameIntermission(false);
 
     // Set temporary session difficulty without persisting to localStorage
     const defaultDiff = intermissionConfig[chosenGame]?.difficulty || 'facile';
@@ -249,6 +258,8 @@ function App() {
               intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['water']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
               onIntermissionRequest={() => handleIntermissionRequest('water')}
+              replaySameIntermission={replaySameIntermission}
+              onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
             />
           </div>
         );
@@ -262,6 +273,8 @@ function App() {
               intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['ball']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
               onIntermissionRequest={() => handleIntermissionRequest('ball')}
+              replaySameIntermission={replaySameIntermission}
+              onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
             />
           </div>
         );
@@ -276,6 +289,8 @@ function App() {
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['2048']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('2048')}
+                replaySameIntermission={replaySameIntermission}
+                onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
             </GameScaleWrapper>
           </div>
@@ -291,6 +306,8 @@ function App() {
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['jigsaw']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('jigsaw')}
+                replaySameIntermission={replaySameIntermission}
+                onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
             </GameScaleWrapper>
           </div>
@@ -317,6 +334,8 @@ function App() {
               intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['freecell']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
               onIntermissionRequest={() => handleIntermissionRequest('freecell')}
+              replaySameIntermission={replaySameIntermission}
+              onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
             />
           </div>
         );
@@ -331,6 +350,8 @@ function App() {
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['mines']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('mines')}
+                replaySameIntermission={replaySameIntermission}
+                onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
             </GameScaleWrapper>
           </div>
@@ -346,6 +367,8 @@ function App() {
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['arrows']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('arrows')}
+                replaySameIntermission={replaySameIntermission}
+                onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
             </GameScaleWrapper>
           </div>
@@ -361,6 +384,8 @@ function App() {
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['hangman']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('hangman')}
+                replaySameIntermission={replaySameIntermission}
+                onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
             </GameScaleWrapper>
           </div>
@@ -376,6 +401,8 @@ function App() {
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['sudoku']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('sudoku')}
+                replaySameIntermission={replaySameIntermission}
+                onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
             </GameScaleWrapper>
           </div>
@@ -391,6 +418,8 @@ function App() {
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['blockfantasy']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
                 onIntermissionRequest={() => handleIntermissionRequest('blockfantasy')}
+                replaySameIntermission={replaySameIntermission}
+                onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
             </GameScaleWrapper>
           </div>
@@ -404,6 +433,9 @@ function App() {
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
                 onIntermissionComplete={handleIntermissionComplete}
+                onIntermissionRequest={() => handleIntermissionRequest('impossible13')}
+                replaySameIntermission={replaySameIntermission}
+                onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
             </GameScaleWrapper>
           </div>
@@ -417,6 +449,9 @@ function App() {
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
                 onIntermissionComplete={handleIntermissionComplete}
+                onIntermissionRequest={() => handleIntermissionRequest('bubblecool')}
+                replaySameIntermission={replaySameIntermission}
+                onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
             </GameScaleWrapper>
           </div>

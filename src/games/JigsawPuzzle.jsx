@@ -3,8 +3,9 @@ import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import IntermissionHeader from '../components/IntermissionHeader';
 
-export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
+export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [gridSize, setGridSize] = useState(() => getGameConfig('jigsaw', 'difficulty', 3)); // 3x3, 4x4
@@ -146,7 +147,12 @@ export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, inte
             setVictoryPhase(3);
             sound.playScore();
             if (isIntermission && onIntermissionComplete) {
-              setTimeout(() => onIntermissionComplete(), 1500);
+              if (replaySameIntermission) {
+                if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+                setTimeout(() => startGame(selectedImage || images[0]), 1500);
+              } else {
+                setTimeout(() => onIntermissionComplete(), 1500);
+              }
             }
             if (onScoreSave) {
               const score = Math.max(1000 - moves * 5, 100);
@@ -189,21 +195,22 @@ export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, inte
         />
       )}
 
-      {isIntermission && gameState === 'playing' && (
-        <div className="entract-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
-          <div className="entract-header-text">Entracte ! Reconstituez l'image pour retourner au jeu principal.</div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {onIntermissionRequest && (
-              <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-                🎲 Autre jeu
-              </button>
-            )}
-            <button onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }} className="entract-header-btn" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
-              Passer l'entracte ⏭
-            </button>
-          </div>
-        </div>
-      )}
+      {isIntermission && gameState === 'playing' && (() => {
+        const total = (gridCols * gridRows) || 9;
+        const current = pieces ? pieces.filter(p => p.isPlaced).length : 0;
+        const jpProgress = victoryPhase > 0 ? 1.0 : (total > 0 ? current / total : 0);
+        return (
+          <IntermissionHeader
+            instructionText="Reconstituez l'image pour retourner au jeu principal."
+            onRestart={() => startGame(selectedImage || images[0])}
+            onOtherGame={onIntermissionRequest}
+            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+            replaySame={replaySameIntermission}
+            onToggleReplaySame={onToggleReplaySameIntermission}
+            progress={jpProgress}
+          />
+        );
+      })()}
 
       {gameState === 'menu' && (
         <div style={menuStyle}>

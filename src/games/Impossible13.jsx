@@ -4,6 +4,7 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
+import IntermissionHeader from '../components/IntermissionHeader';
 
 // --- CONFIGURATION ---
 const GRID_SIZE = 5;
@@ -42,7 +43,7 @@ const areAdjacent = (r1, c1, r2, c2) => {
   return (dr <= 1 && dc <= 1) && !(dr === 0 && dc === 0);
 };
 
-export default function Impossible13({ onBack, onScoreSave, isIntermission, onIntermissionComplete }) {
+export default function Impossible13({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
   const [showStore, setShowStore] = useState(false);
 
@@ -261,7 +262,12 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, onIn
       sound.playSudokuSuccess();
       setVictory(true);
       if (isIntermission && onIntermissionComplete) {
-        setTimeout(onIntermissionComplete, 1500);
+        if (replaySameIntermission) {
+          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+          setTimeout(initGame, 1500);
+        } else {
+          setTimeout(onIntermissionComplete, 1500);
+        }
       }
     }
 
@@ -422,6 +428,21 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, onIn
             </div>
           } />
         )}
+        {isIntermission && (() => {
+          const maxVal = grid ? Math.max(...grid.flat()) : 1;
+          const impProgress = victory ? 1.0 : (maxVal >= 11 ? 0.85 : maxVal >= 10 ? 0.7 : (maxVal / 13));
+          return (
+            <IntermissionHeader
+              instructionText="Atteignez le chiffre 13 pour retourner au jeu principal."
+              onRestart={initGame}
+              onOtherGame={onIntermissionRequest}
+              onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+              replaySame={replaySameIntermission}
+              onToggleReplaySame={onToggleReplaySameIntermission}
+              progress={impProgress}
+            />
+          );
+        })()}
 
         {/* Toolbar */}
         {!isIntermission && (

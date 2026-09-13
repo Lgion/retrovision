@@ -656,6 +656,164 @@ class SoundController {
       console.warn("Bubble row drop sound failed", e);
     }
   }
+
+  playBubbleBomb() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      // Low sub-bass boom
+      const osc = this.ctx.createOscillator();
+      const oscGain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(30, now + 0.35);
+
+      oscGain.gain.setValueAtTime(0.35, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+
+      // Noise punch
+      const duration = 0.25;
+      const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.2));
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800, now);
+      filter.frequency.exponentialRampToValueAtTime(120, now + duration);
+
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.25, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(this.ctx.destination);
+      noise.start(now);
+    } catch (e) {
+      console.warn("Bubble bomb sound failed", e);
+    }
+  }
+
+  playBubbleLaser() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1200, now);
+      osc.frequency.exponentialRampToValueAtTime(180, now + 0.18);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(900, now);
+      filter.Q.value = 4.0;
+
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.18);
+    } catch (e) {
+      console.warn("Bubble laser sound failed", e);
+    }
+  }
+
+  playBubbleRainbow() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+
+        gain.gain.setValueAtTime(0, now + idx * 0.04);
+        gain.gain.linearRampToValueAtTime(0.08, now + idx * 0.04 + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.15);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.04);
+        osc.stop(now + idx * 0.04 + 0.15);
+      });
+    } catch (e) {
+      console.warn("Bubble rainbow sound failed", e);
+    }
+  }
+
+  playBubbleIceBreak() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1800, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } catch (e) {
+      console.warn("Bubble ice break sound failed", e);
+    }
+  }
+
+  playChapterVictory() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      // Majestic 4-chord fanfare: C5, G5, C6, E6
+      const fanfare = [
+        { f: 523.25, t: 0.0, d: 0.15 },
+        { f: 659.25, t: 0.12, d: 0.15 },
+        { f: 783.99, t: 0.24, d: 0.2 },
+        { f: 1046.50, t: 0.40, d: 0.5 }
+      ];
+      fanfare.forEach(note => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(note.f, now + note.t);
+
+        gain.gain.setValueAtTime(0, now + note.t);
+        gain.gain.linearRampToValueAtTime(0.15, now + note.t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + note.t + note.d);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + note.t);
+        osc.stop(now + note.t + note.d);
+      });
+    } catch (e) {
+      console.warn("Chapter victory sound failed", e);
+    }
+  }
 }
 
 export const sound = new SoundController();

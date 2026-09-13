@@ -4,6 +4,7 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
+import IntermissionHeader from '../components/IntermissionHeader';
 
 // ── CONSTANTES DES FORMES DE BLOCS ──────────────────────────────────────────
 const SHAPE_TEMPLATES = [
@@ -95,7 +96,11 @@ export default function BlockFantasy({
   onBack,
   onScoreSave,
   isIntermission,
-  onIntermissionComplete
+  intermissionDifficulty,
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission
 }) {
   const [showIntro, setShowIntro] = useState(true);
   const [showCustomization, setShowCustomization] = useState(false);
@@ -477,7 +482,15 @@ export default function BlockFantasy({
         setQuestGoal(prev => {
           const nextCur = Math.min(prev.target, prev.current + totalLinesCleared);
           if (nextCur >= prev.target) {
-            setTimeout(() => { sound.playSudokuSuccess(); if (onIntermissionComplete) onIntermissionComplete(); }, 1000);
+            setTimeout(() => {
+              sound.playSudokuSuccess();
+              if (replaySameIntermission) {
+                if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+                initGame();
+              } else if (onIntermissionComplete) {
+                onIntermissionComplete();
+              }
+            }, 1000);
           }
           return { ...prev, current: nextCur };
         });
@@ -689,6 +702,20 @@ export default function BlockFantasy({
             </div>
           } />
         )}
+        {isIntermission && (() => {
+          const bfProgress = questGoal && questGoal.target > 0 ? (questGoal.current / questGoal.target) : 0;
+          return (
+            <IntermissionHeader
+              instructionText="Complétez des lignes ou colonnes pour retourner au jeu principal."
+              onRestart={initGame}
+              onOtherGame={onIntermissionRequest}
+              onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+              replaySame={replaySameIntermission}
+              onToggleReplaySame={onToggleReplaySameIntermission}
+              progress={bfProgress}
+            />
+          );
+        })()}
 
         {/* Barre d'actions (Icônes avec compteurs) placée sous la boutique/header */}
         {!isIntermission && (

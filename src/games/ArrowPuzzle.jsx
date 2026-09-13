@@ -4,6 +4,7 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import ArrowPuzzleCollection from './ArrowPuzzleCollection';
+import IntermissionHeader from '../components/IntermissionHeader';
 
 const DIRS = {
   'up': { dr: -1, dc: 0, symbol: '▲', color: '#ef4444' }, // Red
@@ -82,7 +83,7 @@ const isValidCell = (r, c, size) => {
   return true;
 };
 
-export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
+export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [mode, setMode] = useState(() => getGameConfig('arrows', 'mode', 'dense')); // 'scattered' | 'dense' | 'wire'
@@ -496,6 +497,11 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
 
   const handleVictory = () => {
     if (isIntermission && onIntermissionComplete) {
+      if (replaySameIntermission) {
+        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+        setTimeout(() => startGame(boardSize, arrowsLeft), 1000);
+        return;
+      }
       setTimeout(() => onIntermissionComplete(), 1000);
       return;
     }
@@ -635,27 +641,22 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
         onComplete={() => setShowIntro(false)}
       />}
 
-      {isIntermission && gameState === 'playing' && (
-        <div className="entract-header entractArrowHeader" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
-          <div className="entract-header-text">
-            Entracte ! Videz la grille pour retourner au jeu principal.
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {onIntermissionRequest && (
-              <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-                🎲 Autre jeu
-              </button>
-            )}
-            <button
-              onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
-              className="entract-header-btn"
-              style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-            >
-              Passer l'entracte ⏭
-            </button>
-          </div>
-        </div>
-      )}
+      {isIntermission && gameState === 'playing' && (() => {
+        const total = arrowsLeft || (grid ? grid.flat().filter(Boolean).length : 1);
+        const current = grid ? grid.flat().filter(Boolean).length : 0;
+        const apProgress = total > 0 ? ((total - current) / total) : 0;
+        return (
+          <IntermissionHeader
+            instructionText="Videz la grille pour retourner au jeu principal."
+            onRestart={() => startGame(boardSize, arrowsLeft)}
+            onOtherGame={onIntermissionRequest}
+            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+            replaySame={replaySameIntermission}
+            onToggleReplaySame={onToggleReplaySameIntermission}
+            progress={apProgress}
+          />
+        );
+      })()}
 
       <div style={{
         display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '800px',

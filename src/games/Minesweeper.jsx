@@ -4,8 +4,9 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import MinesweeperCollection from './MinesweeperCollection';
+import IntermissionHeader from '../components/IntermissionHeader';
 
-export default function Minesweeper({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest }) {
+export default function Minesweeper({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mines', 'boardSize', 9)); // 9 or 12
@@ -240,6 +241,11 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
 
   const handleVictory = () => {
     if (isIntermission && onIntermissionComplete) {
+      if (replaySameIntermission) {
+        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+        setTimeout(() => startGame(boardSize, numMines), 1000);
+        return;
+      }
       setTimeout(() => onIntermissionComplete(), 1000);
       return;
     }
@@ -323,27 +329,29 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
         onComplete={() => setShowIntro(false)} 
       />}
       
-      {isIntermission && gameState === 'playing' && (
-        <div className="entract-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(57, 255, 20, 0.08)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '8px', marginBottom: '10px' }}>
-          <div className="entract-header-text">
-            Entracte ! Gagnez pour retourner au jeu principal.
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {onIntermissionRequest && (
-              <button onClick={() => onIntermissionRequest()} className="entract-header-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-                🎲 Autre jeu
-              </button>
-            )}
-            <button
-              onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
-              className="entract-header-btn"
-              style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-            >
-              Passer l'entracte ⏭
-            </button>
-          </div>
-        </div>
-      )}
+      {isIntermission && gameState === 'playing' && (() => {
+        const totalSafe = (boardSize * boardSize) - numMines;
+        let revealedSafe = 0;
+        if (grid) {
+          for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+              if (grid[r][c] && grid[r][c].isRevealed && !grid[r][c].isMine) revealedSafe++;
+            }
+          }
+        }
+        const msProgress = totalSafe > 0 ? (revealedSafe / totalSafe) : 0;
+        return (
+          <IntermissionHeader
+            instructionText="Gagnez le Démineur pour retourner au jeu principal."
+            onRestart={() => startGame(boardSize, numMines)}
+            onOtherGame={onIntermissionRequest}
+            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+            replaySame={replaySameIntermission}
+            onToggleReplaySame={onToggleReplaySameIntermission}
+            progress={msProgress}
+          />
+        );
+      })()}
       
       <div style={{ ...containerStyle, background: theme.bg === '#000000' ? '#111' : 'rgba(15, 23, 42, 0.85)' }}>
       {!isIntermission && (
