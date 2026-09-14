@@ -814,6 +814,145 @@ class SoundController {
       console.warn("Chapter victory sound failed", e);
     }
   }
+
+  playBlockPlace(tileCount = 4) {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      // Pitch slightly varies with block size
+      const baseFreq = 320 + Math.min(tileCount * 30, 250);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(baseFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(160, now + 0.08);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } catch (e) {
+      console.warn("Block place sound failed", e);
+    }
+  }
+
+  playBlockCombo(streak = 1) {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      // Ascending pentatonic scale for juicy streaks
+      const scale = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51];
+      const noteIdx = Math.min(streak - 1, scale.length - 1);
+      const rootFreq = scale[noteIdx] || 523.25;
+      const thirdFreq = rootFreq * 1.25; // Major 3rd interval
+
+      [rootFreq, thirdFreq].forEach((f, i) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f, now + i * 0.03);
+
+        gain.gain.setValueAtTime(0, now + i * 0.03);
+        gain.gain.linearRampToValueAtTime(0.1, now + i * 0.03 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.03 + 0.25);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + i * 0.03);
+        osc.stop(now + i * 0.03 + 0.25);
+      });
+    } catch (e) {
+      console.warn("Block combo sound failed", e);
+    }
+  }
+
+  playBlockCrossBlast() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      // Explosive electric fanfare: C5 -> G5 -> C6
+      const notes = [523.25, 783.99, 1046.50, 1567.98];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1400, now + idx * 0.05);
+
+        gain.gain.setValueAtTime(0, now + idx * 0.05);
+        gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.05 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.3);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.05);
+        osc.stop(now + idx * 0.05 + 0.3);
+      });
+    } catch (e) {
+      console.warn("Cross blast sound failed", e);
+    }
+  }
+
+  playBlockHammer() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      // Heavy crunch impact
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(45, now + 0.2);
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } catch (e) {
+      console.warn("Hammer sound failed", e);
+    }
+  }
+
+  playFeverActive() {
+    if (this.muted) return;
+    try {
+      this.init();
+      const now = this.ctx.currentTime;
+      const notes = [659.25, 783.99, 987.77, 1318.51, 1567.98]; // E-G-B-E-G arpeggio
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+
+        gain.gain.setValueAtTime(0, now + idx * 0.04);
+        gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.04 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.35);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.04);
+        osc.stop(now + idx * 0.04 + 0.35);
+      });
+    } catch (e) {
+      console.warn("Fever active sound failed", e);
+    }
+  }
 }
 
 export const sound = new SoundController();
