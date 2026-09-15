@@ -8,11 +8,10 @@ const categories = [
     icon: '🀄',
     items: [
       { id: 'classic', name: 'Classique', icon: '🀄', description: 'Symboles chinois traditionnels et bambous.' },
-      { id: 'nature', name: 'Créatures Mythiques A (SVG)', icon: '🐉', description: 'Créatures mythologiques gravées sur laqué noir & or 24K.' },
-      { id: 'creatures_b', name: 'Créatures Mythiques B (PNG)', icon: '🦅', description: 'Illustrations PNG HD 2D expressives avec contours contrastés.' },
-      { id: 'cyber', name: 'Cyber Néon (Holo)', icon: '⚡', description: 'Tuiles Dark Hologram Glass, circuits neon & glitch animés.' },
-      { id: 'modern', name: 'Chiffres Kanjis (Bois)', icon: '🪵', description: 'Kanjis d\'honneur (Daiji 1-5) gravés sur bois noble.' },
-      { id: 'mosaic', name: 'Mosaïques & Vitraux', icon: '🏛️', description: 'Pavés romains et fresques gravées sur pierre précieuse.' },
+      { id: 'nature', name: 'Créatures Célestes', icon: '🐉', description: 'Créatures mythologiques en émail cloisonné & or 24K sur onyx noir.' },
+      { id: 'cyber', name: 'Marbre Noir & Or', icon: '⚜️', description: 'Gravure or pur et rubis sur marbre noir profond, haute lisibilité.' },
+      { id: 'modern', name: 'Chiffres Kanjis (Bois)', icon: '🪵', description: 'Kanjis d\'honneur gravés sur bois noble.' },
+      { id: 'mosaic', name: 'Art Graphique & Botanique', icon: '🌿', description: 'Faune, flore et symboles géométriques modernes sur porcelaine ivoire.' },
       { id: 'luxury_marble_2', name: 'Marbre & Joaillerie', icon: '👑', description: 'Marbre blanc de Carrare, émail saphir et jade émeraude.' }
     ]
   },

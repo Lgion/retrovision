@@ -21,13 +21,26 @@ import { recordPlay, recordTime, recordScore } from './utils/stats';
 import './App.css';
 
 function App() {
-  const [view, setView] = useState('dashboard');
+  const [view, setView] = useState(() => {
+    try {
+      const p = new URLSearchParams(window.location.search).get('game');
+      return p || 'dashboard';
+    } catch {
+      return 'dashboard';
+    }
+  });
   const [statsUpdated, setStatsUpdated] = useState(0);
   const gameStartRef = useRef(0);
 
   const [isIntermissionMode, setIsIntermissionMode] = useState(false);
   const [returnView, setReturnView] = useState(null);
-  const [skipNextIntro, setSkipNextIntro] = useState(false);
+  const [skipNextIntro, setSkipNextIntro] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('skipIntro') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [showIntermissionIntro, setShowIntermissionIntro] = useState(false);
   const [intermissionResult, setIntermissionResult] = useState('success'); // 'success' | 'passed'
   const [sessionIntermissionDifficulty, setSessionIntermissionDifficulty] = useState('facile');
@@ -65,21 +78,19 @@ function App() {
     setReplaySameIntermission(enabled);
   };
 
-  const handleIntermissionRequest = (fromGameKey) => {
-    const mainGame = isIntermissionMode ? (returnView || 'mahjong') : fromGameKey;
-    const currentGame = isIntermissionMode ? view : null;
-
-    const allGames = ['ball', 'water', 'mines', 'arrows', 'sudoku', 'blockfantasy', '2048', 'hangman', 'freecell', 'jigsaw', 'bubblecool'];
+  const pickRandomIntermissionGame = (fromMainGame, excludedGame = null) => {
+    const allGames = ['ball', 'water', 'mines', 'arrows', 'sudoku', 'blockfantasy', '2048', 'hangman', 'freecell', 'jigsaw', 'bubblecool', 'impossible13'];
     const enabledGames = Object.keys(intermissionConfig).filter(
-      key => intermissionConfig[key]?.enabled && key !== mainGame && key !== currentGame
+      key => intermissionConfig[key]?.enabled && key !== fromMainGame && key !== excludedGame
     );
     const gamesToChooseFrom = enabledGames.length > 0 
       ? enabledGames 
-      : allGames.filter(g => g !== mainGame && g !== currentGame);
+      : allGames.filter(g => g !== fromMainGame && g !== excludedGame);
 
     let filteredGames = gamesToChooseFrom;
-    if (gamesToChooseFrom.length > 1 && lastIntermissionGame) {
-      filteredGames = gamesToChooseFrom.filter(g => g !== lastIntermissionGame);
+    if (gamesToChooseFrom.length > 1 && (lastIntermissionGame || excludedGame)) {
+      filteredGames = gamesToChooseFrom.filter(g => g !== lastIntermissionGame && g !== excludedGame);
+      if (filteredGames.length === 0) filteredGames = gamesToChooseFrom;
     }
 
     const weightMap = { low: 1, medium: 3, high: 5 };
@@ -92,9 +103,26 @@ function App() {
       }
     });
 
-    const chosenGame = weightedList.length > 0
+    return weightedList.length > 0
       ? weightedList[Math.floor(Math.random() * weightedList.length)]
       : filteredGames[Math.floor(Math.random() * filteredGames.length)] || 'water';
+  };
+
+  const [upcomingIntermissionGame, setUpcomingIntermissionGame] = useState(() => {
+    return 'water';
+  });
+
+  const shuffleUpcomingIntermissionGame = () => {
+    const nextGame = pickRandomIntermissionGame('mahjong', upcomingIntermissionGame);
+    setUpcomingIntermissionGame(nextGame);
+    return nextGame;
+  };
+
+  const handleIntermissionRequest = (fromGameKey, targetGameKey = null) => {
+    const mainGame = isIntermissionMode ? (returnView || 'mahjong') : fromGameKey;
+    const currentGame = isIntermissionMode ? view : null;
+
+    const chosenGame = targetGameKey || upcomingIntermissionGame || pickRandomIntermissionGame(mainGame, currentGame);
 
     setLastIntermissionGame(chosenGame);
     localStorage.setItem('retrovision_last_intermission_game', chosenGame);
@@ -112,9 +140,13 @@ function App() {
     setSessionIntermissionDifficulty(defaultDiff);
     setShowIntermissionIntro(!!intermissionConfig.showIntroModal);
     setView(chosenGame);
+
+    // Pre-select next upcoming intermission game
+    const nextPlanned = pickRandomIntermissionGame(mainGame, chosenGame);
+    setUpcomingIntermissionGame(nextPlanned);
   };
 
-  const handleMahjongNextLevel = () => handleIntermissionRequest('mahjong');
+  const handleMahjongNextLevel = (forcedGameKey = null) => handleIntermissionRequest('mahjong', forcedGameKey);
 
   const handleIntermissionComplete = (isSuccess = true) => {
     setIntermissionResult(isSuccess === false ? 'passed' : 'success');
@@ -244,6 +276,9 @@ function App() {
               onBack={() => setView('dashboard')}
               onScoreSave={handleScoreSave}
               onIntermissionRequest={handleMahjongNextLevel}
+              upcomingIntermission={upcomingIntermissionGame}
+              onSelectUpcomingIntermission={setUpcomingIntermissionGame}
+              onShuffleUpcomingIntermission={shuffleUpcomingIntermissionGame}
               skipIntro={skipNextIntro}
             />
           </div>
@@ -443,7 +478,7 @@ function App() {
       case 'bubblecool':
         return (
           <div className="game-wrapper">
-            <GameScaleWrapper designWidth={460} defaultHeight={820}>
+            <GameScaleWrapper designWidth={460} defaultHeight={760}>
               <BubbleCool
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
@@ -452,6 +487,7 @@ function App() {
                 onIntermissionRequest={() => handleIntermissionRequest('bubblecool')}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
+                skipIntro={skipNextIntro}
               />
             </GameScaleWrapper>
           </div>

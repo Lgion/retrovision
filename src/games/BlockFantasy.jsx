@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
-import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { ADVENTURE_LEVELS, getLevelData, calculateLevelStars } from './blockfantasy/levelsData';
@@ -114,6 +114,8 @@ export default function BlockFantasy({
   const [activeDrag, setActiveDrag] = useState(null);
   const [ghostCells, setGhostCells] = useState([]);
   const [anticipateClearCells, setAnticipateClearCells] = useState([]);
+  const [anticipateRows, setAnticipateRows] = useState([]);
+  const [anticipateCols, setAnticipateCols] = useState([]);
   const [isValidDragHover, setIsValidDragHover] = useState(false);
   const [tiltAngle, setTiltAngle] = useState(0);
   const lastMousePosRef = useRef({ x: 0, y: 0, time: 0 });
@@ -209,6 +211,8 @@ export default function BlockFantasy({
     if (!activeDrag) {
       setGhostCells([]);
       setAnticipateClearCells([]);
+      setAnticipateRows([]);
+      setAnticipateCols([]);
       setIsValidDragHover(false);
       setTiltAngle(0);
       return;
@@ -281,8 +285,17 @@ export default function BlockFantasy({
     setLastMove(null);
     setGhostCells([]);
     setAnticipateClearCells([]);
+    setAnticipateRows([]);
+    setAnticipateCols([]);
     setShelfBlocks([getRandomBlock(), getRandomBlock(), getRandomBlock()]);
   };
+
+  useEffect(() => {
+    window.__setBlockFantasyGameOver = setGameOver;
+    return () => {
+      delete window.__setBlockFantasyGameOver;
+    };
+  }, []);
 
   const getRandomBlock = () => {
     const randIdx = Math.floor(Math.random() * SHAPE_TEMPLATES.length);
@@ -307,21 +320,22 @@ export default function BlockFantasy({
   };
 
   const toggleRotationMode = () => {
-    if (rotationUsages <= 0 || gameOver || levelVictory) return;
+    if (rotationUsages <= 0 || levelVictory) return;
     sound.playClick?.();
     setIsHammerMode(false);
     setIsRotationMode(!isRotationMode);
   };
 
   const toggleHammerMode = () => {
-    if (hammerUsages <= 0 || gameOver || levelVictory) return;
+    if (hammerUsages <= 0 || levelVictory) return;
     sound.playClick?.();
     setIsRotationMode(false);
+    if (gameOver) setGameOver(false);
     setIsHammerMode(!isHammerMode);
   };
 
   const handleUseJoker = () => {
-    if (jokerUsages <= 0 || gameOver || levelVictory) return;
+    if (jokerUsages <= 0 || levelVictory) return;
     sound.playPowerup?.();
     const emptySlotIdx = shelfBlocks.findIndex(b => b === null);
     const targetIdx = emptySlotIdx !== -1 ? emptySlotIdx : 0;
@@ -393,7 +407,7 @@ export default function BlockFantasy({
   // --- DRAG & DROP HAUTE FIDÉLITÉ (1:1 SCALE + OMBRE RÉACTIVE) ---
 
   const handleShelfBlockInteract = (e, block, index) => {
-    if (gameOver || levelVictory || isHammerMode) return;
+    if ((gameOver && !isRotationMode) || levelVictory || isHammerMode) return;
     
     if (isRotationMode) {
       const rotatedMatrix = rotateMatrix(block.matrix);
@@ -471,24 +485,28 @@ export default function BlockFantasy({
     const blockRows = activeDrag.matrix.length;
     const blockCols = activeDrag.matrix[0].length;
 
-    // Vérifier si le bloc est au-dessus de la grille
-    const isOverGrid = (startRow + blockRows > 0 && startRow < gridSize && startCol + blockCols > 0 && startCol < gridSize);
+    // Vérification stricte anti-wrapping :
+    // Le bloc ne peut être posé QUE si TOUTES ses tuiles sont strictement à l'intérieur de la grille
+    const canPlace = canPlaceBlock(board, activeDrag.matrix, startRow, startCol, gridSize);
 
-    if (isOverGrid && canPlaceBlock(board, activeDrag.matrix, startRow, startCol, gridSize)) {
+    if (canPlace) {
       const cells = [];
       for (let r = 0; r < blockRows; r++) {
         for (let c = 0; c < blockCols; c++) {
           if (activeDrag.matrix[r][c] === 1) {
             const bR = startRow + r;
             const bC = startCol + c;
-            cells.push(bR * gridSize + bC);
+            // Sécurité anti-débordement/wrapping de ligne
+            if (bR >= 0 && bR < gridSize && bC >= 0 && bC < gridSize) {
+              cells.push(bR * gridSize + bC);
+            }
           }
         }
       }
       setGhostCells(cells);
       setIsValidDragHover(true);
 
-      // --- EFFET D'ANTICIPATION LUMINEUSE (ANTICIPATION GLOW À LA BLOCK BLAST!) ---
+      // --- EFFET D'ANTICIPATION LUMINEUSE (ANTICIPATION GLOW ÉCLATANT FAÇON BLOCK BLAST!) ---
       // Simuler le placement et identifier les lignes/colonnes qui vont sauter
       const tempBoard = [...board];
       cells.forEach(idx => { tempBoard[idx] = { color: activeDrag.color }; });
@@ -510,6 +528,9 @@ export default function BlockFantasy({
         if (isFull) fullCols.push(c);
       }
 
+      setAnticipateRows(fullRows);
+      setAnticipateCols(fullCols);
+
       const toClear = new Set();
       fullRows.forEach(r => { for (let c = 0; c < gridSize; c++) toClear.add(r * gridSize + c); });
       fullCols.forEach(c => { for (let r = 0; r < gridSize; r++) toClear.add(r * gridSize + c); });
@@ -518,6 +539,8 @@ export default function BlockFantasy({
       // Position invalide : supprimer tout ghost parasite pour garder la grille propre !
       setGhostCells([]);
       setAnticipateClearCells([]);
+      setAnticipateRows([]);
+      setAnticipateCols([]);
       setIsValidDragHover(false);
     }
   };
@@ -544,16 +567,21 @@ export default function BlockFantasy({
     setActiveDrag(null);
     setGhostCells([]);
     setAnticipateClearCells([]);
+    setAnticipateRows([]);
+    setAnticipateCols([]);
     setIsValidDragHover(false);
     setTiltAngle(0);
   };
 
   const canPlaceBlock = (boardArray, matrix, startRow, startCol, size) => {
+    if (!matrix || !boardArray) return false;
     for (let r = 0; r < matrix.length; r++) {
       for (let c = 0; c < matrix[r].length; c++) {
         if (matrix[r][c] === 1) {
           const bR = startRow + r;
           const bC = startCol + c;
+          // Sécurité stricte anti-wrapping :
+          // Si une seule tuile dépasse à gauche, à droite, en haut ou en bas, le bloc est 100% invalide !
           if (bR < 0 || bR >= size || bC < 0 || bC >= size) return false;
           if (boardArray[bR * size + bC] !== null) return false;
         }
@@ -579,8 +607,12 @@ export default function BlockFantasy({
     for (let r = 0; r < matrix.length; r++) {
       for (let c = 0; c < matrix[r].length; c++) {
         if (matrix[r][c] === 1) {
-          nextBoard[(startRow + r) * gridSize + (startCol + c)] = { color, isStone: false, isIce: false };
-          cellsPlaced++;
+          const bR = startRow + r;
+          const bC = startCol + c;
+          if (bR >= 0 && bR < gridSize && bC >= 0 && bC < gridSize) {
+            nextBoard[bR * gridSize + bC] = { color, isStone: false, isIce: false };
+            cellsPlaced++;
+          }
         }
       }
     }
@@ -643,7 +675,7 @@ export default function BlockFantasy({
       }
 
       // Progression Fever Gauge
-      const feverGain = totalLinesCleared * 22 + (isCrossBlast ? 35 : 0);
+      const feverGain = totalLinesCleared * 24 + (isCrossBlast ? 40 : 0);
       setFeverMeter(prev => {
         const nextM = Math.min(100, prev + feverGain);
         if (nextM >= 100 && !isFeverActive) {
@@ -731,8 +763,7 @@ export default function BlockFantasy({
       }
     } else {
       setStreak(0);
-      // Réduction lente du fever si aucun coup destructeur
-      setFeverMeter(prev => Math.max(0, prev - 8));
+      setFeverMeter(prev => Math.max(0, prev - 6));
     }
 
     setBoard(nextBoard);
@@ -843,8 +874,8 @@ export default function BlockFantasy({
   // --- RENDU D'UNE CELLULE DU PLATEAU ---
 
   const renderCell = (cell, index) => {
-    const isGhost = ghostCells.includes(index);
-    const isAnticipate = anticipateClearCells.includes(index);
+    const isGhost = Array.isArray(ghostCells) && ghostCells.includes(index);
+    const isAnticipate = Array.isArray(anticipateClearCells) && anticipateClearCells.includes(index);
 
     let cellContent = null;
     let cellStyle = {};
@@ -878,20 +909,23 @@ export default function BlockFantasy({
     if (isGhost && activeDrag && isValidDragHover) {
       cellStyle = {
         backgroundColor: activeDrag.color,
-        opacity: 0.65,
+        opacity: 0.68,
         border: '1.5px solid #ffffff',
         boxShadow: `0 0 12px ${activeDrag.color}`,
         transform: 'scale(0.96)'
       };
     }
 
-    // Effet d'Anticipation Shimmer sur les lignes qui vont sauter
+    // SURBRILLANCE SPECTACULAIRE SUR LES LIGNES/COLONNES COMPLÉTÉES (ANTICIPATION GLOW)
     if (isAnticipate) {
       cellStyle = {
         ...cellStyle,
-        border: '2px solid #FACC15',
-        boxShadow: '0 0 14px #FACC15, inset 0 0 8px #FACC15',
-        animation: 'anticipatePulse 0.4s infinite alternate'
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 204, 21, 0.92) 50%, rgba(255, 255, 255, 0.95) 100%)',
+        border: '2px solid #FFFFFF',
+        boxShadow: '0 0 18px rgba(250, 204, 21, 0.95), inset 0 0 10px #FFFFFF',
+        transform: 'scale(1.05)',
+        zIndex: 10,
+        animation: 'anticipateGlowBeam 0.35s infinite alternate'
       };
     }
 
@@ -1006,27 +1040,168 @@ export default function BlockFantasy({
       )}
 
       <div className="blockfantasy-container game-container" style={{ ...containerStyle, ...getContainerStyles() }}>
+        {/* HEADER COMPACT ET ÉPURÉ (MOINS DE 110PX AU LIEU DE 275PX) */}
         {!isIntermission && (
-          <GameHeader
-            title="BLOCK FANTASY"
-            onBack={handleBackWithConfirm}
-            onRestart={initGame}
-            showBgmToggle={false}
-            onShop={() => setShowCustomization(true)}
-            centerContent={
-              <div style={statsContainerStyle}>
-                <div style={statBoxStyle}><div style={statLabelStyle}>SCORE</div><div style={statValStyle}>{score}</div></div>
-                {activeMode === 'classic' ? (
-                  <div style={statBoxStyle}><div style={statLabelStyle}>RECORD</div><div style={statValStyle}>{highScore}</div></div>
-                ) : (
-                  <div style={{ ...statBoxStyle, cursor: 'pointer' }} onClick={() => setShowLevelSelect(true)} title="Changer de niveau">
-                    <div style={statLabelStyle}>NIVEAU</div>
-                    <div style={{ ...statValStyle, color: '#38BDF8' }}>{currentLevelIndex} 🗺️</div>
-                  </div>
-                )}
+          <div style={compactHeaderStyle}>
+            {/* Ligne 1 : Navigation & Stats */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', width: '100%' }}>
+              <button onClick={handleBackWithConfirm} className="retro-btn" style={smallIconBtnStyle} title="Retourner au menu">
+                ←
+              </button>
+
+              {/* Mode Toggle Pills */}
+              <div style={modePillGroupStyle}>
+                <button
+                  onClick={() => {
+                    if (activeMode !== 'classic') {
+                      setCustomizations(prev => {
+                        const next = { ...prev, mode: 'classic' };
+                        updateGameConfig('blockfantasy', 'customizations', next);
+                        return next;
+                      });
+                    }
+                  }}
+                  style={{
+                    ...modePillStyle,
+                    background: activeMode === 'classic' ? 'rgba(57,255,20,0.2)' : 'transparent',
+                    color: activeMode === 'classic' ? '#39FF14' : '#94a3b8',
+                    border: activeMode === 'classic' ? '1px solid #39FF14' : '1px solid transparent'
+                  }}
+                >
+                  ♾️ Classique
+                </button>
+                <button
+                  onClick={() => {
+                    if (activeMode !== 'arcade') {
+                      setCustomizations(prev => {
+                        const next = { ...prev, mode: 'arcade' };
+                        updateGameConfig('blockfantasy', 'customizations', next);
+                        return next;
+                      });
+                    } else {
+                      setShowLevelSelect(true);
+                    }
+                  }}
+                  style={{
+                    ...modePillStyle,
+                    background: activeMode === 'arcade' ? 'rgba(56,189,248,0.2)' : 'transparent',
+                    color: activeMode === 'arcade' ? '#38BDF8' : '#94a3b8',
+                    border: activeMode === 'arcade' ? '1px solid #38BDF8' : '1px solid transparent'
+                  }}
+                >
+                  🗺️ Ch.{currentLevelIndex}
+                </button>
               </div>
-            }
-          />
+
+              {/* Score & Record inline */}
+              <div style={inlineStatsStyle}>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                  PTS <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '13px' }}>{score}</span>
+                </div>
+                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                  REC <span style={{ color: '#FACC15', fontWeight: 'bold', fontSize: '13px' }}>{highScore}</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button onClick={initGame} className="retro-btn" style={smallIconBtnStyle} title="Recommencer">
+                  🔄
+                </button>
+                <button onClick={() => setShowCustomization(true)} className="retro-btn" style={smallIconBtnStyle} title="Boutique & Options">
+                  🛍️
+                </button>
+              </div>
+            </div>
+
+            {/* Ligne 2 : Objectif Aventure & Jauge Fever intégrés */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%', marginTop: '4px' }}>
+              {activeMode === 'arcade' && activeLvlInfo ? (
+                <div
+                  onClick={() => setShowLevelSelect(true)}
+                  style={compactChapterBadgeStyle}
+                  title="Cliquer pour changer de chapitre"
+                >
+                  <span style={{ fontSize: '13px' }}>{activeLvlInfo.icon}</span>
+                  <span style={{ color: '#FACC15', fontWeight: 'bold' }}>Ch.{activeLvlInfo.id} :</span>
+                  <span style={{ color: '#39FF14', fontWeight: 'bold' }}>{questGoal.current}/{questGoal.target}</span>
+                  <span style={{ fontSize: '9px', color: '#38BDF8' }}>🗺️</span>
+                </div>
+              ) : (
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
+                  MODE SANS FIN
+                </div>
+              )}
+
+              {/* Jauge Fever Fine & Compacte */}
+              <div style={compactFeverContainerStyle}>
+                <span style={{ fontSize: '9px', color: isFeverActive ? '#F59E0B' : '#94a3b8', fontWeight: 'bold' }}>
+                  {isFeverActive ? `🔥 FEVER x2 (${feverTimer}s)` : `⚡ FEVER ${Math.round(feverMeter)}%`}
+                </span>
+                <div style={compactFeverOuterStyle}>
+                  <div
+                    style={{
+                      ...compactFeverInnerStyle,
+                      width: `${isFeverActive ? (feverTimer / 12) * 100 : feverMeter}%`,
+                      background: isFeverActive ? 'linear-gradient(90deg, #F59E0B 0%, #EF4444 100%)' : 'linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%)'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Ligne 3 : Barre d'Actions / Pouvoirs Compacte */}
+            <div className="blazer_options" style={compactActionsRowStyle}>
+              <button
+                onClick={toggleHammerMode}
+                disabled={hammerUsages <= 0 || gameOver || levelVictory}
+                className={`retro-btn compact-action-btn ${isHammerMode ? 'hammer-active pulse-glow' : ''}`}
+                style={{ borderColor: isHammerMode ? '#F43F5E' : '#3b82f6', opacity: hammerUsages <= 0 ? 0.35 : 1 }}
+                title="Marteau Céleste: Détruire une tuile sur la grille"
+              >
+                🔨 <span style={compactBadgeStyle}>{hammerUsages}</span>
+              </button>
+
+              <button
+                onClick={handleReroll}
+                disabled={rerollUsages <= 0 || gameOver || levelVictory}
+                className="retro-btn compact-action-btn"
+                style={{ opacity: rerollUsages <= 0 ? 0.35 : 1 }}
+                title="Relancer les 3 blocs"
+              >
+                🎲 <span style={compactBadgeStyle}>{rerollUsages}</span>
+              </button>
+
+              <button
+                onClick={toggleRotationMode}
+                disabled={rotationUsages <= 0 || gameOver || levelVictory}
+                className={`retro-btn compact-action-btn ${isRotationMode ? 'pulse-glow' : ''}`}
+                style={{ opacity: rotationUsages <= 0 ? 0.35 : 1, borderColor: isRotationMode ? '#39FF14' : '#3b82f6' }}
+                title="Pivoter un bloc"
+              >
+                {isRotationMode ? '✅' : '🔁'} <span style={compactBadgeStyle}>{rotationUsages}</span>
+              </button>
+
+              <button
+                onClick={handleUseJoker}
+                disabled={jokerUsages <= 0 || gameOver || levelVictory}
+                className="retro-btn compact-action-btn"
+                style={{ borderColor: '#FACC15', opacity: jokerUsages <= 0 ? 0.35 : 1 }}
+                title="Baguette Joker 1x1"
+              >
+                🪄 <span style={{ ...compactBadgeStyle, background: '#FACC15' }}>{jokerUsages}</span>
+              </button>
+
+              <button
+                onClick={handleUndo}
+                disabled={!lastMove || levelVictory}
+                className="retro-btn compact-action-btn"
+                style={{ opacity: (!lastMove) ? 0.35 : 1 }}
+                title="Annuler le coup"
+              >
+                ↩️
+              </button>
+            </div>
+          </div>
         )}
 
         {isIntermission && (
@@ -1041,138 +1216,19 @@ export default function BlockFantasy({
           />
         )}
 
-        {/* Bannière Mode Aventure (10 Chapitres) */}
-        {activeMode === 'arcade' && !isIntermission && activeLvlInfo && (
-          <div
-            onClick={() => setShowLevelSelect(true)}
-            style={chapterBannerStyle}
-            title="Cliquer pour choisir un chapitre"
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px' }}>{activeLvlInfo.icon}</span>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#FACC15', fontFamily: 'Orbitron, sans-serif' }}>
-                  CHAPITRE {activeLvlInfo.id} : {activeLvlInfo.title.toUpperCase()}
-                </div>
-                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                  {activeLvlInfo.subtitle} • {activeLvlInfo.difficultyText}
-                </div>
-              </div>
-            </div>
-            <div style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 'bold' }}>
-              🗺️ Chapitres
-            </div>
-          </div>
-        )}
-
-        {/* Barre d'Objectif Aventure */}
-        {activeMode === 'arcade' && !isIntermission && (
-          <div style={goalBarContainerStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={goalLabelStyle}>
-                OBJECTIF : {questGoal.type === 'lines' ? 'Lignes' : questGoal.type === 'double_clears' ? 'Doubles Lignes' : questGoal.type === 'cross_blast' ? 'Cross Blast ⚡' : questGoal.type === 'clear_stone' ? 'Pierres 🧱' : questGoal.type === 'clear_ice' ? 'Glace ❄️' : questGoal.type === 'clear_stone_and_ice' ? 'Pierres & Glaces' : questGoal.type === 'combo_streak' ? 'Combo Streak 👑' : 'Mode Fever 🔥'}
-              </span>
-              <span style={{ fontSize: '10px', color: '#39FF14', fontWeight: 'bold' }}>
-                {questGoal.current} / {questGoal.target}
-              </span>
-            </div>
-            <div style={goalBarOuterStyle}>
-              <div style={{ ...goalBarInnerStyle, width: `${Math.min(100, (questGoal.current / questGoal.target) * 100)}%` }} />
-            </div>
-          </div>
-        )}
-
-        {/* Jauge Fantasy Fever */}
-        {!isIntermission && (
-          <div style={feverBarContainerStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-              <span style={{ fontSize: '9px', fontWeight: 'bold', color: isFeverActive ? '#F59E0B' : '#94a3b8', letterSpacing: '0.5px' }}>
-                {isFeverActive ? `🔥 FANTASY FEVER ACTIF (x2) : ${feverTimer}s` : '⚡ JAUGE FEVER'}
-              </span>
-              <span style={{ fontSize: '9px', color: isFeverActive ? '#F59E0B' : '#94a3b8', fontWeight: 'bold' }}>
-                {isFeverActive ? 'EN COURS !' : `${Math.round(feverMeter)}%`}
-              </span>
-            </div>
-            <div style={feverBarOuterStyle}>
-              <div
-                style={{
-                  ...feverBarInnerStyle,
-                  width: `${isFeverActive ? (feverTimer / 12) * 100 : feverMeter}%`,
-                  background: isFeverActive ? 'linear-gradient(90deg, #F59E0B 0%, #EF4444 100%)' : 'linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%)'
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Barre d'Outils de Sauvetage Anti-Blocage */}
-        {!isIntermission && (
-          <div className="blazer_options" style={actionsRowStyle}>
-            <button
-              onClick={toggleHammerMode}
-              disabled={hammerUsages <= 0 || gameOver || levelVictory}
-              className={`retro-btn action-btn-icon ${isHammerMode ? 'hammer-active pulse-glow' : ''}`}
-              style={{ ...actionBtnStyle, borderColor: isHammerMode ? '#F43F5E' : '#3b82f6', opacity: hammerUsages <= 0 ? 0.35 : 1 }}
-              title="Marteau Céleste: Détruire une tuile ou pierre sur la grille"
-            >
-              🔨 <span style={actionBadgeStyle}>{hammerUsages}</span>
-            </button>
-
-            <button
-              onClick={handleReroll}
-              disabled={rerollUsages <= 0 || gameOver || levelVictory}
-              className="retro-btn action-btn-icon"
-              style={{ ...actionBtnStyle, opacity: rerollUsages <= 0 ? 0.35 : 1 }}
-              title="Relancer immédiatement les 3 blocs du présentoir"
-            >
-              🎲 <span style={actionBadgeStyle}>{rerollUsages}</span>
-            </button>
-
-            <button
-              onClick={toggleRotationMode}
-              disabled={rotationUsages <= 0 || gameOver || levelVictory}
-              className={`retro-btn action-btn-icon ${isRotationMode ? 'pulse-glow' : ''}`}
-              style={{ ...actionBtnStyle, opacity: rotationUsages <= 0 ? 0.35 : 1, borderColor: isRotationMode ? '#39FF14' : '#3b82f6' }}
-              title="Pivoter un bloc proposé"
-            >
-              {isRotationMode ? '✅' : '🔁'} <span style={actionBadgeStyle}>{rotationUsages}</span>
-            </button>
-
-            <button
-              onClick={handleUseJoker}
-              disabled={jokerUsages <= 0 || gameOver || levelVictory}
-              className="retro-btn action-btn-icon"
-              style={{ ...actionBtnStyle, borderColor: '#FACC15', opacity: jokerUsages <= 0 ? 0.35 : 1 }}
-              title="Baguette Joker: Charger un bloc 1x1 sauveur"
-            >
-              🪄 <span style={{ ...actionBadgeStyle, background: '#FACC15' }}>{jokerUsages}</span>
-            </button>
-
-            <button
-              onClick={handleUndo}
-              disabled={!lastMove || levelVictory}
-              className="retro-btn action-btn-icon"
-              style={{ ...actionBtnStyle, opacity: (!lastMove) ? 0.35 : 1 }}
-              title="Revenir au coup précédent"
-            >
-              ↩️
-            </button>
-          </div>
-        )}
-
         {isRotationMode && (
-          <div style={{ textAlign: 'center', fontSize: '11px', color: '#39FF14', marginBottom: '4px', fontWeight: 'bold' }}>
+          <div style={{ textAlign: 'center', fontSize: '11px', color: '#39FF14', margin: '2px 0', fontWeight: 'bold' }}>
             Sélectionnez un bloc ci-dessous pour le faire pivoter
           </div>
         )}
 
         {isHammerMode && (
-          <div style={{ textAlign: 'center', fontSize: '11px', color: '#F43F5E', marginBottom: '4px', fontWeight: 'bold', animation: 'blink 1s infinite' }}>
+          <div style={{ textAlign: 'center', fontSize: '11px', color: '#F43F5E', margin: '2px 0', fontWeight: 'bold', animation: 'blink 1s infinite' }}>
             🔨 Cliquez sur une case du plateau pour la pulvériser !
           </div>
         )}
 
-        {/* Plateau de Jeu avec Screen Shake & Anticipation */}
+        {/* Plateau de Jeu avec Screen Shake & Anticipation Laser Lines */}
         <div style={boardWrapperStyle}>
           <div
             ref={gridRef}
@@ -1186,6 +1242,45 @@ export default function BlockFantasy({
             }}
           >
             {board.map((cell, index) => renderCell(cell, index))}
+
+            {/* RAYONS LASER D'ANTICIPATION EN SURBRILLANCE SUR TOUTES LES LIGNES / COLONNES QUI VONT SAUTER */}
+            {anticipateRows.map(r => (
+              <div
+                key={`anticipate-row-${r}`}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: `${(r / gridSize) * 100}%`,
+                  width: '100%',
+                  height: `${(1 / gridSize) * 100}%`,
+                  pointerEvents: 'none',
+                  background: 'linear-gradient(90deg, rgba(250,204,21,0.2) 0%, rgba(255,255,255,0.6) 50%, rgba(250,204,21,0.2) 100%)',
+                  boxShadow: '0 0 16px rgba(250,204,21,0.9)',
+                  animation: 'anticipateGlowBeam 0.35s infinite alternate',
+                  zIndex: 8,
+                  borderRadius: '4px'
+                }}
+              />
+            ))}
+
+            {anticipateCols.map(c => (
+              <div
+                key={`anticipate-col-${c}`}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: `${(c / gridSize) * 100}%`,
+                  height: '100%',
+                  width: `${(1 / gridSize) * 100}%`,
+                  pointerEvents: 'none',
+                  background: 'linear-gradient(180deg, rgba(250,204,21,0.2) 0%, rgba(255,255,255,0.6) 50%, rgba(250,204,21,0.2) 100%)',
+                  boxShadow: '0 0 16px rgba(250,204,21,0.9)',
+                  animation: 'anticipateGlowBeam 0.35s infinite alternate',
+                  zIndex: 8,
+                  borderRadius: '4px'
+                }}
+              />
+            ))}
 
             {particles.map(p => (
               <div
@@ -1226,44 +1321,11 @@ export default function BlockFantasy({
               </div>
             ))}
 
-            {/* Modal Game Over avec Options de Sauvetage */}
+            {/* MESSAGE PERCUTANT "AUCUN EMPLACEMENT" (3EM) AVEC LÉGER FLOU SUR LA GRILLE */}
             {gameOver && (
-              <div style={overlayStyle}>
-                <div style={gameOverTitleStyle}>GRILLE BLOQUÉE</div>
-                <div style={descStyle}>Aucun coup possible avec le tirage actuel.</div>
-                <div style={statsReportStyle}>Score : <span style={{ color: '#39FF14', fontWeight: 'bold' }}>{score}</span></div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '220px' }}>
-                  {hammerUsages > 0 && (
-                    <button
-                      onClick={() => { setGameOver(false); setIsHammerMode(true); }}
-                      className="retro-btn pulse-glow"
-                      style={{ ...overlayBtnStyle, borderColor: '#F43F5E', color: '#F43F5E' }}
-                    >
-                      🔨 Sauvetage Marteau ({hammerUsages})
-                    </button>
-                  )}
-                  {rerollUsages > 0 && (
-                    <button
-                      onClick={handleReroll}
-                      className="retro-btn pulse-glow"
-                      style={{ ...overlayBtnStyle, borderColor: '#3b82f6', color: '#60a5fa' }}
-                    >
-                      🎲 Relancer Tirage ({rerollUsages})
-                    </button>
-                  )}
-                  {lastMove && (
-                    <button
-                      onClick={handleUndo}
-                      className="retro-btn"
-                      style={{ ...overlayBtnStyle, borderColor: '#eab308', color: '#facc15' }}
-                    >
-                      ↩️ Annuler Dernier Coup
-                    </button>
-                  )}
-                  <button onClick={initGame} className="retro-btn" style={overlayBtnStyle}>
-                    Recommencer
-                  </button>
+              <div style={gridBlockedMessageOverlayStyle}>
+                <div style={bigBlockedTextStyle}>
+                  AUCUN EMPLACEMENT
                 </div>
               </div>
             )}
@@ -1272,12 +1334,12 @@ export default function BlockFantasy({
             {levelVictory && (
               <div style={overlayStyle}>
                 <div style={victoryTitleStyle}>CHAPITRE RÉUSSI !</div>
-                <div style={{ fontSize: '32px', margin: '8px 0' }}>
+                <div style={{ fontSize: '30px', margin: '6px 0' }}>
                   {'⭐'.repeat(victoryStars)}{'☆'.repeat(3 - victoryStars)}
                 </div>
                 <div style={descStyle}>Objectif de niveau accompli avec brio.</div>
                 <div style={statsReportStyle}>Score Final : <span style={{ color: '#39FF14', fontWeight: 'bold' }}>{score}</span></div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => { setLevelVictory(false); initGame(); }}
                     className="retro-btn pulse-glow"
@@ -1297,6 +1359,66 @@ export default function BlockFantasy({
             )}
           </div>
         </div>
+
+        {/* OPTIONS DE SAUVETAGE PLACÉES SOUS LA GRILLE ET AU-DESSUS DU PRÉSENTOIR (FONT-SIZE 18-20PX) */}
+        {gameOver && (
+          <div style={underGridRescueContainerStyle}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', width: '100%', maxWidth: '400px' }}>
+              {hammerUsages > 0 && (
+                <button
+                  onClick={() => { setGameOver(false); setIsHammerMode(true); }}
+                  className="retro-btn pulse-glow"
+                  style={{ ...largeRescueBtnStyle, borderColor: '#F43F5E', color: '#F43F5E', background: 'rgba(244,63,94,0.22)' }}
+                >
+                  🔨 Marteau Céleste ({hammerUsages})
+                </button>
+              )}
+              {rerollUsages > 0 && (
+                <button
+                  onClick={handleReroll}
+                  className="retro-btn pulse-glow"
+                  style={{ ...largeRescueBtnStyle, borderColor: '#3B82F6', color: '#60A5FA', background: 'rgba(59,130,246,0.22)' }}
+                >
+                  🎲 Relancer les Pièces ({rerollUsages})
+                </button>
+              )}
+              {rotationUsages > 0 && (
+                <button
+                  onClick={toggleRotationMode}
+                  className={`retro-btn ${isRotationMode ? 'pulse-glow' : ''}`}
+                  style={{ ...largeRescueBtnStyle, borderColor: '#10B981', color: '#34D399', background: 'rgba(16,185,129,0.22)' }}
+                >
+                  🔁 {isRotationMode ? 'Annuler Rotation' : `Pivoter une Pièce (${rotationUsages})`}
+                </button>
+              )}
+              {jokerUsages > 0 && (
+                <button
+                  onClick={handleUseJoker}
+                  className="retro-btn"
+                  style={{ ...largeRescueBtnStyle, borderColor: '#FACC15', color: '#FACC15', background: 'rgba(250,204,21,0.22)' }}
+                >
+                  🪄 Baguette Joker ({jokerUsages})
+                </button>
+              )}
+              {lastMove && (
+                <button
+                  onClick={handleUndo}
+                  className="retro-btn"
+                  style={{ ...largeRescueBtnStyle, borderColor: '#A855F7', color: '#C084FC', background: 'rgba(168,85,247,0.22)' }}
+                >
+                  ↩️ Annuler Dernier Coup
+                </button>
+              )}
+              <button
+                onClick={initGame}
+                className="retro-btn"
+                style={{ ...largeRescueBtnStyle, borderColor: 'rgba(255,255,255,0.3)', color: '#E2E8F0', background: 'rgba(255,255,255,0.08)' }}
+              >
+                🔄 Recommencer la partie
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Présentoir des Blocs du Joueur */}
         <div style={{ ...shelfContainerStyle, ...getShelfStyles() }}>
@@ -1341,20 +1463,19 @@ export default function BlockFantasy({
           })}
         </div>
 
-        {/* BLOC FLOTTANT EN COURS DE DRAG AVEC OMBRE PORTÉE PHYSIQUE & TILT RÉACTIF */}
-        {activeDrag && (
+        {/* BLOC FLOTTANT EN COURS DE DRAG RENDU DIRECTEMENT SUR DOCUMENT.BODY VIA REACT PORTAL */}
+        {activeDrag && typeof document !== 'undefined' && createPortal(
           <div
             style={{
               position: 'fixed',
               left: activeDrag.x - activeDrag.dragOffsetX,
               top: activeDrag.y - activeDrag.dragOffsetY,
               pointerEvents: 'none',
-              zIndex: 9999,
+              zIndex: 999999,
               transform: `rotate(${tiltAngle}deg) scale(1.04)`,
               transformOrigin: 'center center',
               transition: 'transform 0.08s ease-out',
-              // Ombre portée naturelle réactive qui donne la sensation de volume 3D en lévitation
-              filter: `drop-shadow(${tiltAngle * -1.5}px 18px 16px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 10px ${activeDrag.color}66)`
+              filter: `drop-shadow(${tiltAngle * -1.5}px 18px 16px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 10px ${activeDrag.color}88)`
             }}
           >
             {activeDrag.matrix.map((row, rIdx) => (
@@ -1368,23 +1489,24 @@ export default function BlockFantasy({
                       margin: '1.5px',
                       borderRadius: '4px',
                       backgroundColor: val === 1 ? activeDrag.color : 'transparent',
-                      border: val === 1 ? '1.5px solid rgba(255,255,255,0.6)' : 'none',
-                      boxShadow: val === 1 ? `0 0 12px ${activeDrag.color}, inset 0 0 6px rgba(255,255,255,0.5)` : 'none',
+                      border: val === 1 ? '1.5px solid rgba(255,255,255,0.7)' : 'none',
+                      boxShadow: val === 1 ? `0 0 14px ${activeDrag.color}, inset 0 0 6px rgba(255,255,255,0.6)` : 'none',
                       opacity: val === 1 ? 1 : 0
                     }}
                   />
                 ))}
               </div>
             ))}
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Modal Sélecteur des 10 Chapitres Aventure */}
         {showLevelSelect && (
           <div style={levelModalOverlayStyle}>
             <div style={levelModalContentStyle}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <h3 style={{ margin: 0, color: '#38BDF8', fontFamily: 'Orbitron, sans-serif', fontSize: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h3 style={{ margin: 0, color: '#38BDF8', fontFamily: 'Orbitron, sans-serif', fontSize: '15px' }}>
                   🗺️ CARTE DES 10 CHAPITRES
                 </h3>
                 <button
@@ -1395,7 +1517,7 @@ export default function BlockFantasy({
                 </button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '360px', overflowY: 'auto' }}>
                 {ADVENTURE_LEVELS.map(lvl => {
                   const isCurrent = currentLevelIndex === lvl.id;
                   const stars = starsMap[lvl.id] || 0;
@@ -1414,26 +1536,26 @@ export default function BlockFantasy({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '10px 12px',
-                        background: isCurrent ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                        padding: '8px 10px',
+                        background: isCurrent ? 'rgba(56, 189, 248, 0.18)' : 'rgba(255, 255, 255, 0.04)',
                         border: isCurrent ? '1.5px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.08)',
-                        borderRadius: '10px',
+                        borderRadius: '8px',
                         cursor: 'pointer'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '20px' }}>{lvl.icon}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '18px' }}>{lvl.icon}</span>
                         <div>
-                          <div style={{ fontWeight: 'bold', fontSize: '12px', color: '#fff', fontFamily: 'Orbitron, sans-serif' }}>
+                          <div style={{ fontWeight: 'bold', fontSize: '11px', color: '#fff', fontFamily: 'Orbitron, sans-serif' }}>
                             {lvl.id}. {lvl.title}
                           </div>
-                          <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                          <div style={{ fontSize: '9px', color: '#94a3b8' }}>
                             {lvl.subtitle} • {lvl.difficultyText}
                           </div>
                         </div>
                       </div>
-                      <div style={{ fontSize: '14px' }}>
-                        {stars > 0 ? '⭐'.repeat(stars) : <span style={{ color: '#64748b', fontSize: '11px' }}>Non joué</span>}
+                      <div style={{ fontSize: '13px' }}>
+                        {stars > 0 ? '⭐'.repeat(stars) : <span style={{ color: '#64748b', fontSize: '10px' }}>Non joué</span>}
                       </div>
                     </div>
                   );
@@ -1462,9 +1584,15 @@ export default function BlockFantasy({
           0%, 100% { transform: rotate(-4deg) scale(0.92); }
           50% { transform: rotate(4deg) scale(0.92); }
         }
-        @keyframes anticipatePulse {
-          0% { transform: scale(0.97); filter: brightness(1.1); }
-          100% { transform: scale(1.02); filter: brightness(1.4); }
+        @keyframes anticipateGlowBeam {
+          0% {
+            filter: brightness(1.2) drop-shadow(0 0 6px #FACC15);
+            box-shadow: inset 0 0 10px rgba(250, 204, 21, 0.8), 0 0 14px rgba(250, 204, 21, 0.7);
+          }
+          100% {
+            filter: brightness(1.8) drop-shadow(0 0 14px #FFFFFF);
+            box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.95), 0 0 24px rgba(250, 204, 21, 1);
+          }
         }
         @keyframes blink {
           0%, 100% { opacity: 1; }
@@ -1494,85 +1622,221 @@ export default function BlockFantasy({
           cursor: crosshair !important;
           animation: blink 0.8s infinite alternate;
         }
-        .action-btn-icon {
+        .compact-action-btn {
           position: relative;
-          font-size: 22px;
-          width: 48px;
-          height: 48px;
+          font-size: 18px;
+          width: 38px;
+          height: 38px;
           padding: 0 !important;
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 14px !important;
+          border-radius: 10px !important;
+          background: rgba(59, 130, 246, 0.12);
+          border: 1px solid #3b82f6;
+          box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
+          transition: all 0.15s ease;
         }
       `}</style>
     </>
   );
 }
 
-const containerStyle = { display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '430px', boxSizing: 'border-box', margin: '0 auto', padding: '14px' };
-const statsContainerStyle = { display: 'flex', gap: '10px' };
-const statBoxStyle = { flex: 1, background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '8px', padding: '5px 8px', textAlign: 'center' };
-const statLabelStyle = { fontSize: '9px', color: '#8e8a9f', fontFamily: 'Orbitron, sans-serif', marginBottom: '2px' };
-const statValStyle = { fontSize: '15px', fontWeight: 'bold', color: '#ffffff', fontFamily: 'Orbitron, sans-serif' };
+const containerStyle = { display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '430px', boxSizing: 'border-box', margin: '0 auto', padding: '10px 14px' };
 
-const chapterBannerStyle = {
+// HUD Compact Styles
+const compactHeaderStyle = {
   display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '6px 12px',
-  background: 'rgba(56, 189, 248, 0.08)',
-  border: '1px solid rgba(56, 189, 248, 0.25)',
-  borderRadius: '8px',
-  margin: '6px 0 4px 0',
+  flexDirection: 'column',
+  gap: '4px',
+  width: '100%',
+  background: 'rgba(255, 255, 255, 0.02)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  borderRadius: '12px',
+  padding: '6px 10px',
+  boxSizing: 'border-box',
+  marginBottom: '4px'
+};
+
+const smallIconBtnStyle = {
+  padding: '4px 8px',
+  fontSize: '12px',
+  fontWeight: 'bold',
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  borderRadius: '6px',
   cursor: 'pointer'
 };
 
-const goalBarContainerStyle = { display: 'flex', flexDirection: 'column', gap: '3px', margin: '4px 0 6px 0', width: '100%' };
-const goalLabelStyle = { fontSize: '10px', color: '#8e8a9f', fontWeight: 'bold', letterSpacing: '0.5px', fontFamily: 'Orbitron, sans-serif' };
-const goalBarOuterStyle = { position: 'relative', width: '100%', height: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '5px', overflow: 'hidden' };
-const goalBarInnerStyle = { position: 'absolute', left: 0, top: 0, bottom: 0, background: 'linear-gradient(90deg, #10B981 0%, #39FF14 100%)', borderRadius: '5px', transition: 'width 0.3s ease' };
-
-const feverBarContainerStyle = { display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '6px', width: '100%' };
-const feverBarOuterStyle = { position: 'relative', width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' };
-const feverBarInnerStyle = { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: '3px', transition: 'width 0.25s ease' };
-
-const boardWrapperStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', margin: '4px 0 8px 0' };
-const gridContainerStyle = { position: 'relative', display: 'grid', gap: '3px', width: '100%', aspectRatio: '1 / 1', padding: '6px', boxSizing: 'border-box', overflow: 'hidden' };
-const shelfContainerStyle = { display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', height: '96px', margin: '2px 0 6px 0', borderRadius: '12px', padding: '6px', boxSizing: 'border-box' };
-const shelfSlotStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', width: '80px', height: '80px', transition: 'transform 0.2s', userSelect: 'none' };
-const miniBlockContainerStyle = { display: 'flex', flexDirection: 'column', transform: 'scale(0.92)', transition: 'all 0.2s' };
-const actionsRowStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', width: '100%', margin: '2px 0 8px 0' };
-
-const actionBtnStyle = {
-  border: '1px solid #3b82f6',
-  background: 'rgba(59, 130, 246, 0.12)',
-  color: '#ffffff',
-  transition: 'all 0.2s ease',
-  boxShadow: '0 2px 6px rgba(59, 130, 246, 0.15)'
+const modePillGroupStyle = {
+  display: 'flex',
+  background: 'rgba(0,0,0,0.35)',
+  padding: '2px',
+  borderRadius: '16px',
+  border: '1px solid rgba(255,255,255,0.08)'
 };
 
-const actionBadgeStyle = {
+const modePillStyle = {
+  padding: '3px 8px',
+  fontSize: '10px',
+  fontWeight: 'bold',
+  fontFamily: 'Orbitron, sans-serif',
+  borderRadius: '14px',
+  cursor: 'pointer',
+  transition: 'all 0.15s'
+};
+
+const inlineStatsStyle = {
+  display: 'flex',
+  gap: '8px',
+  fontFamily: 'Orbitron, sans-serif',
+  alignItems: 'center'
+};
+
+const compactChapterBadgeStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '5px',
+  fontSize: '10px',
+  fontFamily: 'Orbitron, sans-serif',
+  background: 'rgba(56, 189, 248, 0.1)',
+  border: '1px solid rgba(56, 189, 248, 0.3)',
+  borderRadius: '6px',
+  padding: '2px 8px',
+  cursor: 'pointer'
+};
+
+const compactFeverContainerStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-end',
+  gap: '2px',
+  flex: 1,
+  maxWidth: '140px'
+};
+
+const compactFeverOuterStyle = {
+  position: 'relative',
+  width: '100%',
+  height: '5px',
+  background: 'rgba(255,255,255,0.06)',
+  borderRadius: '3px',
+  overflow: 'hidden'
+};
+
+const compactFeverInnerStyle = {
   position: 'absolute',
-  top: '-5px',
-  right: '-5px',
+  left: 0,
+  top: 0,
+  bottom: 0,
+  borderRadius: '3px',
+  transition: 'width 0.25s ease'
+};
+
+const compactActionsRowStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: '10px',
+  width: '100%',
+  marginTop: '2px'
+};
+
+const compactBadgeStyle = {
+  position: 'absolute',
+  top: '-4px',
+  right: '-4px',
   background: '#39FF14',
   color: '#000',
-  fontSize: '9px',
+  fontSize: '8px',
   fontWeight: 'bold',
-  padding: '1px 5px',
-  borderRadius: '10px',
-  border: '1.5px solid #14151F',
+  padding: '1px 4px',
+  borderRadius: '8px',
+  border: '1px solid #14151F',
   fontFamily: 'system-ui'
 };
 
+const boardWrapperStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', margin: '2px 0 6px 0' };
+const gridContainerStyle = { position: 'relative', display: 'grid', gap: '3px', width: '100%', aspectRatio: '1 / 1', padding: '6px', boxSizing: 'border-box', overflow: 'hidden' };
+const shelfContainerStyle = { display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', height: '88px', margin: '2px 0', borderRadius: '12px', padding: '4px', boxSizing: 'border-box' };
+const shelfSlotStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', width: '74px', height: '74px', transition: 'transform 0.2s', userSelect: 'none' };
+const miniBlockContainerStyle = { display: 'flex', flexDirection: 'column', transform: 'scale(0.88)', transition: 'all 0.2s' };
+
+// Overlays & Modals
+const gridBlockedMessageOverlayStyle = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(8, 6, 18, 0.45)',
+  backdropFilter: 'blur(3.5px)',
+  WebkitBackdropFilter: 'blur(3.5px)',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 25,
+  borderRadius: '8px',
+  pointerEvents: 'none'
+};
+
+const bigBlockedTextStyle = {
+  fontSize: 'clamp(24px, 2.6em, 34px)',
+  fontWeight: '900',
+  fontFamily: 'Orbitron, sans-serif',
+  color: '#F43F5E',
+  textShadow: '0 0 25px rgba(244, 63, 94, 0.95), 0 0 10px #000, 0 3px 6px #000',
+  letterSpacing: '1px',
+  textAlign: 'center',
+  padding: '0 8px',
+  lineHeight: '1.15',
+  userSelect: 'none',
+  textTransform: 'uppercase',
+  maxWidth: '92%'
+};
+
+const underGridRescueContainerStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  width: '100%',
+  maxWidth: '420px',
+  margin: '6px auto 8px auto',
+  padding: '8px 12px',
+  background: 'rgba(15, 23, 42, 0.9)',
+  border: '1px solid rgba(244, 63, 94, 0.45)',
+  borderRadius: '12px',
+  boxShadow: '0 6px 20px rgba(0,0,0,0.6)',
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
+  animation: 'fadeIn 0.25s ease',
+  boxSizing: 'border-box'
+};
+
+const largeRescueBtnStyle = {
+  padding: '8px 14px',
+  fontSize: '18px',
+  fontWeight: 'bold',
+  fontFamily: 'Orbitron, sans-serif',
+  borderRadius: '10px',
+  border: '1.5px solid',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '8px',
+  boxShadow: '0 3px 10px rgba(0,0,0,0.4)',
+  transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+  width: '100%',
+  boxSizing: 'border-box'
+};
+
 const overlayStyle = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(10, 8, 19, 0.94)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 30, padding: '20px', textAlign: 'center', backdropFilter: 'blur(6px)' };
-const gameOverTitleStyle = { fontFamily: 'Orbitron, sans-serif', fontSize: '24px', color: '#ff3366', textShadow: '0 0 12px #ff3366', fontWeight: 'bold', marginBottom: '8px' };
-const victoryTitleStyle = { fontFamily: 'Orbitron, sans-serif', fontSize: '24px', color: '#39FF14', textShadow: '0 0 12px #39FF14', fontWeight: 'bold', marginBottom: '6px' };
-const descStyle = { color: '#ffffff', fontSize: '13px', marginBottom: '14px' };
-const statsReportStyle = { fontFamily: 'Orbitron, sans-serif', fontSize: '15px', color: '#ffffff', marginBottom: '18px' };
-const overlayBtnStyle = { padding: '9px 18px', fontSize: '13px', border: '2px solid #39FF14', background: 'transparent', color: '#39FF14', boxShadow: '0 0 10px rgba(57, 255, 20, 0.25)', cursor: 'pointer', borderRadius: '8px', fontFamily: 'Orbitron, sans-serif' };
-const footerHelpStyle = { marginTop: '4px', fontSize: '11px', color: '#8e8a9f', textAlign: 'center', lineHeight: '1.4' };
+const victoryTitleStyle = { fontFamily: 'Orbitron, sans-serif', fontSize: '22px', color: '#39FF14', textShadow: '0 0 12px #39FF14', fontWeight: 'bold', marginBottom: '4px' };
+const descStyle = { color: '#ffffff', fontSize: '12px', marginBottom: '12px' };
+const statsReportStyle = { fontFamily: 'Orbitron, sans-serif', fontSize: '14px', color: '#ffffff', marginBottom: '14px' };
+const overlayBtnStyle = { padding: '8px 16px', fontSize: '12px', border: '2px solid #39FF14', background: 'transparent', color: '#39FF14', boxShadow: '0 0 10px rgba(57, 255, 20, 0.25)', cursor: 'pointer', borderRadius: '8px', fontFamily: 'Orbitron, sans-serif' };
+const footerHelpStyle = { marginTop: '2px', fontSize: '10px', color: '#8e8a9f', textAlign: 'center', lineHeight: '1.3' };
 
 const levelModalOverlayStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.82)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '16px' };
-const levelModalContentStyle = { background: '#111827', border: '1.5px solid #38BDF8', borderRadius: '16px', padding: '18px', width: '100%', maxWidth: '420px', boxShadow: '0 0 25px rgba(56, 189, 248, 0.3)' };
+const levelModalContentStyle = { background: '#111827', border: '1.5px solid #38BDF8', borderRadius: '16px', padding: '16px', width: '100%', maxWidth: '400px', boxShadow: '0 0 25px rgba(56, 189, 248, 0.3)' };

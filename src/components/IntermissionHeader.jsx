@@ -1,5 +1,20 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { sound } from '../utils/sound';
+
+const INTERMISSION_GAMES = [
+  { key: 'water', name: 'Water Sort', icon: '💧' },
+  { key: 'ball', name: 'Ball Sort', icon: '🔮' },
+  { key: 'bubblecool', name: 'Bubble Cool', icon: '🫧' },
+  { key: 'sudoku', name: 'Sudoku', icon: '🔢' },
+  { key: 'blockfantasy', name: 'Block Fantasy', icon: '🧱' },
+  { key: '2048', name: '2048', icon: '🔢' },
+  { key: 'mines', name: 'Démineur', icon: '💣' },
+  { key: 'arrows', name: 'Flèches Zen', icon: '🏹' },
+  { key: 'jigsaw', name: 'Puzzle', icon: '🧩' },
+  { key: 'freecell', name: 'FreeCell', icon: '🃏' },
+  { key: 'hangman', name: 'Pendu', icon: '🎈' },
+  { key: 'impossible13', name: 'Impossible 13', icon: '1️⃣3️⃣' }
+];
 
 export default function IntermissionHeader({
   instructionText = "Relevez le défi pour retourner au jeu principal.",
@@ -12,353 +27,339 @@ export default function IntermissionHeader({
   progress = null, // ratio 0.0 to 1.0 (e.g. 0.85 = 85% complete)
   showCTA = false   // explicit force show CTA boolean
 }) {
-  // Persistent state: once 80% progress is reached, Sprint Mode persists until unmounted/restarted
-  const [reached80, setReached80] = React.useState(false);
-  const [showFlyover, setShowFlyover] = React.useState(false);
-  const soundPlayedRef = React.useRef(false);
+  const [reached80, setReached80] = useState(false);
+  const [showGamePicker, setShowGamePicker] = useState(false);
+  const pickerRef = useRef(null);
+  const soundPlayedRef = useRef(false);
 
   const isCurrent80 = (progress !== null && progress >= 0.8) || showCTA === true || !!replaySame;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isCurrent80 && !reached80) {
       setReached80(true);
-      setShowFlyover(true);
       if (!soundPlayedRef.current) {
         soundPlayedRef.current = true;
-        sound.playPowerup();
+        sound.playPowerup?.();
       }
-      const timer = setTimeout(() => {
-        setShowFlyover(false);
-      }, 2600);
-      return () => clearTimeout(timer);
     }
   }, [isCurrent80, reached80]);
 
-  // CTA & Visual transformation remains persistent once 80% is reached
+  // Close game picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+        setShowGamePicker(false);
+      }
+    };
+    if (showGamePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showGamePicker]);
+
   const isCtaVisible = reached80 || isCurrent80;
 
   return (
     <>
-      {/* 1. Dramatic Screen-Crossing CTA Flyover Animation (Traverses Game Zone) */}
-      {showFlyover && (
-        <div
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            zIndex: 99999,
-            pointerEvents: 'none',
-            transform: 'translate(-50%, -50%)',
-            animation: 'ctaTraverseScreen 2.6s cubic-bezier(0.16, 1, 0.3, 1) forwards'
-          }}
-        >
-          <div
-            style={{
-              padding: '18px 36px',
-              borderRadius: '24px',
-              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.96))',
-              backdropFilter: 'blur(16px)',
-              border: '2px solid #F59E0B',
-              boxShadow: '0 0 50px rgba(245, 158, 11, 0.65), inset 0 0 30px rgba(245, 158, 11, 0.3)',
-              color: '#FFFFFF',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
-              minWidth: '300px'
-            }}
-          >
-            <div style={{ fontSize: '2.5rem', animation: 'spinPulse 1.2s infinite ease-in-out' }}>
-              ⚡
-            </div>
-            <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#FDE68A', letterSpacing: '1px', textTransform: 'uppercase' }}>
-              80% DE COMPLÉTION ATTEINTS !
-            </div>
-            <div style={{ fontSize: '0.92rem', color: '#E2E8F0', fontWeight: '600' }}>
-              🔄 Rejouer l'entracte déverrouillé dans l'en-tête
-            </div>
-          </div>
-        </div>
-      )}
+      <style>{`
+        .entract-header-container {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 10px 14px;
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+          border: 1px solid rgba(59, 130, 246, 0.35);
+          border-radius: 14px;
+          margin-bottom: 12px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+          width: 100%;
+          box-sizing: border-box;
+        }
 
-      {/* 2. Persistent Game Zone Background Ambient Aura */}
-      {isCtaVisible && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '25px',
-            zIndex: 9998,
-            pointerEvents: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '6px 16px',
-            borderRadius: '20px',
-            background: 'rgba(245, 158, 11, 0.12)',
-            border: '1px solid rgba(245, 158, 11, 0.35)',
-            backdropFilter: 'blur(6px)',
-            color: '#FDE68A',
-            fontSize: '0.78rem',
-            fontWeight: '800',
-            letterSpacing: '0.5px',
-            animation: 'ambientAuraPulse 3s infinite alternate ease-in-out',
-            boxShadow: '0 0 20px rgba(245, 158, 11, 0.2)'
-          }}
-        >
-          <span style={{ fontSize: '1rem' }}>⚡</span>
-          <span>SPRINT FINAL 80%+</span>
-        </div>
-      )}
+        .entract-top-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+        }
 
-      {/* 3. Main Intermission Header */}
-      <div 
-        className="entract-header"
-        style={{
-          display: 'flex',
-          justify: 'space-between',
-          alignItems: 'center',
-          padding: '10px 16px',
-          background: isCtaVisible 
-            ? 'linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)' 
-            : 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          borderBottom: isCtaVisible 
-            ? '2px solid #F59E0B' 
-            : '2px solid #3B82F6',
-          borderRadius: '12px',
-          marginBottom: '14px',
-          boxShadow: isCtaVisible 
-            ? '0 0 25px rgba(245, 158, 11, 0.4), inset 0 0 15px rgba(245, 158, 11, 0.12)' 
-            : '0 4px 20px rgba(0,0,0,0.4)',
-          color: '#FFFFFF',
-          gap: '12px',
-          flexWrap: 'wrap',
-          width: '100%',
-          boxSizing: 'border-box',
-          position: 'relative',
-          transition: 'all 0.5s ease-in-out'
-        }}
-      >
-        <style>{`
-          @keyframes ctaSlideDown {
-            0% {
-              opacity: 0;
-              transform: translateY(-8px) scale(0.95);
-            }
-            100% {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
-          }
+        .entract-badge {
+          background: rgba(59, 130, 246, 0.2);
+          border: 1px solid rgba(59, 130, 246, 0.4);
+          color: #60a5fa;
+          padding: 3px 10px;
+          border-radius: 10px;
+          font-size: 0.78rem;
+          font-weight: 800;
+          letter-spacing: 0.5px;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
 
-          @keyframes amberGlowPulse {
-            0% {
-              box-shadow: 0 0 10px rgba(245, 158, 11, 0.4), inset 0 0 10px rgba(245, 158, 11, 0.2);
-              border-color: #F59E0B;
-            }
-            100% {
-              box-shadow: 0 0 22px rgba(245, 158, 11, 0.75), inset 0 0 18px rgba(245, 158, 11, 0.4);
-              border-color: #FBBF24;
-            }
-          }
+        .entract-instruction {
+          font-size: 0.86rem;
+          color: #e2e8f0;
+          font-weight: 600;
+          line-height: 1.3;
+          flex: 1;
+        }
 
-          @keyframes badgePulse {
-            0% {
-              transform: scale(1);
-              filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
-            }
-            100% {
-              transform: scale(1.04);
-              filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.8));
-            }
-          }
+        .entract-actions-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+        }
 
-          @keyframes ctaTraverseScreen {
-            0% {
-              opacity: 0;
-              transform: translate(-50%, 40%) scale(0.3) rotate(-24deg);
-              filter: blur(10px);
-            }
-            25% {
-              opacity: 0.95;
-              transform: translate(-50%, -50%) scale(1.2) rotate(5deg);
-              filter: blur(0px);
-            }
-            50% {
-              opacity: 1;
-              transform: translate(-50%, -50%) scale(1.05) rotate(-3deg);
-            }
-            75% {
-              opacity: 0.9;
-              transform: translate(-50%, -100%) scale(0.85) rotate(2deg);
-            }
-            100% {
-              opacity: 0;
-              transform: translate(-50%, -180%) scale(0.4) rotate(0deg);
-              filter: blur(6px);
-            }
-          }
+        .entract-btn {
+          flex: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          padding: 7px 6px;
+          border-radius: 8px;
+          font-size: 0.82rem;
+          font-weight: 700;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.15s ease;
+          user-select: none;
+          outline: none;
+          box-sizing: border-box;
+        }
 
-          @keyframes spinPulse {
-            0% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.25) rotate(15deg); }
-            100% { transform: scale(1) rotate(0deg); }
-          }
+        .entract-btn:active {
+          transform: scale(0.96);
+        }
 
-          @keyframes ambientAuraPulse {
-            0% { opacity: 0.65; transform: translateY(0); }
-            100% { opacity: 1; transform: translateY(-4px); }
-          }
-        `}</style>
+        .entract-btn-restart {
+          background: rgba(16, 185, 129, 0.2);
+          color: #34d399;
+          border: 1px solid rgba(16, 185, 129, 0.5);
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+        }
 
-        {/* Left side: Badge & text */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '220px' }}>
-          <span 
-            style={{
-              background: isCtaVisible 
-                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))' 
-                : 'rgba(59, 130, 246, 0.2)',
-              border: isCtaVisible 
-                ? '1px solid #F59E0B' 
-                : '1px solid rgba(59, 130, 246, 0.4)',
-              color: isCtaVisible ? '#FDE68A' : '#60A5FA',
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '0.8rem',
-              fontWeight: '800',
-              letterSpacing: '0.5px',
-              whiteSpace: 'nowrap',
-              transition: 'all 0.4s ease',
-              animation: isCtaVisible ? 'badgePulse 1.6s infinite alternate ease-in-out' : 'none'
-            }}
-          >
-            {isCtaVisible ? '⚡ SPRINT FINAL (80%+)' : '🎬 ENTRACTE'}
-          </span>
-          <span 
-            className="entract-header-text" 
-            style={{ 
-              fontSize: '0.88rem', 
-              color: isCtaVisible ? '#FEF08A' : '#E2E8F0', 
-              fontWeight: isCtaVisible ? '700' : '600', 
-              lineHeight: '1.3',
-              transition: 'color 0.4s ease'
-            }}
-          >
-            {instructionText}
-          </span>
+        .entract-btn-restart:hover {
+          background: rgba(16, 185, 129, 0.3);
+        }
+
+        .entract-btn-other {
+          background: rgba(59, 130, 246, 0.2);
+          color: #60a5fa;
+          border: 1px solid rgba(59, 130, 246, 0.45);
+          box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
+        }
+
+        .entract-btn-other:hover {
+          background: rgba(59, 130, 246, 0.3);
+        }
+
+        .entract-btn-skip {
+          background: rgba(239, 68, 68, 0.2);
+          color: #f87171;
+          border: 1px solid rgba(239, 68, 68, 0.45);
+          box-shadow: 0 0 10px rgba(239, 68, 68, 0.15);
+        }
+
+        .entract-btn-skip:hover {
+          background: rgba(239, 68, 68, 0.3);
+        }
+
+        .entract-game-picker-dropdown {
+          position: absolute;
+          top: calc(100% + 6px);
+          left: 50%;
+          transform: translateX(-50%);
+          width: 250px;
+          max-height: 280px;
+          overflow-y: auto;
+          background: #0f172a;
+          border: 1px solid rgba(59, 130, 246, 0.5);
+          border-radius: 12px;
+          padding: 6px;
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+          z-index: 10000;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .entract-picker-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 10px;
+          border-radius: 8px;
+          background: transparent;
+          border: none;
+          color: #e2e8f0;
+          font-size: 0.82rem;
+          font-weight: 600;
+          cursor: pointer;
+          text-align: left;
+          width: 100%;
+          transition: background 0.15s ease;
+        }
+
+        .entract-picker-item:hover {
+          background: rgba(59, 130, 246, 0.2);
+          color: #38bdf8;
+        }
+
+        .entract-footer-bar {
+          position: fixed;
+          bottom: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 9999;
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          padding: 6px 16px;
+          border-radius: 20px;
+          background: rgba(15, 23, 42, 0.94);
+          border: 1px solid rgba(245, 158, 11, 0.6);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(245, 158, 11, 0.25);
+          backdrop-filter: blur(10px);
+          pointer-events: auto;
+          animation: entractFooterFadeIn 0.3s ease-out;
+        }
+
+        @keyframes entractFooterFadeIn {
+          from { opacity: 0; transform: translate(-50%, 8px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
+      `}</style>
+
+      {/* --- STANDARDIZED COMPACT HEADER (2 ROWS, IDENTICAL ACROSS ALL 12 GAMES) --- */}
+      <div className="entract-header-container">
+        {/* Row 1: Badge & Instruction text */}
+        <div className="entract-top-row">
+          <span className="entract-badge">🎬 ENTRACTE</span>
+          <span className="entract-instruction">{instructionText}</span>
         </div>
 
-        {/* Right side: Controls & 80% CTA Pill */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          {/* Frosted Glass Amber Pill CTA (appears ONCE 80% reached, persists) */}
-          {isCtaVisible && (
-            <label 
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                background: replaySame 
-                  ? 'rgba(16, 185, 129, 0.3)' 
-                  : 'rgba(30, 41, 59, 0.88)',
-                backdropFilter: 'blur(10px)',
-                border: `1px solid ${replaySame ? '#10B981' : 'rgba(245, 158, 11, 0.75)'}`,
-                color: replaySame ? '#34D399' : '#FDE68A',
-                fontSize: '0.85rem',
-                fontWeight: '700',
-                userSelect: 'none',
-                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                boxShadow: replaySame 
-                  ? '0 0 16px rgba(16, 185, 129, 0.4)' 
-                  : '0 0 16px rgba(245, 158, 11, 0.35)',
-                animation: 'ctaSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1), amberGlowPulse 2s infinite alternate ease-in-out'
-              }}
-              title="Activez pour relancer automatiquement cette entracte une fois terminée"
-            >
-              <input
-                type="checkbox"
-                checked={!!replaySame}
-                onChange={(e) => {
-                  sound.playClick();
-                  if (onToggleReplaySame) onToggleReplaySame(e.target.checked);
-                }}
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  accentColor: replaySame ? '#10B981' : '#F59E0B',
-                  cursor: 'pointer'
-                }}
-              />
-              <span>{replaySame ? '🔄 Rejouer activé' : '⚡ Rejouer cette entracte ?'}</span>
-            </label>
-          )}
-
-          {/* Restart current intermission game button */}
+        {/* Row 2: 3 Compact Actions (Relancer, Autre jeu, Passer l'entracte) */}
+        <div className="entract-actions-row" style={{ position: 'relative' }} ref={pickerRef}>
           {onRestart && (
             <button
               onClick={() => {
                 sound.playClick();
                 onRestart();
               }}
-              className="entract-header-btn"
-              style={{
-                background: 'rgba(16, 185, 129, 0.2) !important',
-                color: '#34D399 !important',
-                border: '1px solid rgba(16, 185, 129, 0.5) !important',
-                boxShadow: '0 0 10px rgba(16, 185, 129, 0.3) !important'
-              }}
-              title="Relancer une nouvelle partie immédiatement"
+              className="entract-btn entract-btn-restart"
+              title="Relancer cette partie d'entracte"
             >
-              🔄 Relancer
+              <span>🔄</span> Relancer
             </button>
           )}
 
-          {/* Other game button */}
           {onOtherGame && (
-            <button 
-              onClick={() => {
-                sound.playClick();
-                onOtherGame();
-              }} 
-              className="entract-header-btn" 
-              style={{
-                background: 'rgba(59, 130, 246, 0.2) !important',
-                color: '#60a5fa !important',
-                border: '1px solid rgba(59, 130, 246, 0.4) !important',
-                boxShadow: '0 0 10px rgba(59, 130, 246, 0.3) !important'
-              }}
-              title="Changer pour une autre entracte aléatoire"
-            >
-              🎲 Autre jeu
-            </button>
+            <div style={{ flex: 1, position: 'relative', display: 'flex' }}>
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setShowGamePicker(!showGamePicker);
+                }}
+                className="entract-btn entract-btn-other"
+                style={{ width: '100%' }}
+                title="Changer de jeu d'entracte à la volée"
+              >
+                <span>🎲</span> Autre jeu ▾
+              </button>
+
+              {showGamePicker && (
+                <div className="entract-game-picker-dropdown">
+                  <button
+                    onClick={() => {
+                      sound.playClick();
+                      setShowGamePicker(false);
+                      onOtherGame();
+                    }}
+                    className="entract-picker-item"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#F59E0B' }}
+                  >
+                    <span>🎲</span>
+                    <span>Aléatoire</span>
+                  </button>
+                  {INTERMISSION_GAMES.map((g) => (
+                    <button
+                      key={g.key}
+                      onClick={() => {
+                        sound.playClick();
+                        setShowGamePicker(false);
+                        onOtherGame(g.key);
+                      }}
+                      className="entract-picker-item"
+                    >
+                      <span style={{ fontSize: '1rem' }}>{g.icon}</span>
+                      <span>{g.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Skip button */}
           {onSkip && (
             <button
               onClick={() => {
                 sound.playClick();
                 onSkip();
               }}
-              className="entract-header-btn"
-              style={{
-                background: 'rgba(239, 68, 68, 0.2) !important',
-                color: '#f87171 !important',
-                border: '1px solid rgba(239, 68, 68, 0.4) !important',
-                boxShadow: '0 0 10px rgba(239, 68, 68, 0.3) !important'
-              }}
-              title="Quitter l'entracte et retourner au Mahjong"
+              className="entract-btn entract-btn-skip"
+              title="Passer cette entracte et reprendre le jeu principal"
             >
-              Passer l'entracte ⏭
+              <span>Passer</span> ⏭
             </button>
           )}
 
           {extraControls}
         </div>
       </div>
+
+      {/* --- FOOTER OPTIONS (SPRINT FINAL 80% & REJOUER CETTE ENTRACTE) --- */}
+      {/* Placed in the footer at bottom of viewport, non-intrusive without modifying header */}
+      {isCtaVisible && (
+        <div className="entract-footer-bar">
+          <span style={{ fontSize: '0.78rem', fontWeight: '800', color: '#FDE68A', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>⚡</span> SPRINT FINAL (80%+)
+          </span>
+
+          {onToggleReplaySame && (
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                color: replaySame ? '#34d399' : '#e2e8f0',
+                fontWeight: '700',
+                userSelect: 'none'
+              }}
+              title="Activer pour relancer automatiquement ce jeu d'entracte une fois terminé"
+            >
+              <input
+                type="checkbox"
+                checked={!!replaySame}
+                onChange={(e) => {
+                  sound.playClick();
+                  onToggleReplaySame(e.target.checked);
+                }}
+                style={{
+                  width: '14px',
+                  height: '14px',
+                  accentColor: '#10B981',
+                  cursor: 'pointer'
+                }}
+              />
+              <span>{replaySame ? '🔄 Rejouer activé' : 'Rejouer cette entracte ?'}</span>
+            </label>
+          )}
+        </div>
+      )}
     </>
   );
 }

@@ -14,19 +14,24 @@ export default function GameScaleWrapper({ children, designWidth = 430, defaultH
   // Function to measure children scrollHeight securely
   const measureHeight = () => {
     if (innerRef.current) {
-      // Temporarily remove scale to measure true natural height without fractional pixel wrapping issues
+      // Temporarily remove scale and height constraints to measure true natural height
       const oldTransform = innerRef.current.style.transform;
+      const oldHeight = innerRef.current.style.height;
       innerRef.current.style.transform = 'none';
+      innerRef.current.style.height = 'auto';
       
       const naturalHeight = innerRef.current.scrollHeight;
       
       innerRef.current.style.transform = oldTransform;
+      innerRef.current.style.height = oldHeight;
 
       const newDesignHeight = Math.max(defaultHeight, naturalHeight);
-      if (Math.abs(newDesignHeight - designHeight) > 5) {
+      if (Math.abs(newDesignHeight - designHeight) > 2) {
         setDesignHeight(newDesignHeight);
       }
+      return newDesignHeight;
     }
+    return designHeight;
   };
 
   useEffect(() => {
@@ -38,11 +43,11 @@ export default function GameScaleWrapper({ children, designWidth = 430, defaultH
       const parentWidth = parent.clientWidth;
       const parentHeight = parent.clientHeight;
 
-      measureHeight();
+      const currentDesignHeight = measureHeight();
 
       // Compute required scale factor
       const scaleX = parentWidth / designWidth;
-      const scaleY = parentHeight / designHeight;
+      const scaleY = parentHeight / currentDesignHeight;
 
       // Only scale down (max scale = 1) to keep design looking clean and sharp
       const newScale = Math.min(1, scaleX, scaleY);
@@ -59,6 +64,20 @@ export default function GameScaleWrapper({ children, designWidth = 430, defaultH
       resizeObserver.observe(parent);
     }
 
+    let contentObserver;
+    if (innerRef.current) {
+      contentObserver = new ResizeObserver((entries) => {
+        if (entries[0]) {
+          const naturalHeight = Math.ceil(entries[0].contentRect.height);
+          if (naturalHeight > 0) {
+            setDesignHeight(Math.max(defaultHeight, naturalHeight));
+          }
+        }
+        handleResize();
+      });
+      contentObserver.observe(innerRef.current);
+    }
+
     window.addEventListener('resize', handleResize);
     // Timeout to make sure browser finished rendering initial fonts and layouts
     const timer = setTimeout(handleResize, 100);
@@ -68,6 +87,9 @@ export default function GameScaleWrapper({ children, designWidth = 430, defaultH
       clearTimeout(timer);
       if (resizeObserver && parent) {
         resizeObserver.unobserve(parent);
+      }
+      if (contentObserver && innerRef.current) {
+        contentObserver.unobserve(innerRef.current);
       }
     };
   }, [designWidth, designHeight]);
@@ -93,7 +115,7 @@ export default function GameScaleWrapper({ children, designWidth = 430, defaultH
         ref={innerRef}
         style={{
           width: `${designWidth}px`,
-          height: `${designHeight}px`,
+          minHeight: `${designHeight}px`,
           position: 'absolute',
           top: 0,
           left: 0,

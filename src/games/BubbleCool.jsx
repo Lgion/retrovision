@@ -88,9 +88,10 @@ export default function BubbleCool({
   onIntermissionComplete,
   onIntermissionRequest,
   replaySameIntermission,
-  onToggleReplaySameIntermission
+  onToggleReplaySameIntermission,
+  skipIntro = false
 }) {
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(!skipIntro);
   const [showStore, setShowStore] = useState(false);
   const [showChapterSelect, setShowChapterSelect] = useState(false);
   const [showChapterIntroModal, setShowChapterIntroModal] = useState(false);
@@ -456,9 +457,11 @@ export default function BubbleCool({
     ctx.lineTo(CANVAS_WIDTH - MARGIN_LEFT, DANGER_Y);
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
-    ctx.font = '700 9px Orbitron, sans-serif';
-    ctx.fillText('LIGNE D\'ALERTE', MARGIN_LEFT + 4, DANGER_Y - 4);
+    ctx.fillStyle = '#EF4444';
+    ctx.font = '900 12px Orbitron, sans-serif';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 4;
+    ctx.fillText('LIGNE D\'ALERTE', MARGIN_LEFT + 4, DANGER_Y - 5);
     ctx.restore();
   };
 
@@ -834,10 +837,12 @@ export default function BubbleCool({
 
     // Text Label NEXT
     ctx.save();
-    ctx.font = '700 10px Orbitron, sans-serif';
-    ctx.fillStyle = '#94a3b8';
+    ctx.font = '900 12px Orbitron, sans-serif';
+    ctx.fillStyle = '#F8FAFC';
     ctx.textAlign = 'center';
-    ctx.fillText('SUIVANT', nextX, nextY + 32);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 6;
+    ctx.fillText('SUIVANT', nextX, nextY + 34);
     ctx.restore();
   };
 
@@ -1561,11 +1566,12 @@ export default function BubbleCool({
     texts.forEach((ft) => {
       ctx.save();
       ctx.globalAlpha = Math.max(0, ft.alpha);
-      ctx.font = '900 16px Orbitron, sans-serif';
-      ctx.fillStyle = ft.color;
+      ctx.font = '900 20px Orbitron, sans-serif';
       ctx.textAlign = 'center';
-      ctx.shadowColor = '#000';
-      ctx.shadowBlur = 8;
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#000000';
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
       ctx.fillText(ft.text, ft.x, ft.y);
       ctx.restore();
     });
@@ -1861,43 +1867,131 @@ export default function BubbleCool({
 
       <div className="bubble-cool-container game-container" style={containerStyle}>
         {!isIntermission && (
-          <GameHeader
-            title="BUBBLE COOL"
-            onBack={onBack}
-            onRestart={initGame}
-            showBgmToggle={true}
-            bgmOn={bgmOn}
-            onBgmToggle={() => setBgmOn(sound.toggleBGM?.())}
-            onShop={() => setShowStore(true)}
-            extraControls={
+          <div style={compactHeaderStyle}>
+            {/* Top row: Back button, Chapter Selector pill, and sleek action buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
+              <button
+                onClick={onBack}
+                className="retro-btn"
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  fontWeight: '800',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#ffffff',
+                  cursor: 'pointer'
+                }}
+              >
+                ← Retour
+              </button>
+
               <button
                 onClick={() => setShowChapterSelect(true)}
                 className="retro-btn"
                 style={{
-                  padding: '6px 10px',
-                  fontSize: '11px',
-                  borderColor: gameMode === 'chapter' ? activeChapter.accentColor : '#38BDF8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '5px 12px',
+                  fontSize: '12px',
+                  fontWeight: '800',
+                  borderRadius: '10px',
+                  background: gameMode === 'chapter' ? `${activeChapter.accentColor}25` : 'rgba(56, 189, 248, 0.15)',
+                  border: `1.5px solid ${gameMode === 'chapter' ? activeChapter.accentColor : '#38BDF8'}`,
                   color: gameMode === 'chapter' ? activeChapter.accentColor : '#38BDF8',
-                  background: 'rgba(15,23,42,0.8)'
+                  cursor: 'pointer',
+                  fontFamily: 'Orbitron, sans-serif'
                 }}
-                title="Choisir un chapitre"
+                title="Changer de chapitre"
               >
-                🗺️ Chapitres
+                <span>{gameMode === 'chapter' ? activeChapter.icon : '🎮'}</span>
+                <span>{gameMode === 'chapter' ? `CH. ${activeChapter.id}` : 'ARCADE'}</span>
+                <span style={{ fontSize: '10px', opacity: 0.8 }}>▾</span>
               </button>
-            }
-            centerContent={
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <div style={statBoxStyle}>
-                  <div style={statLabelStyle}>SCORE</div>
-                  <div style={statValStyle}>{score}</div>
-                </div>
-                <div style={statBoxStyle}>
-                  <div style={statLabelStyle}>RECORD</div>
-                  <div style={statValStyle}>{highScore}</div>
-                </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  onClick={() => setBgmOn(sound.toggleBGM?.())}
+                  className="retro-btn"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    background: bgmOn ? 'rgba(168, 85, 247, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                    border: `1px solid ${bgmOn ? '#A855F7' : '#64748B'}`,
+                    color: '#fff',
+                    cursor: 'pointer'
+                  }}
+                  title={bgmOn ? 'Musique active' : 'Musique muette'}
+                >
+                  {bgmOn ? '🎵' : '🔇'}
+                </button>
+
+                <button
+                  onClick={() => setShowStore(true)}
+                  className="retro-btn"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    background: 'rgba(245, 158, 11, 0.2)',
+                    border: '1px solid #F59E0B',
+                    color: '#fff',
+                    cursor: 'pointer'
+                  }}
+                  title="Boutique"
+                >
+                  🛍️
+                </button>
+
+                <button
+                  onClick={initGame}
+                  className="retro-btn"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    background: 'rgba(56, 189, 248, 0.2)',
+                    border: '1px solid #38BDF8',
+                    color: '#fff',
+                    cursor: 'pointer'
+                  }}
+                  title="Recommencer la partie"
+                >
+                  🔄
+                </button>
               </div>
-            }
-          />
+            </div>
+
+            {/* Bottom row: High-contrast Score and Record */}
+            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+              <div style={statBoxStyle}>
+                <div style={statLabelStyle}>SCORE</div>
+                <div style={statValStyle}>{score}</div>
+              </div>
+              <div style={statBoxStyle}>
+                <div style={statLabelStyle}>MEILLEUR RECORD</div>
+                <div style={statValStyle}>{highScore}</div>
+              </div>
+            </div>
+          </div>
         )}
 
         {isIntermission && (() => {
@@ -1917,39 +2011,6 @@ export default function BubbleCool({
           );
         })()}
 
-        {/* Chapter Banner & Mode Indicator */}
-        {!isIntermission && gameMode === 'chapter' && (
-          <div
-            onClick={() => setShowChapterSelect(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '6px 12px',
-              margin: '3px 0',
-              borderRadius: '10px',
-              background: `linear-gradient(90deg, ${activeChapter.accentColor}25, rgba(15,23,42,0.8))`,
-              border: `1px solid ${activeChapter.accentColor}40`,
-              cursor: 'pointer'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px' }}>{activeChapter.icon}</span>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: activeChapter.accentColor, fontFamily: 'Orbitron, sans-serif' }}>
-                  CHAPITRE {activeChapter.id} : {activeChapter.title.toUpperCase()}
-                </div>
-                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                  {activeChapter.subtitle}
-                </div>
-              </div>
-            </div>
-            <div style={{ fontSize: '10px', color: '#38BDF8', fontWeight: 'bold' }}>
-              🗺️ Changer
-            </div>
-          </div>
-        )}
-
         {/* Rescue Power-Ups Bar (Astuces & Aides Anti-Blocage) */}
         <div style={powerupRowStyle}>
           <button
@@ -1959,8 +2020,8 @@ export default function BubbleCool({
             style={{
               ...powerupBtnStyle,
               borderColor: '#EF4444',
-              color: '#EF4444',
-              background: bombsCount > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.02)',
+              color: '#FCA5A5',
+              background: bombsCount > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.02)',
               opacity: bombsCount > 0 ? 1 : 0.4
             }}
             title="Charger une Bombe dans le canon"
@@ -1975,8 +2036,8 @@ export default function BubbleCool({
             style={{
               ...powerupBtnStyle,
               borderColor: '#A855F7',
-              color: '#A855F7',
-              background: rainbowsCount > 0 ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.02)',
+              color: '#E9D5FF',
+              background: rainbowsCount > 0 ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.02)',
               opacity: rainbowsCount > 0 ? 1 : 0.4
             }}
             title="Charger un Prisme Joker dans le canon"
@@ -1991,8 +2052,8 @@ export default function BubbleCool({
             style={{
               ...powerupBtnStyle,
               borderColor: '#FACC15',
-              color: '#FACC15',
-              background: lightningCount > 0 ? 'rgba(250,204,21,0.15)' : 'rgba(255,255,255,0.02)',
+              color: '#FEF08A',
+              background: lightningCount > 0 ? 'rgba(250,204,21,0.2)' : 'rgba(255,255,255,0.02)',
               opacity: lightningCount > 0 ? 1 : 0.4
             }}
             title="Foudroyer la rangée la plus basse"
@@ -2078,27 +2139,41 @@ const containerStyle = {
   boxShadow: '0 0 20px rgba(56, 189, 248, 0.15)'
 };
 
+const compactHeaderStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
+  padding: '6px 10px',
+  background: 'rgba(15, 23, 42, 0.85)',
+  border: '1px solid rgba(56, 189, 248, 0.3)',
+  borderRadius: '12px',
+  marginBottom: '2px'
+};
+
 const statBoxStyle = {
   flex: 1,
-  background: 'rgba(255, 255, 255, 0.04)',
-  border: '1px solid rgba(255, 255, 255, 0.08)',
+  background: 'rgba(255, 255, 255, 0.05)',
+  border: '1px solid rgba(255, 255, 255, 0.12)',
   borderRadius: '8px',
-  padding: '4px 8px',
+  padding: '4px 6px',
   textAlign: 'center'
 };
 
 const statLabelStyle = {
-  fontSize: '9px',
-  color: '#94a3b8',
+  fontSize: '11px',
+  fontWeight: '800',
+  color: '#cbd5e1',
   fontFamily: 'Orbitron, sans-serif',
-  marginBottom: '2px'
+  marginBottom: '2px',
+  letterSpacing: '0.5px'
 };
 
 const statValStyle = {
-  fontSize: '15px',
-  fontWeight: 'bold',
-  color: '#ffffff',
-  fontFamily: 'Orbitron, sans-serif'
+  fontSize: '17px',
+  fontWeight: '900',
+  color: '#38bdf8',
+  fontFamily: 'Orbitron, sans-serif',
+  textShadow: '0 0 8px rgba(56, 189, 248, 0.5)'
 };
 
 const powerupRowStyle = {
@@ -2107,31 +2182,33 @@ const powerupRowStyle = {
   justifyContent: 'space-between',
   gap: '6px',
   padding: '5px 8px',
-  background: 'rgba(15, 23, 42, 0.7)',
+  background: 'rgba(15, 23, 42, 0.8)',
   borderRadius: '12px',
-  margin: '3px 0',
-  border: '1px solid rgba(255,255,255,0.06)'
+  margin: '2px 0',
+  border: '1px solid rgba(255,255,255,0.08)'
 };
 
 const powerupBtnStyle = {
   flex: 1,
-  padding: '5px 6px',
-  fontSize: '10px',
-  fontWeight: 'bold',
+  padding: '6px 4px',
+  fontSize: '12px',
+  fontWeight: '800',
   borderRadius: '8px',
   border: '1.5px solid',
   cursor: 'pointer',
   whiteSpace: 'nowrap',
-  transition: 'all 0.15s'
+  transition: 'all 0.15s',
+  fontFamily: 'Orbitron, sans-serif'
 };
 
 const swapBtnStyle = {
-  padding: '5px 10px',
-  fontSize: '13px',
+  padding: '6px 10px',
+  fontSize: '15px',
+  fontWeight: '800',
   borderRadius: '8px',
   borderColor: '#38BDF8',
   color: '#38BDF8',
-  background: 'rgba(56, 189, 248, 0.12)',
+  background: 'rgba(56, 189, 248, 0.15)',
   cursor: 'pointer'
 };
 
@@ -2173,22 +2250,24 @@ const overlayStyle = {
 
 const titleStyle = {
   fontFamily: 'Orbitron, sans-serif',
-  fontSize: '22px',
+  fontSize: '26px',
   color: '#EF4444',
-  textShadow: '0 0 12px #EF4444',
-  fontWeight: 'bold',
-  marginBottom: '8px'
+  textShadow: '0 0 16px rgba(239, 68, 68, 0.7)',
+  fontWeight: '900',
+  marginBottom: '10px'
 };
 
 const overlayBtnStyle = {
-  padding: '10px 20px',
-  fontSize: '14px',
+  padding: '12px 22px',
+  fontSize: '15px',
+  fontWeight: '800',
   border: '2px solid #38BDF8',
-  background: 'transparent',
+  background: 'rgba(56, 189, 248, 0.12)',
   color: '#38BDF8',
   cursor: 'pointer',
   borderRadius: '12px',
-  fontFamily: 'Orbitron, sans-serif'
+  fontFamily: 'Orbitron, sans-serif',
+  transition: 'all 0.15s ease'
 };
 
 const modalOverlayStyle = {
@@ -2197,34 +2276,34 @@ const modalOverlayStyle = {
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: 'rgba(2, 6, 23, 0.85)',
+  backgroundColor: 'rgba(2, 6, 23, 0.88)',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
   zIndex: 999,
   padding: '16px',
-  backdropFilter: 'blur(8px)'
+  backdropFilter: 'blur(10px)'
 };
 
 const modalCardStyle = {
   background: 'radial-gradient(circle at top, #1e293b 0%, #0f172a 100%)',
-  border: '1.5px solid rgba(56, 189, 248, 0.3)',
-  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.2)',
+  border: '1.5px solid rgba(56, 189, 248, 0.35)',
+  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.25)',
   borderRadius: '20px',
-  padding: '22px',
+  padding: '24px',
   width: '100%',
-  maxWidth: '380px',
+  maxWidth: '400px',
   textAlign: 'center',
   boxSizing: 'border-box'
 };
 
 const tipBoxStyle = {
-  background: 'rgba(245, 158, 11, 0.1)',
-  border: '1px solid rgba(245, 158, 11, 0.3)',
-  borderRadius: '10px',
-  padding: '8px 12px',
-  fontSize: '12px',
-  color: '#e2e8f0',
+  background: 'rgba(245, 158, 11, 0.15)',
+  border: '1.5px solid rgba(245, 158, 11, 0.4)',
+  borderRadius: '12px',
+  padding: '10px 14px',
+  fontSize: '14px',
+  color: '#f8fafc',
   textAlign: 'left',
-  lineHeight: '1.4'
+  lineHeight: '1.5'
 };

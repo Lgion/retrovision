@@ -50,7 +50,7 @@ const MahjongTile = React.memo(function MahjongTile({
       onClick={onClick}
       onMouseDown={onMouseDown}
       onTouchStart={onTouchStart}
-      className={`mahjong-tile-3d ${tileset === 'nature' ? 'nature-jade-tile' : ''} ${tileset === 'cyber' ? 'cyber-neon-tile' : ''} ${tileset === 'modern' ? 'modern-wood-tile' : ''} ${tileset === 'mosaic' ? 'mosaic-stone-tile' : ''} ${tileset === 'luxury_marble_2' ? 'luxury-marble-tile' : ''} ${isSelected ? 'selected' : ''} ${isHint ? 'hinted' : ''} ${!isFree && mode === 'zen' ? 'blocked' : ''} ${isVibrating ? 'tile-vibrating' : ''} ${isHintSimulating ? 'hint-simulating' : ''} ${isDiscreetHint ? 'discreet-hint-glow' : ''}`}
+      className={`mahjong-tile-3d ${tileset === 'nature' ? 'nature-jade-tile' : ''} ${tileset === 'cyber' ? 'onyx-gold-tile' : ''} ${tileset === 'modern' ? 'modern-wood-tile' : ''} ${tileset === 'mosaic' ? 'mosaic-botanical-tile' : ''} ${tileset === 'luxury_marble_2' ? 'luxury-marble-tile' : ''} ${isSelected ? 'selected' : ''} ${isHint ? 'hinted' : ''} ${!isFree && mode === 'zen' ? 'blocked' : ''} ${isVibrating ? 'tile-vibrating' : ''} ${isHintSimulating ? 'hint-simulating' : ''} ${isDiscreetHint ? 'discreet-hint-glow' : ''}`}
       style={{
         position: 'absolute',
         left: `${left}px`,
@@ -66,73 +66,79 @@ const MahjongTile = React.memo(function MahjongTile({
         willChange: isDragging ? 'left, top' : 'auto',
         '--hint-dx': isHintSimulating && hintMove ? hintMove.dx * cellWidth : 0,
         '--hint-dy': isHintSimulating && hintMove ? hintMove.dy * cellHeight : 0,
-        background: tileset === 'nature' || tileset === 'creatures_b'
-          ? 'linear-gradient(145deg, #18181b 0%, #0f0f11 50%, #000000 100%)'
-          : tileset === 'cyber'
-            ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 27, 75, 0.95) 50%, rgba(13, 148, 136, 0.2) 100%)'
-            : tileset === 'modern'
-              ? 'linear-gradient(145deg, #3e1f17 0%, #28130d 50%, #170905 100%)'
-              : tileset === 'mosaic'
-                ? 'linear-gradient(145deg, #33261f 0%, #211813 50%, #120d0a 100%)'
-                : tileset === 'luxury_marble_2'
-                  ? 'linear-gradient(145deg, #ffffff 0%, #f3f4f6 60%, #e5e7eb 100%)'
-                  : '#ffffff',
+        background: tileset === 'nature' || tileset === 'creatures_b' || tileset === 'cyber'
+          ? 'linear-gradient(145deg, #1c1d22 0%, #111216 50%, #08080a 100%)'
+          : tileset === 'modern'
+            ? 'linear-gradient(145deg, #3e1f17 0%, #28130d 50%, #170905 100%)'
+            : tileset === 'mosaic'
+              ? 'linear-gradient(145deg, #ffffff 0%, #f9fafb 50%, #f3f4f6 100%)'
+              : tileset === 'luxury_marble_2'
+                ? 'linear-gradient(145deg, #ffffff 0%, #f3f4f6 60%, #e5e7eb 100%)'
+                : '#ffffff',
         borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         boxSizing: 'border-box',
-        borderTop: tileset === 'nature' || tileset === 'creatures_b' || tileset === 'modern' || tileset === 'mosaic' || tileset === 'luxury_marble_2'
+        borderTop: tileset === 'nature' || tileset === 'creatures_b' || tileset === 'cyber' || tileset === 'modern' || tileset === 'luxury_marble_2'
           ? '1.5px solid rgba(251, 191, 36, 0.85)'
-          : tileset === 'cyber'
-            ? '1px solid rgba(0, 240, 255, 0.85)'
+          : tileset === 'mosaic'
+            ? '1.5px solid rgba(255, 255, 255, 0.95)'
             : 'none',
-        borderLeft: tileset === 'nature' || tileset === 'creatures_b' || tileset === 'modern' || tileset === 'mosaic' || tileset === 'luxury_marble_2'
+        borderLeft: tileset === 'nature' || tileset === 'creatures_b' || tileset === 'cyber' || tileset === 'modern' || tileset === 'luxury_marble_2'
           ? '1.5px solid rgba(251, 191, 36, 0.65)'
-          : tileset === 'cyber'
-            ? '1px solid rgba(0, 240, 255, 0.65)'
+          : tileset === 'mosaic'
+            ? '1.5px solid rgba(255, 255, 255, 0.85)'
             : 'none',
         borderBottom: isVibrating
           ? '5px solid #ef4444'
-          : tileset === 'nature' || tileset === 'creatures_b'
-            ? '5.5px solid #09090b'
-            : tileset === 'cyber'
-              ? '5px solid #1e1b4b'
-              : tileset === 'modern' || tileset === 'mosaic'
-                ? '5.5px solid #0a0302'
+          : tileset === 'nature' || tileset === 'creatures_b' || tileset === 'cyber'
+            ? '5.5px solid #060708'
+            : tileset === 'modern'
+              ? '5.5px solid #0a0302'
+              : tileset === 'mosaic'
+                ? '5.5px solid #cbd5e1'
                 : tileset === 'luxury_marble_2'
                   ? '5.5px solid #d1d5db'
                   : '5px solid #16a34a',
         borderRight: isVibrating
           ? '3px solid #dc2626'
-          : tileset === 'nature' || tileset === 'creatures_b'
-            ? '3.5px solid #121215'
-            : tileset === 'cyber'
-              ? '3px solid #312e81'
-              : tileset === 'modern' || tileset === 'mosaic'
-                ? '3.5px solid #140704'
+          : tileset === 'nature' || tileset === 'creatures_b' || tileset === 'cyber'
+            ? '3.5px solid #101114'
+            : tileset === 'modern'
+              ? '3.5px solid #140704'
+              : tileset === 'mosaic'
+                ? '3.5px solid #94a3b8'
                 : tileset === 'luxury_marble_2'
                   ? '3.5px solid #9ca3af'
                   : '3px solid #15803d',
         boxShadow: isVibrating
           ? '0 0 20px #ef4444'
           : isSelected
-            ? (tileset === 'nature' || tileset === 'creatures_b' ? '0 0 22px #fbbf24, inset 0 0 10px #fbbf24' : tileset === 'modern' || tileset === 'mosaic' || tileset === 'luxury_marble_2' ? '0 0 25px #f59e0b, inset 0 0 12px #fef08a' : '0 0 25px #00f0ff, inset 0 0 12px #f43f5e')
+            ? (tileset === 'nature' || tileset === 'creatures_b' || tileset === 'cyber' || tileset === 'modern' || tileset === 'luxury_marble_2'
+              ? '0 0 25px #fbbf24, inset 0 0 10px #fbbf24'
+              : tileset === 'mosaic'
+                ? '0 0 25px #38bdf8, inset 0 0 12px #bae6fd'
+                : '0 0 25px #00f0ff, inset 0 0 12px #f43f5e')
             : isMatchOption
               ? '0 0 20px #38bdf8, inset 0 0 10px #38bdf8'
               : isHint
                 ? '0 0 20px #facc15, inset 0 0 10px #facc15'
-                : tileset === 'nature' || tileset === 'creatures_b'
-                  ? `inset 0 1px 2px rgba(255, 255, 255, 0.35), inset 0 -3px 8px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.35), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.3)`
-                  : tileset === 'cyber'
-                    ? `inset 0 0 12px rgba(0, 240, 255, 0.25), inset 0 -2px 6px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 240, 255, 0.2), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.4)`
-                    : tileset === 'modern' || tileset === 'mosaic'
-                      ? `inset 0 1px 3px rgba(254, 240, 138, 0.35), inset 0 -3px 8px rgba(0, 0, 0, 0.7), 0 4px 10px rgba(0, 0, 0, 0.4), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.5)`
+                : tileset === 'nature' || tileset === 'creatures_b' || tileset === 'cyber'
+                  ? `inset 0 1px 2px rgba(255, 255, 255, 0.35), inset 0 -3px 8px rgba(0, 0, 0, 0.6), 0 4px 10px rgba(0, 0, 0, 0.4), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.35)`
+                  : tileset === 'modern'
+                    ? `inset 0 1px 3px rgba(254, 240, 138, 0.35), inset 0 -3px 8px rgba(0, 0, 0, 0.7), 0 4px 10px rgba(0, 0, 0, 0.4), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.5)`
+                    : tileset === 'mosaic'
+                      ? `inset 0 1px 3px rgba(255, 255, 255, 0.95), inset 0 -3px 6px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.15), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.15)`
                       : tileset === 'luxury_marble_2'
                         ? `inset 0 1px 3px rgba(255, 255, 255, 0.9), inset 0 -3px 6px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.25), ${tile.z * 2}px ${tile.z * 2 + 2}px 8px rgba(0,0,0,0.2)`
                         : `0 4px 6px rgba(0, 0, 0, 0.15), ${tile.z * 2}px ${tile.z * 2 + 2}px 6px rgba(0,0,0,0.18)`,
         outline: isSelected
-          ? (tileset === 'nature' || tileset === 'creatures_b' ? '3px solid #fbbf24' : '3px solid #00f0ff')
+          ? (tileset === 'nature' || tileset === 'creatures_b' || tileset === 'cyber' || tileset === 'modern' || tileset === 'luxury_marble_2'
+            ? '3px solid #fbbf24'
+            : tileset === 'mosaic'
+              ? '3px solid #0284c7'
+              : '3px solid #00f0ff')
           : isMatchOption
             ? '3px solid #38bdf8'
             : isHint
@@ -171,7 +177,40 @@ const MahjongTile = React.memo(function MahjongTile({
   );
 });
 
-export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest, skipIntro }) {
+const INTERMISSION_MINI_GAMES = [
+  { key: 'water', name: 'Water Sort', icon: '💧', subtitle: 'Tri de couleurs relaxant' },
+  { key: 'ball', name: 'Ball Sort', icon: '🔮', subtitle: 'Tri de billes chromatiques' },
+  { key: 'bubblecool', name: 'Bubble Cool', icon: '🫧', subtitle: 'Tir de bulles arcade' },
+  { key: 'sudoku', name: 'Sudoku', icon: '🔢', subtitle: 'Logique & chiffres' },
+  { key: 'blockfantasy', name: 'Block Fantasy', icon: '🧱', subtitle: 'Lignes de blocs' },
+  { key: '2048', name: '2048', icon: '🔢', subtitle: 'Fusion numérique' },
+  { key: 'mines', name: 'Démineur', icon: '💣', subtitle: 'Déminage tactique' },
+  { key: 'arrows', name: 'Flèches Zen', icon: '🏹', subtitle: 'Labyrinthe directionnel' },
+  { key: 'jigsaw', name: 'Puzzle', icon: '🧩', subtitle: 'Reconstitution visuelle' },
+  { key: 'freecell', name: 'FreeCell', icon: '🃏', subtitle: 'Cartes & patience' },
+  { key: 'hangman', name: 'Pendu', icon: '🎈', subtitle: 'Mots & déduction' },
+  { key: 'impossible13', name: 'Impossible 13', icon: '1️⃣3️⃣', subtitle: 'Addition stratégique' }
+];
+
+export default function MahjongZen({
+  onBack,
+  onScoreSave,
+  onIntermissionRequest,
+  upcomingIntermission = 'water',
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  skipIntro
+}) {
+  const [selectedUpcomingIntermission, setSelectedUpcomingIntermission] = useState(upcomingIntermission || 'water');
+
+  useEffect(() => {
+    if (upcomingIntermission) {
+      setSelectedUpcomingIntermission(upcomingIntermission);
+    }
+  }, [upcomingIntermission]);
+
+  const activeIntermissionGame = INTERMISSION_MINI_GAMES.find(g => g.key === selectedUpcomingIntermission) || INTERMISSION_MINI_GAMES[0];
+  const isIntermissionEnabled = localStorage.getItem('retrovision_intermission_enabled') !== 'false';
   const [showIntro, setShowIntro] = useState(!skipIntro);
   const [mode, setMode] = useState(() => getGameConfig('mahjong', 'mode', 'slide'));
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mahjong', 'boardSize', 'large'));
@@ -2460,27 +2499,135 @@ export default function MahjongZen({ onBack, onScoreSave, onIntermissionRequest,
               Vous avez brillamment complété le plateau avec un score de <strong style={{ color: '#f59e0b' }}>{score}</strong> points !
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '240px', zIndex: 10 }}>
+            {isIntermissionEnabled && (
+              <div style={{
+                width: '100%',
+                maxWidth: '300px',
+                background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98))',
+                border: '1.5px solid rgba(59, 130, 246, 0.45)',
+                borderRadius: '16px',
+                padding: '12px 14px',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.2)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                marginBottom: '10px',
+                boxSizing: 'border-box',
+                zIndex: 10
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{
+                    fontSize: '10px',
+                    fontWeight: '800',
+                    letterSpacing: '0.8px',
+                    color: '#60A5FA',
+                    background: 'rgba(59, 130, 246, 0.18)',
+                    border: '1px solid rgba(59, 130, 246, 0.35)',
+                    borderRadius: '8px',
+                    padding: '3px 8px',
+                    textTransform: 'uppercase'
+                  }}>
+                    🎬 PROCHAIN ENTRACTE
+                  </span>
+                  <button
+                    onClick={() => {
+                      sound.playClick();
+                      if (onShuffleUpcomingIntermission) {
+                        const next = onShuffleUpcomingIntermission();
+                        setSelectedUpcomingIntermission(next);
+                      } else {
+                        const others = INTERMISSION_MINI_GAMES.filter(g => g.key !== selectedUpcomingIntermission);
+                        const rand = others[Math.floor(Math.random() * others.length)].key;
+                        setSelectedUpcomingIntermission(rand);
+                        if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(rand);
+                      }
+                    }}
+                    className="retro-btn"
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      color: '#38BDF8',
+                      background: 'rgba(56, 189, 248, 0.15)',
+                      border: '1px solid rgba(56, 189, 248, 0.35)',
+                      borderRadius: '8px',
+                      padding: '3px 10px',
+                      cursor: 'pointer'
+                    }}
+                    title="Tirer un autre mini-jeu au hasard"
+                  >
+                    🎲 Aléatoire
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
+                    <span style={{ fontSize: '26px' }}>{activeIntermissionGame.icon}</span>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: '800', color: '#FFFFFF', fontFamily: 'var(--font-main)' }}>
+                        {activeIntermissionGame.name}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>
+                        {activeIntermissionGame.subtitle}
+                      </div>
+                    </div>
+                  </div>
+
+                  <select
+                    value={selectedUpcomingIntermission}
+                    onChange={(e) => {
+                      sound.playClick();
+                      setSelectedUpcomingIntermission(e.target.value);
+                      if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(e.target.value);
+                    }}
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.95)',
+                      border: '1.5px solid #38BDF8',
+                      color: '#38BDF8',
+                      borderRadius: '8px',
+                      padding: '5px 8px',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      outline: 'none'
+                    }}
+                    title="Définir à la volée le jeu d'entracte souhaité"
+                  >
+                    {INTERMISSION_MINI_GAMES.map((g) => (
+                      <option key={g.key} value={g.key} style={{ background: '#0F172A', color: '#FFFFFF' }}>
+                        {g.icon} {g.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '300px', zIndex: 10 }}>
               <button
                 onClick={() => {
-                  if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') onIntermissionRequest();
-                  else initGame();
+                  if (onIntermissionRequest && isIntermissionEnabled) {
+                    onIntermissionRequest(selectedUpcomingIntermission);
+                  } else {
+                    initGame();
+                  }
                 }}
                 className="retro-btn pulse-glow"
                 style={{
                   ...restartBtnStyle,
-                  background: '#10b981',
-                  borderColor: '#10b981',
+                  background: isIntermissionEnabled ? 'linear-gradient(135deg, #3B82F6, #1D4ED8)' : '#10b981',
+                  borderColor: isIntermissionEnabled ? '#60A5FA' : '#10b981',
                   color: '#ffffff',
                   width: '100%',
                   fontWeight: '800',
-                  fontSize: '16px',
-                  padding: '12px 0',
+                  fontSize: '15px',
+                  padding: '12px 14px',
                   borderRadius: '12px',
-                  boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)',
+                  boxShadow: isIntermissionEnabled ? '0 0 20px rgba(59, 130, 246, 0.4)' : '0 0 15px rgba(16, 185, 129, 0.4)',
                 }}
               >
-                🔄 Nouveau Niveau
+                {isIntermissionEnabled
+                  ? `🎬 Lancer l'Entracte : ${activeIntermissionGame.name}`
+                  : '🔄 Nouveau Niveau'}
               </button>
               <button
                 onClick={onBack}
