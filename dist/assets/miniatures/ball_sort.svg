@@ -1,0 +1,35 @@
+<svg viewBox="0 0 100 80" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bs-tube" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.25)" />
+      <stop offset="25%" stop-color="rgba(255,255,255,0.08)" />
+      <stop offset="75%" stop-color="rgba(255,255,255,0.04)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0.2)" />
+    </linearGradient>
+    <radialGradient id="bs-r" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#FCA5A5"/><stop offset="40%" stop-color="#EF4444"/><stop offset="100%" stop-color="#991B1B"/></radialGradient>
+    <radialGradient id="bs-g" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#86EFAC"/><stop offset="40%" stop-color="#10B981"/><stop offset="100%" stop-color="#065F46"/></radialGradient>
+    <radialGradient id="bs-b" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#93C5FD"/><stop offset="40%" stop-color="#3B82F6"/><stop offset="100%" stop-color="#1E40AF"/></radialGradient>
+    <radialGradient id="bs-p" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#F472B6"/><stop offset="40%" stop-color="#D946EF"/><stop offset="100%" stop-color="#86198F"/></radialGradient>
+    <radialGradient id="bs-a" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#FDE68A"/><stop offset="40%" stop-color="#F59E0B"/><stop offset="100%" stop-color="#92400E"/></radialGradient>
+    <filter id="bs-glow"><feGaussianBlur stdDeviation="2" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
+  </defs>
+  <rect x="13" y="24" width="18" height="50" rx="9" fill="url(#bs-tube)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+  <path d="M12 24 H32" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" />
+  <circle cx="22" cy="64" r="7" fill="url(#bs-g)" />
+  <circle cx="22" cy="49" r="7" fill="url(#bs-a)" />
+  <circle cx="22" cy="34" r="7" fill="url(#bs-r)" />
+  <rect x="41" y="24" width="18" height="50" rx="9" fill="url(#bs-tube)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+  <path d="M40 24 H60" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" />
+  <circle cx="50" cy="64" r="7" fill="url(#bs-b)" />
+  <circle cx="50" cy="49" r="7" fill="url(#bs-b)" />
+  <rect x="69" y="24" width="18" height="50" rx="9" fill="url(#bs-tube)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+  <path d="M68 24 H88" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" />
+  <circle cx="78" cy="64" r="7" fill="url(#bs-g)" />
+  <path d="M50 22 Q64 4 78 20" stroke="#F472B6" stroke-width="1.5" stroke-dasharray="3,2" fill="none" opacity="0.8" />
+  <polygon points="76,17 80,21 75,23" fill="#F472B6" />
+  <g filter="url(#bs-glow)">
+    <circle cx="64" cy="11" r="7.5" fill="url(#bs-p)" />
+    <circle cx="62" cy="9" r="2.5" fill="white" opacity="0.75" />
+  </g>
+  <path d="M64 1 L65 3 L67 4 L65 5 L64 7 L63 5 L61 4 L63 3 Z" fill="#FDE68A" />
+</svg>

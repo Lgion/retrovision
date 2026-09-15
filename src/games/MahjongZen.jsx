@@ -7,6 +7,8 @@ import GameHeader from '../components/GameHeader';
 import MahjongCollection from './MahjongCollection';
 
 import MahjongIcon, { MAHJONG_THEME } from './MahjongIcon';
+import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import GameMiniature from '../components/GameMiniature';
 
 
 const MahjongTile = React.memo(function MahjongTile({
@@ -178,19 +180,25 @@ const MahjongTile = React.memo(function MahjongTile({
 });
 
 const INTERMISSION_MINI_GAMES = [
-  { key: 'water', name: 'Water Sort', icon: '💧', subtitle: 'Tri de couleurs relaxant' },
-  { key: 'ball', name: 'Ball Sort', icon: '🔮', subtitle: 'Tri de billes chromatiques' },
-  { key: 'bubblecool', name: 'Bubble Cool', icon: '🫧', subtitle: 'Tir de bulles arcade' },
-  { key: 'sudoku', name: 'Sudoku', icon: '🔢', subtitle: 'Logique & chiffres' },
-  { key: 'blockfantasy', name: 'Block Fantasy', icon: '🧱', subtitle: 'Lignes de blocs' },
-  { key: '2048', name: '2048', icon: '🔢', subtitle: 'Fusion numérique' },
-  { key: 'mines', name: 'Démineur', icon: '💣', subtitle: 'Déminage tactique' },
-  { key: 'arrows', name: 'Flèches Zen', icon: '🏹', subtitle: 'Labyrinthe directionnel' },
-  { key: 'jigsaw', name: 'Puzzle', icon: '🧩', subtitle: 'Reconstitution visuelle' },
-  { key: 'freecell', name: 'FreeCell', icon: '🃏', subtitle: 'Cartes & patience' },
-  { key: 'hangman', name: 'Pendu', icon: '🎈', subtitle: 'Mots & déduction' },
-  { key: 'impossible13', name: 'Impossible 13', icon: '1️⃣3️⃣', subtitle: 'Addition stratégique' }
+  { key: 'water', name: 'Water Sort', icon: '💧', subtitle: 'Tri de couleurs relaxant', bg: 'water_sort_bg.webp' },
+  { key: 'ball', name: 'Ball Sort', icon: '🔮', subtitle: 'Tri de billes chromatiques', bg: 'ball_sort_bg.webp' },
+  { key: 'bubblecool', name: 'Bubble Cool', icon: '🫧', subtitle: 'Tir de bulles arcade', bg: 'bubble_cool_bg.webp' },
+  { key: 'sudoku', name: 'Sudoku', icon: '🔢', subtitle: 'Logique & chiffres', bg: 'sudoku_bg.webp' },
+  { key: 'blockfantasy', name: 'Block Fantasy', icon: '🧱', subtitle: 'Lignes de blocs', bg: 'block_fantasy_bg.webp' },
+  { key: '2048', name: '2048', icon: '✨', subtitle: 'Fusion numérique', bg: 'grid_2048_bg.webp' },
+  { key: 'mines', name: 'Démineur', icon: '💣', subtitle: 'Déminage tactique', bg: 'minesweeper_bg.webp' },
+  { key: 'arrows', name: 'Flèches Zen', icon: '🏹', subtitle: 'Labyrinthe directionnel', bg: 'arrow_puzzle_bg.webp' },
+  { key: 'jigsaw', name: 'Puzzle', icon: '🧩', subtitle: 'Reconstitution visuelle', bg: 'jigsaw_puzzle_bg.webp' },
+  { key: 'freecell', name: 'FreeCell', icon: '🃏', subtitle: 'Cartes & patience', bg: 'freecell_bg.webp' },
+  { key: 'hangman', name: 'Pendu', icon: '🎈', subtitle: 'Mots & déduction', bg: 'hangman_bg.webp' },
+  { key: 'impossible13', name: 'Impossible 13', icon: '1️⃣3️⃣', subtitle: 'Addition stratégique', bg: 'impossible13_bg.webp' }
 ];
+
+const getGameBgUrl = (bgFile) => {
+  const base = import.meta.env.BASE_URL || '/';
+  const safeBase = base.endsWith('/') ? base : `${base}/`;
+  return `${safeBase}assets/bg/${bgFile}`;
+};
 
 export default function MahjongZen({
   onBack,
@@ -214,7 +222,12 @@ export default function MahjongZen({
   const [showIntro, setShowIntro] = useState(!skipIntro);
   const [mode, setMode] = useState(() => getGameConfig('mahjong', 'mode', 'slide'));
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mahjong', 'boardSize', 'large'));
-  const [tileset, setTileset] = useState(() => getGameConfig('mahjong', 'tileset', 'classic'));
+  const [tileset, setTileset] = useState(() => {
+    if (isRandomThemeEnabled('mahjong')) {
+      return pickRandomTheme('mahjong');
+    }
+    return getGameConfig('mahjong', 'tileset', 'classic');
+  });
   const [showCollection, setShowCollection] = useState(false);
   const [showArrows, setShowArrows] = useState(() => getGameConfig('mahjong', 'showArrows', false)); // Hidden by default to match reference
 
@@ -537,6 +550,11 @@ export default function MahjongZen({
 
   const initGame = () => {
     sound.startBGM();
+    if (isRandomThemeEnabled('mahjong')) {
+      const nextTileset = pickRandomTheme('mahjong', tileset);
+      setTileset(nextTileset);
+      updateGameConfig('mahjong', 'tileset', nextTileset);
+    }
     setHintIds([]);
     setSelectedTile(null);
     setMatchSelection(null);
@@ -1701,7 +1719,14 @@ export default function MahjongZen({
         icon="🀄"
         colors={['#10b981', '#3b82f6', '#f59e0b']}
         particleType="tiles"
-        onComplete={() => setShowIntro(false)}
+        onComplete={(isRandomTheme) => {
+          setShowIntro(false);
+          if (isRandomTheme || isRandomThemeEnabled('mahjong')) {
+            const nextTileset = pickRandomTheme('mahjong', tileset);
+            setTileset(nextTileset);
+            updateGameConfig('mahjong', 'tileset', nextTileset);
+          }
+        }}
       />}
       <div
         ref={containerRef}
@@ -2502,33 +2527,38 @@ export default function MahjongZen({
             {isIntermissionEnabled && (
               <div style={{
                 width: '100%',
-                maxWidth: '300px',
-                background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98))',
-                border: '1.5px solid rgba(59, 130, 246, 0.45)',
+                maxWidth: '360px',
+                background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.98))',
+                border: '1.5px solid rgba(59, 130, 246, 0.5)',
                 borderRadius: '16px',
-                padding: '12px 14px',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.2)',
+                padding: '12px 10px',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.25)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
-                marginBottom: '10px',
+                marginBottom: '12px',
                 boxSizing: 'border-box',
                 zIndex: 10
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{
-                    fontSize: '10px',
-                    fontWeight: '800',
-                    letterSpacing: '0.8px',
-                    color: '#60A5FA',
-                    background: 'rgba(59, 130, 246, 0.18)',
-                    border: '1px solid rgba(59, 130, 246, 0.35)',
-                    borderRadius: '8px',
-                    padding: '3px 8px',
-                    textTransform: 'uppercase'
-                  }}>
-                    🎬 PROCHAIN ENTRACTE
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      letterSpacing: '0.8px',
+                      color: '#60A5FA',
+                      background: 'rgba(59, 130, 246, 0.18)',
+                      border: '1px solid rgba(59, 130, 246, 0.35)',
+                      borderRadius: '8px',
+                      padding: '3px 8px',
+                      textTransform: 'uppercase'
+                    }}>
+                      🎬 PROCHAIN ENTRACTE
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#38BDF8' }}>
+                      {activeIntermissionGame.icon} {activeIntermissionGame.name}
+                    </span>
+                  </div>
                   <button
                     onClick={() => {
                       sound.playClick();
@@ -2559,50 +2589,130 @@ export default function MahjongZen({
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
-                    <span style={{ fontSize: '26px' }}>{activeIntermissionGame.icon}</span>
-                    <div>
-                      <div style={{ fontSize: '15px', fontWeight: '800', color: '#FFFFFF', fontFamily: 'var(--font-main)' }}>
-                        {activeIntermissionGame.name}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>
-                        {activeIntermissionGame.subtitle}
-                      </div>
-                    </div>
-                  </div>
+                {/* Horizontal strip of miniature game cards spanning full width */}
+                <div 
+                  className="intermission-strip-scroll"
+                  style={{
+                    display: 'flex',
+                    gap: '10px',
+                    overflowX: 'auto',
+                    padding: '4px 4px 8px 4px',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    scrollSnapType: 'x mandatory',
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                >
+                  {INTERMISSION_MINI_GAMES.map((g) => {
+                    const isSelected = g.key === selectedUpcomingIntermission;
+                    return (
+                      <div
+                        key={g.key}
+                        onClick={() => {
+                          sound.playClick();
+                          setSelectedUpcomingIntermission(g.key);
+                          if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(g.key);
+                          if (onIntermissionRequest && isIntermissionEnabled) {
+                            onIntermissionRequest(g.key);
+                          }
+                        }}
+                        style={{
+                          flex: '0 0 96px',
+                          height: '114px',
+                          position: 'relative',
+                          borderRadius: '14px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          background: isSelected
+                            ? 'linear-gradient(135deg, rgba(14, 116, 144, 0.4), rgba(15, 23, 42, 0.95))'
+                            : 'linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95))',
+                          border: isSelected ? '2px solid #38BDF8' : '1.5px solid rgba(255, 255, 255, 0.12)',
+                          boxShadow: isSelected
+                            ? '0 0 16px rgba(56, 189, 248, 0.65), inset 0 0 10px rgba(56, 189, 248, 0.25)'
+                            : '0 4px 10px rgba(0, 0, 0, 0.35)',
+                          transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          padding: '6px 6px 7px 6px',
+                          boxSizing: 'border-box',
+                          scrollSnapAlign: 'start',
+                          userSelect: 'none'
+                        }}
+                        title={`Lancer l'entracte ${g.name}`}
+                      >
+                        {/* Top Row: Icon & Status */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: '2px' }}>
+                          <span style={{
+                            fontSize: '13px',
+                            background: 'rgba(15, 23, 42, 0.6)',
+                            borderRadius: '6px',
+                            padding: '1px 4px'
+                          }}>
+                            {g.icon}
+                          </span>
+                          {isSelected ? (
+                            <span style={{
+                              fontSize: '8px',
+                              fontWeight: '900',
+                              color: '#FFFFFF',
+                              background: '#0284C7',
+                              borderRadius: '5px',
+                              padding: '1px 5px',
+                              boxShadow: '0 0 6px #38BDF8'
+                            }}>
+                              CHOISI
+                            </span>
+                          ) : (
+                            <span style={{
+                              fontSize: '8px',
+                              color: '#64748B',
+                              fontWeight: '700'
+                            }}>
+                              ▶
+                            </span>
+                          )}
+                        </div>
 
-                  <select
-                    value={selectedUpcomingIntermission}
-                    onChange={(e) => {
-                      sound.playClick();
-                      setSelectedUpcomingIntermission(e.target.value);
-                      if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(e.target.value);
-                    }}
-                    style={{
-                      background: 'rgba(15, 23, 42, 0.95)',
-                      border: '1.5px solid #38BDF8',
-                      color: '#38BDF8',
-                      borderRadius: '8px',
-                      padding: '5px 8px',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      outline: 'none'
-                    }}
-                    title="Définir à la volée le jeu d'entracte souhaité"
-                  >
-                    {INTERMISSION_MINI_GAMES.map((g) => (
-                      <option key={g.key} value={g.key} style={{ background: '#0F172A', color: '#FFFFFF' }}>
-                        {g.icon} {g.name}
-                      </option>
-                    ))}
-                  </select>
+                        {/* Center: Representative Vector Gameplay Illustration */}
+                        <div style={{
+                          width: '100%',
+                          height: '62px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(15, 23, 42, 0.45)',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          padding: '2px'
+                        }}>
+                          <GameMiniature gameKey={g.key} width="100%" height="100%" />
+                        </div>
+
+                        {/* Bottom Row: Game Name */}
+                        <div style={{
+                          fontSize: '10.5px',
+                          fontWeight: '800',
+                          color: isSelected ? '#38BDF8' : '#F8FAFC',
+                          lineHeight: '1.2',
+                          textAlign: 'center',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          marginTop: '3px'
+                        }}>
+                          {g.name}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '300px', zIndex: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '360px', zIndex: 10 }}>
               <button
                 onClick={() => {
                   if (onIntermissionRequest && isIntermissionEnabled) {

@@ -6,6 +6,7 @@ import GameIntro from '../components/GameIntro';
 import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 
 export default function WaterSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -14,15 +15,23 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
   const [tubes, setTubes] = useState([]);
   const [selectedTube, setSelectedTube] = useState(null);
   const [history, setHistory] = useState([]);
-  const [victoryPhase, setVictoryPhase] = useState(0); // 0: playing, 1: stage1, 2: stage2, 3: final
   const [moves, setMoves] = useState(0);
-  const [startTime, setStartTime] = useState(Date.now());
+  const [startTime, setStartTime] = useState(null);
+  const [victoryPhase, setVictoryPhase] = useState(0); // 0: playing, 1: stage1, 2: stage2, 3: final
+  const [undoHighlight, setUndoHighlight] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   const [pouringTubes, setPouringTubes] = useState(null); // { src, dest }
   const [extraTubesCount, setExtraTubesCount] = useState(0);
   const [hintTubes, setHintTubes] = useState(null);
   const [scale, setScale] = useState(1);
   const [showCollection, setShowCollection] = useState(false);
-  const [customizations, setCustomizations] = useState(() => getGameConfig('water', 'customizations', { tube: 'wt1', theme: 'bg1', color: 'wc1', difficulty: 'moyen' }));
+  const [customizations, setCustomizations] = useState(() => {
+    const saved = getGameConfig('water', 'customizations', { tube: 'wt1', theme: 'bg1', color: 'wc1', difficulty: 'moyen' });
+    if (isRandomThemeEnabled('water')) {
+      return { ...saved, theme: pickRandomTheme('water') };
+    }
+    return saved;
+  });
   const [pourFromBottom, setPourFromBottom] = useState(false);
   const [completedTubeIndex, setCompletedTubeIndex] = useState(null);
 
@@ -59,6 +68,15 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
   };
 
   const initGame = (overrideDiff = null) => {
+    if (isRandomThemeEnabled('water')) {
+      const nextTheme = pickRandomTheme('water', customizations.theme);
+      setCustomizations(prev => {
+        const next = { ...prev, theme: nextTheme };
+        updateGameConfig('water', 'customizations', next);
+        return next;
+      });
+    }
+
     let numFilled;
     if (isIntermission) {
       let min = 3, max = 4;
@@ -406,7 +424,17 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
         icon="💧"
         colors={['#33CCFF', '#FF3366', '#FFD700']}
         particleType="bubbles"
-        onComplete={() => setShowIntro(false)}
+        onComplete={(isRandomTheme) => {
+          setShowIntro(false);
+          if (isRandomTheme || isRandomThemeEnabled('water')) {
+            const nextTheme = pickRandomTheme('water', customizations.theme);
+            setCustomizations(prev => {
+              const next = { ...prev, theme: nextTheme };
+              updateGameConfig('water', 'customizations', next);
+              return next;
+            });
+          }
+        }}
       />}
       <div
         ref={containerRef}

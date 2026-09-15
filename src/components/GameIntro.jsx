@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
+import { isRandomThemeEnabled, setRandomThemeEnabled, normalizeGameId } from '../utils/themeManager';
 
 export default function GameIntro({ 
     gameName, 
@@ -12,11 +13,22 @@ export default function GameIntro({
   const [intermissionEnabled, setIntermissionEnabled] = useState(() => {
     return localStorage.getItem('retrovision_intermission_enabled') !== 'false';
   });
+  const [randomThemeEnabled, setRandomThemeEnabledState] = useState(() => {
+    return isRandomThemeEnabled(gameName);
+  });
 
-  const toggleIntermission = () => {
+  const toggleIntermission = (e) => {
+    if (e) e.stopPropagation();
     const nextVal = !intermissionEnabled;
     setIntermissionEnabled(nextVal);
     localStorage.setItem('retrovision_intermission_enabled', nextVal ? 'true' : 'false');
+  };
+
+  const toggleRandomTheme = (e) => {
+    if (e) e.stopPropagation();
+    const nextVal = !randomThemeEnabled;
+    setRandomThemeEnabled(gameName, nextVal);
+    setRandomThemeEnabledState(nextVal);
   };
 
   useEffect(() => {
@@ -265,6 +277,9 @@ export default function GameIntro({
   const longestWord = Math.max(...gameName.split(' ').map(w => w.length));
   const titleFontSize = longestWord > 7 ? 'min(4rem, 10vw)' : 'min(6rem, 15vw)';
 
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  const safeBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+
   return (
     <div style={{
       position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -298,59 +313,72 @@ export default function GameIntro({
         .intro-btn-play:hover { filter: brightness(1.2); }
         .intro-intermission-container {
           position: absolute;
-          bottom: 6%;
+          bottom: 5%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          flex-wrap: wrap;
+          z-index: 20;
+          visibility: hidden;
+          max-width: 95vw;
+        }
+        .intro-switch-chip {
           display: flex;
           align-items: center;
           gap: 10px;
-          background: rgba(15, 23, 42, 0.6);
+          background: rgba(15, 23, 42, 0.75);
           border: 1px solid rgba(255, 255, 255, 0.2);
           padding: 8px 16px;
           border-radius: 20px;
           backdrop-filter: blur(10px);
           color: white;
           font-family: 'Orbitron', sans-serif;
-          font-size: 0.9rem;
-          z-index: 20;
+          font-size: 0.85rem;
           cursor: pointer;
           user-select: none;
-          transition: all 0.3s ease;
-          visibility: hidden;
+          transition: all 0.25s ease;
         }
-        .intro-intermission-container:hover {
+        .intro-switch-chip:hover {
           border-color: ${mainColor};
-          box-shadow: 0 0 10px ${mainColor}80;
+          box-shadow: 0 0 12px ${mainColor}80;
         }
         .retro-switch {
           position: relative;
-          width: 50px;
-          height: 24px;
+          width: 46px;
+          height: 22px;
           background: #334155;
-          border-radius: 12px;
+          border-radius: 11px;
           transition: background 0.3s;
         }
         .retro-switch.active {
           background: #10b981;
           box-shadow: 0 0 10px #10b98180;
         }
+        .retro-switch.active-cyan {
+          background: #0284c7;
+          box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+        }
         .retro-switch-handle {
           position: absolute;
           top: 2px;
           left: 2px;
-          width: 20px;
-          height: 20px;
+          width: 18px;
+          height: 18px;
           background: white;
           border-radius: 50%;
           transition: transform 0.3s;
         }
-        .retro-switch.active .retro-switch-handle {
-          transform: translateX(26px);
+        .retro-switch.active .retro-switch-handle,
+        .retro-switch.active-cyan .retro-switch-handle {
+          transform: translateX(24px);
         }
 
       `}</style>
       <div className="intro-bg-sphere intro-sphere-1" />
       <div className="intro-bg-image" style={{
           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-          backgroundImage: `url(/assets/bg/${bgImageName})`,
+          backgroundImage: `url(${safeBase}assets/bg/${bgImageName})`,
           backgroundSize: 'cover', backgroundPosition: 'center',
           opacity: 0.25, zIndex: 0, mixBlendMode: 'screen', filter: 'blur(3px)'
       }} />
@@ -391,15 +419,27 @@ export default function GameIntro({
           ))}
         </div>
       </div>
-      <button className="intro-btn-play" onClick={onComplete}>JOUER</button>
-      <div className="intro-intermission-container" onClick={toggleIntermission}>
-        <span>Entracte :</span>
-        <div className={`retro-switch ${intermissionEnabled ? 'active' : ''}`}>
-          <div className="retro-switch-handle" />
+      <button className="intro-btn-play" onClick={() => onComplete && onComplete(randomThemeEnabled)}>JOUER</button>
+      <div className="intro-intermission-container">
+        <div className="intro-switch-chip" onClick={toggleIntermission} title="Activer ou désactiver les entractes après les victoires">
+          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Entracte :</span>
+          <div className={`retro-switch ${intermissionEnabled ? 'active' : ''}`}>
+            <div className="retro-switch-handle" />
+          </div>
+          <span style={{ fontWeight: 'bold', color: intermissionEnabled ? '#10b981' : '#ef4444', minWidth: '44px', fontSize: '11px' }}>
+            {intermissionEnabled ? 'AVEC' : 'SANS'}
+          </span>
         </div>
-        <span style={{ fontWeight: 'bold', color: intermissionEnabled ? '#10b981' : '#ef4444', minWidth: '45px' }}>
-          {intermissionEnabled ? 'AVEC' : 'SANS'}
-        </span>
+
+        <div className="intro-switch-chip" onClick={toggleRandomTheme} title="Activer ou désactiver le choix aléatoire du thème visuel à chaque partie">
+          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Thème aléatoire :</span>
+          <div className={`retro-switch ${randomThemeEnabled ? 'active-cyan' : ''}`}>
+            <div className="retro-switch-handle" />
+          </div>
+          <span style={{ fontWeight: 'bold', color: randomThemeEnabled ? '#38bdf8' : '#94a3b8', minWidth: '44px', fontSize: '11px' }}>
+            {randomThemeEnabled ? 'OUI' : 'NON'}
+          </span>
+        </div>
       </div>
       <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 15, pointerEvents: 'none' }} />
     </div>

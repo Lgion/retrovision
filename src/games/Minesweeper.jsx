@@ -5,6 +5,7 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import MinesweeperCollection from './MinesweeperCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 
 export default function Minesweeper({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -20,7 +21,13 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
   const [minesLeft, setMinesLeft] = useState(0);
   const [moves, setMoves] = useState(0);
   const [showCollection, setShowCollection] = useState(false);
-  const [customizations, setCustomizations] = useState(() => getGameConfig('mines', 'customizations', { difficulty: 'moyen', theme: 'classic' }));
+  const [customizations, setCustomizations] = useState(() => {
+    const saved = getGameConfig('mines', 'customizations', { difficulty: 'moyen', theme: 'classic' });
+    if (isRandomThemeEnabled('mines')) {
+      return { ...saved, theme: pickRandomTheme('mines') };
+    }
+    return saved;
+  });
 
   const getDifficultySettings = (diffId) => {
     switch(diffId) {
@@ -83,6 +90,14 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
 
   const startGame = (size, mines) => {
     sound.playClick();
+    if (isRandomThemeEnabled('mines')) {
+      const nextTheme = pickRandomTheme('mines', customizations.theme);
+      setCustomizations(prev => {
+        const next = { ...prev, theme: nextTheme };
+        updateGameConfig('mines', 'customizations', next);
+        return next;
+      });
+    }
     setBoardSize(size);
     setNumMines(mines);
     updateGameConfig('mines', 'boardSize', size);
@@ -326,7 +341,17 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
         icon="💣" 
         colors={['#ef4444', '#f59e0b', '#39FF14']} 
         particleType="mines" 
-        onComplete={() => setShowIntro(false)} 
+        onComplete={(isRandomTheme) => {
+          setShowIntro(false);
+          if (isRandomTheme || isRandomThemeEnabled('mines')) {
+            const nextTheme = pickRandomTheme('mines', customizations.theme);
+            setCustomizations(prev => {
+              const next = { ...prev, theme: nextTheme };
+              updateGameConfig('mines', 'customizations', next);
+              return next;
+            });
+          }
+        }} 
       />}
       
       {isIntermission && gameState === 'playing' && (() => {

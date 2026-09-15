@@ -3,6 +3,7 @@ import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
+import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 
 // Generic Sudoku helper functions
 function isValid(grid, r, c, val, rowsPerBlock, colsPerBlock, size) {
@@ -285,6 +286,9 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
 
   const [showStore, setShowStore] = useState(false);
   const [activeThemeId, setActiveThemeId] = useState(() => {
+    if (isRandomThemeEnabled('sudoku')) {
+      return pickRandomTheme('sudoku');
+    }
     return localStorage.getItem('retrovision_sudoku_theme') || 'classic';
   });
   
@@ -383,6 +387,11 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
 
   const startGame = (diff) => {
     sound.playClick();
+    if (isRandomThemeEnabled('sudoku')) {
+      const nextTheme = pickRandomTheme('sudoku', activeThemeId);
+      setActiveThemeId(nextTheme);
+      localStorage.setItem('retrovision_sudoku_theme', nextTheme);
+    }
     setDifficulty(diff);
     setMistakes(0);
     setHintsLeft(diff === 'facile' ? 1 : diff === 'moyen' ? 2 : 3);
@@ -650,7 +659,14 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
           icon="🔢"
           colors={['#8b5cf6', '#6366f1', '#a78bfa']}
           particleType="bubbles"
-          onComplete={() => setShowIntro(false)}
+          onComplete={(isRandomTheme) => {
+            setShowIntro(false);
+            if (isRandomTheme || isRandomThemeEnabled('sudoku')) {
+              const nextTheme = pickRandomTheme('sudoku', activeThemeId);
+              setActiveThemeId(nextTheme);
+              localStorage.setItem('retrovision_sudoku_theme', nextTheme);
+            }
+          }}
         />
       )}
 

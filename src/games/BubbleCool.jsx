@@ -5,6 +5,7 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { CHAPTERS, getChapter, calculateStars, SPECIAL_TYPES, generateDynamicChapterGrid } from './bubblecool/chapterData';
 
 // --- GRID & CANVAS CONFIGURATION ---
@@ -133,7 +134,12 @@ export default function BubbleCool({
   });
 
   const [customizations, setCustomizations] = useState(() => {
-    return getGameConfig('bubblecool', 'customizations', { theme: 'candy', difficulty: 'normal' });
+    const saved = getGameConfig('bubblecool', 'customizations', { theme: 'candy', difficulty: 'normal' });
+    if (isRandomThemeEnabled('bubblecool')) {
+      const randTheme = pickRandomTheme('bubblecool');
+      return { ...saved, theme: randTheme };
+    }
+    return saved;
   });
 
   const activeTheme = isIntermission ? 'candy' : (customizations.theme || 'candy');
@@ -204,6 +210,15 @@ export default function BubbleCool({
   };
 
   const initGame = () => {
+    if (isRandomThemeEnabled('bubblecool')) {
+      const randTheme = pickRandomTheme('bubblecool', customizations.theme);
+      setCustomizations((prev) => {
+        const next = { ...prev, theme: randTheme };
+        updateGameConfig('bubblecool', 'customizations', next);
+        return next;
+      });
+    }
+
     let newGrid = Array.from({ length: MAX_ROWS }, () => Array(COLS_EVEN).fill(null));
 
     if (gameMode === 'chapter' && !isIntermission) {
@@ -1631,7 +1646,17 @@ export default function BubbleCool({
           icon="🫧"
           colors={['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6']}
           particleType="bubbles"
-          onComplete={() => setShowIntro(false)}
+          onComplete={(isRandomTheme) => {
+            setShowIntro(false);
+            if (isRandomTheme || isRandomThemeEnabled('bubblecool')) {
+              const randTheme = pickRandomTheme('bubblecool', customizations.theme);
+              setCustomizations((prev) => {
+                const next = { ...prev, theme: randTheme };
+                updateGameConfig('bubblecool', 'customizations', next);
+                return next;
+              });
+            }
+          }}
         />
       )}
 

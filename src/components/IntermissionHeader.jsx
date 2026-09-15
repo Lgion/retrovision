@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { sound } from '../utils/sound';
+import GameMiniature from './GameMiniature';
 
 const INTERMISSION_GAMES = [
   { key: 'water', name: 'Water Sort', icon: '💧' },
@@ -280,7 +281,9 @@ export default function IntermissionHeader({
                     className="entract-picker-item"
                     style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#F59E0B' }}
                   >
-                    <span>🎲</span>
+                    <div style={{ width: '30px', height: '24px', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '13px' }}>
+                      🎲
+                    </div>
                     <span>Aléatoire</span>
                   </button>
                   {INTERMISSION_GAMES.map((g) => (
@@ -293,7 +296,9 @@ export default function IntermissionHeader({
                       }}
                       className="entract-picker-item"
                     >
-                      <span style={{ fontSize: '1rem' }}>{g.icon}</span>
+                      <div style={{ width: '32px', height: '26px', borderRadius: '4px', overflow: 'hidden', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <GameMiniature gameKey={g.key} width="100%" height="100%" />
+                      </div>
                       <span>{g.name}</span>
                     </button>
                   ))}
