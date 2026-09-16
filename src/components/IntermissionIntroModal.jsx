@@ -82,29 +82,26 @@ export default function IntermissionIntroModal({
           Pause avant de poursuivre votre partie de <strong style={{ color: '#E2E8F0' }}>{returnGameName}</strong>
         </p>
 
-        {/* Section: Non-persistent session parameters */}
+        {/* Section: Compact Session Difficulty */}
         <div 
           style={{
             width: '100%',
-            background: 'rgba(255, 255, 255, 0.04)',
-            borderRadius: '16px',
-            padding: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            marginBottom: '24px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            borderRadius: '14px',
+            padding: '10px 14px',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            marginBottom: '20px',
             boxSizing: 'border-box'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#CBD5E1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              ⚡ Difficulté de l'entracte
-            </span>
-            <span style={{ fontSize: '0.75rem', color: '#64748B', fontStyle: 'italic' }}>
-              (Session uniquement)
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              ⚡ Difficulté de session
             </span>
           </div>
 
           {/* Difficulty selector buttons */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
             {difficulties.map(d => {
               const isSelected = currentDifficulty === d.id;
               return (
@@ -115,22 +112,22 @@ export default function IntermissionIntroModal({
                     if (onDifficultyChange) onDifficultyChange(d.id);
                   }}
                   style={{
-                    padding: '10px 6px',
-                    borderRadius: '12px',
-                    border: `2px solid ${isSelected ? d.color : 'rgba(255, 255, 255, 0.08)'}`,
-                    background: isSelected ? `${d.color}22` : 'rgba(15, 23, 42, 0.6)',
+                    padding: '6px 4px',
+                    borderRadius: '10px',
+                    border: `1.5px solid ${isSelected ? d.color : 'rgba(255, 255, 255, 0.08)'}`,
+                    background: isSelected ? `${d.color}25` : 'rgba(15, 23, 42, 0.5)',
                     color: isSelected ? d.color : '#94A3B8',
-                    fontWeight: 'bold',
-                    fontSize: '0.85rem',
+                    fontWeight: '700',
+                    fontSize: '0.8rem',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.15s ease',
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     gap: '4px'
                   }}
                 >
-                  <span style={{ fontSize: '1.1rem' }}>{d.icon}</span>
+                  <span style={{ fontSize: '0.9rem' }}>{d.icon}</span>
                   <span>{d.label}</span>
                 </button>
               );
@@ -138,9 +135,9 @@ export default function IntermissionIntroModal({
           </div>
         </div>
 
-        {/* Action Controls */}
+        {/* Action Controls: Primary animated play CTA + Secondary random button */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* Main Play Button */}
+          {/* Button 1: Aller vers l'entracte (Primary Action) */}
           <button
             onClick={() => {
               sound.playClick();
@@ -148,26 +145,31 @@ export default function IntermissionIntroModal({
             }}
             style={{
               width: '100%',
-              padding: '14px',
-              borderRadius: '14px',
+              padding: '15px 20px',
+              borderRadius: '16px',
               background: 'linear-gradient(135deg, #10B981, #059669)',
+              border: '2.5px solid #6EE7B7',
               color: '#FFFFFF',
-              border: 'none',
-              fontWeight: '800',
+              fontWeight: '900',
               fontSize: '1.05rem',
               cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+              boxShadow: '0 0 26px rgba(16, 185, 129, 0.7), 0 4px 14px rgba(0, 0, 0, 0.35)',
               transition: 'transform 0.15s ease, filter 0.15s ease',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px'
+              gap: '10px'
             }}
           >
-            <span>▶️</span> Démarrer l'entracte
+            <span className="primary-play-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
+            <span>Aller vers l'Entracte ({gameName})</span>
           </button>
 
-          {/* Random Game Change Button */}
+          {/* Button 2: Lancer un Jeu Aléatoire (Secondary Action) */}
           <button
             onClick={() => {
               sound.playClick();
@@ -175,49 +177,60 @@ export default function IntermissionIntroModal({
             }}
             style={{
               width: '100%',
-              padding: '12px',
-              borderRadius: '14px',
-              background: 'rgba(59, 130, 246, 0.12)',
-              color: '#60A5FA',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
+              padding: '10px 16px',
+              borderRadius: '12px',
+              background: 'rgba(30, 41, 59, 0.75)',
+              border: '1.5px solid rgba(96, 165, 250, 0.45)',
+              color: '#93C5FD',
               fontWeight: '700',
-              fontSize: '0.95rem',
+              fontSize: '0.92rem',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+              transition: 'all 0.15s ease',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px'
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.22)';
+              e.currentTarget.style.borderColor = '#60A5FA';
+              e.currentTarget.style.color = '#FFFFFF';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(30, 41, 59, 0.75)';
+              e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.45)';
+              e.currentTarget.style.color = '#93C5FD';
+            }}
           >
-            <span>🎲</span> Proposer un autre jeu aléatoire
+            <span style={{ fontSize: '1.15rem' }}>🎲</span>
+            <span>Lancer un jeu aléatoire</span>
+            <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: '600' }}>(Surprise)</span>
           </button>
 
-          {/* Skip Red Button */}
+          {/* Skip Button (Discrete link) */}
           <button
             onClick={() => {
               sound.playClick();
               if (onSkip) onSkip();
             }}
             style={{
-              width: '100%',
-              padding: '10px',
-              borderRadius: '12px',
-              background: 'rgba(239, 68, 68, 0.1)',
-              color: '#F87171',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
+              background: 'none',
+              border: 'none',
+              color: '#94A3B8',
               fontWeight: '600',
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              display: 'flex',
+              transition: 'color 0.15s ease',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
-              marginTop: '4px'
+              marginTop: '4px',
+              textDecoration: 'underline'
             }}
           >
-            <span>⏭️</span> Passer l'entracte (Bouton Rouge)
+            <span>⏭️</span> Passer cette entracte et continuer
           </button>
         </div>
       </div>
@@ -226,6 +239,23 @@ export default function IntermissionIntroModal({
         @keyframes modalPop {
           0% { transform: scale(0.9); opacity: 0; }
           100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes playArrowPulseModal {
+          0%, 100% {
+            transform: scale(1) translateX(0);
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
+          }
+          50% {
+            transform: scale(1.22) translateX(4px);
+            filter: drop-shadow(0 0 8px #6ee7b7) drop-shadow(0 0 14px #10b981);
+          }
+        }
+        .primary-play-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          animation: playArrowPulseModal 1.1s ease-in-out infinite;
+          flex-shrink: 0;
         }
       `}</style>
     </div>

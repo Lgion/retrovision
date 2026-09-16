@@ -1,6 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { isRandomThemeEnabled, setRandomThemeEnabled, normalizeGameId } from '../utils/themeManager';
+import { 
+  isRandomThemeEnabled, 
+  setRandomThemeEnabled, 
+  normalizeGameId,
+  GAME_THEME_DETAILS,
+  getAllowedThemes,
+  toggleAllowedTheme,
+  selectAllThemes
+} from '../utils/themeManager';
+import ThemeMiniature from './ThemeMiniature';
+import { sound } from '../utils/sound';
 
 export default function GameIntro({ 
     gameName, 
@@ -17,8 +27,17 @@ export default function GameIntro({
     return isRandomThemeEnabled(gameName);
   });
 
+  const gameId = normalizeGameId(gameName);
+  const availableThemes = GAME_THEME_DETAILS[gameId] || [];
+  const hasThemes = availableThemes.length > 0;
+
+  const [allowedThemes, setAllowedThemesState] = useState(() => {
+    return getAllowedThemes(gameName);
+  });
+
   const toggleIntermission = (e) => {
     if (e) e.stopPropagation();
+    sound.playClick();
     const nextVal = !intermissionEnabled;
     setIntermissionEnabled(nextVal);
     localStorage.setItem('retrovision_intermission_enabled', nextVal ? 'true' : 'false');
@@ -26,9 +45,24 @@ export default function GameIntro({
 
   const toggleRandomTheme = (e) => {
     if (e) e.stopPropagation();
+    sound.playClick();
     const nextVal = !randomThemeEnabled;
     setRandomThemeEnabled(gameName, nextVal);
     setRandomThemeEnabledState(nextVal);
+  };
+
+  const handleToggleTheme = (themeId, e) => {
+    if (e) e.stopPropagation();
+    sound.playClick();
+    const next = toggleAllowedTheme(gameName, themeId);
+    setAllowedThemesState([...next]);
+  };
+
+  const handleSelectAll = (e) => {
+    if (e) e.stopPropagation();
+    sound.playClick();
+    const next = selectAllThemes(gameName);
+    setAllowedThemesState([...next]);
   };
 
   useEffect(() => {
@@ -50,8 +84,7 @@ export default function GameIntro({
     gsap.set(".intro-sweep", { left: '-100%' });
     gsap.set(".intro-logo-container", { visibility: "visible", opacity: 1 });
     gsap.set(".intro-icon", { scale: 0, opacity: 0 });
-    gsap.set(".intro-btn-play", { visibility: "visible", scale: 0, opacity: 0 });
-    gsap.set(".intro-intermission-container", { visibility: "visible", scale: 0, opacity: 0 });
+    gsap.set(".intro-bottom-controls", { visibility: "visible", y: 40, opacity: 0 });
 
     // 2. Animate letters (Anticipation + Squash/Stretch)
     tl.to(".letter-v2", {
@@ -87,18 +120,12 @@ export default function GameIntro({
       opacity: 1,
       ease: "back.out(1.7)"
     }, 1.5)
-    .to(".intro-btn-play", {
+    .to(".intro-bottom-controls", {
       duration: 0.8,
-      scale: 1,
+      y: 0,
       opacity: 1,
       ease: "back.out(1.5)"
     }, 1.7)
-    .to(".intro-intermission-container", {
-      duration: 0.8,
-      scale: 1,
-      opacity: 1,
-      ease: "back.out(1.5)"
-    }, 1.8)
     // 7. Secondary Action: Floating letters
     .to(".letter-v2", {
       duration: 1.2,
@@ -153,7 +180,7 @@ export default function GameIntro({
             controlX: startX + (Math.random() - 0.5) * 400,
             controlY: startY - 200 - Math.random() * 300,
             endX: startX + (Math.random() - 0.5) * window.innerWidth,
-            endY: window.innerHeight + 100, // Fall down off screen
+            endY: window.innerHeight + 100,
             t: 0,
             speed: 0.005 + Math.random() * 0.01,
             size: Math.random() * 10 + 5,
@@ -163,7 +190,7 @@ export default function GameIntro({
         };
         
         if (particleType === 'water') {
-            p.endY = startY - 400 - Math.random() * 300; // Splash up
+            p.endY = startY - 400 - Math.random() * 300;
             p.color = ['#00BFFF', '#87CEFA', '#4169E1', '#E0FFFF'][Math.floor(Math.random()*4)];
             p.size = Math.random() * 8 + 3;
         } else if (particleType === 'neon') {
@@ -198,74 +225,56 @@ export default function GameIntro({
           } else if (particleType === 'bricks' || particleType === 'blocks' || particleType === 'tiles') {
               ctx.fillRect(-p.size, -p.size/2, p.size*2, p.size);
               if(particleType === 'tiles' || particleType === 'blocks') {
-                  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                  ctx.strokeStyle = '#FFFFFF';
                   ctx.lineWidth = 1;
                   ctx.strokeRect(-p.size, -p.size/2, p.size*2, p.size);
               }
-          } else if (particleType === 'cards') {
-              ctx.fillStyle = 'white';
-              ctx.fillRect(-p.size, -p.size*1.5, p.size*2, p.size*3);
-              ctx.fillStyle = p.color;
-              ctx.font = `${p.size}px Arial`;
-              ctx.textAlign = "center";
-              ctx.textBaseline = "middle";
-              ctx.fillText(["♥","♦","♣","♠"][Math.floor(Math.random()*4)], 0, 0);
-          } else if (particleType === 'mines') {
-              ctx.beginPath();
-              for(let i=0; i<5; i++){
-                  ctx.lineTo(Math.cos((18+i*72)*Math.PI/180)*p.size, -Math.sin((18+i*72)*Math.PI/180)*p.size);
-                  ctx.lineTo(Math.cos((54+i*72)*Math.PI/180)*p.size/2, -Math.sin((54+i*72)*Math.PI/180)*p.size/2);
-              }
-              ctx.closePath();
-              ctx.fill();
-          } else if (particleType === 'water') {
-              ctx.beginPath();
-              ctx.arc(0, 0, p.size, 0, Math.PI);
-              ctx.lineTo(0, -p.size*2);
-              ctx.closePath();
-              ctx.fill();
-          } else { // default, neon, snake, puzzle (circles)
+          } else if (particleType === 'bubbles') {
               ctx.beginPath();
               ctx.arc(0, 0, p.size, 0, Math.PI * 2);
               ctx.fill();
-              if (particleType === 'neon') {
-                  ctx.shadowBlur = 15;
-                  ctx.shadowColor = p.color;
-              }
+              ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+          } else {
+              ctx.beginPath();
+              ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+              ctx.fill();
           }
           ctx.restore();
       };
 
-      const renderParticles = () => {
-        if (!isRunning) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i];
-            p.t += p.speed;
-            p.rot += p.rotSpeed;
-            const u = 1 - p.t;
-            p.x = u * u * p.startX + 2 * u * p.t * p.controlX + p.t * p.t * p.endX;
-            p.y = u * u * p.startY + 2 * u * p.t * p.controlY + p.t * p.t * p.endY;
-            
-            const life = 1 - p.t;
+      const animate = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          for (let i = particles.length - 1; i >= 0; i--) {
+              let p = particles[i];
+              p.t += p.speed;
+              
+              p.x = (1 - p.t) * (1 - p.t) * p.startX + 2 * (1 - p.t) * p.t * p.controlX + p.t * p.t * p.endX;
+              p.y = (1 - p.t) * (1 - p.t) * p.startY + 2 * (1 - p.t) * p.t * p.controlY + p.t * p.t * p.endY;
+              p.rot += p.rotSpeed;
 
-            if (life <= 0 || p.t >= 1) {
-                particles.splice(i, 1);
-                continue;
-            }
+              let life = 1;
+              if (p.t > 0.8) {
+                  life = (1 - p.t) / 0.2;
+              }
 
-            drawParticle(p, Math.max(life, 0));
-        }
-        animationFrameId = requestAnimationFrame(renderParticles);
+              drawParticle(p, life);
+
+              if (p.t >= 1) {
+                  particles.splice(i, 1);
+              }
+          }
+          animationFrameId = requestAnimationFrame(animate);
       };
-      renderParticles();
+
+      animate();
     };
 
     return () => {
       tl.kill();
-      isRunning = false;
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (spawnInterval) clearInterval(spawnInterval);
+      clearInterval(spawnInterval);
+      cancelAnimationFrame(animationFrameId);
       if (resizeHandler) window.removeEventListener('resize', resizeHandler);
     };
   }, [colors, particleType]);
@@ -307,34 +316,227 @@ export default function GameIntro({
         .intro-flare { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0; height: 0; background: radial-gradient(circle, #ffffff 0%, ${colors[1] || '#a855f7'} 30%, transparent 70%); border-radius: 50%; mix-blend-mode: screen; pointer-events: none; z-index: 10; }
         .intro-sweep { position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.9), transparent); transform: skewX(-20deg); mix-blend-mode: overlay; pointer-events: none; z-index: 5; }
         
-        .intro-logo-container { position: absolute; top: 25%; font-family: '"Orbitron", sans-serif'; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 20; opacity: 0; visibility: hidden; text-align: center; }
-        .intro-icon { font-size: 6rem; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6)); margin-bottom: -10px; }
-        .intro-btn-play { position: absolute; bottom: 15%; background: linear-gradient(to bottom, ${mainColor}, ${secColor}); border: 2px solid #FFF; border-radius: 50px; padding: 15px 40px; font-size: 2rem; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,255,255,0.4); z-index: 20; opacity: 0; visibility: hidden; text-transform: uppercase; transition: filter 0.2s; font-family: '"Orbitron", sans-serif'; letter-spacing: 2px; }
-        .intro-btn-play:hover { filter: brightness(1.2); }
-        .intro-intermission-container {
+        .intro-logo-container { 
+          position: absolute; 
+          top: 25%; 
+          font-family: '"Orbitron", sans-serif'; 
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; 
+          gap: 16px; 
+          z-index: 20; 
+          opacity: 0; 
+          visibility: hidden; 
+          text-align: center;
+          transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .intro-logo-container.with-ribbon {
+          top: 22%;
+        }
+
+        .intro-icon { font-size: 5.5rem; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6)); margin-bottom: -10px; }
+
+        /* --- TOP THEMES RIBBON --- */
+        .intro-themes-ribbon {
           position: absolute;
-          bottom: 5%;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 50;
+          background: linear-gradient(180deg, rgba(15, 23, 42, 0.97) 0%, rgba(15, 23, 42, 0.90) 100%);
+          border-bottom: 1px solid rgba(56, 189, 248, 0.35);
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(12px);
+          padding: 8px 14px 10px 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          animation: slideDownRibbon 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideDownRibbon {
+          from { transform: translateY(-100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        .intro-ribbon-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 4px;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .intro-ribbon-badge {
+          background: rgba(56, 189, 248, 0.15);
+          border: 1px solid rgba(56, 189, 248, 0.4);
+          color: #38bdf8;
+          font-size: 11px;
+          font-weight: 800;
+          border-radius: 6px;
+          padding: 2px 8px;
+        }
+
+        .intro-select-all-btn {
+          background: rgba(16, 185, 129, 0.2);
+          border: 1px solid rgba(16, 185, 129, 0.4);
+          color: #34d399;
+          font-size: 11px;
+          font-weight: 800;
+          border-radius: 6px;
+          padding: 2px 10px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .intro-select-all-btn:hover {
+          background: rgba(16, 185, 129, 0.35);
+        }
+
+        .intro-themes-strip {
+          display: flex;
+          gap: 10px;
+          overflow-x: auto;
+          padding: 4px 4px 6px 4px;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+        }
+        .intro-themes-strip::-webkit-scrollbar {
+          height: 4px;
+        }
+        .intro-themes-strip::-webkit-scrollbar-thumb {
+          background: rgba(56, 189, 248, 0.5);
+          border-radius: 2px;
+        }
+
+        .intro-theme-card {
+          flex: 0 0 100px;
+          height: 98px;
+          border-radius: 12px;
+          padding: 5px 6px 6px 6px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          cursor: pointer;
+          user-select: none;
+          scroll-snap-align: start;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .intro-theme-card.active {
+          background: linear-gradient(135deg, rgba(14, 116, 144, 0.4), rgba(15, 23, 42, 0.95));
+          border: 2px solid #38BDF8;
+          box-shadow: 0 0 12px rgba(56, 189, 248, 0.45), inset 0 0 8px rgba(56, 189, 248, 0.2);
+          transform: translateY(-1px);
+        }
+
+        .intro-theme-card.inactive {
+          background: rgba(30, 41, 59, 0.55);
+          border: 1.5px solid rgba(255, 255, 255, 0.1);
+          opacity: 0.55;
+          filter: grayscale(0.5);
+        }
+        .intro-theme-card.inactive:hover {
+          opacity: 0.85;
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .intro-theme-card-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+        }
+
+        .intro-theme-checkbox {
+          width: 16px;
+          height: 16px;
+          accent-color: #38BDF8;
+          cursor: pointer;
+        }
+
+        .intro-theme-preview-box {
+          width: 100%;
+          height: 46px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(15, 23, 42, 0.45);
+          border-radius: 6px;
+          overflow: hidden;
+        }
+
+        .intro-theme-name {
+          font-size: 9.5px;
+          font-weight: 800;
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.2;
+        }
+
+        /* --- UNIFIED BOTTOM CONTROLS (PLAY BUTTON + OPTIONS ROW) --- */
+        .intro-bottom-controls {
+          position: absolute;
+          bottom: 22px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 14px;
+          z-index: 30;
+          width: 100%;
+          max-width: 95vw;
+          visibility: hidden;
+          opacity: 0;
+          pointer-events: auto;
+        }
+
+        .intro-btn-play {
+          position: relative;
+          background: linear-gradient(to bottom, ${mainColor}, ${secColor});
+          border: 2px solid #FFF;
+          border-radius: 50px;
+          padding: 13px 44px;
+          font-size: 1.8rem;
+          color: white;
+          font-weight: bold;
+          cursor: pointer;
+          box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 20px ${mainColor}60, inset 0 3px 6px rgba(255,255,255,0.5);
+          z-index: 31;
+          text-transform: uppercase;
+          font-family: 'Orbitron', sans-serif;
+          letter-spacing: 3px;
+          transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
+          flex-shrink: 0;
+        }
+        .intro-btn-play:hover {
+          filter: brightness(1.25);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 30px ${mainColor};
+        }
+
+        .intro-switches-row {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 12px;
           flex-wrap: wrap;
-          z-index: 20;
-          visibility: hidden;
-          max-width: 95vw;
         }
+
         .intro-switch-chip {
           display: flex;
           align-items: center;
-          gap: 10px;
-          background: rgba(15, 23, 42, 0.75);
+          gap: 9px;
+          background: rgba(15, 23, 42, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.2);
-          padding: 8px 16px;
+          padding: 7px 14px;
           border-radius: 20px;
           backdrop-filter: blur(10px);
           color: white;
           font-family: 'Orbitron', sans-serif;
-          font-size: 0.85rem;
           cursor: pointer;
           user-select: none;
           transition: all 0.25s ease;
@@ -343,9 +545,25 @@ export default function GameIntro({
           border-color: ${mainColor};
           box-shadow: 0 0 12px ${mainColor}80;
         }
+
+        .intro-switch-label {
+          font-size: 11.5px;
+          color: #cbd5e1;
+        }
+
+        .retro-switch-val {
+          font-weight: 800;
+          min-width: 42px;
+          font-size: 11px;
+        }
+        .val-green { color: #10b981; }
+        .val-red { color: #ef4444; }
+        .val-cyan { color: #38bdf8; }
+        .val-gray { color: #94a3b8; }
+
         .retro-switch {
           position: relative;
-          width: 46px;
+          width: 44px;
           height: 22px;
           background: #334155;
           border-radius: 11px;
@@ -371,10 +589,67 @@ export default function GameIntro({
         }
         .retro-switch.active .retro-switch-handle,
         .retro-switch.active-cyan .retro-switch-handle {
-          transform: translateX(24px);
+          transform: translateX(22px);
         }
-
       `}</style>
+
+      {/* --- TOP THEMES SELECTOR RIBBON (PINNED TO TOP, VISIBLE ONLY IF RANDOM THEME IS ON & HAS THEMES) --- */}
+      {randomThemeEnabled && hasThemes && (
+        <div className="intro-themes-ribbon">
+          <div className="intro-ribbon-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: '800', color: '#38BDF8', letterSpacing: '0.5px' }}>
+                🎨 Thèmes autorisés pour l'aléatoire :
+              </span>
+              <span className="intro-ribbon-badge">
+                {allowedThemes.length} / {availableThemes.length} actifs
+              </span>
+            </div>
+
+            {allowedThemes.length < availableThemes.length && (
+              <button onClick={handleSelectAll} className="intro-select-all-btn" title="Activer tous les thèmes dans le tirage aléatoire">
+                ✓ Tout cocher
+              </button>
+            )}
+          </div>
+
+          <div className="intro-themes-strip">
+            {availableThemes.map((theme) => {
+              const isChecked = allowedThemes.includes(theme.id);
+              return (
+                <div
+                  key={theme.id}
+                  onClick={(e) => handleToggleTheme(theme.id, e)}
+                  className={`intro-theme-card ${isChecked ? 'active' : 'inactive'}`}
+                  title={`${theme.name} : ${isChecked ? 'Coché (Cliquez pour désactiver)' : 'Décoché (Cliquez pour activer)'}`}
+                >
+                  {/* Top card header with Checkbox & Icon */}
+                  <div className="intro-theme-card-top">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {}} // handled by card onClick
+                      className="intro-theme-checkbox"
+                    />
+                    <span style={{ fontSize: '13px' }}>{theme.icon}</span>
+                  </div>
+
+                  {/* Theme Vector Miniature Preview */}
+                  <div className="intro-theme-preview-box">
+                    <ThemeMiniature gameId={gameName} themeId={theme.id} width="100%" height="100%" />
+                  </div>
+
+                  {/* Theme Name */}
+                  <div className="intro-theme-name" style={{ color: isChecked ? '#F8FAFC' : '#94A3B8' }}>
+                    {theme.name}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="intro-bg-sphere intro-sphere-1" />
       <div className="intro-bg-image" style={{
           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -392,7 +667,7 @@ export default function GameIntro({
       
       <div className="intro-flare" />
       
-      <div className="intro-logo-container">
+      <div className={`intro-logo-container ${randomThemeEnabled && hasThemes ? 'with-ribbon' : ''}`}>
         <div className="intro-icon">{icon}</div>
         
         <div style={{ position: 'relative', display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -419,28 +694,44 @@ export default function GameIntro({
           ))}
         </div>
       </div>
-      <button className="intro-btn-play" onClick={() => onComplete && onComplete(randomThemeEnabled)}>JOUER</button>
-      <div className="intro-intermission-container">
-        <div className="intro-switch-chip" onClick={toggleIntermission} title="Activer ou désactiver les entractes après les victoires">
-          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Entracte :</span>
-          <div className={`retro-switch ${intermissionEnabled ? 'active' : ''}`}>
-            <div className="retro-switch-handle" />
-          </div>
-          <span style={{ fontWeight: 'bold', color: intermissionEnabled ? '#10b981' : '#ef4444', minWidth: '44px', fontSize: '11px' }}>
-            {intermissionEnabled ? 'AVEC' : 'SANS'}
-          </span>
-        </div>
 
-        <div className="intro-switch-chip" onClick={toggleRandomTheme} title="Activer ou désactiver le choix aléatoire du thème visuel à chaque partie">
-          <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Thème aléatoire :</span>
-          <div className={`retro-switch ${randomThemeEnabled ? 'active-cyan' : ''}`}>
-            <div className="retro-switch-handle" />
+      {/* Unified Bottom Controls: Play Button strictly positioned above Switches */}
+      <div className="intro-bottom-controls">
+        <button 
+          className="intro-btn-play pulse-glow" 
+          onClick={() => {
+            sound.playPowerup?.();
+            onComplete && onComplete(randomThemeEnabled);
+          }}
+        >
+          JOUER
+        </button>
+
+        <div className="intro-switches-row">
+          <div className="intro-switch-chip" onClick={toggleIntermission} title="Activer ou désactiver les entractes après les victoires">
+            <span className="intro-switch-label">Entracte :</span>
+            <div className={`retro-switch ${intermissionEnabled ? 'active' : ''}`}>
+              <div className="retro-switch-handle" />
+            </div>
+            <span className={`retro-switch-val ${intermissionEnabled ? 'val-green' : 'val-red'}`}>
+              {intermissionEnabled ? 'AVEC' : 'SANS'}
+            </span>
           </div>
-          <span style={{ fontWeight: 'bold', color: randomThemeEnabled ? '#38bdf8' : '#94a3b8', minWidth: '44px', fontSize: '11px' }}>
-            {randomThemeEnabled ? 'OUI' : 'NON'}
-          </span>
+
+          {hasThemes && (
+            <div className="intro-switch-chip" onClick={toggleRandomTheme} title="Activer ou désactiver le choix aléatoire du thème visuel à chaque partie">
+              <span className="intro-switch-label">Thème aléatoire :</span>
+              <div className={`retro-switch ${randomThemeEnabled ? 'active-cyan' : ''}`}>
+                <div className="retro-switch-handle" />
+              </div>
+              <span className={`retro-switch-val ${randomThemeEnabled ? 'val-cyan' : 'val-gray'}`}>
+                {randomThemeEnabled ? 'OUI' : 'NON'}
+              </span>
+            </div>
+          )}
         </div>
       </div>
+
       <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 15, pointerEvents: 'none' }} />
     </div>
   );

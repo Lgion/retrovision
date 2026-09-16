@@ -642,13 +642,15 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
       />}
 
       {isIntermission && gameState === 'playing' && (() => {
-        const total = arrowsLeft || (grid ? grid.flat().filter(Boolean).length : 1);
-        const current = grid ? grid.flat().filter(Boolean).length : 0;
-        const apProgress = total > 0 ? ((total - current) / total) : 0;
+        const diff = intermissionDifficulty || 'facile';
+        const settings = getDifficultySettings(diff, 'wire');
+        const total = settings.arrows || 1;
+        const current = arrowsLeft;
+        const apProgress = total > 0 ? Math.max(0, (total - current) / total) : 0;
         return (
           <IntermissionHeader
             instructionText="Videz la grille pour retourner au jeu principal."
-            onRestart={() => startGame(boardSize, arrowsLeft)}
+            onRestart={() => startGame(settings.size, settings.arrows, 'wire')}
             onOtherGame={onIntermissionRequest}
             onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
             replaySame={replaySameIntermission}

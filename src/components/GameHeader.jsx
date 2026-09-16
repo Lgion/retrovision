@@ -1,5 +1,6 @@
 import React from 'react';
 import { sound } from '../utils/sound';
+import { isRandomThemeEnabled } from '../utils/themeManager';
 
 export default function GameHeader({
   title,
@@ -11,17 +12,30 @@ export default function GameHeader({
   onHint,
   hintDisabled = false,
   hintsLeft,
+  onShuffle,
+  shuffleDisabled = false,
   onShop,
   showBgmToggle = true,
   bgmOn,
   onBgmToggle,
   centerContent,
   extraControls,
-  style = {}
+  style = {},
+  gameId,
+  onChangeTheme
 }) {
   return (
     <>
       <style>{`
+        .btn-theme-rand {
+          background: radial-gradient(circle at 30% 30%, #38bdf8, #6366f1);
+          border-bottom: 4px solid #4338ca;
+          box-shadow: 0 8px 15px rgba(56, 189, 248, 0.35), inset 0 6px 8px rgba(255,255,255,0.6);
+        }
+        .btn-theme-rand:hover {
+          filter: brightness(1.2);
+          box-shadow: 0 8px 20px rgba(56, 189, 248, 0.6), inset 0 6px 8px rgba(255,255,255,0.8);
+        }
         .candy-btn {
           position: relative;
           display: flex;
@@ -64,12 +78,9 @@ export default function GameHeader({
           border-bottom: 4px solid #a16207;
           animation: hint-pulse 2s infinite;
         }
-        .btn-hint{left:30%;}
-        .btn-shuffle {right:30%;}
-        .btn-hint, .btn-shuffle {
-          position: absolute;
-          z-index: 10;
-          width: 100px;
+        .btn-shuffle {
+          background: radial-gradient(circle at 30% 30%, #fb923c, #ea580c);
+          border-bottom: 4px solid #c2410c;
         }
         @keyframes hint-pulse {
           0%, 100% { box-shadow: 0 8px 15px rgba(234, 179, 8, 0.4), inset 0 6px 8px rgba(255,255,255,0.6), inset 0 -4px 6px rgba(0,0,0,0.4); }
@@ -244,6 +255,33 @@ export default function GameHeader({
                 <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" />
               </svg>
               {hintsLeft !== undefined && <span className="badge">{hintsLeft}</span>}
+            </button>
+          )}
+
+          {/* RANDOM THEME CHANGE BUTTON: ALONGSIDE HINT & SHUFFLE */}
+          {onChangeTheme && isRandomThemeEnabled(gameId || title) && (
+            <button
+              onClick={() => {
+                sound.playClick();
+                onChangeTheme();
+              }}
+              className="candy-btn btn-theme-rand"
+              title="Changer de thème (Thème aléatoire actif)"
+            >
+              🎨
+            </button>
+          )}
+
+          {onShuffle && (
+            <button
+              onClick={onShuffle}
+              disabled={shuffleDisabled}
+              className="candy-btn btn-shuffle"
+              title="Mélanger"
+            >
+              <svg className="btn-icon" viewBox="0 0 24 24" style={{ color: "white" }}>
+                <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+              </svg>
             </button>
           )}
 

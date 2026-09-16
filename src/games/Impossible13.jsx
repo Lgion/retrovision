@@ -429,7 +429,7 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
           } />
         )}
         {isIntermission && (() => {
-          const maxVal = grid ? Math.max(...grid.flat()) : 1;
+          const maxVal = currentMax || 1;
           const impProgress = victory ? 1.0 : (maxVal >= 11 ? 0.85 : maxVal >= 10 ? 0.7 : (maxVal / 13));
           return (
             <IntermissionHeader

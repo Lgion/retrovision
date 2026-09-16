@@ -6,6 +6,7 @@ import { gsap } from 'gsap';
 import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 
 const BallSortIntro = ({ onComplete }) => {
   const canvasRef = useRef(null);
@@ -660,11 +661,11 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, intermis
         }}
       >
         {/* Background Overlay to soften image */}
-        <div style={{
+        {/* <div style={{
           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
           background: 'rgba(255, 255, 255, 0.1)',
           zIndex: 0
-        }} />
+        }} /> */}
 
         {/* Ambient Particles Layer */}
         <AmbientParticles config={getAmbientConfig()} />
@@ -673,6 +674,13 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, intermis
         {!isIntermission && (
           <GameHeader
             title="TRI BILLES"
+            gameId="ball"
+            onChangeTheme={() => {
+              const nextTheme = pickRandomTheme('ball', customizations.theme);
+              setCustomizations(prev => ({ ...prev, theme: nextTheme }));
+              updateGameConfig('ball', 'customizations', { ...customizations, theme: nextTheme });
+              sound.playPowerup?.();
+            }}
             onBack={handleBackWithConfirm}
             onRestart={initGame}
             onUndo={undo}
@@ -687,7 +695,7 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, intermis
             }}
           />
         )}
-        
+
         {isIntermission && victoryPhase === 0 && (() => {
           const totalColors = tubes && tubes.length > 0 ? Math.max(1, tubes.length - 1) : 4;
           const completedCount = tubes ? tubes.filter(t => t.length === defaultCap && t.every(b => b === t[0])).length : 0;

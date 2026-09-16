@@ -382,6 +382,16 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
       {!isIntermission && (
         <GameHeader
           title="DÉMINEUR"
+          gameId="mines"
+          onChangeTheme={() => {
+            const nextTheme = pickRandomTheme('mines', customizations.theme);
+            setCustomizations(prev => {
+              const next = { ...prev, theme: nextTheme };
+              updateGameConfig('mines', 'customizations', next);
+              return next;
+            });
+            sound.playPowerup?.();
+          }}
           onBack={handleBackWithConfirm}
           onRestart={gameState === 'playing' ? () => { const s = getDifficultySettings(customizations.difficulty); startGame(s.size, s.mines); } : undefined}
           onShop={() => setShowCollection(true)}

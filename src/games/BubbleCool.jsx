@@ -1959,6 +1959,38 @@ export default function BubbleCool({
                   {bgmOn ? '🎵' : '🔇'}
                 </button>
 
+                {/* Random theme change button - IF AND ONLY IF random theme mode is enabled */}
+                {isRandomThemeEnabled('bubblecool') && (
+                  <button
+                    onClick={() => {
+                      sound.playClick();
+                      const randTheme = pickRandomTheme('bubblecool', customizations.theme);
+                      setCustomizations(prev => ({ ...prev, theme: randTheme }));
+                      updateGameConfig('bubblecool', 'theme', randTheme);
+                      sound.playPowerup?.();
+                    }}
+                    className="retro-btn"
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      padding: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      background: 'rgba(56, 189, 248, 0.25)',
+                      border: '1px solid #38BDF8',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      boxShadow: '0 0 10px rgba(56, 189, 248, 0.4)'
+                    }}
+                    title="Changer de thème (Thème aléatoire actif)"
+                  >
+                    🎨
+                  </button>
+                )}
+
                 <button
                   onClick={() => setShowStore(true)}
                   className="retro-btn"

@@ -717,6 +717,13 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
           <div style={unfocusedStyle}>
             <GameHeader
               title="SUDOKU"
+              gameId="sudoku"
+              onChangeTheme={() => {
+                const nextTheme = pickRandomTheme('sudoku', themeId);
+                setThemeId(nextTheme);
+                updateGameConfig('sudoku', 'theme', nextTheme);
+                sound.playPowerup?.();
+              }}
               onBack={handleBackWithConfirm}
               onRestart={gameState === 'playing' && !victory ? () => setGameState('menu') : undefined}
               onShop={() => { sound.playClick(); setShowStore(true); }}

@@ -6,6 +6,7 @@ import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 import FreeCellCollection from './FreeCellCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { pickRandomTheme } from '../utils/themeManager';
 
 const SUITS = [
   { id: '♥', color: '#c21807' },
@@ -727,6 +728,16 @@ export default function FreeCell({ onBack, onScoreSave, isIntermission, intermis
         {!isIntermission && (
           <GameHeader
             title="FREECELL"
+            gameId="freecell"
+            onChangeTheme={() => {
+              const nextTheme = pickRandomTheme('freecell', customizations.theme);
+              setCustomizations(prev => {
+                const next = { ...prev, theme: nextTheme };
+                updateGameConfig('freecell', 'customizations', next);
+                return next;
+              });
+              sound.playPowerup?.();
+            }}
             onBack={handleBackWithConfirm}
             onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
             onUndo={gameState === 'playing' ? undoMove : undefined}
@@ -742,7 +753,7 @@ export default function FreeCell({ onBack, onScoreSave, isIntermission, intermis
         )}
         
         {isIntermission && gameState === 'playing' && (() => {
-          const totalFoundations = foundations ? foundations.reduce((acc, f) => acc + (f ? f.length : 0), 0) : 0;
+          const totalFoundations = foundations ? Object.values(foundations).reduce((acc, rank) => acc + (rank || 0), 0) : 0;
           const fcProgress = victoryPhase > 0 ? 1.0 : (totalFoundations / 52);
           return (
             <IntermissionHeader

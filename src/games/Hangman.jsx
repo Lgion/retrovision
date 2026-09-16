@@ -298,7 +298,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     }
 
     if (isIntermission) {
-      const wordLetters = word ? Array.from(new Set(word.split(''))) : [];
+      const wordLetters = targetWord ? Array.from(new Set(targetWord.split(''))) : [];
       const guessed = wordLetters.filter(l => guessedLetters.includes(l)).length;
       const hmProgress = gameState === 'won' ? 1.0 : (wordLetters.length > 0 ? guessed / wordLetters.length : 0);
       return (

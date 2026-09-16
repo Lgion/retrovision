@@ -462,6 +462,13 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
         {!isIntermission && (
           <GameHeader
             title="WATER SORT"
+            gameId="water"
+            onChangeTheme={() => {
+              const nextTheme = pickRandomTheme('water', customizations.theme);
+              setCustomizations(prev => ({ ...prev, theme: nextTheme }));
+              updateGameConfig('water', 'customizations', { ...customizations, theme: nextTheme });
+              sound.playPowerup?.();
+            }}
             onBack={() => {
               if (victoryPhase === 0 && history.length > 0) {
                 if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) onBack();
@@ -504,7 +511,7 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
 
         {isIntermission && victoryPhase === 0 && (() => {
           const totalColors = tubes && tubes.length > 0 ? Math.max(1, tubes.length - 1) : 4;
-          const completedCount = tubes ? tubes.filter(t => t.length > 0 && t.every(c => c === t[0])).length : 0;
+          const completedCount = tubes ? tubes.filter((t, idx) => t.length === getTubeCapacity(idx) && t.every(c => c === t[0])).length : 0;
           const wsProgress = completedCount / totalColors;
           return (
             <IntermissionHeader

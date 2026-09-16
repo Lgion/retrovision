@@ -1,21 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { sound } from '../utils/sound';
-import GameMiniature from './GameMiniature';
-
-const INTERMISSION_GAMES = [
-  { key: 'water', name: 'Water Sort', icon: '💧' },
-  { key: 'ball', name: 'Ball Sort', icon: '🔮' },
-  { key: 'bubblecool', name: 'Bubble Cool', icon: '🫧' },
-  { key: 'sudoku', name: 'Sudoku', icon: '🔢' },
-  { key: 'blockfantasy', name: 'Block Fantasy', icon: '🧱' },
-  { key: '2048', name: '2048', icon: '🔢' },
-  { key: 'mines', name: 'Démineur', icon: '💣' },
-  { key: 'arrows', name: 'Flèches Zen', icon: '🏹' },
-  { key: 'jigsaw', name: 'Puzzle', icon: '🧩' },
-  { key: 'freecell', name: 'FreeCell', icon: '🃏' },
-  { key: 'hangman', name: 'Pendu', icon: '🎈' },
-  { key: 'impossible13', name: 'Impossible 13', icon: '1️⃣3️⃣' }
-];
 
 export default function IntermissionHeader({
   instructionText = "Relevez le défi pour retourner au jeu principal.",
@@ -29,11 +13,14 @@ export default function IntermissionHeader({
   showCTA = false   // explicit force show CTA boolean
 }) {
   const [reached80, setReached80] = useState(false);
-  const [showGamePicker, setShowGamePicker] = useState(false);
-  const pickerRef = useRef(null);
+  const [isDismissed, setIsDismissed] = useState(false);
   const soundPlayedRef = useRef(false);
 
   const isCurrent80 = (progress !== null && progress >= 0.8) || showCTA === true || !!replaySame;
+
+  useEffect(() => {
+    setIsDismissed(false);
+  }, [instructionText]);
 
   useEffect(() => {
     if (isCurrent80 && !reached80) {
@@ -44,19 +31,6 @@ export default function IntermissionHeader({
       }
     }
   }, [isCurrent80, reached80]);
-
-  // Close game picker when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
-        setShowGamePicker(false);
-      }
-    };
-    if (showGamePicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showGamePicker]);
 
   const isCtaVisible = reached80 || isCurrent80;
 
@@ -167,69 +141,83 @@ export default function IntermissionHeader({
           background: rgba(239, 68, 68, 0.3);
         }
 
-        .entract-game-picker-dropdown {
-          position: absolute;
-          top: calc(100% + 6px);
-          left: 50%;
-          transform: translateX(-50%);
-          width: 250px;
-          max-height: 280px;
-          overflow-y: auto;
-          background: #0f172a;
-          border: 1px solid rgba(59, 130, 246, 0.5);
-          border-radius: 12px;
-          padding: 6px;
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
-          z-index: 10000;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
 
-        .entract-picker-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 10px;
-          border-radius: 8px;
-          background: transparent;
-          border: none;
-          color: #e2e8f0;
-          font-size: 0.82rem;
-          font-weight: 600;
-          cursor: pointer;
-          text-align: left;
-          width: 100%;
-          transition: background 0.15s ease;
-        }
-
-        .entract-picker-item:hover {
-          background: rgba(59, 130, 246, 0.2);
-          color: #38bdf8;
-        }
 
         .entract-footer-bar {
           position: fixed;
           bottom: 12px;
-          left: 50%;
-          transform: translateX(-50%);
+          right: 14px;
           z-index: 9999;
           display: inline-flex;
           align-items: center;
-          gap: 12px;
-          padding: 6px 16px;
+          gap: 10px;
+          padding: 6px 10px 6px 14px;
           border-radius: 20px;
           background: rgba(15, 23, 42, 0.94);
-          border: 1px solid rgba(245, 158, 11, 0.6);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(245, 158, 11, 0.25);
-          backdrop-filter: blur(10px);
+          border: 1px solid rgba(245, 158, 11, 0.55);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55), 0 0 15px rgba(245, 158, 11, 0.2);
+          backdrop-filter: blur(12px);
           pointer-events: auto;
-          animation: entractFooterFadeIn 0.3s ease-out;
+          animation: entractFooterSlideIn 0.25s ease-out;
+          max-width: calc(100vw - 28px);
+          box-sizing: border-box;
         }
 
-        @keyframes entractFooterFadeIn {
-          from { opacity: 0; transform: translate(-50%, 8px); }
-          to { opacity: 1; transform: translate(-50%, 0); }
+        @keyframes entractFooterSlideIn {
+          from { opacity: 0; transform: translateY(8px) scale(0.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .entract-footer-close-btn {
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #94a3b8;
+          font-size: 11px;
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          padding: 0;
+          margin-left: 2px;
+          transition: all 0.15s ease;
+          line-height: 1;
+        }
+
+        .entract-footer-close-btn:hover {
+          background: rgba(239, 68, 68, 0.4);
+          border-color: #ef4444;
+          color: #ffffff;
+        }
+
+        .entract-footer-minimized-btn {
+          position: fixed;
+          bottom: 12px;
+          right: 14px;
+          z-index: 9999;
+          height: 28px;
+          padding: 0 10px;
+          border-radius: 14px;
+          background: rgba(15, 23, 42, 0.9);
+          border: 1px solid rgba(245, 158, 11, 0.5);
+          color: #fde68a;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 800;
+          backdrop-filter: blur(8px);
+          transition: all 0.2s ease;
+        }
+
+        .entract-footer-minimized-btn:hover {
+          transform: scale(1.05);
+          background: rgba(30, 41, 59, 0.95);
+          border-color: #f59e0b;
         }
       `}</style>
 
@@ -241,8 +229,8 @@ export default function IntermissionHeader({
           <span className="entract-instruction">{instructionText}</span>
         </div>
 
-        {/* Row 2: 3 Compact Actions (Relancer, Autre jeu, Passer l'entracte) */}
-        <div className="entract-actions-row" style={{ position: 'relative' }} ref={pickerRef}>
+        {/* Row 2: 3 Compact Actions (Relancer, Jeu aléatoire, Passer l'entracte) */}
+        <div className="entract-actions-row">
           {onRestart && (
             <button
               onClick={() => {
@@ -257,54 +245,16 @@ export default function IntermissionHeader({
           )}
 
           {onOtherGame && (
-            <div style={{ flex: 1, position: 'relative', display: 'flex' }}>
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setShowGamePicker(!showGamePicker);
-                }}
-                className="entract-btn entract-btn-other"
-                style={{ width: '100%' }}
-                title="Changer de jeu d'entracte à la volée"
-              >
-                <span>🎲</span> Autre jeu ▾
-              </button>
-
-              {showGamePicker && (
-                <div className="entract-game-picker-dropdown">
-                  <button
-                    onClick={() => {
-                      sound.playClick();
-                      setShowGamePicker(false);
-                      onOtherGame();
-                    }}
-                    className="entract-picker-item"
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#F59E0B' }}
-                  >
-                    <div style={{ width: '30px', height: '24px', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '13px' }}>
-                      🎲
-                    </div>
-                    <span>Aléatoire</span>
-                  </button>
-                  {INTERMISSION_GAMES.map((g) => (
-                    <button
-                      key={g.key}
-                      onClick={() => {
-                        sound.playClick();
-                        setShowGamePicker(false);
-                        onOtherGame(g.key);
-                      }}
-                      className="entract-picker-item"
-                    >
-                      <div style={{ width: '32px', height: '26px', borderRadius: '4px', overflow: 'hidden', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <GameMiniature gameKey={g.key} width="100%" height="100%" />
-                      </div>
-                      <span>{g.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOtherGame();
+              }}
+              className="entract-btn entract-btn-other"
+              title="Lancer immédiatement un autre jeu d'entracte au hasard"
+            >
+              <span>🎲</span> Jeu aléatoire
+            </button>
           )}
 
           {onSkip && (
@@ -325,45 +275,68 @@ export default function IntermissionHeader({
       </div>
 
       {/* --- FOOTER OPTIONS (SPRINT FINAL 80% & REJOUER CETTE ENTRACTE) --- */}
-      {/* Placed in the footer at bottom of viewport, non-intrusive without modifying header */}
-      {isCtaVisible && (
+      {isCtaVisible && !isDismissed && (
         <div className="entract-footer-bar">
-          <span style={{ fontSize: '0.78rem', fontWeight: '800', color: '#FDE68A', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: '800', color: '#FDE68A', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <span>⚡</span> SPRINT FINAL (80%+)
           </span>
 
           {onToggleReplaySame && (
-            <label
+            <button
+              onClick={() => {
+                sound.playClick();
+                onToggleReplaySame(!replaySame);
+              }}
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-                color: replaySame ? '#34d399' : '#e2e8f0',
+                gap: '5px',
+                background: replaySame ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                border: replaySame ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.18)',
+                borderRadius: '12px',
+                padding: '3px 9px',
+                fontSize: '0.75rem',
                 fontWeight: '700',
-                userSelect: 'none'
+                color: replaySame ? '#34d399' : '#e2e8f0',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                userSelect: 'none',
+                whiteSpace: 'nowrap'
               }}
               title="Activer pour relancer automatiquement ce jeu d'entracte une fois terminé"
             >
-              <input
-                type="checkbox"
-                checked={!!replaySame}
-                onChange={(e) => {
-                  sound.playClick();
-                  onToggleReplaySame(e.target.checked);
-                }}
-                style={{
-                  width: '14px',
-                  height: '14px',
-                  accentColor: '#10B981',
-                  cursor: 'pointer'
-                }}
-              />
-              <span>{replaySame ? '🔄 Rejouer activé' : 'Rejouer cette entracte ?'}</span>
-            </label>
+              <span>{replaySame ? '🔄' : '🔁'}</span>
+              <span>{replaySame ? 'Rejouer activé' : 'Rejouer cette entracte ?'}</span>
+            </button>
           )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              sound.playClick();
+              setIsDismissed(true);
+            }}
+            className="entract-footer-close-btn"
+            title="Fermer ce bloc"
+            aria-label="Fermer"
+          >
+            ✕
+          </button>
         </div>
+      )}
+
+      {isCtaVisible && isDismissed && (
+        <button
+          onClick={() => {
+            sound.playClick();
+            setIsDismissed(false);
+          }}
+          className="entract-footer-minimized-btn"
+          title="Rouvrir les options d'entracte (80% / Rejouer)"
+        >
+          <span>⚡</span>
+          <span>{replaySame ? 'Rejouer (ON)' : '80%+'}</span>
+        </button>
       )}
     </>
   );

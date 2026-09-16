@@ -122,7 +122,8 @@ function App() {
     const mainGame = isIntermissionMode ? (returnView || 'mahjong') : fromGameKey;
     const currentGame = isIntermissionMode ? view : null;
 
-    const chosenGame = targetGameKey || upcomingIntermissionGame || pickRandomIntermissionGame(mainGame, currentGame);
+    // Use explicitly requested game if provided; otherwise pick random
+    const chosenGame = targetGameKey || pickRandomIntermissionGame(mainGame, currentGame);
 
     setLastIntermissionGame(chosenGame);
     localStorage.setItem('retrovision_last_intermission_game', chosenGame);
@@ -292,7 +293,7 @@ function App() {
               isIntermission={isIntermissionMode}
               intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['water']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
-              onIntermissionRequest={() => handleIntermissionRequest('water')}
+              onIntermissionRequest={(targetKey) => handleIntermissionRequest('water', targetKey)}
               replaySameIntermission={replaySameIntermission}
               onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
             />
@@ -307,7 +308,7 @@ function App() {
               isIntermission={isIntermissionMode}
               intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['ball']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
-              onIntermissionRequest={() => handleIntermissionRequest('ball')}
+              onIntermissionRequest={(targetKey) => handleIntermissionRequest('ball', targetKey)}
               replaySameIntermission={replaySameIntermission}
               onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
             />
@@ -323,7 +324,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['2048']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
-                onIntermissionRequest={() => handleIntermissionRequest('2048')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('2048', targetKey)}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
@@ -340,7 +341,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['jigsaw']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
-                onIntermissionRequest={() => handleIntermissionRequest('jigsaw')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('jigsaw', targetKey)}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
@@ -354,7 +355,7 @@ function App() {
               <UnblockMe
                 onBack={() => setView('dashboard')}
                 onScoreSave={handleScoreSave}
-                onIntermissionRequest={() => handleIntermissionRequest('unblock')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('unblock', targetKey)}
               />
             </GameScaleWrapper>
           </div>
@@ -368,7 +369,7 @@ function App() {
               isIntermission={isIntermissionMode}
               intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['freecell']?.difficulty || 'facile'}
               onIntermissionComplete={handleIntermissionComplete}
-              onIntermissionRequest={() => handleIntermissionRequest('freecell')}
+              onIntermissionRequest={(targetKey) => handleIntermissionRequest('freecell', targetKey)}
               replaySameIntermission={replaySameIntermission}
               onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
             />
@@ -384,7 +385,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['mines']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
-                onIntermissionRequest={() => handleIntermissionRequest('mines')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('mines', targetKey)}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
@@ -401,7 +402,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['arrows']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
-                onIntermissionRequest={() => handleIntermissionRequest('arrows')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('arrows', targetKey)}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
@@ -418,7 +419,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['hangman']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
-                onIntermissionRequest={() => handleIntermissionRequest('hangman')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('hangman', targetKey)}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
@@ -435,7 +436,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['sudoku']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
-                onIntermissionRequest={() => handleIntermissionRequest('sudoku')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('sudoku', targetKey)}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
@@ -452,7 +453,7 @@ function App() {
                 isIntermission={isIntermissionMode}
                 intermissionDifficulty={sessionIntermissionDifficulty || intermissionConfig['blockfantasy']?.difficulty || 'facile'}
                 onIntermissionComplete={handleIntermissionComplete}
-                onIntermissionRequest={() => handleIntermissionRequest('blockfantasy')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('blockfantasy', targetKey)}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
@@ -468,7 +469,7 @@ function App() {
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
                 onIntermissionComplete={handleIntermissionComplete}
-                onIntermissionRequest={() => handleIntermissionRequest('impossible13')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('impossible13', targetKey)}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
               />
@@ -484,7 +485,7 @@ function App() {
                 onScoreSave={handleScoreSave}
                 isIntermission={isIntermissionMode}
                 onIntermissionComplete={handleIntermissionComplete}
-                onIntermissionRequest={() => handleIntermissionRequest('bubblecool')}
+                onIntermissionRequest={(targetKey) => handleIntermissionRequest('bubblecool', targetKey)}
                 replaySameIntermission={replaySameIntermission}
                 onToggleReplaySameIntermission={handleToggleReplaySameIntermission}
                 skipIntro={skipNextIntro}
