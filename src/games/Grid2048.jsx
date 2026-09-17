@@ -1,23 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import Grid2048Collection from './Grid2048Collection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+
+const addRandomTile = (currentBoard) => {
+  const emptyIndices = currentBoard
+    .map((val, idx) => (val === null ? idx : null))
+    .filter((val) => val !== null);
+
+  if (emptyIndices.length === 0) return currentBoard;
+
+  const randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+  const newBoard = [...currentBoard];
+  // 90% chance of 2, 10% chance of 4
+  newBoard[randomIndex] = Math.random() < 0.9 ? 2 : 4;
+  return newBoard;
+};
 
 export default function Grid2048({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
-  const [board, setBoard] = useState([]);
-  const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(() => {
-    return parseInt(localStorage.getItem('retrovision_2048_highscore') || '0', 10);
-  });
-  const [gameOver, setGameOver] = useState(false);
-  const [victory, setVictory] = useState(false);
-  const [keepPlaying, setKeepPlaying] = useState(false);
-  const touchStartRef = useRef(null);
-  const [showCollection, setShowCollection] = useState(false);
   const [customizations, setCustomizations] = useState(() => getGameConfig('2048', 'customizations', { difficulty: 'moyen', theme: 'neon' }));
 
   const getGridSize = () => {
@@ -34,10 +39,41 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
   const gridSize = getGridSize();
   const totalCells = gridSize * gridSize;
 
-  // Initialize board
+  const [board, setBoard] = useState(() => {
+    const emptyBoard = Array(totalCells).fill(null);
+    return addRandomTile(addRandomTile(emptyBoard));
+  });
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(() => {
+    return parseInt(localStorage.getItem('retrovision_2048_highscore') || '0', 10);
+  });
+  const [gameOver, setGameOver] = useState(false);
+  const [victory, setVictory] = useState(false);
+  const [keepPlaying, setKeepPlaying] = useState(false);
+  const touchStartRef = useRef(null);
+  const [showCollection, setShowCollection] = useState(false);
+
+  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('2048'));
+
   useEffect(() => {
-    initGame();
+    const handleToggle = (e) => {
+      if (e.detail?.gameId === '2048') {
+        setRandomThemeActive(e.detail.enabled);
+      }
+    };
+    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
+    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
   }, []);
+
+  const handleChangeTheme = () => {
+    const nextTheme = pickRandomTheme('2048', customizations.theme);
+    setCustomizations(prev => {
+      const next = { ...prev, theme: nextTheme };
+      updateGameConfig('2048', 'customizations', next);
+      return next;
+    });
+    sound.playPowerup?.();
+  };
 
   // Ask permission to leave if game is in progress
   useEffect(() => {
@@ -64,7 +100,7 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
     }
   };
 
-  const initGame = () => {
+  const initGame = useCallback(() => {
     const emptyBoard = Array(totalCells).fill(null);
     let b = addRandomTile(addRandomTile(emptyBoard));
     setBoard(b);
@@ -72,21 +108,7 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
     setGameOver(false);
     setVictory(false);
     setKeepPlaying(false);
-  };
-
-  const addRandomTile = (currentBoard) => {
-    const emptyIndices = currentBoard
-      .map((val, idx) => (val === null ? idx : null))
-      .filter((val) => val !== null);
-
-    if (emptyIndices.length === 0) return currentBoard;
-
-    const randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-    const newBoard = [...currentBoard];
-    // 90% chance of 2, 10% chance of 4
-    newBoard[randomIndex] = Math.random() < 0.9 ? 2 : 4;
-    return newBoard;
-  };
+  }, [totalCells]);
 
   const getTileColor = (val) => {
     switch (val) {
@@ -125,7 +147,7 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
     return nextB;
   };
 
-  const slideAndMerge = (line, isLeftOrUp) => {
+  const slideAndMerge = (line) => {
     // Compress non-null values
     let compressed = line.filter((val) => val !== null);
     
@@ -177,7 +199,7 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
     if (direction === 'left') {
       for (let r = 0; r < gridSize; r++) {
         const originalRow = getRow(nextBoard, r);
-        const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(originalRow, true);
+        const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(originalRow);
         nextBoard = setRow(nextBoard, r, newLine);
         totalScoreGained += scoreGained;
         if (mergedThisTurn) playMergeSound = true;
@@ -187,7 +209,7 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
       for (let r = 0; r < gridSize; r++) {
         const originalRow = getRow(nextBoard, r);
         const reversedRow = [...originalRow].reverse();
-        const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(reversedRow, true);
+        const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(reversedRow);
         const finalRow = [...newLine].reverse();
         nextBoard = setRow(nextBoard, r, finalRow);
         totalScoreGained += scoreGained;
@@ -197,7 +219,7 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
     } else if (direction === 'up') {
       for (let c = 0; c < gridSize; c++) {
         const originalCol = getCol(nextBoard, c);
-        const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(originalCol, true);
+        const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(originalCol);
         nextBoard = setCol(nextBoard, c, newLine);
         totalScoreGained += scoreGained;
         if (mergedThisTurn) playMergeSound = true;
@@ -207,7 +229,7 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
       for (let c = 0; c < gridSize; c++) {
         const originalCol = getCol(nextBoard, c);
         const reversedCol = [...originalCol].reverse();
-        const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(reversedCol, true);
+        const { newLine, scoreGained, mergedThisTurn } = slideAndMerge(reversedCol);
         const finalCol = [...newLine].reverse();
         nextBoard = setCol(nextBoard, c, finalCol);
         totalScoreGained += scoreGained;
@@ -276,21 +298,26 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
     sound.playExplosion();
   };
 
+  const moveRef = useRef(move);
+  useEffect(() => {
+    moveRef.current = move;
+  });
+
   // Handle Keyboard Arrows
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
         e.preventDefault();
-        if (e.code === 'ArrowUp') move('up');
-        if (e.code === 'ArrowDown') move('down');
-        if (e.code === 'ArrowLeft') move('left');
-        if (e.code === 'ArrowRight') move('right');
+        if (e.code === 'ArrowUp') moveRef.current?.('up');
+        if (e.code === 'ArrowDown') moveRef.current?.('down');
+        if (e.code === 'ArrowLeft') moveRef.current?.('left');
+        if (e.code === 'ArrowRight') moveRef.current?.('right');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [board, score, gameOver, victory, keepPlaying]);
+  }, []);
 
   // Touch Swipe Handlers for Mobile
   const handleTouchStart = (e) => {
@@ -367,16 +394,31 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
         icon="🔢" 
         colors={['#00f0ff', '#ff007f', '#ffd700']} 
         particleType="blocks" 
-        onComplete={() => setShowIntro(false)} 
+        onComplete={(isRandomTheme) => {
+          setShowIntro(false);
+          const isRand = isRandomTheme || isRandomThemeEnabled('2048');
+          setRandomThemeActive(isRand);
+          if (isRand) {
+            const nextTheme = pickRandomTheme('2048', customizations.theme);
+            setCustomizations(prev => {
+              const next = { ...prev, theme: nextTheme };
+              updateGameConfig('2048', 'customizations', next);
+              return next;
+            });
+          }
+        }} 
       />}
-      <div className="game-container neon-border" style={{...containerStyle, background: theme.bg}}>
+      <div className="game-container neon-border neon-2048-container" style={{...containerStyle, background: theme.bg}}>
       {!isIntermission && (
         <GameHeader
+          key={randomThemeActive ? 'rand' : 'fixed'}
           title="NEON 2048"
+          gameId="2048"
           onBack={handleBackWithConfirm}
           onRestart={initGame}
           showBgmToggle={false} // BGM global
           onShop={() => setShowCollection(true)}
+          onChangeTheme={handleChangeTheme}
           centerContent={
             <div style={statsContainerStyle}>
               <div style={statBoxStyle}>
@@ -408,83 +450,104 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
         );
       })()}
 
-      <div 
-        style={{...gridContainerStyle, gridTemplateColumns: `repeat(${gridSize}, 1fr)`, gridTemplateRows: `repeat(${gridSize}, 1fr)`, background: theme.tileBg}}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
-        {board.map((tileValue, index) => {
-          const styles = tileValue ? getTileColor(tileValue) : null;
-          return (
-            <div 
-              key={index} 
-              style={{
-                ...tileStyle,
-                backgroundColor: styles ? styles.bg : 'rgba(255, 255, 255, 0.03)',
-                border: styles ? `2px solid ${styles.border}` : '1px solid rgba(255, 255, 255, 0.05)',
-                color: styles ? styles.color : '#ffffff',
-                boxShadow: styles ? styles.shadow : 'none',
-                animation: styles && styles.pulse ? 'pulse 1.5s infinite alternate' : 'none',
-                transform: tileValue ? 'scale(1)' : 'scale(0.96)',
-              }}
-              className={tileValue ? 'tile-appear' : ''}
-            >
-              {tileValue}
-            </div>
-          );
-        })}
-
-        {victory && !keepPlaying && (
-          <div style={{ ...overlayStyle, animation: 'delayFadeIn 2s forwards' }}>
-            <div style={victoryTitleStyle}>VICTOIRE !</div>
-            <div style={descStyle}>Vous avez atteint la tuile 2048.</div>
-            <div style={btnRowStyle}>
-              <button 
-                onClick={() => setKeepPlaying(true)} 
-                className="retro-btn"
-                style={{ ...overlayBtnStyle, borderColor: '#ff007f', color: '#ff007f' }}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', flexGrow: 1, margin: 'auto 0' }}>
+        <div 
+          style={{
+            ...gridContainerStyle, 
+            maxWidth: 'min(380px, 48vh)',
+            gridTemplateColumns: `repeat(${gridSize}, 1fr)`, 
+            gridTemplateRows: `repeat(${gridSize}, 1fr)`, 
+            background: theme.tileBg
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {board.map((tileValue, index) => {
+            const styles = tileValue ? getTileColor(tileValue) : null;
+            return (
+              <div 
+                key={index} 
+                style={{
+                  ...tileStyle,
+                  backgroundColor: styles ? styles.bg : 'rgba(255, 255, 255, 0.03)',
+                  border: styles ? `2px solid ${styles.border}` : '1px solid rgba(255, 255, 255, 0.05)',
+                  color: styles ? styles.color : '#ffffff',
+                  boxShadow: styles ? styles.shadow : 'none',
+                  animation: styles && styles.pulse ? 'pulse 1.5s infinite alternate' : 'none',
+                  transform: tileValue ? 'scale(1)' : 'scale(0.96)',
+                }}
+                className={tileValue ? 'tile-appear' : ''}
               >
-                Continuer
-              </button>
+                {tileValue}
+              </div>
+            );
+          })}
+
+          {victory && !keepPlaying && (
+            <div style={{ ...overlayStyle, animation: 'delayFadeIn 2s forwards' }}>
+              <div style={victoryTitleStyle}>VICTOIRE !</div>
+              <div style={descStyle}>Vous avez atteint la tuile 2048.</div>
+              <div style={btnRowStyle}>
+                <button 
+                  onClick={() => setKeepPlaying(true)} 
+                  className="retro-btn"
+                  style={{ ...overlayBtnStyle, borderColor: '#ff007f', color: '#ff007f' }}
+                >
+                  Continuer
+                </button>
+                <button 
+                  onClick={() => {
+                    if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
+                      onIntermissionRequest();
+                    } else {
+                      initGame();
+                    }
+                  }} 
+                  className="retro-btn pulse-glow"
+                  style={overlayBtnStyle}
+                >
+                  Recommencer
+                </button>
+              </div>
+            </div>
+          )}
+
+          {gameOver && (
+            <div style={overlayStyle}>
+              <div style={gameOverTitleStyle}>BLOCAGE TOTAL</div>
+              <div style={descStyle}>Plus aucun mouvement possible !</div>
+              <div style={statsReportStyle}>
+                Score final : <span style={{ color: '#ff007f', fontWeight: 'bold' }}>{score}</span>
+              </div>
               <button 
-                onClick={() => {
-                  if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
-                    onIntermissionRequest();
-                  } else {
-                    initGame();
-                  }
-                }} 
+                onClick={initGame} 
                 className="retro-btn pulse-glow"
                 style={overlayBtnStyle}
               >
-                Recommencer
+                Réessayer
               </button>
             </div>
-          </div>
-        )}
-
-        {gameOver && (
-          <div style={overlayStyle}>
-            <div style={gameOverTitleStyle}>BLOCAGE TOTAL</div>
-            <div style={descStyle}>Plus aucun mouvement possible !</div>
-            <div style={statsReportStyle}>
-              Score final : <span style={{ color: '#ff007f', fontWeight: 'bold' }}>{score}</span>
-            </div>
-            <button 
-              onClick={initGame} 
-              className="retro-btn pulse-glow"
-              style={overlayBtnStyle}
-            >
-              Réessayer
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div style={footerHelpStyle}>
         Comment jouer: Utilisez les flèches du clavier ou glissez (swipe) avec votre doigt dans la grille pour fusionner les nombres identiques et former la tuile 2048.
       </div>
     </div>
+
+    <style>{`
+      @media (max-width: 600px) {
+        .neon-2048-container {
+          border-radius: 0 !important;
+          border: none !important;
+          padding: 12px 10px !important;
+          min-height: 100% !important;
+          max-width: 100% !important;
+          box-shadow: none !important;
+        }
+      }
+    `}</style>
     </>
   );
 }
@@ -494,33 +557,16 @@ const containerStyle = {
   display: 'flex',
   flexDirection: 'column',
   width: '100%',
-  maxWidth: '420px',
+  maxWidth: '430px',
+  minHeight: '100%',
+  flex: 1,
   background: 'rgba(10, 8, 19, 0.85)',
   backdropFilter: 'blur(10px)',
-  borderRadius: '12px',
+  borderRadius: '16px',
   padding: '16px',
   boxSizing: 'border-box',
   margin: '0 auto',
-};
-
-const headerStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: '16px',
-};
-
-const backBtnStyle = {
-  padding: '6px 12px',
-  fontSize: '13px',
-};
-
-const titleStyle = {
-  fontFamily: 'Orbitron, sans-serif',
-  fontSize: '20px',
-  color: '#00f0ff',
-  textShadow: '0 0 8px #00f0ff',
-  letterSpacing: '1px'
+  justifyContent: 'space-between'
 };
 
 const statsContainerStyle = {

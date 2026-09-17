@@ -1,4 +1,4 @@
-import React from 'react';
+
 import Boutique from '../components/Boutique';
 
 const categories = [
@@ -17,9 +17,10 @@ const categories = [
     name: 'Thème Visuel',
     icon: '🎨',
     items: [
-      { id: 'classic', name: 'Classique Bleu', icon: '🔵' },
+      { id: 'classic', name: 'Minimaliste', icon: '🏹' },
       { id: 'neon', name: 'Néon Violet', icon: '🌌' },
-      { id: 'forest', name: 'Forêt Émeraude', icon: '🌲' }
+      { id: 'nature', name: 'Bambou Zen', icon: '🎋' },
+      { id: 'cyberpunk', name: 'Cyber Matrix', icon: '🔮' }
     ]
   }
 ];

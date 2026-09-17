@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { isRandomThemeEnabled, pickRandomTheme, GAME_THEME_DETAILS } from '../utils/themeManager';
 
 // --- CONFIGURATION ---
 const GRID_SIZE = 5;
@@ -43,7 +44,43 @@ const areAdjacent = (r1, c1, r2, c2) => {
   return (dr <= 1 && dc <= 1) && !(dr === 0 && dc === 0);
 };
 
-export default function Impossible13({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+const hasPossibleMoves = (b) => {
+  if (!b || b.length < GRID_SIZE) return false;
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const val = b[r][c]?.val;
+      if (!val) continue;
+      const visited = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false));
+      const stack = [{ r, c }];
+      let clusterSize = 0;
+
+      while (stack.length > 0) {
+        const curr = stack.pop();
+        if (visited[curr.r][curr.c]) continue;
+        visited[curr.r][curr.c] = true;
+        clusterSize++;
+
+        if (clusterSize >= 3) return true;
+
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            const nr = curr.r + dr;
+            const nc = curr.c + dc;
+            if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+              if (!visited[nr][nc] && b[nr][nc]?.val === val) {
+                stack.push({ r: nr, c: nc });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+};
+
+export default function Impossible13({ onBack, onScoreSave, isIntermission, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
   const [showStore, setShowStore] = useState(false);
 
@@ -53,8 +90,45 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
 
   const activeTheme = isIntermission ? 'neon' : (customizations.theme || 'neon');
 
+  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('impossible13'));
+
+  useEffect(() => {
+    const handleToggle = (e) => {
+      if (e.detail?.gameId === 'impossible13') {
+        setRandomThemeActive(e.detail.enabled);
+      }
+    };
+    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
+    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
+  }, []);
+
+  const handleChangeTheme = useCallback(() => {
+    const nextTheme = pickRandomTheme('impossible13', activeTheme);
+    setCustomizations(prev => {
+      const next = { ...prev, theme: nextTheme };
+      updateGameConfig('impossible13', 'customizations', next);
+      return next;
+    });
+    sound.playPowerup?.();
+  }, [activeTheme]);
+
+  const cellIdRef = useRef(GRID_SIZE * GRID_SIZE);
+
   // Game State
-  const [board, setBoard] = useState([]); // 2D array: { val, id }
+  const [board, setBoard] = useState(() => {
+    let initialMax = 3;
+    let newBoard = [];
+    let id = 0;
+    for (let r = 0; r < GRID_SIZE; r++) {
+      let row = [];
+      for (let c = 0; c < GRID_SIZE; c++) {
+        id += 1;
+        row.push({ val: getRandomValue(initialMax), id });
+      }
+      newBoard.push(row);
+    }
+    return newBoard;
+  });
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('retrovision_impossible13_highscore') || '0', 10));
   const [currentMax, setCurrentMax] = useState(3);
@@ -73,8 +147,26 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
 
   const gridRef = useRef(null);
 
-  useEffect(() => {
-    initGame();
+  const initGame = useCallback(() => {
+    let initialMax = 3;
+    let newBoard = [];
+    for (let r = 0; r < GRID_SIZE; r++) {
+      let row = [];
+      for (let c = 0; c < GRID_SIZE; c++) {
+        cellIdRef.current += 1;
+        row.push({ val: getRandomValue(initialMax), id: cellIdRef.current });
+      }
+      newBoard.push(row);
+    }
+    setBoard(newBoard);
+    setScore(0);
+    setCurrentMax(initialMax);
+    setGameOver(false);
+    setVictory(false);
+    setUndoUsages(3);
+    setLastMove(null);
+    setActiveChain([]);
+    setIsDragging(false);
   }, []);
 
   // Particle Engine
@@ -116,34 +208,13 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
     setParticles(prev => [...prev, ...newParticles]);
   };
 
-  const initGame = () => {
-    let initialMax = 3;
-    let newBoard = [];
-    for (let r = 0; r < GRID_SIZE; r++) {
-      let row = [];
-      for (let c = 0; c < GRID_SIZE; c++) {
-        row.push({ val: getRandomValue(initialMax), id: Math.random() });
-      }
-      newBoard.push(row);
-    }
-    setBoard(newBoard);
-    setScore(0);
-    setCurrentMax(initialMax);
-    setGameOver(false);
-    setVictory(false);
-    setUndoUsages(3);
-    setLastMove(null);
-    setActiveChain([]);
-    setIsDragging(false);
-  };
-
-  const saveStateForUndo = () => {
+  const saveStateForUndo = useCallback(() => {
     setLastMove({
       board: board.map(row => row.map(cell => ({ ...cell }))),
       score,
       currentMax,
     });
-  };
+  }, [board, score, currentMax]);
 
   const handleUndo = () => {
     if (undoUsages <= 0 || !lastMove || victory) return;
@@ -202,31 +273,7 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
     }
   };
 
-  const handlePointerUp = () => {
-    if (!isDragging || gameOver || victory) return;
-    setIsDragging(false);
-
-    if (activeChain.length >= 3) {
-      executeMerge();
-    } else {
-      setActiveChain([]);
-    }
-  };
-
-  // Attach global pointer up
-  useEffect(() => {
-    const handleGlobalUp = () => {
-      if (isDragging) handlePointerUp();
-    };
-    window.addEventListener('mouseup', handleGlobalUp);
-    window.addEventListener('touchend', handleGlobalUp);
-    return () => {
-      window.removeEventListener('mouseup', handleGlobalUp);
-      window.removeEventListener('touchend', handleGlobalUp);
-    };
-  }, [isDragging, activeChain]);
-
-  const executeMerge = () => {
+  const executeMerge = useCallback(() => {
     saveStateForUndo();
     
     const newBoard = board.map(row => row.map(cell => ({ ...cell })));
@@ -246,16 +293,18 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
 
     let newMax = Math.max(currentMax, mergeValue);
     
-    sound.playScore(); // generic merge sound
+    sound.playScore();
 
     // Visual Feedback
-    const rect = gridRef.current.getBoundingClientRect();
-    const cellW = rect.width / GRID_SIZE;
-    const centerX = targetCell.c * cellW + (cellW / 2);
-    const centerY = targetCell.r * cellW + (cellW / 2);
-    
-    addFloatingScore(`+${pointsEarned}`, centerX, centerY);
-    spawnParticleBurst(centerX, centerY, VALUE_COLORS[mergeValue] || '#fff');
+    if (gridRef.current) {
+      const rect = gridRef.current.getBoundingClientRect();
+      const cellW = rect.width / GRID_SIZE;
+      const centerX = targetCell.c * cellW + (cellW / 2);
+      const centerY = targetCell.r * cellW + (cellW / 2);
+      
+      addFloatingScore(`+${pointsEarned}`, centerX, centerY);
+      spawnParticleBurst(centerX, centerY, VALUE_COLORS[mergeValue] || '#fff');
+    }
 
     // Win condition check
     if (mergeValue === TARGET_NUMBER) {
@@ -283,7 +332,8 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
         }
       }
       for (let r = 0; r < emptySlots; r++) {
-        newBoard[r][c] = { val: getRandomValue(newMax), id: Math.random() };
+        cellIdRef.current += 1;
+        newBoard[r][c] = { val: getRandomValue(newMax), id: cellIdRef.current };
       }
     }
 
@@ -302,62 +352,49 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
     // Check Game Over
     if (!hasPossibleMoves(newBoard)) {
       setGameOver(true);
-      sound.playShake(); // Game over sound
+      sound.playShake();
     }
-  };
+  }, [activeChain, board, currentMax, highScore, initGame, isIntermission, onIntermissionComplete, onScoreSave, replaySameIntermission, onToggleReplaySameIntermission, saveStateForUndo, score]);
 
-  const hasPossibleMoves = (b) => {
-    for (let r = 0; r < GRID_SIZE; r++) {
-      for (let c = 0; c < GRID_SIZE; c++) {
-        const val = b[r][c].val;
-        // Run a simple flood fill or DFS to find if there is a cluster of >= 3
-        const visited = Array.from({length: GRID_SIZE}, () => Array(GRID_SIZE).fill(false));
-        const stack = [{r, c}];
-        let clusterSize = 0;
-        
-        while(stack.length > 0) {
-          const curr = stack.pop();
-          if (visited[curr.r][curr.c]) continue;
-          visited[curr.r][curr.c] = true;
-          clusterSize++;
-          
-          if (clusterSize >= 3) return true;
+  const handlePointerUp = useCallback(() => {
+    if (!isDragging || gameOver || victory) return;
+    setIsDragging(false);
 
-          // Check 8 neighbors
-          for (let dr = -1; dr <= 1; dr++) {
-            for (let dc = -1; dc <= 1; dc++) {
-              if (dr === 0 && dc === 0) continue;
-              const nr = curr.r + dr;
-              const nc = curr.c + dc;
-              if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
-                if (!visited[nr][nc] && b[nr][nc].val === val) {
-                  stack.push({r: nr, c: nc});
-                }
-              }
-            }
-          }
-        }
-      }
+    if (activeChain.length >= 3) {
+      executeMerge();
+    } else {
+      setActiveChain([]);
     }
-    return false;
-  };
+  }, [activeChain, executeMerge, gameOver, isDragging, victory]);
+
+  // Attach global pointer up
+  useEffect(() => {
+    const handleGlobalUp = () => {
+      if (isDragging) handlePointerUp();
+    };
+    window.addEventListener('mouseup', handleGlobalUp);
+    window.addEventListener('touchend', handleGlobalUp);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalUp);
+      window.removeEventListener('touchend', handleGlobalUp);
+    };
+  }, [isDragging, handlePointerUp]);
 
   const renderLines = () => {
-    if (activeChain.length < 2 || !gridRef.current) return null;
-    const rect = gridRef.current.getBoundingClientRect();
-    const cellW = rect.width / GRID_SIZE;
+    if (activeChain.length < 2) return null;
+    const cellStep = 100 / GRID_SIZE;
     
-    let path = `M ${activeChain[0].c * cellW + cellW/2} ${activeChain[0].r * cellW + cellW/2}`;
+    let path = `M ${activeChain[0].c * cellStep + cellStep / 2} ${activeChain[0].r * cellStep + cellStep / 2}`;
     for (let i = 1; i < activeChain.length; i++) {
-      path += ` L ${activeChain[i].c * cellW + cellW/2} ${activeChain[i].r * cellW + cellW/2}`;
+      path += ` L ${activeChain[i].c * cellStep + cellStep / 2} ${activeChain[i].r * cellStep + cellStep / 2}`;
     }
 
-    const firstVal = board[activeChain[0].r][activeChain[0].c].val;
+    const firstVal = board[activeChain[0].r]?.[activeChain[0].c]?.val;
     const color = VALUE_COLORS[firstVal] || '#fff';
 
     return (
-      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }}>
-        <path d={path} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" 
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }}>
+        <path d={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" 
               style={{ filter: activeTheme === 'neon' ? `drop-shadow(0 0 8px ${color})` : 'none', opacity: 0.8 }} />
       </svg>
     );
@@ -393,7 +430,7 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
             id: 'theme',
             name: 'Thèmes Visuels',
             icon: '🎨',
-            items: [
+            items: GAME_THEME_DETAILS.impossible13 || [
               { id: 'neon', name: 'Néon Fantasy', icon: '✨' },
               { id: 'wood', name: 'Bois Cosy', icon: '🪵' },
               { id: 'jewel', name: 'Gemmes Translucides', icon: '💎' }
@@ -416,17 +453,45 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
   return (
     <>
       {showIntro && !isIntermission && (
-        <GameIntro gameName="IMPOSSIBLE 13" icon="1️⃣3️⃣" colors={['#EF4444', '#FBBF24', '#10B981', '#39FF14']} particleType="bubbles" onComplete={() => setShowIntro(false)} />
+        <GameIntro
+          gameName="IMPOSSIBLE 13"
+          icon="1️⃣3️⃣"
+          colors={['#EF4444', '#FBBF24', '#10B981', '#39FF14']}
+          particleType="bubbles"
+          onComplete={(isRandomTheme) => {
+            setShowIntro(false);
+            const isRand = isRandomTheme || isRandomThemeEnabled('impossible13');
+            setRandomThemeActive(isRand);
+            if (isRand) {
+              const nextTheme = pickRandomTheme('impossible13', activeTheme);
+              setCustomizations(prev => {
+                const next = { ...prev, theme: nextTheme };
+                updateGameConfig('impossible13', 'customizations', next);
+                return next;
+              });
+            }
+          }}
+        />
       )}
 
       <div className="impossible13-container game-container" style={{ ...containerStyle, ...getContainerStyle() }}>
         {!isIntermission && (
-          <GameHeader title="IMPOSSIBLE 13" onBack={onBack} onRestart={initGame} showBgmToggle={false} onShop={() => setShowStore(true)} centerContent={
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={statBoxStyle}><div style={statLabelStyle}>SCORE</div><div style={statValStyle}>{score}</div></div>
-              <div style={statBoxStyle}><div style={statLabelStyle}>RECORD</div><div style={statValStyle}>{highScore}</div></div>
-            </div>
-          } />
+          <GameHeader
+            key={randomThemeActive ? 'rand' : 'fixed'}
+            title="IMPOSSIBLE 13"
+            gameId="impossible13"
+            onBack={onBack}
+            onRestart={initGame}
+            showBgmToggle={false}
+            onShop={() => setShowStore(true)}
+            onChangeTheme={handleChangeTheme}
+            centerContent={
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={statBoxStyle}><div style={statLabelStyle}>SCORE</div><div style={statValStyle}>{score}</div></div>
+                <div style={statBoxStyle}><div style={statLabelStyle}>RECORD</div><div style={statValStyle}>{highScore}</div></div>
+              </div>
+            }
+          />
         )}
         {isIntermission && (() => {
           const maxVal = currentMax || 1;
@@ -454,12 +519,12 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', margin: '10px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', flexGrow: 1, margin: 'auto 0' }}>
           <div 
             ref={gridRef}
             onTouchMove={handlePointerMove}
             onMouseMove={handlePointerMove}
-            style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`, gap: '8px', width: '100%', maxWidth: '380px', aspectRatio: '1/1', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', touchAction: 'none' }}
+            style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`, gap: '8px', width: '100%', maxWidth: 'min(380px, 48vh)', aspectRatio: '1/1', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', touchAction: 'none' }}
           >
             {renderLines()}
             
@@ -540,12 +605,34 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, inte
 
       <style>{`
         @keyframes floatUpScore { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -150%) scale(0.85); opacity: 0; } }
+        @media (max-width: 600px) {
+          .impossible13-container {
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 12px 10px !important;
+            min-height: 100% !important;
+            max-width: 100% !important;
+          }
+        }
       `}</style>
     </>
   );
 }
 
-const containerStyle = { display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '430px', boxSizing: 'border-box', margin: '0 auto', padding: '16px', borderRadius: '16px' };
+const containerStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  maxWidth: '430px',
+  minHeight: '100%',
+  flex: 1,
+  boxSizing: 'border-box',
+  margin: '0 auto',
+  padding: '16px',
+  borderRadius: '16px',
+  justifyContent: 'space-between'
+};
 const statBoxStyle = { flex: 1, background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '8px', padding: '6px 10px', textAlign: 'center' };
 const statLabelStyle = { fontSize: '10px', color: '#8e8a9f', fontFamily: 'Orbitron, sans-serif', marginBottom: '2px' };
 const statValStyle = { fontSize: '16px', fontWeight: 'bold', color: '#ffffff', fontFamily: 'Orbitron, sans-serif' };

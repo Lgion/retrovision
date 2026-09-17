@@ -1,9 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
-import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
+import IntermissionHeader from '../components/IntermissionHeader';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { updateGameConfig } from '../utils/config';
+
+// Deterministic confetti particles for victory celebration
+const CONFETTI_PARTICLES = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  left: `${(i * 17) % 100}%`,
+  color: ['#8b5cf6', '#0d9488', '#e11d48'][i % 3],
+  duration: `${2 + (i % 5) * 0.6}s`,
+  delay: `${(i % 7) * 0.3}s`
+}));
 
 // Generic Sudoku helper functions
 function isValid(grid, r, c, val, rowsPerBlock, colsPerBlock, size) {
@@ -277,21 +287,53 @@ const THEMES = {
     particleColors: ['#ff9ff3', '#feca57', '#ff6b6b', '#48dbfb', '#1dd1a1']
   }
 };
-import IntermissionHeader from '../components/IntermissionHeader';
+function getSudokuConfig(diff) {
+  if (diff === 'difficile') {
+    return { size: 9, rBlock: 3, cBlock: 3, clues: 30 };
+  }
+  if (diff === 'moyen') {
+    return { size: 6, rBlock: 2, cBlock: 3, clues: 16 };
+  }
+  return { size: 4, rBlock: 2, cBlock: 2, clues: 6 };
+}
 
-export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
-  const [showIntro, setShowIntro] = useState(true);
-  const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
-  const [difficulty, setDifficulty] = useState('facile'); // 'facile' | 'moyen' | 'difficile'
+export default function Sudoku({
+  onBack,
+  onScoreSave,
+  isIntermission,
+  intermissionDifficulty,
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission
+}) {
+  const initialDiff = isIntermission ? (intermissionDifficulty || 'facile') : 'facile';
+  const initialCfg = getSudokuConfig(initialDiff);
+
+  const [showIntro, setShowIntro] = useState(!isIntermission);
+  const [gameState, setGameState] = useState(isIntermission ? 'playing' : 'menu'); // 'menu' | 'playing'
+  const [difficulty, setDifficulty] = useState(initialDiff); // 'facile' | 'moyen' | 'difficile'
 
   const [showStore, setShowStore] = useState(false);
   const [activeThemeId, setActiveThemeId] = useState(() => {
     if (isRandomThemeEnabled('sudoku')) {
       return pickRandomTheme('sudoku');
     }
-    return localStorage.getItem('retrovision_sudoku_theme') || 'classic';
+    return localStorage.getItem('retrovision_sudoku_theme') || 'neon';
   });
   
+  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('sudoku'));
+
+  useEffect(() => {
+    const handleToggle = (e) => {
+      if (e.detail?.gameId === 'sudoku') {
+        setRandomThemeActive(e.detail.enabled);
+      }
+    };
+    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
+    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
+  }, []);
+
   const currentTheme = THEMES[activeThemeId] || THEMES['classic'];
 
   const handleSelectTheme = (themeId) => {
@@ -301,29 +343,32 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
     setShowStore(false);
   };
 
-
   // Game parameters
-  const [gridSize, setGridSize] = useState(4); // 4, 6, 9
-  const [rowsPerBlock, setRowsPerBlock] = useState(2);
-  const [colsPerBlock, setColsPerBlock] = useState(2);
+  const [gridSize, setGridSize] = useState(initialCfg.size); // 4, 6, 9
+  const [rowsPerBlock, setRowsPerBlock] = useState(initialCfg.rBlock);
+  const [colsPerBlock, setColsPerBlock] = useState(initialCfg.cBlock);
 
   // Board states
-  const [board, setBoard] = useState([]);
+  const [board, setBoard] = useState(() => {
+    if (isIntermission) {
+      return generatePuzzle(initialCfg.rBlock, initialCfg.cBlock, initialCfg.size, initialCfg.clues);
+    }
+    return [];
+  });
   const [selectedCell, setSelectedCell] = useState(null); // { r, c }
   const [noteMode, setNoteMode] = useState(false);
   const [mistakes, setMistakes] = useState(0);
-  const [hintsLeft, setHintsLeft] = useState(3);
+  const [hintsLeft, setHintsLeft] = useState(initialDiff === 'facile' ? 1 : initialDiff === 'moyen' ? 2 : 3);
   const [victory, setVictory] = useState(false);
   const [history, setHistory] = useState([]); // for undo
   const [animatedCell, setAnimatedCell] = useState(null); // { r, c, ts }
   const [hoveredCell, setHoveredCell] = useState(null); // { r, c }
-  const [easiestCell, setEasiestCell] = useState(null); // { r, c }
+  const actionSeqRef = useRef(0);
 
-  // Calculate easiest cell whenever board changes
-  useEffect(() => {
-    if (gameState !== 'playing' || victory || board.length === 0) {
-      setEasiestCell(null);
-      return;
+  // Derive easiest cell with useMemo whenever board or state changes
+  const easiestCell = useMemo(() => {
+    if (gameState !== 'playing' || victory || !board || board.length === 0) {
+      return null;
     }
     
     const numberGrid = board.map(row => row.map(cell => cell.value));
@@ -346,46 +391,14 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
         }
       }
     }
-    setEasiestCell(bestCell);
+    return bestCell;
   }, [board, gameState, victory, gridSize, rowsPerBlock, colsPerBlock]);
 
   // Timer states
   const [time, setTime] = useState(0);
   const timerRef = useRef(null);
 
-  useEffect(() => {
-    if (isIntermission && gameState === 'menu') {
-      // In intermission mode, we bypass menu and start easy 4x4 immediately
-      setTimeout(() => startGame('facile'), 100);
-    }
-  }, [isIntermission, gameState]);
-
-  useEffect(() => {
-    if (gameState === 'playing' && !victory) {
-      timerRef.current = setInterval(() => {
-        setTime(t => t + 1);
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [gameState, victory]);
-
-  const handleBackWithConfirm = () => {
-    if (gameState === 'playing' && !victory) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie de Sudoku en cours ?")) {
-        sound.stopBGM();
-        onBack();
-      }
-    } else {
-      sound.stopBGM();
-      onBack();
-    }
-  };
-
-  const startGame = (diff) => {
+  const startGame = useCallback((diff) => {
     sound.playClick();
     if (isRandomThemeEnabled('sudoku')) {
       const nextTheme = pickRandomTheme('sudoku', activeThemeId);
@@ -426,6 +439,43 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
     setBoard(generated);
     setGameState('playing');
     sound.startBGM();
+  }, [activeThemeId]);
+
+  const prevDiffRef = useRef(intermissionDifficulty);
+  useEffect(() => {
+    if (isIntermission && intermissionDifficulty && prevDiffRef.current !== intermissionDifficulty) {
+      prevDiffRef.current = intermissionDifficulty;
+      const timer = setTimeout(() => {
+        startGame(intermissionDifficulty);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [isIntermission, intermissionDifficulty, startGame]);
+
+  useEffect(() => {
+    if (gameState === 'playing' && !victory) {
+      timerRef.current = setInterval(() => {
+        setTime(t => t + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [gameState, victory]);
+
+  const handleBackWithConfirm = () => {
+    sound.playClick();
+    if (gameState === 'playing' && !victory && (mistakes > 0 || history.length > 0)) {
+      if (window.confirm("Voulez-vous vraiment quitter la partie de Sudoku en cours ?")) {
+        sound.stopBGM?.();
+        if (onBack) onBack();
+      }
+    } else {
+      sound.stopBGM?.();
+      if (onBack) onBack();
+    }
   };
 
   const selectCell = (r, c) => {
@@ -440,9 +490,54 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
     sound.playClick();
   };
 
-  const saveHistory = (newBoard) => {
+  const saveHistory = () => {
     setHistory(prev => [...prev, board.map(row => row.map(cell => ({ ...cell, notes: [...cell.notes] })))]);
   };
+
+  const handleVictory = useCallback(() => {
+    sound.stopBGM();
+    setVictory(true);
+    sound.playScore();
+
+    if (isIntermission && onIntermissionComplete) {
+      if (replaySameIntermission) {
+        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+        setTimeout(() => {
+          startGame(difficulty);
+        }, 1500);
+        return;
+      }
+      setTimeout(() => {
+        onIntermissionComplete(true);
+      }, 2000);
+    } else if (onScoreSave) {
+      const difficultyMultiplier = gridSize === 4 ? 1 : gridSize === 6 ? 3 : 10;
+      const basePoints = 500 * difficultyMultiplier;
+      const timePenalty = Math.min(time * 2, basePoints * 0.5);
+      const mistakePenalty = Math.min(mistakes * 50, basePoints * 0.3);
+      const finalScore = Math.max(basePoints - timePenalty - mistakePenalty, 100);
+
+      setTimeout(() => {
+        onScoreSave('Sudoku', Math.round(finalScore));
+      }, 1500);
+    }
+  }, [isIntermission, onIntermissionComplete, replaySameIntermission, onToggleReplaySameIntermission, startGame, difficulty, onScoreSave, gridSize, time, mistakes]);
+
+  const checkWin = useCallback((currentBoard) => {
+    let solved = true;
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        if (currentBoard[r][c].value !== currentBoard[r][c].solution) {
+          solved = false;
+          break;
+        }
+      }
+    }
+
+    if (solved) {
+      handleVictory();
+    }
+  }, [gridSize, handleVictory]);
 
   const handleNumberInput = (num) => {
     let target = selectedCell;
@@ -460,9 +555,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
     const wasEmpty = cell.value === 0;
 
     if (noteMode) {
-      // Toggle note
       if (targetCell.value !== 0) {
-        // clear value if note is toggled
         targetCell.value = 0;
       }
       if (targetCell.notes.includes(num)) {
@@ -472,21 +565,19 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
       }
       sound.playBallDrop();
     } else {
-      // Set value
-      targetCell.notes = []; // Clear notes
+      targetCell.notes = [];
       if (targetCell.value === num) {
-        targetCell.value = 0; // Toggle off if clicked same number
+        targetCell.value = 0;
         sound.playClick();
       } else {
         targetCell.value = num;
-        // Verify correctness
         if (num !== targetCell.solution) {
           sound.playShake();
           setMistakes(m => m + 1);
         } else {
           if (wasEmpty) {
-            // Trigger pop animation, particle burst, and play the addictive sound effect!
-            setAnimatedCell({ r, c, ts: Date.now() });
+            actionSeqRef.current += 1;
+            setAnimatedCell({ r, c, ts: actionSeqRef.current });
             sound.playSudokuSuccess();
           } else {
             sound.playTubeComplete();
@@ -529,7 +620,6 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
   const handleHint = () => {
     if (hintsLeft <= 0 || victory) return;
 
-    // Find all empty cells or incorrect cells
     const targetCells = [];
     for (let r = 0; r < gridSize; r++) {
       for (let c = 0; c < gridSize; c++) {
@@ -540,10 +630,11 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
       }
     }
 
-    if (targetCells.length === 0) return; // All correct
+    if (targetCells.length === 0) return;
 
     sound.playPowerup();
-    const randomCell = targetCells[Math.floor(Math.random() * targetCells.length)];
+    actionSeqRef.current += 1;
+    const randomCell = targetCells[actionSeqRef.current % targetCells.length];
 
     saveHistory();
 
@@ -556,54 +647,6 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
     setHintsLeft(h => h - 1);
 
     checkWin(newBoard);
-  };
-
-  const checkWin = (currentBoard) => {
-    // A board is won if all cells match their solution
-    let solved = true;
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        if (currentBoard[r][c].value !== currentBoard[r][c].solution) {
-          solved = false;
-          break;
-        }
-      }
-    }
-
-    if (solved) {
-      handleVictory();
-    }
-  };
-
-  const handleVictory = () => {
-    sound.stopBGM();
-    setVictory(true);
-    sound.playScore();
-
-    if (isIntermission && onIntermissionComplete) {
-      if (replaySameIntermission) {
-        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-        setTimeout(() => {
-          startGame(gridSize, difficulty);
-        }, 1500);
-        return;
-      }
-      setTimeout(() => {
-        onIntermissionComplete();
-      }, 2000);
-    } else if (onScoreSave) {
-      // Calculate high score based on difficulty and efficiency
-      const difficultyMultiplier = gridSize === 4 ? 1 : gridSize === 6 ? 3 : 10;
-      const basePoints = 500 * difficultyMultiplier;
-      const timePenalty = Math.min(time * 2, basePoints * 0.5);
-      const mistakePenalty = Math.min(mistakes * 50, basePoints * 0.3);
-      const finalScore = Math.max(basePoints - timePenalty - mistakePenalty, 100);
-
-      setTimeout(() => {
-        onScoreSave('Sudoku', Math.round(finalScore));
-
-      }, 1500);
-    }
   };
 
   const formatTime = (secs) => {
@@ -645,14 +688,18 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
     ? { filter: 'blur(4px)', opacity: 0.35, pointerEvents: 'none', transition: 'all 0.3s ease' } 
     : { filter: 'blur(0px)', opacity: 1, transition: 'all 0.3s ease' };
 
+  // Calculate real progress for intermission (ratio 0.0 to 1.0) based on correct cells
+  const sudokuProgress = (() => {
+    if (!board || board.length === 0) return 0;
+    const allCells = board.flat();
+    const targetEmpty = allCells.filter(c => !c.isOriginal).length;
+    const correctCount = allCells.filter(c => !c.isOriginal && c.value === c.solution).length;
+    if (victory) return 1.0;
+    return targetEmpty > 0 ? Math.max(0, Math.min(1.0, correctCount / targetEmpty)) : 0;
+  })();
+
   return (
     <>
-      {/* Zen Background with Glowing Orbs */}
-      <div className={currentTheme.bgClass}>
-        <div className="sudoku-zen-orb sudoku-zen-orb-1"></div>
-        <div className="sudoku-zen-orb sudoku-zen-orb-2"></div>
-      </div>
-
       {showIntro && !isIntermission && (
         <GameIntro
           gameName="SUDOKU"
@@ -661,7 +708,9 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
           particleType="bubbles"
           onComplete={(isRandomTheme) => {
             setShowIntro(false);
-            if (isRandomTheme || isRandomThemeEnabled('sudoku')) {
+            const isRand = isRandomTheme || isRandomThemeEnabled('sudoku');
+            setRandomThemeActive(isRand);
+            if (isRand) {
               const nextTheme = pickRandomTheme('sudoku', activeThemeId);
               setActiveThemeId(nextTheme);
               localStorage.setItem('retrovision_sudoku_theme', nextTheme);
@@ -670,82 +719,133 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
         />
       )}
 
-      {isIntermission && gameState === 'playing' && (() => {
-        const initialCount = board ? board.filter(c => c.initial).length : 0;
-        const currentCount = board ? board.filter(c => c.val !== 0).length : 0;
-        const target = board ? board.length - initialCount : 1;
-        const progressVal = victory ? 1.0 : (target > 0 ? (currentCount - initialCount) / target : 0);
-        return (
-          <IntermissionHeader
-            instructionText="Complétez ce Sudoku pour retourner au jeu principal."
-            onRestart={() => startGame(gridSize, difficulty)}
-            onOtherGame={onIntermissionRequest}
-            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
-            replaySame={replaySameIntermission}
-            onToggleReplaySame={onToggleReplaySameIntermission}
-            progress={progressVal}
-          />
-        );
-      })()}
+      {/* Store Modal */}
+      {showStore && (
+        <Boutique
+          title="BOUTIQUE SUDOKU"
+          icon="🔢"
+          categories={[
+            {
+              id: 'theme',
+              name: 'Thèmes Visuels',
+              icon: '🎨',
+              items: Object.values(THEMES).map(t => ({
+                id: t.id,
+                name: t.name,
+                icon: t.icon
+              }))
+            }
+          ]}
+          currentSelections={{ theme: activeThemeId }}
+          onSelect={(_, themeId) => handleSelectTheme(themeId)}
+          onClose={() => setShowStore(false)}
+        />
+      )}
 
-      
-        {/* Store Modal */}
-        {showStore && (
-          <Boutique
-            title="BOUTIQUE SUDOKU"
-            icon="🔢"
-            categories={[
-              {
-                id: 'theme',
-                name: 'Thèmes Visuels',
-                icon: '🎨',
-                items: Object.values(THEMES).map(t => ({
-                  id: t.id,
-                  name: t.name,
-                  icon: t.icon
-                }))
-              }
-            ]}
-            currentSelections={{ theme: activeThemeId }}
-            onSelect={(_, themeId) => handleSelectTheme(themeId)}
-            onClose={() => setShowStore(false)}
-          />
-        )}
+      <div className="sudoku-card-container" style={{ ...containerStyle, background: currentTheme.panelBg }}>
+        {/* Ambient Zen Orbs contained inside the card */}
+        <div className="sudoku-zen-orb sudoku-zen-orb-1" style={{ pointerEvents: 'none' }}></div>
+        <div className="sudoku-zen-orb sudoku-zen-orb-2" style={{ pointerEvents: 'none' }}></div>
 
-      <div style={containerStyle}>
-        {!isIntermission && (
-          <div style={unfocusedStyle}>
-            <GameHeader
-              title="SUDOKU"
-              gameId="sudoku"
-              onChangeTheme={() => {
-                const nextTheme = pickRandomTheme('sudoku', themeId);
-                setThemeId(nextTheme);
-                updateGameConfig('sudoku', 'theme', nextTheme);
-                sound.playPowerup?.();
-              }}
-              onBack={handleBackWithConfirm}
-              onRestart={gameState === 'playing' && !victory ? () => setGameState('menu') : undefined}
-              onShop={() => { sound.playClick(); setShowStore(true); }}
-              showBgmToggle={false}
-              centerContent={
-                gameState === 'playing' ? (
-                  <div style={timeCounterStyle}>
-                    ⏱️ {formatTime(time)}
-                  </div>
-                ) : null
-              }
+        {/* Sleek single-row header */}
+        {!isIntermission ? (
+          <div style={{ width: '100%', zIndex: 10 }}>
+            <div style={compactHeaderStyle}>
+              {/* Left: Back button */}
+              <button
+                onClick={handleBackWithConfirm}
+                className="retro-btn"
+                style={{
+                  ...backBtnStyle,
+                  color: currentTheme.panelText,
+                  background: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+                  borderColor: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
+                }}
+              >
+                ← Retour
+              </button>
+
+              {/* Center: Title + Timer */}
+              <div style={centerHeaderStyle}>
+                <span style={{ ...titleStyle, color: currentTheme.panelText }}>SUDOKU</span>
+                {gameState === 'playing' && (
+                  <span style={timerPillStyle}>⏱️ {formatTime(time)}</span>
+                )}
+              </div>
+
+              {/* Right: Actions */}
+              <div style={headerActionsStyle}>
+                {randomThemeActive && (
+                  <button
+                    onClick={() => {
+                      const nextTheme = pickRandomTheme('sudoku', activeThemeId);
+                      setActiveThemeId(nextTheme);
+                      updateGameConfig('sudoku', 'theme', nextTheme);
+                      sound.playPowerup?.();
+                    }}
+                    className="retro-btn"
+                    style={{
+                      ...iconBtnStyle,
+                      color: currentTheme.panelText,
+                      background: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+                      borderColor: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
+                    }}
+                    title="Changer de thème (Thème aléatoire actif)"
+                  >
+                    🎨
+                  </button>
+                )}
+                {gameState === 'playing' && !victory && (
+                  <button
+                    onClick={() => setGameState('menu')}
+                    className="retro-btn"
+                    style={{
+                      ...iconBtnStyle,
+                      color: currentTheme.panelText,
+                      background: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+                      borderColor: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
+                    }}
+                    title="Menu de difficulté"
+                  >
+                    🔄
+                  </button>
+                )}
+                <button
+                  onClick={() => { sound.playClick(); setShowStore(true); }}
+                  className="retro-btn"
+                  style={{
+                    ...iconBtnStyle,
+                    color: currentTheme.panelText,
+                    background: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+                    borderColor: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
+                  }}
+                  title="Boutique Sudoku"
+                >
+                  🛍️
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ width: '100%', marginBottom: '10px', zIndex: 10 }}>
+            <IntermissionHeader
+              instructionText="Complétez ce Sudoku pour retourner au jeu principal."
+              onRestart={() => startGame(difficulty)}
+              onOtherGame={onIntermissionRequest}
+              onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+              replaySame={replaySameIntermission}
+              onToggleReplaySame={onToggleReplaySameIntermission}
+              progress={sudokuProgress}
             />
           </div>
         )}
 
-        {gameState === 'menu' && (
+        {gameState === 'menu' && !isIntermission && (
           <div style={menuStyle}>
             <div style={{ fontSize: '5.5rem', marginBottom: '15px', filter: 'drop-shadow(0 0 12px rgba(139, 92, 246, 0.6))' }}>🔢</div>
-            <h2 style={menuTitleStyle}>Entraînement Sudoku Zen</h2>
-            <p style={menuSubtitleStyle}>Stimulez votre mémoire de travail et votre logique visuelle.</p>
+            <h2 style={{ ...menuTitleStyle, color: currentTheme.panelText }}>Entraînement Sudoku Zen</h2>
+            <p style={{ ...menuSubtitleStyle, color: currentTheme.id === 'classic' ? '#475569' : '#c084fc' }}>Stimulez votre mémoire de travail et votre logique visuelle.</p>
 
-            
             <div style={btnGroupStyle}>
               <button
                 onClick={() => startGame('facile')}
@@ -779,6 +879,11 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
         {gameState === 'playing' && (
           <div style={gameplayContainerStyle}>
             <div style={{ ...statsRowStyle, ...unfocusedStyle }}>
+              {isIntermission && (
+                <div style={statBoxStyle}>
+                  ⏱️ {formatTime(time)}
+                </div>
+              )}
               <div style={statBoxStyle}>
                 Mode : <span style={{ textTransform: 'capitalize', fontWeight: '800', color: '#a78bfa' }}>{difficulty}</span>
               </div>
@@ -791,7 +896,10 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
             </div>
 
             {/* Sudoku Grid */}
-            <div className="sudokuGrid" style={{ ...boardWrapperStyle, maxWidth: gridSize === 4 ? '300px' : gridSize === 6 ? '380px' : '440px' }}>
+            <div className="sudokuGrid" style={{
+              ...boardWrapperStyle,
+              maxWidth: gridSize === 4 ? 'min(280px, 42vh)' : gridSize === 6 ? 'min(340px, 45vh)' : 'min(390px, 48vh)'
+            }}>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
@@ -970,8 +1078,17 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
 
             {/* Helper text display for empty cell */}
             {showEmptyCellPrompt && (
-              <div className="sudoku-helper-text">
-                <span>🎯</span> Sélectionnez un chiffre ci-dessous pour remplir la case
+              <div className="sudoku-helper-text" style={{
+                textAlign: 'center',
+                fontSize: '0.78rem',
+                color: currentTheme.panelText,
+                background: currentTheme.id === 'classic' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                margin: '2px 0 6px 0',
+                fontWeight: '600'
+              }}>
+                <span>🎯</span> Sélectionnez un chiffre pour remplir la case
               </div>
             )}
 
@@ -979,12 +1096,12 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
             <div className={`sudoku_choices ${showEmptyCellPrompt ? 'sudoku-choices-glow' : ''}`} style={{
               display: 'grid',
               gridTemplateColumns: `repeat(${gridSize <= 6 ? gridSize : 5}, 1fr)`,
-              gap: '10px',
+              gap: '6px',
               width: '100%',
               maxWidth: '380px',
-              marginTop: '5px',
-              marginBottom: '15px',
-              padding: '8px',
+              marginTop: '4px',
+              marginBottom: '8px',
+              padding: '2px 4px',
               boxSizing: 'border-box'
             }}>
               {Array.from({ length: gridSize }, (_, i) => i + 1).map(num => {
@@ -1007,12 +1124,12 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
                     disabled={complete}
                     className="sudoku-choice-btn"
                     style={{
-                      height: '50px',
-                      borderRadius: '14px',
+                      height: gridSize === 9 ? '42px' : '46px',
+                      borderRadius: '12px',
                       border: complete ? currentTheme.keypadDisabledBorder : currentTheme.keypadNormalBorder,
                       background: complete ? currentTheme.keypadDisabledBg : currentTheme.keypadNormalBg,
                       color: complete ? currentTheme.keypadDisabledText : currentTheme.keypadNormalText,
-                      fontSize: '22px',
+                      fontSize: gridSize === 9 ? '18px' : '20px',
                       fontWeight: '800',
                       cursor: complete ? 'not-allowed' : 'pointer',
                       boxShadow: complete ? 'none' : currentTheme.keypadNormalShadow,
@@ -1029,7 +1146,7 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
             </div>
 
             {/* Sudoku Controls (Pencil, Erase, Undo, Hint) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', width: '100%', maxWidth: '380px', marginBottom: '5px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', width: '100%', maxWidth: '380px', marginBottom: '4px' }}>
               <button
                 onClick={() => setSelectedCell(null)}
                 className="retro-btn"
@@ -1101,13 +1218,21 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
         {victory && !isIntermission && (
           <div style={overlayStyle}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-              {Array.from({ length: 30 }, (_, i) => (
-                <div key={i} style={{
-                  position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
-                  width: '10px', height: '10px', background: ['#8b5cf6', '#0d9488', '#e11d48'][i % 3],
-                  borderRadius: '50%', animation: `confettiFall ${2 + Math.random() * 3}s linear ${Math.random() * 2}s infinite`,
-                  opacity: 0.8
-                }} />
+              {CONFETTI_PARTICLES.map(p => (
+                <div
+                  key={p.id}
+                  style={{
+                    position: 'absolute',
+                    left: p.left,
+                    top: '-20px',
+                    width: '10px',
+                    height: '10px',
+                    background: p.color,
+                    borderRadius: '50%',
+                    animation: `confettiFall ${p.duration} linear ${p.delay} infinite`,
+                    opacity: 0.8
+                  }}
+                />
               ))}
             </div>
 
@@ -1154,6 +1279,16 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
           0% { transform: translateY(0) rotate(0deg); }
           100% { transform: translateY(105vh) rotate(360deg); }
         }
+        @media (max-width: 600px) {
+          .sudoku-card-container {
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 12px 10px !important;
+            min-height: 100% !important;
+            max-width: 100% !important;
+          }
+        }
       `}</style>
     </>
   );
@@ -1161,13 +1296,93 @@ export default function Sudoku({ onBack, onScoreSave, isIntermission, onIntermis
 
 // Styles objects
 const containerStyle = {
-  display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '500px',
-  background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(16px)',
-  borderRadius: '24px', padding: '24px', boxSizing: 'border-box',
-  margin: '0 auto', flex: 1, position: 'relative', overflowX: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  maxWidth: '460px',
+  minHeight: '100%',
+  flex: 1,
+  backdropFilter: 'blur(20px)',
+  borderRadius: '24px',
+  padding: '14px 16px',
+  boxSizing: 'border-box',
+  margin: '0 auto',
+  position: 'relative',
+  overflow: 'hidden',
   border: '1px solid rgba(139, 92, 246, 0.25)',
-  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
-  zIndex: 1
+  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(139, 92, 246, 0.1)',
+  zIndex: 1,
+  justifyContent: 'space-between'
+};
+
+const compactHeaderStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '8px',
+  width: '100%',
+  paddingBottom: '10px',
+  marginBottom: '10px',
+  borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
+  zIndex: 10
+};
+
+const backBtnStyle = {
+  padding: '6px 12px',
+  fontSize: '12px',
+  fontWeight: '800',
+  borderRadius: '10px',
+  background: 'rgba(255, 255, 255, 0.08)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  color: '#ffffff',
+  cursor: 'pointer',
+  whiteSpace: 'nowrap'
+};
+
+const centerHeaderStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px'
+};
+
+const titleStyle = {
+  fontFamily: "'Orbitron', 'Outfit', sans-serif",
+  fontSize: '1.2rem',
+  fontWeight: '800',
+  letterSpacing: '1px',
+  color: '#ffffff'
+};
+
+const timerPillStyle = {
+  fontSize: '0.82rem',
+  fontWeight: '800',
+  color: '#a78bfa',
+  background: 'rgba(139, 92, 246, 0.15)',
+  border: '1px solid rgba(139, 92, 246, 0.3)',
+  borderRadius: '10px',
+  padding: '2px 8px',
+  whiteSpace: 'nowrap'
+};
+
+const headerActionsStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px'
+};
+
+const iconBtnStyle = {
+  width: '32px',
+  height: '32px',
+  borderRadius: '8px',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  background: 'rgba(255, 255, 255, 0.08)',
+  color: '#ffffff',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  fontSize: '13px',
+  padding: 0
 };
 
 const menuStyle = {
@@ -1176,61 +1391,62 @@ const menuStyle = {
 };
 
 const menuTitleStyle = {
-  fontSize: '2rem', fontWeight: '800', color: '#ffffff', marginBottom: '8px', textAlign: 'center',
+  fontSize: '1.8rem', fontWeight: '800', color: '#ffffff', marginBottom: '6px', textAlign: 'center',
   fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.5px'
 };
 
 const menuSubtitleStyle = {
-  color: '#c084fc', fontSize: '0.95rem', textAlign: 'center', marginBottom: '32px', maxWidth: '340px'
+  color: '#c084fc', fontSize: '0.9rem', textAlign: 'center', marginBottom: '24px', maxWidth: '320px'
 };
 
 const btnGroupStyle = {
-  display: 'flex', flexDirection: 'column', gap: '14px', width: '100%', maxWidth: '280px'
+  display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '280px'
 };
 
 const menuBtnStyle = {
-  padding: '14px 28px', fontSize: '1.05rem', width: '100%', borderRadius: '16px'
+  padding: '12px 24px', fontSize: '1rem', width: '100%', borderRadius: '14px'
 };
 
 const helpCardStyle = {
-  marginTop: '36px', color: '#cbd5e1', textAlign: 'center', fontSize: '0.82rem',
-  lineHeight: '1.4', background: 'rgba(15, 23, 42, 0.4)', padding: '12px 18px', borderRadius: '12px',
+  marginTop: '24px', color: '#cbd5e1', textAlign: 'center', fontSize: '0.8rem',
+  lineHeight: '1.4', background: 'rgba(15, 23, 42, 0.4)', padding: '10px 16px', borderRadius: '12px',
   border: '1px solid rgba(139, 92, 246, 0.2)', maxWidth: '320px'
 };
 
 const gameplayContainerStyle = {
-  display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, width: '100%', zIndex: 2
-};
-
-const timeCounterStyle = {
-  fontSize: '20px', fontWeight: '800', color: '#a78bfa',
-  background: 'rgba(139, 92, 246, 0.1)', padding: '6px 18px', borderRadius: '20px',
-  border: '2px solid rgba(139, 92, 246, 0.3)'
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  flexGrow: 1,
+  width: '100%',
+  zIndex: 2
 };
 
 const statsRowStyle = {
   width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  marginBottom: '16px', padding: '0 4px', boxSizing: 'border-box'
+  marginBottom: '10px', padding: '0 4px', boxSizing: 'border-box', gap: '6px'
 };
 
 const statBoxStyle = {
-  fontSize: '0.88rem', fontWeight: '700', color: '#cbd5e1',
-  background: 'rgba(15, 23, 42, 0.4)', padding: '6px 12px', borderRadius: '10px',
-  border: '1px solid rgba(139, 92, 246, 0.2)'
+  fontSize: '0.82rem', fontWeight: '700', color: '#cbd5e1',
+  background: 'rgba(15, 23, 42, 0.5)', padding: '4px 10px', borderRadius: '10px',
+  border: '1px solid rgba(139, 92, 246, 0.2)', whiteSpace: 'nowrap'
 };
 
 const boardWrapperStyle = {
-  width: '100%', display: 'flex', justifyContent: 'center', marginBottom: '18px'
+  width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  flexGrow: 1,
+  margin: 'auto 0'
 };
 
-const gridControlsStyle = {
-  display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', width: '100%',
-  maxWidth: '380px', marginBottom: '5px'
-};
 
 const actionBtnStyle = {
-  padding: '6px 12px', fontSize: '0.88rem', fontWeight: '700', borderRadius: '12px',
-  minHeight: '44px', width: '100%', cursor: 'pointer'
+  padding: '6px 4px', fontSize: '0.78rem', fontWeight: '700', borderRadius: '10px',
+  minHeight: '38px', width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
 };
 
 const overlayStyle = {

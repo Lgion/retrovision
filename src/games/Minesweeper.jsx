@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
@@ -6,6 +6,64 @@ import GameHeader from '../components/GameHeader';
 import MinesweeperCollection from './MinesweeperCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+
+const getDifficultySettings = (diffId) => {
+  switch (diffId) {
+    case 'facile': return { size: 9, mines: 10 };
+    case 'moyen': return { size: 12, mines: 25 };
+    case 'difficile': return { size: 16, mines: 40 };
+    default: return { size: 12, mines: 25 };
+  }
+};
+
+const createEmptyGrid = (size) => {
+  const newGrid = [];
+  for (let r = 0; r < size; r++) {
+    const row = [];
+    for (let c = 0; c < size; c++) {
+      row.push({
+        r, c,
+        isMine: false,
+        isRevealed: false,
+        isFlagged: false,
+        neighborMines: 0
+      });
+    }
+    newGrid.push(row);
+  }
+  return newGrid;
+};
+
+const placeMines = (grid, firstR, firstC, size, minesCount) => {
+  let placed = 0;
+  while (placed < minesCount) {
+    const r = Math.floor(Math.random() * size);
+    const c = Math.floor(Math.random() * size);
+    // Don't place mine on first click or adjacent to it, to guarantee a good start
+    if (!grid[r][c].isMine && (Math.abs(r - firstR) > 1 || Math.abs(c - firstC) > 1)) {
+      grid[r][c].isMine = true;
+      placed++;
+    }
+  }
+
+  // Calculate neighbors
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (!grid[r][c].isMine) {
+        let count = 0;
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            if (r+i >= 0 && r+i < size && c+j >= 0 && c+j < size) {
+              if (grid[r+i][c+j].isMine) count++;
+            }
+          }
+        }
+        grid[r][c].neighborMines = count;
+      }
+    }
+  }
+  return grid;
+};
 
 export default function Minesweeper({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -21,74 +79,30 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
   const [minesLeft, setMinesLeft] = useState(0);
   const [moves, setMoves] = useState(0);
   const [showCollection, setShowCollection] = useState(false);
-  const [customizations, setCustomizations] = useState(() => {
-    const saved = getGameConfig('mines', 'customizations', { difficulty: 'moyen', theme: 'classic' });
-    if (isRandomThemeEnabled('mines')) {
-      return { ...saved, theme: pickRandomTheme('mines') };
-    }
-    return saved;
-  });
-
-  const getDifficultySettings = (diffId) => {
-    switch(diffId) {
-      case 'facile': return { size: 9, mines: 10 };
-      case 'moyen': return { size: 12, mines: 25 };
-      case 'difficile': return { size: 16, mines: 40 };
-      default: return { size: 12, mines: 25 };
-    }
-  };
+  const [customizations, setCustomizations] = useState(() => getGameConfig('mines', 'customizations', { difficulty: 'moyen', theme: 'classic' }));
+  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('mines'));
 
   useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (gameState === 'playing' && victoryPhase === 0 && !gameOver && moves > 0) {
-        e.preventDefault();
-        e.returnValue = "Voulez-vous vraiment quitter ?";
-        return e.returnValue;
+    const handleToggle = (e) => {
+      if (e.detail?.gameId === 'mines') {
+        setRandomThemeActive(e.detail.enabled);
       }
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [gameState, victoryPhase, gameOver, moves]);
+    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
+    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
+  }, []);
 
-  useEffect(() => {
-    if (isIntermission && gameState === 'menu') {
-      const diff = intermissionDifficulty || 'facile';
-      const settings = getDifficultySettings(diff);
-      setTimeout(() => startGame(settings.size, settings.mines), 100);
-    }
-  }, [isIntermission, gameState]);
-
-  const handleBackWithConfirm = () => {
-    if (gameState === 'playing' && victoryPhase === 0 && !gameOver && moves > 0) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
-        sound.stopBGM();
-        onBack();
-      }
-    } else {
-      sound.stopBGM();
-      onBack();
-    }
+  const handleChangeTheme = () => {
+    const nextTheme = pickRandomTheme('mines', customizations.theme);
+    setCustomizations(prev => {
+      const next = { ...prev, theme: nextTheme };
+      updateGameConfig('mines', 'customizations', next);
+      return next;
+    });
+    sound.playPowerup?.();
   };
 
-  const createEmptyGrid = (size) => {
-    const newGrid = [];
-    for (let r = 0; r < size; r++) {
-      const row = [];
-      for (let c = 0; c < size; c++) {
-        row.push({
-          r, c,
-          isMine: false,
-          isRevealed: false,
-          isFlagged: false,
-          neighborMines: 0
-        });
-      }
-      newGrid.push(row);
-    }
-    return newGrid;
-  };
-
-  const startGame = (size, mines) => {
+  const startGame = useCallback((size, mines) => {
     sound.playClick();
     if (isRandomThemeEnabled('mines')) {
       const nextTheme = pickRandomTheme('mines', customizations.theme);
@@ -111,37 +125,39 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
     setFlagMode(false);
     setGameState('playing');
     sound.startBGM();
-  };
+  }, [customizations.theme]);
 
-  const placeMines = (grid, firstR, firstC, size, minesCount) => {
-    let placed = 0;
-    while (placed < minesCount) {
-      const r = Math.floor(Math.random() * size);
-      const c = Math.floor(Math.random() * size);
-      // Don't place mine on first click or adjacent to it, to guarantee a good start
-      if (!grid[r][c].isMine && (Math.abs(r - firstR) > 1 || Math.abs(c - firstC) > 1)) {
-        grid[r][c].isMine = true;
-        placed++;
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (gameState === 'playing' && victoryPhase === 0 && !gameOver && moves > 0) {
+        e.preventDefault();
+        e.returnValue = "Voulez-vous vraiment quitter ?";
+        return e.returnValue;
       }
-    }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [gameState, victoryPhase, gameOver, moves]);
 
-    // Calculate neighbors
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        if (!grid[r][c].isMine) {
-          let count = 0;
-          for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-              if (r+i >= 0 && r+i < size && c+j >= 0 && c+j < size) {
-                if (grid[r+i][c+j].isMine) count++;
-              }
-            }
-          }
-          grid[r][c].neighborMines = count;
-        }
-      }
+  useEffect(() => {
+    if (isIntermission && gameState === 'menu') {
+      const diff = intermissionDifficulty || 'facile';
+      const settings = getDifficultySettings(diff);
+      const timer = setTimeout(() => startGame(settings.size, settings.mines), 100);
+      return () => clearTimeout(timer);
     }
-    return grid;
+  }, [isIntermission, gameState, intermissionDifficulty, startGame]);
+
+  const handleBackWithConfirm = () => {
+    if (gameState === 'playing' && victoryPhase === 0 && !gameOver && moves > 0) {
+      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+        sound.stopBGM();
+        onBack();
+      }
+    } else {
+      sound.stopBGM();
+      onBack();
+    }
   };
 
   const revealCell = (r, c) => {
@@ -327,15 +343,29 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
 
   const getThemeStyles = () => {
     switch (customizations.theme) {
-      case 'dark': return { bg: '#0f172a', cellRevealed: '#020617', cellHidden: '#1e293b', border: '#334155 #020617 #020617 #334155' };
-      case 'neon': return { bg: '#000000', cellRevealed: '#111111', cellHidden: '#222222', border: '#00f0ff #000000 #000000 #00f0ff' };
-      default: return { bg: '#0f172a', cellRevealed: '#020617', cellHidden: '#334155', border: '#475569 #0f172a #0f172a #475569' };
+      case 'dark': return { bg: '#0a0f1d', cellRevealed: '#020617', cellHidden: '#1e293b', border: '#334155 #020617 #020617 #334155' };
+      case 'neon': return { bg: '#050714', cellRevealed: '#111111', cellHidden: '#1a1033', border: '#00f0ff #000000 #000000 #00f0ff' };
+      case 'retro_green': return { bg: '#051408', cellRevealed: '#0a2e0a', cellHidden: '#0e3b18', border: '#10b981 #051408 #051408 #10b981' };
+      case 'glassmorphism': return { bg: '#0b132b', cellRevealed: 'rgba(255, 255, 255, 0.05)', cellHidden: 'rgba(255, 255, 255, 0.15)', border: 'rgba(255, 255, 255, 0.25) rgba(255, 255, 255, 0.08) rgba(255, 255, 255, 0.08) rgba(255, 255, 255, 0.25)' };
+      default: return { bg: 'rgba(15, 23, 42, 0.9)', cellRevealed: '#020617', cellHidden: '#334155', border: '#475569 #0f172a #0f172a #475569' };
     }
   };
   const theme = getThemeStyles();
 
   return (
     <>
+      <style>{`
+        @media (max-width: 600px) {
+          .minesweeper-container {
+            border-radius: 0 !important;
+            border: none !important;
+            padding: 12px 10px !important;
+            min-height: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
       {showIntro && !isIntermission && <GameIntro 
         gameName="DÉMINEUR" 
         icon="💣" 
@@ -343,7 +373,9 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
         particleType="mines" 
         onComplete={(isRandomTheme) => {
           setShowIntro(false);
-          if (isRandomTheme || isRandomThemeEnabled('mines')) {
+          const isRand = isRandomTheme || isRandomThemeEnabled('mines');
+          setRandomThemeActive(isRand);
+          if (isRand) {
             const nextTheme = pickRandomTheme('mines', customizations.theme);
             setCustomizations(prev => {
               const next = { ...prev, theme: nextTheme };
@@ -378,20 +410,13 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
         );
       })()}
       
-      <div style={{ ...containerStyle, background: theme.bg === '#000000' ? '#111' : 'rgba(15, 23, 42, 0.85)' }}>
+      <div className="game-container minesweeper-container" style={{ ...containerStyle, background: theme.bg }}>
       {!isIntermission && (
         <GameHeader
+          key={randomThemeActive ? 'rand' : 'fixed'}
           title="DÉMINEUR"
           gameId="mines"
-          onChangeTheme={() => {
-            const nextTheme = pickRandomTheme('mines', customizations.theme);
-            setCustomizations(prev => {
-              const next = { ...prev, theme: nextTheme };
-              updateGameConfig('mines', 'customizations', next);
-              return next;
-            });
-            sound.playPowerup?.();
-          }}
+          onChangeTheme={handleChangeTheme}
           onBack={handleBackWithConfirm}
           onRestart={gameState === 'playing' ? () => { const s = getDifficultySettings(customizations.difficulty); startGame(s.size, s.mines); } : undefined}
           onShop={() => setShowCollection(true)}
@@ -409,17 +434,18 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
                 onClick={() => { sound.playClick(); setFlagMode(!flagMode); }}
                 className={`retro-btn ${flagMode ? 'pulse-glow' : ''}`}
                 style={{
-                  padding: '8px 16px', fontSize: '14px', 
+                  padding: '6px 12px', fontSize: '13px', 
                   backgroundColor: flagMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
                   border: `1px solid ${flagMode ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
                   color: flagMode ? '#ef4444' : '#ffffff',
                   borderRadius: '20px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap'
                 }}
               >
-                {flagMode ? '🚩 Mode Drapeau' : '⛏️ Mode Creuser'}
+                {flagMode ? '🚩 Drapeau' : '⛏️ Creuser'}
               </button>
             ) : null
           }
@@ -466,7 +492,7 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
               border: '4px solid #1e293b',
               borderRadius: '8px',
               width: '100%',
-              maxWidth: '400px' // cap width so cells don't get too huge
+              maxWidth: 'min(380px, 48vh)'
             }}>
               {grid.map((row, r) => row.map((cell, c) => (
                 <div 
@@ -534,9 +560,9 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none' }}>
               {Array.from({ length: 40 }, (_, i) => (
                 <div key={i} style={{
-                  position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
-                  width: '12px', height: '12px', background: ['#39FF14', '#00F0FF', '#FFD700'][i%3],
-                  borderRadius: '50%', animation: `confettiFall ${2 + Math.random()*3}s linear ${Math.random()*2}s infinite`,
+                  position: 'absolute', left: `${(i * 37) % 100}%`, top: '-20px',
+                  width: '12px', height: '12px', background: ['#39FF14', '#00F0FF', '#FFD700'][i % 3],
+                  borderRadius: '50%', animation: `confettiFall ${2 + (i % 4) * 0.75}s linear ${(i * 0.25) % 2}s infinite`,
                   opacity: 0.8
                 }} />
               ))}
@@ -580,31 +606,16 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
 // Inline Styles
 const containerStyle = {
   display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '500px',
+  minHeight: '100%',
+  justifyContent: 'space-between',
   background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(10px)',
   borderRadius: '16px', padding: '20px', boxSizing: 'border-box',
   margin: '0 auto', flex: 1, position: 'relative', overflowX: 'hidden'
 };
 
-const headerStyle = {
-  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '15px'
-};
+const menuStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, margin: 'auto 0' };
 
-const backBtnStyle = { padding: '8px 12px', fontSize: '14px' };
-
-const titleStyle = {
-  fontFamily: 'Orbitron, sans-serif', fontSize: '22px', color: '#ef4444',
-  textShadow: '0 0 10px rgba(239, 68, 68, 0.5)', letterSpacing: '2px', fontWeight: 'bold'
-};
-
-const menuStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1 };
-
-const gameplayContainerStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, width: '100%' };
-
-const statusRowStyle = {
-  width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  marginBottom: '20px', padding: '0 10px', boxSizing: 'border-box'
-};
+const gameplayContainerStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100%', margin: 'auto 0' };
 
 const mineCounterStyle = {
   fontSize: '22px', fontWeight: 'bold', color: '#ef4444', 
@@ -613,5 +624,5 @@ const mineCounterStyle = {
 
 const boardWrapperStyle = {
   width: '100%', display: 'flex', justifyContent: 'center',
-  background: 'rgba(0,0,0,0.2)', borderRadius: '8px'
+  background: 'rgba(0,0,0,0.2)', borderRadius: '8px', margin: 'auto 0'
 };

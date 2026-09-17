@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import ArrowPuzzleCollection from './ArrowPuzzleCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 
 const DIRS = {
   'up': { dr: -1, dc: 0, symbol: '▲', color: '#ef4444' }, // Red
@@ -83,10 +84,225 @@ const isValidCell = (r, c, size) => {
   return true;
 };
 
+const getDifficultySettings = (diffId, gameMode) => {
+  switch (diffId) {
+    case 'facile': return { size: 16, arrows: gameMode === 'wire' ? 75 : 85 };
+    case 'moyen': return { size: 24, arrows: gameMode === 'wire' ? 150 : 150 };
+    case 'difficile': return { size: 32, arrows: gameMode === 'wire' ? 300 : 250 };
+    default: return { size: 24, arrows: gameMode === 'wire' ? 150 : 150 };
+  }
+};
+
+// 1. Original scattered board generator
+const generateBoard = (size, numArrows) => {
+  let newGrid = Array(size).fill(null).map(() => Array(size).fill(null));
+  let placed = 0;
+  let attempts = 0;
+  const dirKeys = Object.keys(DIRS);
+
+  while (placed < numArrows && attempts < 2000) {
+    attempts++;
+    const r = Math.floor(Math.random() * size);
+    const c = Math.floor(Math.random() * size);
+    if (newGrid[r][c] !== null) continue;
+
+    const dirName = dirKeys[Math.floor(Math.random() * dirKeys.length)];
+    const dir = DIRS[dirName];
+
+    let pathClear = true;
+    let currR = r + dir.dr;
+    let currC = c + dir.dc;
+    while (currR >= 0 && currR < size && currC >= 0 && currC < size) {
+      if (newGrid[currR][currC] !== null) {
+        pathClear = false;
+        break;
+      }
+      currR += dir.dr;
+      currC += dir.dc;
+    }
+
+    if (pathClear) {
+      newGrid[r][c] = {
+        id: `arrow_${placed}`,
+        dir: dirName,
+        symbol: dir.symbol,
+        color: dir.color,
+        r, c
+      };
+      placed++;
+    }
+  }
+  return { grid: newGrid, placed };
+};
+
+// 2. Dense board generator (100% full solvable grid of single blocks)
+const generateDenseBoard = (size) => {
+  let newGrid = Array(size).fill(null).map(() => Array(size).fill(null));
+  let U = new Set();
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      U.add(`${r},${c}`);
+    }
+  }
+
+  const dirKeys = Object.keys(DIRS);
+  const assignments = {};
+
+  while (U.size > 0) {
+    const candidates = [];
+    for (let coordStr of U) {
+      const [r, c] = coordStr.split(',').map(Number);
+      for (let dirName of dirKeys) {
+        const dir = DIRS[dirName];
+        let currR = r + dir.dr;
+        let currC = c + dir.dc;
+        let clear = true;
+        while (currR >= 0 && currR < size && currC >= 0 && currC < size) {
+          if (U.has(`${currR},${currC}`)) {
+            clear = false;
+            break;
+          }
+          currR += dir.dr;
+          currC += dir.dc;
+        }
+        if (clear) {
+          candidates.push({ r, c, dirName, coordStr });
+        }
+      }
+    }
+
+    if (candidates.length === 0) break;
+
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    assignments[chosen.coordStr] = chosen.dirName;
+    U.delete(chosen.coordStr);
+  }
+
+  let placed = 0;
+  for (let coordStr in assignments) {
+    const [r, c] = coordStr.split(',').map(Number);
+    const dirName = assignments[coordStr];
+    const dir = DIRS[dirName];
+    newGrid[r][c] = {
+      id: `arrow_${r}_${c}`,
+      dir: dirName,
+      symbol: dir.symbol,
+      color: dir.color,
+      r, c
+    };
+    placed++;
+  }
+
+  return { grid: newGrid, placed };
+};
+
+// 3. Reverse Wire Board Generator
+const generateWireBoard = (size, numWiresTarget) => {
+  let newGrid = Array(size).fill(null).map(() => Array(size).fill(null));
+  let newWires = [];
+  const dirKeys = Object.keys(DIRS);
+
+  let attempts = 0;
+  while (newWires.length < numWiresTarget && attempts < 4000) {
+    attempts++;
+    const r = Math.floor(Math.random() * size);
+    const c = Math.floor(Math.random() * size);
+
+    if (!isValidCell(r, c, size)) continue;
+    if (newGrid[r][c] !== null) continue;
+
+    const dirName = dirKeys[Math.floor(Math.random() * dirKeys.length)];
+    const dir = DIRS[dirName];
+
+    let pathClear = true;
+    let currR = r + dir.dr;
+    let currC = c + dir.dc;
+    while (currR >= 0 && currR < size && currC >= 0 && currC < size) {
+      if (newGrid[currR][currC] !== null) {
+        pathClear = false;
+        break;
+      }
+      currR += dir.dr;
+      currC += dir.dc;
+    }
+    if (!pathClear) continue;
+
+    const tailR = r - dir.dr;
+    const tailC = c - dir.dc;
+    if (tailR < 0 || tailR >= size || tailC < 0 || tailC >= size) continue;
+    if (!isValidCell(tailR, tailC, size)) continue;
+    if (newGrid[tailR][tailC] !== null) continue;
+
+    let currentWire = [{ r, c }, { r: tailR, c: tailC }];
+    let currentCells = new Set([`${r},${c}`, `${tailR},${tailC}`]);
+    const maxLen = Math.min(35, size * 1.5);
+    const targetLength = 5 + Math.floor(Math.random() * (maxLen - 4));
+
+    let growAttempts = 0;
+    while (currentWire.length < targetLength && growAttempts < 80) {
+      growAttempts++;
+      const tail = currentWire[currentWire.length - 1];
+
+      const neighbors = [
+        { dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 }
+      ].sort(() => Math.random() - 0.5);
+
+      let grown = false;
+      for (let n of neighbors) {
+        const nr = tail.r + n.dr;
+        const nc = tail.c + n.dc;
+
+        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+          if (isValidCell(nr, nc, size) && newGrid[nr][nc] === null && !currentCells.has(`${nr},${nc}`)) {
+            let onExitRay = false;
+            let rayR = r + dir.dr;
+            let rayC = c + dir.dc;
+            while (rayR >= 0 && rayR < size && rayC >= 0 && rayC < size) {
+              if (nr === rayR && nc === rayC) {
+                onExitRay = true;
+                break;
+              }
+              rayR += dir.dr;
+              rayC += dir.dc;
+            }
+
+            if (!onExitRay) {
+              currentWire.push({ r: nr, c: nc });
+              currentCells.add(`${nr},${nc}`);
+              grown = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!grown) break;
+    }
+
+    if (currentWire.length < 3) continue;
+
+    const wireId = `wire_${newWires.length}`;
+    const color = WIRE_COLORS[newWires.length % WIRE_COLORS.length];
+
+    for (let cell of currentWire) {
+      newGrid[cell.r][cell.c] = wireId;
+    }
+
+    newWires.push({
+      id: wireId,
+      path: currentWire,
+      dir: dirName,
+      color: color,
+      flying: false
+    });
+  }
+
+  return { grid: newGrid, placed: newWires.length, wires: newWires };
+};
+
 export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
-  const [mode, setMode] = useState(() => getGameConfig('arrows', 'mode', 'dense')); // 'scattered' | 'dense' | 'wire'
+  const [mode, setMode] = useState(() => (isIntermission ? 'wire' : getGameConfig('arrows', 'mode', 'dense'))); // 'scattered' | 'dense' | 'wire'
   const [boardSize, setBoardSize] = useState(6);
   const [grid, setGrid] = useState([]);
   const [moves, setMoves] = useState(0);
@@ -98,268 +314,46 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
   const [hints, setHints] = useState(3);
   const [showCollection, setShowCollection] = useState(false);
   const [customizations, setCustomizations] = useState(() => getGameConfig('arrows', 'customizations', { difficulty: 'moyen', theme: 'classic' }));
-
-  const getDifficultySettings = (diffId, gameMode) => {
-    switch(diffId) {
-      case 'facile': return { size: 16, arrows: gameMode === 'wire' ? 75 : 85 };
-      case 'moyen': return { size: 24, arrows: gameMode === 'wire' ? 150 : 150 };
-      case 'difficile': return { size: 32, arrows: gameMode === 'wire' ? 300 : 250 };
-      default: return { size: 24, arrows: gameMode === 'wire' ? 150 : 150 };
-    }
-  };
+  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('arrows'));
+  const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 400));
 
   useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (gameState === 'playing' && victoryPhase === 0 && moves > 0 && arrowsLeft > 0) {
-        e.preventDefault();
-        e.returnValue = "Voulez-vous vraiment quitter ?";
-        return e.returnValue;
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleToggle = (e) => {
+      if (e.detail?.gameId === 'arrows') {
+        setRandomThemeActive(e.detail.enabled);
       }
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [gameState, victoryPhase, moves, arrowsLeft]);
+    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
+    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
+  }, []);
 
-  useEffect(() => {
-    if (isIntermission && gameState === 'menu') {
-      const diff = intermissionDifficulty || 'facile';
-      const activeMode = 'wire';
-      setMode(activeMode);
-      const settings = getDifficultySettings(diff, activeMode);
-      startGame(settings.size, settings.arrows, activeMode);
-    }
-  }, [isIntermission, gameState]);
-
-  const handleBackWithConfirm = () => {
-    if (gameState === 'playing' && victoryPhase === 0 && moves > 0 && arrowsLeft > 0) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
-        sound.stopBGM();
-        onBack();
-      }
-    } else {
-      sound.stopBGM();
-      onBack();
-    }
+  const handleChangeTheme = () => {
+    const nextTheme = pickRandomTheme('arrows', customizations.theme);
+    setCustomizations(prev => {
+      const next = { ...prev, theme: nextTheme };
+      updateGameConfig('arrows', 'customizations', next);
+      return next;
+    });
+    sound.playPowerup?.();
   };
 
-  // 1. Original scattered board generator
-  const generateBoard = (size, numArrows) => {
-    let newGrid = Array(size).fill(null).map(() => Array(size).fill(null));
-    let placed = 0;
-    let attempts = 0;
-    const dirKeys = Object.keys(DIRS);
-
-    while (placed < numArrows && attempts < 2000) {
-      attempts++;
-      const r = Math.floor(Math.random() * size);
-      const c = Math.floor(Math.random() * size);
-      if (newGrid[r][c] !== null) continue;
-
-      const dirName = dirKeys[Math.floor(Math.random() * dirKeys.length)];
-      const dir = DIRS[dirName];
-
-      let pathClear = true;
-      let currR = r + dir.dr;
-      let currC = c + dir.dc;
-      while (currR >= 0 && currR < size && currC >= 0 && currC < size) {
-        if (newGrid[currR][currC] !== null) {
-          pathClear = false;
-          break;
-        }
-        currR += dir.dr;
-        currC += dir.dc;
-      }
-
-      if (pathClear) {
-        newGrid[r][c] = {
-          id: `arrow_${placed}`,
-          dir: dirName,
-          symbol: dir.symbol,
-          color: dir.color,
-          r, c
-        };
-        placed++;
-      }
-    }
-    return { grid: newGrid, placed };
-  };
-
-  // 2. Dense board generator (100% full solvable grid of single blocks)
-  const generateDenseBoard = (size) => {
-    let newGrid = Array(size).fill(null).map(() => Array(size).fill(null));
-    let U = new Set();
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        U.add(`${r},${c}`);
-      }
-    }
-
-    const dirKeys = Object.keys(DIRS);
-    const assignments = {};
-
-    while (U.size > 0) {
-      let candidates = [];
-      for (let cell of U) {
-        let [r, c] = cell.split(',').map(Number);
-        let validDirs = [];
-        for (let dirName of dirKeys) {
-          const dir = DIRS[dirName];
-          let currR = r + dir.dr;
-          let currC = c + dir.dc;
-          let pathClear = true;
-          while (currR >= 0 && currR < size && currC >= 0 && currC < size) {
-            if (U.has(`${currR},${currC}`)) {
-              pathClear = false;
-              break;
-            }
-            currR += dir.dr;
-            currC += dir.dc;
-          }
-          if (pathClear) {
-            validDirs.push(dirName);
-          }
-        }
-        if (validDirs.length > 0) {
-          candidates.push({ r, c, validDirs });
-        }
-      }
-
-      if (candidates.length === 0) break; // Fallback
-
-      const cand = candidates[Math.floor(Math.random() * candidates.length)];
-      const chosenDir = cand.validDirs[Math.floor(Math.random() * cand.validDirs.length)];
-      assignments[`${cand.r},${cand.c}`] = chosenDir;
-      U.delete(`${cand.r},${cand.c}`);
-    }
-
-    let placed = 0;
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        if (assignments[`${r},${c}`]) {
-          const dirName = assignments[`${r},${c}`];
-          const dir = DIRS[dirName];
-          newGrid[r][c] = {
-            id: `arrow_${placed++}`,
-            dir: dirName,
-            symbol: dir.symbol,
-            color: dir.color,
-            r, c
-          };
-        }
-      }
-    }
-    return { grid: newGrid, placed };
-  };
-
-  const generateWireBoard = (size, numWires) => {
-    let newGrid = Array(size).fill(null).map(() => Array(size).fill(null));
-    let newWires = [];
-    const dirKeys = Object.keys(DIRS);
-    let attempts = 0;
-    const maxAttempts = size > 20 ? 25000 : 10000;
-
-    while (newWires.length < numWires && attempts < maxAttempts) {
-      attempts++;
-      const r = Math.floor(Math.random() * size);
-      const c = Math.floor(Math.random() * size);
-      if (!isValidCell(r, c, size)) continue;
-      if (newGrid[r][c] !== null) continue;
-
-      const dirName = dirKeys[Math.floor(Math.random() * dirKeys.length)];
-      const dir = DIRS[dirName];
-
-      // Check if exit ray is clear of placed wires
-      const isRayClear = (startR, startC) => {
-        let currR = startR + dir.dr;
-        let currC = startC + dir.dc;
-        while (currR >= 0 && currR < size && currC >= 0 && currC < size) {
-          if (newGrid[currR][currC] !== null) return false;
-          currR += dir.dr;
-          currC += dir.dc;
-        }
-        return true;
-      };
-
-      if (!isRayClear(r, c)) continue;
-
-      // Start tail segment in opposite direction of arrowhead
-      const tailR = r - dir.dr;
-      const tailC = c - dir.dc;
-      if (tailR < 0 || tailR >= size || tailC < 0 || tailC >= size) continue;
-      if (!isValidCell(tailR, tailC, size)) continue;
-      if (newGrid[tailR][tailC] !== null) continue;
-
-      let currentWire = [{ r, c }, { r: tailR, c: tailC }];
-      let currentCells = new Set([`${r},${c}`, `${tailR},${tailC}`]);
-      // Longer wires to be compactly interlaced like a real labyrinth
-      const maxLen = Math.min(35, size * 1.5);
-      const targetLength = 5 + Math.floor(Math.random() * (maxLen - 4));
-
-      let growAttempts = 0;
-      while (currentWire.length < targetLength && growAttempts < 80) {
-        growAttempts++;
-        const tail = currentWire[currentWire.length - 1];
-
-        const neighbors = [
-          { dr: -1, dc: 0 }, { dr: 1, dc: 0 }, { dr: 0, dc: -1 }, { dr: 0, dc: 1 }
-        ].sort(() => Math.random() - 0.5);
-
-        let grown = false;
-        for (let n of neighbors) {
-          const nr = tail.r + n.dr;
-          const nc = tail.c + n.dc;
-
-          if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-            if (isValidCell(nr, nc, size) && newGrid[nr][nc] === null && !currentCells.has(`${nr},${nc}`)) {
-              // Ensure we don't cross the head's exit ray
-              let onExitRay = false;
-              let currR = r + dir.dr;
-              let currC = c + dir.dc;
-              while (currR >= 0 && currR < size && currC >= 0 && currC < size) {
-                if (nr === currR && nc === currC) {
-                  onExitRay = true;
-                  break;
-                }
-                currR += dir.dr;
-                currC += dir.dc;
-              }
-
-              if (!onExitRay) {
-                currentWire.push({ r: nr, c: nc });
-                currentCells.add(`${nr},${nc}`);
-                grown = true;
-                break;
-              }
-            }
-          }
-        }
-        if (!grown) break;
-      }
-
-      if (currentWire.length < 3) continue;
-
-      const wireId = `wire_${newWires.length}`;
-      const color = WIRE_COLORS[newWires.length % WIRE_COLORS.length];
-
-      for (let cell of currentWire) {
-        newGrid[cell.r][cell.c] = wireId;
-      }
-
-      newWires.push({
-        id: wireId,
-        path: currentWire,
-        dir: dirName,
-        color: color,
-        flying: false
-      });
-    }
-
-    return { grid: newGrid, placed: newWires.length, wires: newWires };
-  };
-
-  const startGame = (size, arrows, overrideMode = null) => {
+  const startGame = useCallback((size, arrows, overrideMode = null) => {
     const activeMode = overrideMode || mode;
     sound.playClick();
+    if (isRandomThemeEnabled('arrows')) {
+      const nextTheme = pickRandomTheme('arrows', customizations.theme);
+      setCustomizations(prev => {
+        const next = { ...prev, theme: nextTheme };
+        updateGameConfig('arrows', 'customizations', next);
+        return next;
+      });
+    }
     setBoardSize(size);
     if (activeMode === 'wire') {
       const { grid: newGrid, placed, wires: newWires } = generateWireBoard(size, arrows);
@@ -379,6 +373,39 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
     setHints(3);
     setGameState('playing');
     sound.startBGM();
+  }, [mode, customizations.theme]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (gameState === 'playing' && victoryPhase === 0 && moves > 0 && arrowsLeft > 0) {
+        e.preventDefault();
+        e.returnValue = "Voulez-vous vraiment quitter ?";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [gameState, victoryPhase, moves, arrowsLeft]);
+
+  useEffect(() => {
+    if (isIntermission && gameState === 'menu') {
+      const diff = intermissionDifficulty || 'facile';
+      const settings = getDifficultySettings(diff, 'wire');
+      const timer = setTimeout(() => startGame(settings.size, settings.arrows, 'wire'), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isIntermission, gameState, intermissionDifficulty, startGame]);
+
+  const handleBackWithConfirm = () => {
+    if (gameState === 'playing' && victoryPhase === 0 && moves > 0 && arrowsLeft > 0) {
+      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+        sound.stopBGM();
+        onBack();
+      }
+    } else {
+      sound.stopBGM();
+      onBack();
+    }
   };
 
   // 1. Path checking for standard modes (scattered / dense)
@@ -572,7 +599,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
     }
   };
 
-  const CELL_SIZE = Math.min(50, Math.floor(440 / boardSize));
+  const CELL_SIZE = Math.max(10, Math.min(50, Math.floor(Math.min(windowWidth - 24, 380) / boardSize)));
   const strokeWidth = mode === 'wire' ? Math.max(2, Math.round(CELL_SIZE * 0.15)) : CELL_SIZE - 4;
   const arrowHeadSize = Math.max(6, Math.round(CELL_SIZE * 0.4));
   const fontSize = Math.max(12, Math.round(CELL_SIZE * 0.48));
@@ -623,52 +650,76 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
   }
 
   const getThemeStyles = () => {
-    switch(customizations.theme) {
-      case 'neon': return { bg: '#2e1065', wireBg: '#1e1b4b', container: 'rgba(46, 16, 101, 0.85)' };
-      case 'forest': return { bg: '#064e3b', wireBg: '#022c22', container: 'rgba(6, 78, 59, 0.85)' };
-      default: return { bg: '#1e293b', wireBg: '#f8fafc', container: 'rgba(15, 23, 42, 0.85)' };
+    switch (customizations.theme) {
+      case 'neon': return { bg: '#130924', wireBg: '#1e1b4b', container: 'rgba(26, 16, 51, 0.9)' };
+      case 'nature':
+      case 'forest': return { bg: '#042f24', wireBg: '#022c22', container: 'rgba(6, 60, 46, 0.9)' };
+      case 'cyberpunk': return { bg: '#080d1a', wireBg: '#0f172a', container: 'rgba(10, 15, 30, 0.9)' };
+      default: return { bg: '#0f172a', wireBg: '#1e293b', container: 'rgba(15, 23, 42, 0.9)' };
     }
   };
   const theme = getThemeStyles();
 
   return (
     <>
+      <style>{`
+        @media (max-width: 600px) {
+          .arrow-puzzle-container {
+            border-radius: 0 !important;
+            border: none !important;
+            padding: 12px 10px !important;
+            min-height: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
       {showIntro && !isIntermission && <GameIntro
         gameName="ARROW PUZZLE"
         icon="⬆️"
         colors={['#3b82f6', '#10b981', '#ef4444']}
         particleType="arrows"
-        onComplete={() => setShowIntro(false)}
+        onComplete={(isRandomTheme) => {
+          setShowIntro(false);
+          const isRand = isRandomTheme || isRandomThemeEnabled('arrows');
+          setRandomThemeActive(isRand);
+          if (isRand) {
+            const nextTheme = pickRandomTheme('arrows', customizations.theme);
+            setCustomizations(prev => {
+              const next = { ...prev, theme: nextTheme };
+              updateGameConfig('arrows', 'customizations', next);
+              return next;
+            });
+          }
+        }}
       />}
 
-      {isIntermission && gameState === 'playing' && (() => {
-        const diff = intermissionDifficulty || 'facile';
-        const settings = getDifficultySettings(diff, 'wire');
-        const total = settings.arrows || 1;
-        const current = arrowsLeft;
-        const apProgress = total > 0 ? Math.max(0, (total - current) / total) : 0;
-        return (
-          <IntermissionHeader
-            instructionText="Videz la grille pour retourner au jeu principal."
-            onRestart={() => startGame(settings.size, settings.arrows, 'wire')}
-            onOtherGame={onIntermissionRequest}
-            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
-            replaySame={replaySameIntermission}
-            onToggleReplaySame={onToggleReplaySameIntermission}
-            progress={apProgress}
-          />
-        );
-      })()}
+      <div className="game-container arrow-puzzle-container" style={{ ...containerStyle, background: theme.container }}>
+        {isIntermission && gameState === 'playing' && (() => {
+          const diff = intermissionDifficulty || 'facile';
+          const settings = getDifficultySettings(diff, 'wire');
+          const total = settings.arrows || 1;
+          const current = arrowsLeft;
+          const apProgress = total > 0 ? Math.max(0, (total - current) / total) : 0;
+          return (
+            <IntermissionHeader
+              instructionText="Videz la grille pour retourner au jeu principal."
+              onRestart={() => startGame(settings.size, settings.arrows, 'wire')}
+              onOtherGame={onIntermissionRequest}
+              onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+              replaySame={replaySameIntermission}
+              onToggleReplaySame={onToggleReplaySameIntermission}
+              progress={apProgress}
+            />
+          );
+        })()}
 
-      <div style={{
-        display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '800px',
-        background: theme.container, backdropFilter: 'blur(10px)',
-        borderRadius: '16px', padding: '20px', boxSizing: 'border-box',
-        margin: '0 auto', flex: 1, position: 'relative', overflowX: 'hidden'
-      }}>
         {!isIntermission && (
           <GameHeader
+            key={randomThemeActive ? 'rand' : 'fixed'}
             title="ARROW PUZZLE"
+            gameId="arrows"
+            onChangeTheme={handleChangeTheme}
             onBack={handleBackWithConfirm}
             onRestart={gameState === 'playing' ? () => { const s = getDifficultySettings(customizations.difficulty, mode); startGame(s.size, s.arrows); } : undefined}
             onHint={gameState === 'playing' ? useHint : undefined}
@@ -820,7 +871,7 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
                   })}
                 </svg>
               ) : (
-                <React.Fragment>
+                <>
                   {/* Static Arrows for scattered / dense modes */}
                   {grid.map((row, r) => row.map((arrow, c) => {
                     if (!arrow) return null;
@@ -833,57 +884,54 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
                           position: 'absolute', left: c * CELL_SIZE, top: r * CELL_SIZE,
                           width: CELL_SIZE, height: CELL_SIZE, zIndex: 10,
                           display: 'flex', justifyContent: 'center', alignItems: 'center',
-                          cursor: 'pointer', transition: 'transform 0.1s'
+                          cursor: 'pointer',
+                          transform: 'scale(1)',
+                          transition: 'transform 0.15s ease'
                         }}
                       >
-                        <div style={{
-                          width: '80%', height: '80%', backgroundColor: arrow.color,
-                          borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                          color: 'white', fontSize: `${fontSize}px`, fontWeight: 'bold',
-                          boxShadow: '0 4px 6px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.3)',
-                          border: '1px solid rgba(255,255,255,0.4)'
+                        <span style={{
+                          fontSize: `${fontSize}px`,
+                          color: arrow.color,
+                          filter: `drop-shadow(0 0 5px ${arrow.color}88)`,
+                          pointerEvents: 'none'
                         }}>
                           {arrow.symbol}
-                        </div>
+                        </span>
                       </div>
                     );
                   }))}
-                </React.Fragment>
-              )}
 
-              {/* Flying Arrows */}
-              {mode !== 'wire' && flyingArrows.map(arrow => {
-                const dx = DIRS[arrow.dir].dc * 400; // Fly far away
-                const dy = DIRS[arrow.dir].dr * 400;
-                const isHoriz = DIRS[arrow.dir].dc !== 0;
-                return (
-                  <div
-                    key={arrow.flyingId}
-                    style={{
-                      position: 'absolute', left: arrow.c * CELL_SIZE, top: arrow.r * CELL_SIZE,
-                      width: CELL_SIZE, height: CELL_SIZE, zIndex: 20,
-                      display: 'flex', justifyContent: 'center', alignItems: 'center',
-                      pointerEvents: 'none',
-                      animation: `flyAwaySquash 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards`,
-                      '--dx': `${dx}px`, '--dy': `${dy}px`,
-                      '--sx': isHoriz ? 1.8 : 0.4, // Stretch in flight direction
-                      '--sy': isHoriz ? 0.4 : 1.8,
-                      '--asx': isHoriz ? 0.7 : 1.3, // Squash for anticipation
-                      '--asy': isHoriz ? 1.3 : 0.7,
-                    }}
-                  >
-                    <div style={{
-                      width: '80%', height: '80%', backgroundColor: arrow.color,
-                      borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                      color: 'white', fontSize: `${fontSize}px`, fontWeight: 'bold',
-                      boxShadow: '0 10px 15px rgba(0,0,0,0.5)',
-                      opacity: 0.8
-                    }}>
-                      {arrow.symbol}
-                    </div>
-                  </div>
-                );
-              })}
+                  {/* Flying Arrows Animations for standard mode */}
+                  {flyingArrows.map(arrow => {
+                    const dir = DIRS[arrow.dir];
+                    const travelDist = boardSize * CELL_SIZE * 1.5;
+                    const destX = arrow.c * CELL_SIZE + dir.dc * travelDist;
+                    const destY = arrow.r * CELL_SIZE + dir.dr * travelDist;
+                    return (
+                      <div
+                        key={arrow.id}
+                        style={{
+                          position: 'absolute', left: arrow.c * CELL_SIZE, top: arrow.r * CELL_SIZE,
+                          width: CELL_SIZE, height: CELL_SIZE, zIndex: 20,
+                          display: 'flex', justifyContent: 'center', alignItems: 'center',
+                          pointerEvents: 'none',
+                          '--dest-x': `${destX - arrow.c * CELL_SIZE}px`,
+                          '--dest-y': `${destY - arrow.r * CELL_SIZE}px`,
+                          animation: 'arrowFlyOut 0.4s cubic-bezier(0.5, 0, 1, 1) forwards'
+                        }}
+                      >
+                        <span style={{
+                          fontSize: `${fontSize}px`,
+                          color: arrow.color,
+                          filter: `drop-shadow(0 0 10px ${arrow.color})`
+                        }}>
+                          {arrow.symbol}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </div>
 
           </div>
@@ -892,21 +940,21 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
         {/* Immediate Confetti Explosion */}
         {victoryPhase !== 0 && victoryPhase !== -2 && (
           <div style={{ position: 'absolute', top: '50%', left: '50%', width: 0, height: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 1000 }}>
-            {Array.from({ length: 100 }, (_, i) => {
-              const angle = Math.random() * Math.PI * 2;
-              const velocity = 150 + Math.random() * 450; // spread
+            {Array.from({ length: 60 }, (_, i) => {
+              const angle = (i * 137.5 * Math.PI) / 180;
+              const velocity = 150 + ((i * 29) % 350);
               const tx = Math.cos(angle) * velocity;
-              const ty = Math.sin(angle) * velocity + 300; // gravity effect
+              const ty = Math.sin(angle) * velocity + 200;
               return (
                 <div key={i} style={{
                   position: 'absolute',
                   width: '10px', height: '10px',
                   background: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#a855f7'][i % 6],
-                  borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-                  '--tx': `${tx}px`, '--ty': `${ty}px`, '--rot': `${Math.random() * 720}deg`,
-                  animation: `confettiExplode ${1 + Math.random() * 1.5}s cubic-bezier(0.25, 1, 0.5, 1) forwards`
+                  borderRadius: i % 2 === 0 ? '50%' : '2px',
+                  '--tx': `${tx}px`, '--ty': `${ty}px`, '--rot': `${(i * 73) % 720}deg`,
+                  animation: `confettiExplode ${1 + (i % 4) * 0.4}s cubic-bezier(0.25, 1, 0.5, 1) forwards`
                 }} />
-              )
+              );
             })}
           </div>
         )}
@@ -1052,28 +1100,12 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
 // Inline Styles
 const containerStyle = {
   display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '500px',
-  background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(10px)',
+  minHeight: '100%',
+  justifyContent: 'space-between',
   borderRadius: '16px', padding: '20px', boxSizing: 'border-box',
   margin: '0 auto', flex: 1, position: 'relative', overflowX: 'hidden'
 };
 
-const headerStyle = {
-  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '15px'
-};
+const menuStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, margin: 'auto 0' };
 
-const backBtnStyle = { padding: '8px 12px', fontSize: '14px' };
-
-const titleStyle = {
-  fontFamily: 'Orbitron, sans-serif', fontSize: '22px', color: '#3b82f6',
-  textShadow: '0 0 10px rgba(59, 130, 246, 0.5)', letterSpacing: '2px', fontWeight: 'bold'
-};
-
-const menuStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1 };
-
-const gameplayContainerStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, width: '100%', overflowX: 'auto', paddingBottom: '20px' };
-
-const statusRowStyle = {
-  width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  marginBottom: '20px', padding: '0 10px', boxSizing: 'border-box'
-};
+const gameplayContainerStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100%', margin: 'auto 0' };

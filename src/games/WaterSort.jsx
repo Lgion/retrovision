@@ -455,7 +455,7 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
         <div style={{
           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
           background: 'rgba(255, 255, 255, 0.1)',
-          zIndex: 0
+          zIndex: -1
         }} />
 
         {/* Header */}

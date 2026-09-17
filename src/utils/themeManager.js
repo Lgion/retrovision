@@ -58,10 +58,9 @@ export const GAME_THEME_DETAILS = {
     { id: 'cyberpunk', name: 'Cyber Matrix', icon: '🔮', desc: 'High-tech cyan & magenta' }
   ],
   '2048': [
-    { id: 'classic', name: 'Bois Beige', icon: '🪵', desc: 'Teintes douces de bois clair' },
-    { id: 'neon', name: 'Synthwave', icon: '⚡', desc: 'Électrique sur fond sombre' },
-    { id: 'cyberpunk', name: 'Cyber Matrix', icon: '🤖', desc: 'Jaune vif & noir industriel' },
-    { id: 'pastel', name: 'Pastel Doux', icon: '🌸', desc: 'Palette macaron douce' }
+    { id: 'neon', name: 'Néon Original', icon: '🌌', desc: 'Ambiance cyberpunk néon cyan' },
+    { id: 'dark', name: 'Sombre Épuré', icon: '🌑', desc: 'Noir minimaliste & contraste net' },
+    { id: 'light', name: 'Clair Lumineux', icon: '☀️', desc: 'Fond clair doux & épuré' }
   ],
   freecell: [
     { id: 'classic', name: 'Tapis Vert', icon: '🃏', desc: 'Vert feutre casino' },
@@ -80,9 +79,9 @@ export const GAME_THEME_DETAILS = {
     { id: 'sunset', name: 'Crépuscule', icon: '🌇', desc: 'Ciel orangé & blocs pourpres' }
   ],
   impossible13: [
-    { id: 'neon', name: 'Néon Vibrant', icon: '⚡', desc: 'Disques fluorescents lumineux' },
-    { id: 'pastel', name: 'Pastel Gourmand', icon: '🍬', desc: 'Douces nuances bonbon' },
-    { id: 'gold', name: 'Or Impérial', icon: '👑', desc: 'Reflets dorés prestigieux' }
+    { id: 'neon', name: 'Néon Fantasy', icon: '✨', desc: 'Disques fluorescents lumineux' },
+    { id: 'wood', name: 'Bois Cosy', icon: '🪵', desc: 'Ambiance boisée & chaleureuse' },
+    { id: 'jewel', name: 'Gemmes Translucides', icon: '💎', desc: 'Éclat cristal & reflets précieux' }
   ],
   jigsaw: [
     { id: 'forest', name: 'Forêt Magique', icon: '🌲', desc: 'Sous-bois verdoyant' },
@@ -128,7 +127,9 @@ const safeStorage = {
         const val = localStorage.getItem(key);
         if (val !== null) return val;
       }
-    } catch (e) {}
+    } catch {
+      // LocalStorage unavailable
+    }
     return _memoryStorage[key] || null;
   },
   setItem: (key, val) => {
@@ -136,7 +137,9 @@ const safeStorage = {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(key, String(val));
       }
-    } catch (e) {}
+    } catch {
+      // LocalStorage unavailable
+    }
     _memoryStorage[key] = String(val);
   }
 };
@@ -172,8 +175,8 @@ export const getAllowedThemes = (gameIdOrName) => {
         if (valid.length > 0) return valid;
       }
     }
-  } catch (e) {
-    // ignore
+  } catch {
+    // Ignore parse errors and fallback
   }
 
   return allThemes;
