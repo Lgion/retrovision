@@ -5,18 +5,19 @@ import { GAMES_CONFIG } from '../utils/gamesConfig';
  * Modale de configuration des entractes (activation des jeux, fréquence, difficulté, panneau d'intro).
  * Utilise GAMES_CONFIG comme unique source de vérité.
  */
-export default function IntermissionSettingsModal({ config, onClose, onSave }) {
+export default function IntermissionSettingsModal({ config, onClose, onSave, onChange }) {
   const [tempConfig, setTempConfig] = useState(() => JSON.parse(JSON.stringify(config)));
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleToggle = (gameKey) => {
     setTempConfig((prev) => {
       const next = { ...prev };
-      const current = next[gameKey] || { enabled: false, frequency: 'medium' };
+      const current = next[gameKey] || { enabled: false, frequency: 'medium', difficulty: 'facile' };
       next[gameKey] = {
         ...current,
         enabled: !current.enabled,
       };
+      if (onChange) onChange(next);
       return next;
     });
     setErrorMsg('');
@@ -25,11 +26,44 @@ export default function IntermissionSettingsModal({ config, onClose, onSave }) {
   const handleFrequency = (gameKey, freq) => {
     setTempConfig((prev) => {
       const next = { ...prev };
-      const current = next[gameKey] || { enabled: true, frequency: 'medium' };
+      const current = next[gameKey] || { enabled: true, frequency: 'medium', difficulty: 'facile' };
       next[gameKey] = {
         ...current,
         frequency: freq,
       };
+      if (onChange) onChange(next);
+      return next;
+    });
+  };
+
+  const handleDifficulty = (gameKey, diff) => {
+    setTempConfig((prev) => {
+      const next = { ...prev };
+      const current = next[gameKey] || { enabled: true, frequency: 'medium', difficulty: 'facile' };
+      next[gameKey] = {
+        ...current,
+        difficulty: diff,
+      };
+      if (onChange) onChange(next);
+      return next;
+    });
+  };
+
+  const handleToggleShowIntro = () => {
+    setTempConfig((prev) => {
+      const next = {
+        ...prev,
+        showIntroModal: !prev.showIntroModal,
+      };
+      try {
+        const saved = localStorage.getItem('retrovision_intermission_config');
+        const parsed = saved ? JSON.parse(saved) : {};
+        parsed.showIntroModal = next.showIntroModal;
+        localStorage.setItem('retrovision_intermission_config', JSON.stringify(parsed));
+      } catch (e) {
+        console.warn('Could not persist showIntroModal to localStorage', e);
+      }
+      if (onChange) onChange(next);
       return next;
     });
   };
@@ -45,17 +79,34 @@ export default function IntermissionSettingsModal({ config, onClose, onSave }) {
     onSave(tempConfig);
   };
 
+  const handleClose = () => {
+    const anyEnabled = Object.keys(tempConfig)
+      .filter((k) => k !== 'showIntroModal')
+      .some((g) => tempConfig[g]?.enabled);
+    if (anyEnabled) {
+      onSave(tempConfig);
+    } else {
+      onClose();
+    }
+  };
+
   // Liste des jeux disponibles pour les entractes depuis la configuration centralisée
   const intermissionGames = Object.values(GAMES_CONFIG).filter((g) => g.supportsIntermission);
 
   return (
-    <div className="modal-backdrop" style={modalBackdropStyle}>
+    <div
+      className="modal-backdrop"
+      style={modalBackdropStyle}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+    >
       <div style={modalContentStyle}>
         <div style={modalHeaderStyle}>
           <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-main)' }}>
             ⚙️ PARAMÈTRES DES ENTRACTES
           </h2>
-          <button onClick={onClose} style={closeBtnStyle} aria-label="Fermer">✕</button>
+          <button onClick={handleClose} style={closeBtnStyle} aria-label="Fermer">✕</button>
         </div>
 
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: '1.4' }}>
@@ -86,12 +137,7 @@ export default function IntermissionSettingsModal({ config, onClose, onSave }) {
           </div>
           <button
             type="button"
-            onClick={() => {
-              setTempConfig((prev) => ({
-                ...prev,
-                showIntroModal: !prev.showIntroModal,
-              }));
-            }}
+            onClick={handleToggleShowIntro}
             style={{
               padding: '8px 14px',
               borderRadius: '12px',
@@ -213,12 +259,7 @@ export default function IntermissionSettingsModal({ config, onClose, onSave }) {
                         return (
                           <button
                             key={diff}
-                            onClick={() => {
-                              setTempConfig((prev) => ({
-                                ...prev,
-                                [gameKey]: { ...prev[gameKey], difficulty: diff },
-                              }));
-                            }}
+                            onClick={() => handleDifficulty(gameKey, diff)}
                             style={{
                               border: 'none',
                               background: isSelected ? '#eab308' : 'transparent',
@@ -251,7 +292,7 @@ export default function IntermissionSettingsModal({ config, onClose, onSave }) {
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="retro-btn"
             style={{
               padding: '10px 20px',
@@ -263,7 +304,7 @@ export default function IntermissionSettingsModal({ config, onClose, onSave }) {
               cursor: 'pointer',
             }}
           >
-            Annuler
+            Fermer
           </button>
           <button
             onClick={handleSave}

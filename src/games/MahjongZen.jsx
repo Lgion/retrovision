@@ -207,17 +207,34 @@ export default function MahjongZen({
   upcomingIntermission = 'water',
   onSelectUpcomingIntermission,
   onShuffleUpcomingIntermission,
+  intermissionConfig = {},
   skipIntro
 }) {
-  const [selectedUpcomingIntermission, setSelectedUpcomingIntermission] = useState(upcomingIntermission || 'water');
+  const availableIntermissionGames = React.useMemo(() => {
+    const enabled = INTERMISSION_MINI_GAMES.filter((g) => {
+      const conf = intermissionConfig[g.key];
+      if (conf && typeof conf.enabled === 'boolean') {
+        return conf.enabled;
+      }
+      return true;
+    });
+    return enabled.length > 0 ? enabled : INTERMISSION_MINI_GAMES;
+  }, [intermissionConfig]);
 
-  useEffect(() => {
-    if (upcomingIntermission) {
-      setSelectedUpcomingIntermission(upcomingIntermission);
-    }
-  }, [upcomingIntermission]);
+  const [userSelectedUpcoming, setUserSelectedUpcoming] = useState(null);
 
-  const activeIntermissionGame = INTERMISSION_MINI_GAMES.find(g => g.key === selectedUpcomingIntermission) || INTERMISSION_MINI_GAMES[0];
+  const currentUpcomingKey = userSelectedUpcoming || upcomingIntermission;
+  const isCurrentUpcomingAvail = availableIntermissionGames.some(
+    (g) => g.key === currentUpcomingKey
+  );
+  const effectiveSelectedUpcoming = isCurrentUpcomingAvail
+    ? currentUpcomingKey
+    : (availableIntermissionGames[0]?.key || 'water');
+
+  const activeIntermissionGame =
+    availableIntermissionGames.find((g) => g.key === effectiveSelectedUpcoming) ||
+    availableIntermissionGames[0] ||
+    INTERMISSION_MINI_GAMES[0];
   const isIntermissionEnabled = localStorage.getItem('retrovision_intermission_enabled') !== 'false';
   const [showIntro, setShowIntro] = useState(!skipIntro);
   const [mode, setMode] = useState(() => getGameConfig('mahjong', 'mode', 'slide'));
@@ -2622,7 +2639,7 @@ export default function MahjongZen({
                     <span>Mini-jeux d'entracte au choix :</span>
                   </div>
                   <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>
-                    12 jeux (défilement ↔)
+                    {availableIntermissionGames.length} jeu{availableIntermissionGames.length > 1 ? 'x' : ''} configuré{availableIntermissionGames.length > 1 ? 's' : ''} {availableIntermissionGames.length > 3 ? '(défilement ↔)' : ''}
                   </span>
                 </div>
 
@@ -2644,19 +2661,22 @@ export default function MahjongZen({
                     boxShadow: 'inset 0 2px 10px rgba(0, 0, 0, 0.4)'
                   }}
                 >
-                  {INTERMISSION_MINI_GAMES.map((g) => {
-                    const isSelected = g.key === selectedUpcomingIntermission;
+                  {availableIntermissionGames.map((g) => {
+                    const isSelected = g.key === effectiveSelectedUpcoming;
+                    const gameConf = intermissionConfig[g.key] || {};
+                    const diff = gameConf.difficulty || 'facile';
+                    const diffColor = diff === 'facile' ? '#10B981' : diff === 'moyen' ? '#F59E0B' : '#EF4444';
                     return (
                       <div
                         key={g.key}
                         onClick={() => {
                           sound.playClick();
-                          setSelectedUpcomingIntermission(g.key);
+                          setUserSelectedUpcoming(g.key);
                           if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(g.key);
                         }}
                         onDoubleClick={() => {
                           sound.playClick();
-                          setSelectedUpcomingIntermission(g.key);
+                          setUserSelectedUpcoming(g.key);
                           if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(g.key);
                           if (onIntermissionRequest) onIntermissionRequest(g.key);
                         }}
@@ -2684,28 +2704,42 @@ export default function MahjongZen({
                           scrollSnapAlign: 'start',
                           userSelect: 'none'
                         }}
-                        title={`${g.name} - ${g.subtitle} (Cliquez pour sélectionner)`}
+                        title={`${g.name} - ${g.subtitle} (Difficulté : ${diff}) - Cliquez pour sélectionner`}
                       >
-                        {/* Top bar: Icon & Status Badge */}
+                        {/* Top bar: Icon & Badges */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '3px' }}>
                           <span style={{ fontSize: '15px' }}>{g.icon}</span>
-                          {isSelected ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <span style={{
                               fontSize: '8px',
-                              fontWeight: '900',
-                              color: '#fff',
-                              background: '#0284C7',
+                              fontWeight: '800',
+                              color: diffColor,
+                              background: `${diffColor}22`,
+                              border: `1px solid ${diffColor}55`,
                               borderRadius: '4px',
-                              padding: '2px 5px',
-                              boxShadow: '0 0 8px #38BDF8'
+                              padding: '1px 4px',
+                              textTransform: 'capitalize'
                             }}>
-                              ACTIF
+                              {diff}
                             </span>
-                          ) : (
-                            <span style={{ fontSize: '9px', color: '#64748B', fontWeight: '700' }}>
-                              ▶
-                            </span>
-                          )}
+                            {isSelected ? (
+                              <span style={{
+                                fontSize: '8px',
+                                fontWeight: '900',
+                                color: '#fff',
+                                background: '#0284C7',
+                                borderRadius: '4px',
+                                padding: '1px 5px',
+                                boxShadow: '0 0 8px #38BDF8'
+                              }}>
+                                ACTIF
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '9px', color: '#64748B', fontWeight: '700' }}>
+                                ▶
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Miniature container: LARGE & CRISP (84px high) */}
@@ -2746,7 +2780,7 @@ export default function MahjongZen({
                   onClick={() => {
                     sound.playClick();
                     if (onIntermissionRequest) {
-                      onIntermissionRequest(selectedUpcomingIntermission);
+                      onIntermissionRequest(effectiveSelectedUpcoming);
                     }
                   }}
                   className="retro-btn pulse-glow"
@@ -2780,7 +2814,7 @@ export default function MahjongZen({
                     <span>Aller vers l'Entracte</span>
                   </div>
                   <div style={{ fontSize: '12px', fontWeight: '700', color: '#D1FAE5', opacity: 0.95 }}>
-                    Jouer : {activeIntermissionGame.name} {activeIntermissionGame.icon}
+                    Jouer : {activeIntermissionGame.name} {activeIntermissionGame.icon} • {intermissionConfig[activeIntermissionGame.key]?.difficulty || 'facile'}
                   </div>
                 </button>
 
@@ -2788,12 +2822,18 @@ export default function MahjongZen({
                 <button
                   onClick={() => {
                     sound.playClick();
-                    const others = INTERMISSION_MINI_GAMES.filter(g => g.key !== selectedUpcomingIntermission);
-                    const randGame = others[Math.floor(Math.random() * others.length)];
-                    setSelectedUpcomingIntermission(randGame.key);
-                    if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(randGame.key);
-                    if (onIntermissionRequest) {
-                      onIntermissionRequest(randGame.key);
+                    let nextKey = null;
+                    if (onShuffleUpcomingIntermission) {
+                      nextKey = onShuffleUpcomingIntermission();
+                    } else {
+                      const others = availableIntermissionGames.filter(g => g.key !== effectiveSelectedUpcoming);
+                      const pool = others.length > 0 ? others : availableIntermissionGames;
+                      nextKey = pool[Math.floor(Math.random() * pool.length)].key;
+                      setUserSelectedUpcoming(nextKey);
+                      if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(nextKey);
+                    }
+                    if (onIntermissionRequest && nextKey) {
+                      onIntermissionRequest(nextKey);
                     }
                   }}
                   className="retro-btn"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
@@ -6,6 +6,20 @@ import GameHeader from '../components/GameHeader';
 import HangmanCollection from './HangmanCollection';
 import hangmanData from '../utils/hangmanData.json';
 import IntermissionHeader from '../components/IntermissionHeader';
+
+const shuffleArray = (arr) => {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+};
+
+const getRandomItem = (arr) => {
+  if (!arr || arr.length === 0) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+};
 
 export default function Hangman({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
   const [showIntro, setShowIntro] = useState(true);
@@ -24,30 +38,13 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
 
   const filteredData = getFilteredData();
 
-  // Random order logic
-  const [riddleOrder, setRiddleOrder] = useState(() => {
-    const order = Array.from({ length: filteredData.length }, (_, i) => i);
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
-    }
-    return order;
-  });
-
-  useEffect(() => {
-    // When category changes, reset order and index
-    const order = Array.from({ length: filteredData.length }, (_, i) => i);
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
-    }
-    setRiddleOrder(order);
-    setCurrentOrderIdx(0);
-    resetLevel();
-  }, [customizations.category]);
-
   const [currentOrderIdx, setCurrentOrderIdx] = useState(() => {
     return parseInt(localStorage.getItem('retrovision_hangman_idx') || '0', 10);
+  });
+
+  // Random order logic
+  const [riddleOrder, setRiddleOrder] = useState(() => {
+    return shuffleArray(Array.from({ length: filteredData.length }, (_, i) => i));
   });
 
   const getInitialLives = () => {
@@ -79,15 +76,14 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
   const currentData = filteredData[currentRiddleIdx] || hangmanData[0];
   const targetWord = currentData.answer.toUpperCase();
 
-  const handleBeforeUnload = (e) => {
-    if (gameState === 'playing' && guessedLetters.length > 0) {
-      e.preventDefault();
-      e.returnValue = "Voulez-vous vraiment quitter ?";
-      return e.returnValue;
-    }
-  };
-
   useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (gameState === 'playing' && guessedLetters.length > 0) {
+        e.preventDefault();
+        e.returnValue = "Voulez-vous vraiment quitter ?";
+        return e.returnValue;
+      }
+    };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, guessedLetters]);
@@ -193,12 +189,12 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
   };
 
   // Powerups Functions
-  const useMagnify = () => {
+  const handleUseMagnify = () => {
     // Reveal one correct letter that hasn't been guessed
     if (gameState !== 'playing' || magnifyUsed || coins < 30) return;
     const unrevealed = targetWord.split('').filter(c => c !== ' ' && !guessedLetters.includes(c));
     if (unrevealed.length > 0) {
-      const letterToReveal = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+      const letterToReveal = getRandomItem(unrevealed);
       setCoins(c => c - 30);
       setMagnifyUsed(true);
       sound.playPowerup();
@@ -206,11 +202,11 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     }
   };
 
-  const useBomb = () => {
+  const handleUseBomb = () => {
     // Eliminate 3 wrong letters
     if (gameState !== 'playing' || bombUsed || coins < 20) return;
     const wrongLetters = alphabet.filter(c => !targetWord.includes(c) && !guessedLetters.includes(c));
-    const toEliminate = wrongLetters.sort(() => 0.5 - Math.random()).slice(0, 3);
+    const toEliminate = shuffleArray(wrongLetters).slice(0, 3);
     if (toEliminate.length > 0) {
       setCoins(c => c - 20);
       setBombUsed(true);
@@ -219,7 +215,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     }
   };
 
-  const useHint = () => {
+  const handleUseHint = () => {
     // Reveal a textual hint
     if (gameState !== 'playing' || hintUsed || showHintMessage) return;
     setHintUsed(true);
@@ -227,7 +223,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     sound.playPowerup();
   };
 
-  const useLangueAuChat = () => {
+  const handleUseLangueAuChat = () => {
     // Reveal solution letters indicatively in mauve without stopping the game
     if (gameState !== 'playing' || isCatSolutionShown) return;
     sound.playPowerup();
@@ -297,23 +293,6 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
       );
     }
 
-    if (isIntermission) {
-      const wordLetters = targetWord ? Array.from(new Set(targetWord.split(''))) : [];
-      const guessed = wordLetters.filter(l => guessedLetters.includes(l)).length;
-      const hmProgress = gameState === 'won' ? 1.0 : (wordLetters.length > 0 ? guessed / wordLetters.length : 0);
-      return (
-        <IntermissionHeader
-          instructionText="Devinez le mot pour retourner au jeu principal."
-          onRestart={resetLevel}
-          onOtherGame={onIntermissionRequest}
-          onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
-          replaySame={replaySameIntermission}
-          onToggleReplaySame={onToggleReplaySameIntermission}
-          progress={hmProgress}
-        />
-      );
-    }
-
     return (
       <div style={statsBoxStyle}>
         <span style={{ fontSize: '20px' }}>😈</span>
@@ -339,7 +318,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
     ];
 
     return (
-      <svg width="150" height="180" viewBox="0 0 120 150" style={drawingStyle}>
+      <svg width="115" height="125" viewBox="0 0 120 150" style={drawingStyle}>
         {/* Shark & Water */}
         <path d="M 10 130 Q 30 125 50 130 T 90 130 T 130 130" stroke={theme.color} strokeWidth="2" fill="none" opacity="0.6" />
         <path d="M 10 140 Q 30 135 50 140 T 90 140 T 130 140" stroke={theme.color} strokeWidth="2" fill="none" opacity="0.4" />
@@ -386,12 +365,19 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           resetLevel();
         }}
         currentSelections={customizations}
-        onSelect={(category, id) => {
+        onSelect={(categoryKey, id) => {
           setCustomizations(prev => {
-            const next = { ...prev, [category]: id };
+            const next = { ...prev, [categoryKey]: id };
             updateGameConfig('hangman', 'customizations', next);
             return next;
           });
+          if (categoryKey === 'category') {
+            const newFiltered = id === 'mixte' ? hangmanData : hangmanData.filter(d => d.category === id);
+            const dataToUse = newFiltered.length > 0 ? newFiltered : hangmanData;
+            setRiddleOrder(shuffleArray(Array.from({ length: dataToUse.length }, (_, i) => i)));
+            setCurrentOrderIdx(0);
+            localStorage.setItem('retrovision_hangman_idx', '0');
+          }
           setShowCollection(false);
           resetLevel();
         }}
@@ -487,32 +473,75 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
         onComplete={() => setShowIntro(false)}
       />}
 
-      <div style={{ ...containerStyle, background: theme.bg, backgroundImage: theme.bgImage, color: theme.color }} className={isShaking ? 'shake-error' : ''}>
+      <div
+        style={{ ...containerStyle, background: theme.bg, backgroundImage: theme.bgImage, color: theme.color }}
+        className={`game-container hangman-container ${isShaking ? 'shake-error' : ''}`}
+      >
         {isShaking && <div className="error-tint"></div>}
 
-        {/* Top Header */}
-        <GameHeader
-          title={
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: '1.2' }}>
-              <span>DEVINETTE</span>
-              <span style={{ fontSize: '11px', color: diffInfo.color, fontWeight: 'bold' }}>
-                {diffInfo.icon} {diffInfo.label}
-              </span>
+        {/* En-tête : IntermissionHeader en mode entracte, ou GameHeader en mode normal */}
+        {isIntermission ? (() => {
+          const wordLetters = targetWord ? Array.from(new Set(targetWord.split(''))) : [];
+          const guessed = wordLetters.filter((l) => guessedLetters.includes(l)).length;
+          const hmProgress =
+            gameState === 'won'
+              ? 1.0
+              : wordLetters.length > 0
+                ? guessed / wordLetters.length
+                : 0;
+          return (
+            <div style={{ width: '100%', marginBottom: '6px', zIndex: 10, flexShrink: 0 }}>
+              <IntermissionHeader
+                instructionText="Devinez le mot pour retourner au jeu principal."
+                onRestart={resetLevel}
+                onOtherGame={onIntermissionRequest}
+                onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+                replaySame={replaySameIntermission}
+                onToggleReplaySame={onToggleReplaySameIntermission}
+                progress={hmProgress}
+              />
             </div>
-          }
-          onBack={handleBackWithConfirm}
-          showBgmToggle={false} // bgm global
-          onShop={() => setShowCollection(true)}
-          centerContent={renderHeaderCenter()}
-          style={{ background: 'transparent', boxShadow: 'none', borderBottom: `2px dashed ${theme.border.split(' ')[2] || '#cbd5e1'}` }}
-        />
+          );
+        })() : (
+          <GameHeader
+            title={
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: '1.2' }}>
+                <span>DEVINETTE</span>
+                <span style={{ fontSize: '11px', color: diffInfo.color, fontWeight: 'bold' }}>
+                  {diffInfo.icon} {diffInfo.label}
+                </span>
+              </div>
+            }
+            onBack={handleBackWithConfirm}
+            showBgmToggle={false} // bgm global
+            onShop={() => setShowCollection(true)}
+            centerContent={renderHeaderCenter()}
+            style={{ background: 'transparent', boxShadow: 'none', borderBottom: `2px dashed ${theme.border.split(' ')[2] || '#cbd5e1'}` }}
+          />
+        )}
 
         {/* Drawing & Riddle Section */}
         <div style={topSectionStyle}>
           <div style={drawingContainerStyle}>
             {renderDrawing()}
-            <div style={livesBadgeStyle}>
-              ❤️ x{lives}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+              <div style={livesBadgeStyle}>
+                ❤️ x{lives}
+              </div>
+              {isIntermission && (
+                <div style={{
+                  background: `${diffInfo.color}22`,
+                  border: `1px solid ${diffInfo.color}66`,
+                  color: diffInfo.color,
+                  padding: '1px 6px',
+                  borderRadius: '10px',
+                  fontSize: '10px',
+                  fontWeight: '800',
+                  textTransform: 'uppercase'
+                }}>
+                  {diffInfo.label}
+                </div>
+              )}
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '10px' }}>
@@ -584,7 +613,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
         {/* Jokers Section */}
         <div style={jokersContainerStyle}>
           <button
-            onClick={useMagnify}
+            onClick={handleUseMagnify}
             disabled={magnifyUsed || coins < 30 || gameState !== 'playing'}
             style={{ ...jokerBtnStyle, opacity: (magnifyUsed || coins < 30 || gameState !== 'playing') ? 0.5 : 1 }}
             title="Dévoiler une lettre"
@@ -594,7 +623,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           </button>
 
           <button
-            onClick={useBomb}
+            onClick={handleUseBomb}
             disabled={bombUsed || coins < 20 || gameState !== 'playing'}
             style={{ ...jokerBtnStyle, opacity: (bombUsed || coins < 20 || gameState !== 'playing') ? 0.5 : 1 }}
             title="Éliminer 3 fausses lettres"
@@ -604,7 +633,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           </button>
 
           <button
-            onClick={useHint}
+            onClick={handleUseHint}
             disabled={hintUsed || gameState !== 'playing'}
             style={{ ...jokerBtnStyle, opacity: (hintUsed || gameState !== 'playing') ? 0.5 : 1 }}
             title="Afficher un indice"
@@ -614,7 +643,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           </button>
 
           <button
-            onClick={useLangueAuChat}
+            onClick={handleUseLangueAuChat}
             disabled={isCatSolutionShown || gameState !== 'playing'}
             style={{ ...jokerBtnStyle, opacity: (isCatSolutionShown || gameState !== 'playing') ? 0.5 : 1 }}
             title="Donner sa langue au chat (solution indicative)"
@@ -676,19 +705,22 @@ const containerStyle = {
   flexDirection: 'column',
   width: '100%',
   maxWidth: '430px',
-  flex: 1,
+  height: '100%',
+  maxHeight: '100%',
   margin: '0 auto',
   backgroundSize: '25px 25px',
   fontFamily: '"Comic Sans MS", "Chalkboard SE", "Marker Felt", sans-serif',
   position: 'relative',
-  overflow: 'hidden',
-  boxSizing: 'border-box'
+  overflowY: 'auto',
+  overflowX: 'hidden',
+  boxSizing: 'border-box',
+  padding: '6px 8px 10px 8px'
 };
 
 const statsBoxStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: '10px'
+  gap: '8px'
 };
 
 const coinsBadgeStyle = {
@@ -698,56 +730,56 @@ const coinsBadgeStyle = {
   background: '#ffffff',
   border: '2px solid #d1d5db',
   borderRadius: '20px',
-  padding: '4px 12px',
+  padding: '3px 10px',
   color: '#1e293b'
 };
 
 const topSectionStyle = {
   display: 'flex',
-  padding: '10px 15px',
-  gap: '12px',
-  alignItems: 'flex-start'
+  padding: '4px 6px',
+  gap: '8px',
+  alignItems: 'center',
+  flexShrink: 0
 };
 
 const drawingContainerStyle = {
-  flex: '0 0 140px',
+  flex: '0 0 115px',
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   background: 'rgba(255, 255, 255, 0.1)',
-  borderRadius: '16px',
-  padding: '8px',
-  boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)',
+  borderRadius: '14px',
+  padding: '6px 4px',
+  boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.1), 0 3px 5px rgba(0,0,0,0.05)',
   border: '2px solid rgba(255,255,255,0.2)'
 };
 
 const drawingStyle = {
   background: 'transparent',
-  filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.25))'
+  filter: 'drop-shadow(0px 3px 3px rgba(0,0,0,0.25))'
 };
 
 const livesBadgeStyle = {
   background: '#ef4444',
   color: '#ffffff',
-  padding: '4px 12px',
-  borderRadius: '12px',
-  fontSize: '15px',
+  padding: '2px 8px',
+  borderRadius: '10px',
+  fontSize: '12px',
   fontWeight: 'bold',
-  marginTop: '6px',
   boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
 };
 
 const riddleBoxStyle = {
   flex: 1,
-  fontSize: '27px',
+  fontSize: 'clamp(14px, 3.5vw, 17px)',
   fontWeight: '700',
   color: '#1e293b',
   textAlign: 'center',
-  lineHeight: '1.4',
-  padding: '14px 16px',
+  lineHeight: '1.35',
+  padding: '8px 10px',
   background: 'rgba(255,255,255,0.7)',
-  borderRadius: '16px',
+  borderRadius: '14px',
   boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
   border: '1px dashed #cbd5e1',
   position: 'relative'
@@ -755,12 +787,12 @@ const riddleBoxStyle = {
 
 const riddleTypeBadge = {
   position: 'absolute',
-  top: '-12px',
-  right: '12px',
+  top: '-9px',
+  right: '8px',
   background: '#8b5cf6',
   color: '#ffffff',
-  fontSize: '13px',
-  padding: '4px 10px',
+  fontSize: '11px',
+  padding: '2px 8px',
   borderRadius: '6px',
   fontWeight: 'bold',
   letterSpacing: '0.5px'
@@ -769,22 +801,23 @@ const riddleTypeBadge = {
 const wordContainerStyle = {
   display: 'flex',
   justifyContent: 'center',
-  gap: '8px',
-  padding: '24px 15px',
-  flexWrap: 'wrap'
+  gap: '6px',
+  padding: '8px 4px',
+  flexWrap: 'wrap',
+  flexShrink: 0
 };
 
 const letterSlotStyle = {
-  minWidth: '34px',
-  height: '48px',
-  borderBottom: '4px solid #10b981',
+  minWidth: 'clamp(24px, 5.8vw, 32px)',
+  height: 'clamp(34px, 8vw, 40px)',
+  borderBottom: '3px solid #10b981',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'flex-end',
-  fontSize: '32px',
+  fontSize: 'clamp(18px, 4.8vw, 24px)',
   fontWeight: 'bold',
   textTransform: 'uppercase',
-  padding: '0 4px 2px 4px',
+  padding: '0 2px 2px 2px',
   borderRadius: '4px 4px 0 0'
 };
 
@@ -792,16 +825,17 @@ const keyboardContainerStyle = {
   display: 'flex',
   flexWrap: 'wrap',
   justifyContent: 'center',
-  gap: '8px',
-  padding: '0 12px',
-  marginTop: '15px'
+  gap: 'clamp(4px, 1.2vw, 6px)',
+  padding: '0 4px',
+  marginTop: '4px',
+  flexShrink: 0
 };
 
 const keyBtnStyle = {
-  width: '40px',
-  height: '40px',
+  width: 'clamp(28px, 8.2vw, 36px)',
+  height: 'clamp(30px, 8.2vw, 36px)',
   border: 'none',
-  fontSize: '26px',
+  fontSize: 'clamp(16px, 4.2vw, 20px)',
   fontWeight: 'bold',
   fontFamily: '"Comic Sans MS", "Chalkboard SE", "Marker Felt", sans-serif',
   cursor: 'pointer',
@@ -809,7 +843,7 @@ const keyBtnStyle = {
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  borderRadius: '8px',
+  borderRadius: '6px',
   boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
 };
 
@@ -817,9 +851,10 @@ const jokersContainerStyle = {
   display: 'flex',
   justifyContent: 'space-evenly',
   alignItems: 'center',
-  gap: '10px',
-  padding: '15px 12px',
-  marginTop: 'auto'
+  gap: '6px',
+  padding: '6px 4px 8px 4px',
+  marginTop: 'auto',
+  flexShrink: 0
 };
 
 const jokerBtnStyle = {
@@ -828,31 +863,31 @@ const jokerBtnStyle = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  gap: '5px',
+  gap: '3px',
   cursor: 'pointer',
   transition: 'transform 0.2s'
 };
 
 const jokerIconBoxStyle = {
-  width: '52px',
-  height: '52px',
+  width: 'clamp(36px, 9vw, 44px)',
+  height: 'clamp(36px, 9vw, 44px)',
   borderRadius: '50%',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  fontSize: '26px',
+  fontSize: 'clamp(18px, 4.5vw, 22px)',
   color: 'white',
-  boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
+  boxShadow: '0 3px 5px rgba(0,0,0,0.2)',
   border: '2px solid #ffffff'
 };
 
 const jokerCostStyle = {
   background: '#f59e0b',
   color: '#ffffff',
-  fontSize: '13px',
+  fontSize: '11px',
   fontWeight: 'bold',
-  padding: '3px 10px',
-  borderRadius: '12px',
+  padding: '2px 8px',
+  borderRadius: '10px',
   border: '1px solid #ffffff',
   whiteSpace: 'nowrap'
 };

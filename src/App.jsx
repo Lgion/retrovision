@@ -42,22 +42,33 @@ function App() {
   const [sessionIntermissionDifficulty, setSessionIntermissionDifficulty] = useState('facile');
   const [replaySameIntermission, setReplaySameIntermission] = useState(false);
 
-  // Configuration persistée des entractes
+  // Configuration persistée des entractes (couvrant tous les 12 jeux d'entracte)
   const [intermissionConfig, setIntermissionConfig] = useState(() => {
     const defaultConfig = {
       showIntroModal: false,
-      ball: { enabled: true, frequency: 'medium' },
-      water: { enabled: true, frequency: 'medium' },
-      mines: { enabled: true, frequency: 'medium' },
-      arrows: { enabled: true, frequency: 'medium' },
-      sudoku: { enabled: true, frequency: 'medium' },
-      blockfantasy: { enabled: true, frequency: 'medium' },
     };
+    INTERMISSION_GAME_KEYS.forEach((key) => {
+      defaultConfig[key] = { enabled: true, frequency: 'medium', difficulty: 'facile' };
+    });
+
     const saved = localStorage.getItem('retrovision_intermission_config');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return { ...defaultConfig, ...parsed };
+        const merged = { ...defaultConfig };
+        if (typeof parsed.showIntroModal === 'boolean') {
+          merged.showIntroModal = parsed.showIntroModal;
+        }
+        INTERMISSION_GAME_KEYS.forEach((key) => {
+          if (parsed[key]) {
+            merged[key] = {
+              enabled: parsed[key].enabled !== false,
+              frequency: parsed[key].frequency || 'medium',
+              difficulty: parsed[key].difficulty || 'facile',
+            };
+          }
+        });
+        return merged;
       } catch {
         // ignore
       }
@@ -70,33 +81,33 @@ function App() {
     return localStorage.getItem('retrovision_last_intermission_game') || null;
   });
 
-  // Sélection aléatoire pondérée d'un jeu d'entracte
+  // Sélection aléatoire pondérée d'un jeu d'entracte (exclusivement parmi les jeux activés)
   const pickRandomIntermissionGame = useCallback(
     (fromMainGame, excludedGame = null) => {
-      const enabledGames = Object.keys(intermissionConfig).filter(
-        (key) =>
-          intermissionConfig[key]?.enabled &&
-          key !== fromMainGame &&
-          key !== excludedGame &&
-          INTERMISSION_GAME_KEYS.includes(key)
+      const allEnabledGames = INTERMISSION_GAME_KEYS.filter(
+        (key) => intermissionConfig[key]?.enabled !== false && key !== fromMainGame
       );
 
-      const gamesToChooseFrom =
-        enabledGames.length > 0
-          ? enabledGames
-          : INTERMISSION_GAME_KEYS.filter((g) => g !== fromMainGame && g !== excludedGame);
+      const basePool =
+        allEnabledGames.length > 0
+          ? allEnabledGames
+          : INTERMISSION_GAME_KEYS.filter((g) => g !== fromMainGame);
 
-      let filteredGames = gamesToChooseFrom;
-      if (gamesToChooseFrom.length > 1 && (lastIntermissionGame || excludedGame)) {
-        filteredGames = gamesToChooseFrom.filter(
-          (g) => g !== lastIntermissionGame && g !== excludedGame
-        );
-        if (filteredGames.length === 0) filteredGames = gamesToChooseFrom;
+      let candidates = basePool.filter((g) => g !== excludedGame);
+      if (candidates.length === 0) {
+        candidates = basePool;
+      }
+
+      if (candidates.length > 1 && lastIntermissionGame) {
+        const withoutLast = candidates.filter((g) => g !== lastIntermissionGame);
+        if (withoutLast.length > 0) {
+          candidates = withoutLast;
+        }
       }
 
       const weightMap = { low: 1, medium: 3, high: 5 };
       const weightedList = [];
-      filteredGames.forEach((gameKey) => {
+      candidates.forEach((gameKey) => {
         const configEntry = intermissionConfig[gameKey] || { frequency: 'medium' };
         const weight = weightMap[configEntry.frequency] || 3;
         for (let i = 0; i < weight; i++) {
@@ -106,12 +117,23 @@ function App() {
 
       return weightedList.length > 0
         ? weightedList[Math.floor(Math.random() * weightedList.length)]
-        : filteredGames[Math.floor(Math.random() * filteredGames.length)] || 'water';
+        : candidates[0] || 'water';
     },
     [intermissionConfig, lastIntermissionGame]
   );
 
-  const [upcomingIntermissionGame, setUpcomingIntermissionGame] = useState(() => 'water');
+  const [upcomingIntermissionGame, setUpcomingIntermissionGame] = useState(() => {
+    const enabled = INTERMISSION_GAME_KEYS.filter(
+      (k) => intermissionConfig[k]?.enabled !== false
+    );
+    return enabled.length > 0 ? enabled[0] : 'water';
+  });
+
+  // Calcul dérivé du jeu d'entracte prévu, garantissant qu'il est toujours activé
+  const activeUpcomingIntermissionGame =
+    intermissionConfig[upcomingIntermissionGame]?.enabled !== false
+      ? upcomingIntermissionGame
+      : pickRandomIntermissionGame('mahjong');
 
   const shuffleUpcomingIntermissionGame = useCallback(() => {
     const nextGame = pickRandomIntermissionGame('mahjong', upcomingIntermissionGame);
@@ -251,9 +273,10 @@ function App() {
       gameKey === 'mahjong'
         ? {
             onIntermissionRequest: handleMahjongNextLevel,
-            upcomingIntermission: upcomingIntermissionGame,
+            upcomingIntermission: activeUpcomingIntermissionGame,
             onSelectUpcomingIntermission: setUpcomingIntermissionGame,
             onShuffleUpcomingIntermission: shuffleUpcomingIntermissionGame,
+            intermissionConfig,
           }
         : {};
 
@@ -331,6 +354,10 @@ function App() {
         <IntermissionSettingsModal
           config={intermissionConfig}
           onClose={() => setIsSettingsOpen(false)}
+          onChange={(newConfig) => {
+            setIntermissionConfig(newConfig);
+            localStorage.setItem('retrovision_intermission_config', JSON.stringify(newConfig));
+          }}
           onSave={(newConfig) => {
             setIntermissionConfig(newConfig);
             localStorage.setItem('retrovision_intermission_config', JSON.stringify(newConfig));

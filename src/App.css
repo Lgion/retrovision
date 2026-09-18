@@ -1019,7 +1019,8 @@ body {
   .impossible13-container,
   .neon-2048-container,
   .minesweeper-container,
-  .arrow-puzzle-container {
+  .arrow-puzzle-container,
+  .hangman-container {
     border-radius: 0 !important;
     border: none !important;
     padding: 12px 10px !important;
