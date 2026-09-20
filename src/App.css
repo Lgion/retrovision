@@ -1020,7 +1020,8 @@ body {
   .neon-2048-container,
   .minesweeper-container,
   .arrow-puzzle-container,
-  .hangman-container {
+  .hangman-container,
+  .bubble-cool-container {
     border-radius: 0 !important;
     border: none !important;
     padding: 12px 10px !important;

@@ -1,8 +1,6 @@
-import React from 'react';
 import { sound } from '../utils/sound';
 
 export default function IntermissionIntroModal({
-  gameKey,
   gameName,
   gameIcon = "🎮",
   returnGameName = "Jeu Principal",
@@ -143,30 +141,72 @@ export default function IntermissionIntroModal({
               sound.playClick();
               if (onStart) onStart();
             }}
+            className="retro-btn pulse-glow"
             style={{
               width: '100%',
-              padding: '15px 20px',
+              padding: '14px 20px',
               borderRadius: '16px',
               background: 'linear-gradient(135deg, #10B981, #059669)',
               border: '2.5px solid #6EE7B7',
               color: '#FFFFFF',
               fontWeight: '900',
-              fontSize: '1.05rem',
+              fontSize: '17px',
               cursor: 'pointer',
-              boxShadow: '0 0 26px rgba(16, 185, 129, 0.7), 0 4px 14px rgba(0, 0, 0, 0.35)',
+              boxShadow: '0 0 28px rgba(16, 185, 129, 0.7), 0 4px 14px rgba(0, 0, 0, 0.35)',
               transition: 'transform 0.15s ease, filter 0.15s ease',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px', fontWeight: '900' }}>
+              <span className="primary-play-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </span>
+              <span>Aller vers l'Entracte</span>
+            </div>
+            <div style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '10px'
-            }}
-          >
-            <span className="primary-play-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </span>
-            <span>Aller vers l'Entracte ({gameName})</span>
+              gap: '8px',
+              flexWrap: 'wrap',
+              fontSize: '15px',
+              fontWeight: '800'
+            }}>
+              <span style={{ color: '#D1FAE5', opacity: 0.95 }}>Jouer :</span>
+              <span style={{
+                color: '#FDE047',
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '3px 12px',
+                borderRadius: '8px',
+                border: '1.5px solid rgba(253, 224, 71, 0.5)',
+                fontSize: '16px',
+                fontWeight: '900',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+              }}>
+                <span>{gameIcon}</span>
+                <span>{gameName}</span>
+              </span>
+              <span style={{
+                fontSize: '13px',
+                color: '#6EE7B7',
+                background: 'rgba(0, 0, 0, 0.25)',
+                padding: '2px 8px',
+                borderRadius: '6px',
+                fontWeight: '800',
+                textTransform: 'capitalize'
+              }}>
+                ({currentDifficulty})
+              </span>
+            </div>
           </button>
 
           {/* Button 2: Lancer un Jeu Aléatoire (Secondary Action) */}

@@ -2799,22 +2799,58 @@ export default function MahjongZen({
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '3px',
+                    gap: '6px',
                     cursor: 'pointer',
                     letterSpacing: '0.4px',
                     transition: 'transform 0.15s ease, box-shadow 0.15s ease'
                   }}
                 >
-                  <span className="primary-play-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block', width: "100px", height: "100px" }}>
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px', fontWeight: '900' }}>
+                    <span className="primary-play-icon">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </span>
                     <span>Aller vers l'Entracte</span>
                   </div>
-                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#D1FAE5', opacity: 0.95 }}>
-                    Jouer : {activeIntermissionGame.name} {activeIntermissionGame.icon} • {intermissionConfig[activeIntermissionGame.key]?.difficulty || 'facile'}
+                  <div style={{
+                    fontSize: '15px',
+                    fontWeight: '800',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                    marginTop: '2px'
+                  }}>
+                    <span style={{ color: '#D1FAE5', opacity: 0.95 }}>Jouer :</span>
+                    <span style={{
+                      color: '#FDE047',
+                      background: 'rgba(0, 0, 0, 0.3)',
+                      padding: '3px 12px',
+                      borderRadius: '8px',
+                      border: '1.5px solid rgba(253, 224, 71, 0.5)',
+                      fontSize: '16px',
+                      fontWeight: '900',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+                    }}>
+                      <span>{activeIntermissionGame.icon}</span>
+                      <span>{activeIntermissionGame.name}</span>
+                    </span>
+                    <span style={{
+                      fontSize: '13px',
+                      color: '#6EE7B7',
+                      background: 'rgba(0, 0, 0, 0.25)',
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      fontWeight: '800',
+                      textTransform: 'capitalize'
+                    }}>
+                      ({intermissionConfig[activeIntermissionGame.key]?.difficulty || 'facile'})
+                    </span>
                   </div>
                 </button>
 

@@ -5,7 +5,7 @@ import LEVELS from '../utils/unblockLevels.json';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 
-export default function UnblockMe({ onBack, onScoreSave, onIntermissionRequest }) {
+export default function UnblockMe({ onBack, onScoreSave, onIntermissionRequest, isIntermission = false }) {
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing' | 'levelSelect'
   const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(() => {

@@ -31,16 +31,16 @@ const PROJECTILE_SPEED = 1650;
 const COLOR_KEYS = ['red', 'blue', 'green', 'yellow', 'purple', 'pink'];
 
 const COLOR_PALETTES = {
-  red: { main: '#EF4444', top: '#FCA5A5', shadow: '#991B1B', glow: 'rgba(239, 68, 68, 0.7)', symbol: '▲' },
+  red: { main: '#DC2626', top: '#FF6B6B', shadow: '#7F1D1D', glow: 'rgba(220, 38, 38, 0.85)', symbol: '▲' },
   blue: { main: '#3B82F6', top: '#93C5FD', shadow: '#1E3A8A', glow: 'rgba(59, 130, 246, 0.7)', symbol: '◆' },
   green: { main: '#10B981', top: '#6EE7B7', shadow: '#065F46', glow: 'rgba(16, 185, 129, 0.7)', symbol: '●' },
   yellow: { main: '#F59E0B', top: '#FDE68A', shadow: '#92400E', glow: 'rgba(245, 158, 11, 0.7)', symbol: '★' },
   purple: { main: '#8B5CF6', top: '#C4B5FD', shadow: '#4C1D95', glow: 'rgba(139, 92, 246, 0.7)', symbol: '✦' },
-  pink: { main: '#EC4899', top: '#FBCFE8', shadow: '#831843', glow: 'rgba(236, 72, 153, 0.7)', symbol: '♥' },
+  pink: { main: '#F9A8D4', top: '#FFFFFF', shadow: '#BE185D', glow: 'rgba(249, 168, 212, 0.9)', symbol: '♥' },
   // Special types palettes
   stone: { main: '#64748B', top: '#94A3B8', shadow: '#334155', glow: 'rgba(148, 163, 184, 0.4)', symbol: '🪨' },
   bomb: { main: '#1E293B', top: '#F97316', shadow: '#0F172A', glow: 'rgba(239, 68, 68, 0.9)', symbol: '💣' },
-  rainbow: { main: '#EC4899', top: '#38BDF8', shadow: '#8B5CF6', glow: 'rgba(168, 85, 247, 0.9)', symbol: '🌈' },
+  rainbow: { main: '#F9A8D4', top: '#38BDF8', shadow: '#8B5CF6', glow: 'rgba(168, 85, 247, 0.9)', symbol: '🌈' },
   lightning: { main: '#FACC15', top: '#FEF08A', shadow: '#A16207', glow: 'rgba(250, 204, 21, 0.9)', symbol: '⚡' },
   ice: { main: '#7DD3FC', top: '#E0F2FE', shadow: '#0284C7', glow: 'rgba(56, 189, 248, 0.8)', symbol: '❄️' }
 };
@@ -142,8 +142,8 @@ export default function BubbleCool({
     return saved;
   });
 
-  const activeTheme = isIntermission ? 'candy' : (customizations.theme || 'candy');
-  const activeDifficulty = isIntermission ? 'normal' : (customizations.difficulty || 'normal');
+  const activeTheme = customizations.theme || 'candy';
+  const activeDifficulty = isIntermission ? (intermissionDifficulty || 'moyen') : (customizations.difficulty || 'moyen');
 
   const activeChapter = getChapter(currentChapterId);
 
@@ -152,7 +152,6 @@ export default function BubbleCool({
   const [highScore, setHighScore] = useState(() => {
     return parseInt(localStorage.getItem('retrovision_bubblecool_highscore') || '0', 10);
   });
-  const [foulCounter, setFoulCounter] = useState(5);
   const [gameOver, setGameOver] = useState(false);
   const [victory, setVictory] = useState(false);
   const [swapUsed, setSwapUsed] = useState(0);
@@ -260,7 +259,6 @@ export default function BubbleCool({
 
     setScore(0);
     setShotsFired(0);
-    setFoulCounter(5);
     setBombsCount(3);
     setRainbowsCount(2);
     setLightningCount(1);
@@ -557,7 +555,7 @@ export default function BubbleCool({
       rainbowGrad.addColorStop(0, '#FFFFFF');
       rainbowGrad.addColorStop(0.3, '#38BDF8');
       rainbowGrad.addColorStop(0.6, '#A855F7');
-      rainbowGrad.addColorStop(0.85, '#EC4899');
+      rainbowGrad.addColorStop(0.85, '#F9A8D4');
       rainbowGrad.addColorStop(1, '#EAB308');
       ctx.fillStyle = rainbowGrad;
       ctx.fill();
@@ -660,8 +658,8 @@ export default function BubbleCool({
       }
 
       if (palette.symbol) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.font = 'bold 11px sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(palette.symbol, 0, 1);
@@ -1178,22 +1176,10 @@ export default function BubbleCool({
       checkBoardStatus(state);
 
     } else {
-      // MISSED MATCH -> Aucune punition en mode Chapitres !
+      // MISSED MATCH -> Aucune pénalisation (pas d'ajout de nouvelle vague de boules)
       state.comboCount = 0;
       state.consecutiveMisses = (state.consecutiveMisses || 0) + 1;
       sound.playClick?.();
-
-      // En mode arcade uniquement : gestion des fautes
-      if (gameMode === 'arcade') {
-        setFoulCounter((prev) => {
-          const next = prev - 1;
-          if (next <= 0) {
-            dropNewGridRow(state);
-            return 5;
-          }
-          return next;
-        });
-      }
     }
 
     // Check Defeat Condition
@@ -1373,28 +1359,6 @@ export default function BubbleCool({
     }
 
     return orphansCount;
-  };
-
-  const dropNewGridRow = (state) => {
-    if (typeof sound.playBubbleRowDrop === 'function') {
-      sound.playBubbleRowDrop();
-    } else {
-      sound.playShake?.();
-    }
-
-    state.screenShake = 6;
-    const grid = state.grid;
-
-    for (let r = MAX_ROWS - 1; r > 0; r--) {
-      for (let c = 0; c < COLS_EVEN; c++) {
-        grid[r][c] = grid[r - 1][c];
-      }
-    }
-
-    const available = getAvailableColorsFromGrid(grid);
-    for (let c = 0; c < COLS_EVEN; c++) {
-      grid[0][c] = available[Math.floor(Math.random() * available.length)];
-    }
   };
 
   const isBoardEmpty = (grid) => {
@@ -2068,8 +2032,62 @@ export default function BubbleCool({
           );
         })()}
 
-        {/* Rescue Power-Ups Bar (Astuces & Aides Anti-Blocage) */}
-        <div style={powerupRowStyle}>
+        {/* Canvas Screen */}
+        <div style={canvasWrapperStyle} className="bubbleBlock">
+          <canvas
+            ref={canvasRef}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            onMouseMove={handlePointerMove}
+            onTouchMove={handlePointerMove}
+            onClick={handleShoot}
+            style={canvasStyle}
+          />
+
+          {/* Game Over Overlay */}
+          {gameOver && (
+            <div style={overlayStyle}>
+              <div style={titleStyle}>PARTIE TERMINÉE !</div>
+              <div style={{ color: '#94a3b8', marginBottom: '16px', fontSize: '13px' }}>
+                Les bulles ont franchi la ligne d'alerte !
+              </div>
+              <div style={{ fontSize: '24px', color: '#38BDF8', fontWeight: 'bold', marginBottom: '20px' }}>
+                Score: {score}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '220px' }}>
+                <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
+                  Réessayer 🔄
+                </button>
+                {gameMode === 'chapter' && (
+                  <button onClick={() => setShowChapterSelect(true)} className="retro-btn" style={{ ...overlayBtnStyle, borderColor: '#94a3b8', color: '#94a3b8' }}>
+                    Menu des Chapitres 🗺️
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Victory Overlay (Arcade Mode) */}
+          {victory && gameMode === 'arcade' && (
+            <div style={overlayStyle}>
+              <div style={{ ...titleStyle, color: '#10B981', textShadow: '0 0 12px #10B981' }}>
+                VICTOIRE ÉCLATANTE !
+              </div>
+              <div style={{ color: '#94a3b8', marginBottom: '16px' }}>
+                Vous avez entièrement vidé la grille !
+              </div>
+              <div style={{ fontSize: '24px', color: '#10B981', fontWeight: 'bold', marginBottom: '20px' }}>
+                Score: {score}
+              </div>
+              <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
+                Nouvelle Partie 🎮
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Rescue Power-Ups Bar (Astuces & Aides Anti-Blocage) - Collé au bas */}
+        <div style={powerupRowStyle} className="bubbleOptions">
           <button
             onClick={handleUseBombPower}
             disabled={bombsCount <= 0 || gameStateRef.current.isShooting}
@@ -2122,60 +2140,6 @@ export default function BubbleCool({
             🔄
           </button>
         </div>
-
-        {/* Canvas Screen */}
-        <div style={canvasWrapperStyle}>
-          <canvas
-            ref={canvasRef}
-            width={CANVAS_WIDTH}
-            height={CANVAS_HEIGHT}
-            onMouseMove={handlePointerMove}
-            onTouchMove={handlePointerMove}
-            onClick={handleShoot}
-            style={canvasStyle}
-          />
-
-          {/* Game Over Overlay */}
-          {gameOver && (
-            <div style={overlayStyle}>
-              <div style={titleStyle}>PARTIE TERMINÉE !</div>
-              <div style={{ color: '#94a3b8', marginBottom: '16px', fontSize: '13px' }}>
-                Les bulles ont franchi la ligne d'alerte !
-              </div>
-              <div style={{ fontSize: '24px', color: '#38BDF8', fontWeight: 'bold', marginBottom: '20px' }}>
-                Score: {score}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '220px' }}>
-                <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
-                  Réessayer 🔄
-                </button>
-                {gameMode === 'chapter' && (
-                  <button onClick={() => setShowChapterSelect(true)} className="retro-btn" style={{ ...overlayBtnStyle, borderColor: '#94a3b8', color: '#94a3b8' }}>
-                    Menu des Chapitres 🗺️
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Victory Overlay (Arcade Mode) */}
-          {victory && gameMode === 'arcade' && (
-            <div style={overlayStyle}>
-              <div style={{ ...titleStyle, color: '#10B981', textShadow: '0 0 12px #10B981' }}>
-                VICTOIRE ÉCLATANTE !
-              </div>
-              <div style={{ color: '#94a3b8', marginBottom: '16px' }}>
-                Vous avez entièrement vidé la grille !
-              </div>
-              <div style={{ fontSize: '24px', color: '#10B981', fontWeight: 'bold', marginBottom: '20px' }}>
-                Score: {score}
-              </div>
-              <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
-                Nouvelle Partie 🎮
-              </button>
-            </div>
-          )}
-        </div>
       </div>
     </>
   );
@@ -2187,13 +2151,16 @@ const containerStyle = {
   flexDirection: 'column',
   width: '100%',
   maxWidth: '460px',
+  height: '100%',
+  maxHeight: '100%',
   boxSizing: 'border-box',
   margin: '0 auto',
   padding: '8px',
   borderRadius: '20px',
   background: 'radial-gradient(circle at center, #0f172a 0%, #020617 100%)',
   border: '2px solid rgba(56, 189, 248, 0.3)',
-  boxShadow: '0 0 20px rgba(56, 189, 248, 0.15)'
+  boxShadow: '0 0 20px rgba(56, 189, 248, 0.15)',
+  overflow: 'hidden'
 };
 
 const compactHeaderStyle = {
@@ -2238,11 +2205,15 @@ const powerupRowStyle = {
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: '6px',
-  padding: '5px 8px',
-  background: 'rgba(15, 23, 42, 0.8)',
-  borderRadius: '12px',
-  margin: '2px 0',
-  border: '1px solid rgba(255,255,255,0.08)'
+  padding: '8px 10px',
+  background: 'rgba(15, 23, 42, 0.95)',
+  borderRadius: '14px',
+  marginTop: 'auto',
+  border: '1px solid rgba(56, 189, 248, 0.25)',
+  boxShadow: '0 -4px 14px rgba(0, 0, 0, 0.35)',
+  width: '100%',
+  boxSizing: 'border-box',
+  flexShrink: 0
 };
 
 const powerupBtnStyle = {
@@ -2272,10 +2243,12 @@ const swapBtnStyle = {
 const canvasWrapperStyle = {
   position: 'relative',
   width: '100%',
+  flex: '1 1 auto',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  margin: '2px 0'
+  margin: '2px 0',
+  minHeight: 0
 };
 
 const canvasStyle = {

@@ -30,6 +30,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
   const [showHintMessage, setShowHintMessage] = useState(false);
 
   const getFilteredData = () => {
+    if (isIntermission) return hangmanData; // En entracte, tous les thèmes sont actifs
     let cat = customizations.category || 'mixte';
     if (cat === 'mixte') return hangmanData;
     const filtered = hangmanData.filter(d => d.category === cat);
@@ -245,7 +246,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
       let background = 'transparent';
 
       if (isCatSuggestion) {
-        color = '#8b5cf6';
+        color = 'orange';
         borderColor = '#8b5cf6';
         background = 'rgba(139, 92, 246, 0.15)';
       } else if (isMissed) {
@@ -548,11 +549,11 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
             <div className="riddleBox" style={{ ...riddleBoxStyle, flex: 'none', background: theme.riddleBg, border: theme.border, color: theme.color }}>
               <div style={riddleTypeBadge}>{currentData.category ? currentData.category.toUpperCase() : 'MIXTE'}</div>
               {currentData.question.split('\\n').map((line, i) => (
-                <p key={i} style={{ margin: '4px 0' }}>{line}</p>
+                <p key={i} style={{ margin: '4px 0', fontSize: "1.5rem" }}>{line}</p>
               ))}
             </div>
             {showHintMessage && (
-              <div className="hangman_tips" style={{ padding: '12px 16px', background: 'rgba(245, 158, 11, 0.15)', border: '2px solid #f59e0b', borderRadius: '12px', color: '#d97706', fontWeight: 'bold', fontSize: '20px', animation: 'fadeIn 0.3s' }}>
+              <div className="hangman_tips" style={{ padding: '12px 16px', background: 'rgba(245, 158, 11, 0.15)', border: '2px solid #f59e0b', borderRadius: '12px', color: '#d97706', fontWeight: 'bold', fontSize: '20px', animation: 'fadeIn 0.3s', textShadow: '-1px -1px white, 0px 0px white, 2px 2px black, -2px -2px black, -3px -3px black, 3px 3px black' }}>
                 💡 Indice : {currentData.hint}
               </div>
             )}
@@ -565,7 +566,7 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
         </div>
 
         {/* Keyboard Section */}
-        <div style={keyboardContainerStyle}>
+        <div style={keyboardContainerStyle} className="keyboard_bloc">
           {alphabet.map((letter) => {
             const isGuessed = guessedLetters.includes(letter);
             const isCorrect = isGuessed && targetWord.includes(letter);
@@ -610,8 +611,36 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
           })}
         </div>
 
+        {/* Passer à la suite button when 'Langue au chat' is active */}
+        {isCatSolutionShown && gameState === 'playing' && (
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
+            <button
+              onClick={forceNextQuestion}
+              className="retro-btn pulse-glow"
+              style={{
+                padding: '9px 22px',
+                background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                border: '2px solid #c4b5fd',
+                borderRadius: '24px',
+                color: '#ffffff',
+                fontSize: 'clamp(13px, 3.5vw, 15px)',
+                fontWeight: '900',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 0 16px rgba(139, 92, 246, 0.6)'
+              }}
+              title="Passer à la devinette suivante sans compléter"
+            >
+              <span>Passer à la suite</span>
+              <span style={{ fontSize: '16px' }}>⏭️</span>
+            </button>
+          </div>
+        )}
+
         {/* Jokers Section */}
-        <div style={jokersContainerStyle}>
+        <div style={jokersContainerStyle} className="Joker_buttons">
           <button
             onClick={handleUseMagnify}
             disabled={magnifyUsed || coins < 30 || gameState !== 'playing'}

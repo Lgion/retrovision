@@ -59,7 +59,7 @@ export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, inte
     }
   };
 
-  const startGame = (img, size) => {
+  const startGame = (img, size = gridSize || 3) => {
     sound.playClick();
     setSelectedImage(img);
     setGridSize(size);
@@ -149,7 +149,7 @@ export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, inte
             if (isIntermission && onIntermissionComplete) {
               if (replaySameIntermission) {
                 if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-                setTimeout(() => startGame(selectedImage || images[0]), 1500);
+                setTimeout(() => startGame(selectedImage || images[0], gridSize), 1500);
               } else {
                 setTimeout(() => onIntermissionComplete(), 1500);
               }
@@ -196,13 +196,13 @@ export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, inte
       )}
 
       {isIntermission && gameState === 'playing' && (() => {
-        const total = (gridCols * gridRows) || 9;
-        const current = pieces ? pieces.filter(p => p.isPlaced).length : 0;
-        const jpProgress = victoryPhase > 0 ? 1.0 : (total > 0 ? current / total : 0);
+        const total = (gridSize * gridSize) || 9;
+        const current = Object.keys(placedPieces).length;
+        const jpProgress = (victoryPhase !== 0 || current >= total) ? 1.0 : (total > 0 ? current / total : 0);
         return (
           <IntermissionHeader
             instructionText="Reconstituez l'image pour retourner au jeu principal."
-            onRestart={() => startGame(selectedImage || images[0])}
+            onRestart={() => startGame(selectedImage || images[0], gridSize)}
             onOtherGame={onIntermissionRequest}
             onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
             replaySame={replaySameIntermission}
