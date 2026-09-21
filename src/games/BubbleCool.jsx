@@ -104,18 +104,25 @@ export default function BubbleCool({
   const [rainbowsCount, setRainbowsCount] = useState(2);
   const [lightningCount, setLightningCount] = useState(1);
 
-  // Game Mode: 'chapter' or 'arcade'
+  // Game Mode: 'chapter' or 'arcade' (L'entracte se joue désormais en mode Aventure)
   const [gameMode, setGameMode] = useState(() => {
-    return isIntermission ? 'arcade' : getGameConfig('bubblecool', 'gameMode', 'chapter');
+    return isIntermission ? 'chapter' : getGameConfig('bubblecool', 'gameMode', 'chapter');
   });
 
+  // En entracte : choix aléatoire parmi les 10 chapitres de l'aventure
   const [currentChapterId, setCurrentChapterId] = useState(() => {
+    if (isIntermission) {
+      return Math.floor(Math.random() * 10) + 1;
+    }
     return parseInt(localStorage.getItem('retrovision_bubblecool_last_ch') || '1', 10);
   });
 
-  const [unlockedChapters, setUnlockedChapters] = useState(() => {
-    return parseInt(localStorage.getItem('retrovision_bubblecool_unlocked_ch') || '1', 10);
-  });
+  // Tous les 10 chapitres sont entièrement et immédiatement débloqués (accès 100% libre)
+  const [unlockedChapters, setUnlockedChapters] = useState(10);
+
+  useEffect(() => {
+    localStorage.setItem('retrovision_bubblecool_unlocked_ch', '10');
+  }, []);
 
   const [chapterStars, setChapterStars] = useState(() => {
     try {
@@ -156,9 +163,12 @@ export default function BubbleCool({
   const [victory, setVictory] = useState(false);
   const [swapUsed, setSwapUsed] = useState(0);
   const [shotsFired, setShotsFired] = useState(0);
+  const [isShootingState, setIsShootingState] = useState(false);
+  const [intermissionProgress, setIntermissionProgress] = useState(0);
 
   // References for Animation & Game Loop
   const canvasRef = useRef(null);
+  const initialBubbleCountRef = useRef(40);
   const gameStateRef = useRef({
     grid: Array.from({ length: MAX_ROWS }, () => Array(COLS_EVEN).fill(null)),
     currentBubble: 'red',
@@ -220,11 +230,11 @@ export default function BubbleCool({
 
     let newGrid = Array.from({ length: MAX_ROWS }, () => Array(COLS_EVEN).fill(null));
 
-    if (gameMode === 'chapter' && !isIntermission) {
-      // Generate Dynamic Procedural Chapter Layout (Anti-monotonie)
+    if (gameMode === 'chapter') {
+      // Mode Aventure (jeu normal ou entracte) : grille dynamique procédurale du chapitre
       newGrid = generateDynamicChapterGrid(currentChapterId, MAX_ROWS, COLS_EVEN, COLS_ODD);
     } else {
-      // Arcade / Intermission Mode : 5 random rows
+      // Mode Arcade infini : 5 rangées aléatoires
       const initialRows = 5;
       const colorsToUse = activeDifficulty === 'facile' ? COLOR_KEYS.slice(0, 4) : COLOR_KEYS;
       for (let r = 0; r < initialRows; r++) {
@@ -234,6 +244,15 @@ export default function BubbleCool({
         }
       }
     }
+
+    // Nombre initial de bulles pour calculer la jauge de progression
+    let bubbleCount = 0;
+    for (let r = 0; r < MAX_ROWS; r++) {
+      for (let c = 0; c < getCols(r); c++) {
+        if (newGrid[r][c]) bubbleCount++;
+      }
+    }
+    initialBubbleCountRef.current = bubbleCount > 0 ? bubbleCount : 40;
 
     const firstColor = getRandomColor(newGrid);
     const secondColor = getRandomColor(newGrid);
@@ -265,12 +284,27 @@ export default function BubbleCool({
     setGameOver(false);
     setVictory(false);
     setSwapUsed(0);
+    setIsShootingState(false);
+    setIntermissionProgress(0);
     setShowChapterVictoryModal(false);
+  };
+
+  const handleRestart = (forceSame = false) => {
+    if (isIntermission && !replaySameIntermission && !forceSame) {
+      const randCh = Math.floor(Math.random() * 10) + 1;
+      if (randCh !== currentChapterId) {
+        setCurrentChapterId(randCh);
+        return;
+      }
+    }
+    initGame();
   };
 
   const startChapter = (chapterId) => {
     setCurrentChapterId(chapterId);
-    localStorage.setItem('retrovision_bubblecool_last_ch', chapterId.toString());
+    if (!isIntermission) {
+      localStorage.setItem('retrovision_bubblecool_last_ch', chapterId.toString());
+    }
     setShowChapterSelect(false);
     setShowChapterIntroModal(true);
     initGame();
@@ -905,6 +939,7 @@ export default function BubbleCool({
     };
 
     state.isShooting = true;
+    setIsShootingState(true);
     setShotsFired((prev) => prev + 1);
   };
 
@@ -1261,6 +1296,7 @@ export default function BubbleCool({
     }
 
     state.isShooting = false;
+    setIsShootingState(false);
   };
 
   const addScore = (points) => {
@@ -1279,6 +1315,12 @@ export default function BubbleCool({
     const hasRemainingColorBubbles = state.grid.some((row) =>
       row.some((b) => b && COLOR_KEYS.includes(b))
     );
+
+    if (isIntermission) {
+      const total = initialBubbleCountRef.current || 40;
+      const rem = state.grid.flat().filter(Boolean).length;
+      setIntermissionProgress(Math.max(0, Math.min(1, (total - rem) / total)));
+    }
 
     if (!hasRemainingColorBubbles || isBoardEmpty(state.grid)) {
       triggerVictory();
@@ -1386,20 +1428,47 @@ export default function BubbleCool({
     sound.playShake?.();
     setGameOver(true);
     gameStateRef.current.isShooting = false;
+    setIsShootingState(false);
   };
 
   const triggerVictory = () => {
     setVictory(true);
     gameStateRef.current.isShooting = false;
+    setIsShootingState(false);
 
-    if (gameMode === 'chapter' && !isIntermission) {
+    if (isIntermission) {
+      setIntermissionProgress(1);
+      sound.playSudokuSuccess?.();
+
+      // Enregistre les étoiles et le score du chapitre même lors d'un entracte
+      const stars = calculateStars(currentChapterId, score);
+      setVictoryStars(stars);
+      setChapterStars((prev) => {
+        const next = { ...prev, [currentChapterId]: Math.max(prev[currentChapterId] || 0, stars) };
+        localStorage.setItem('retrovision_bubblecool_stars', JSON.stringify(next));
+        return next;
+      });
+      setChapterScores((prev) => {
+        const next = { ...prev, [currentChapterId]: Math.max(prev[currentChapterId] || 0, score) };
+        localStorage.setItem('retrovision_bubblecool_ch_scores', JSON.stringify(next));
+        return next;
+      });
+
+      if (onIntermissionComplete) {
+        if (replaySameIntermission) {
+          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+          setTimeout(initGame, 1800);
+        } else {
+          setTimeout(onIntermissionComplete, 1800);
+        }
+      }
+    } else if (gameMode === 'chapter') {
       const stars = calculateStars(currentChapterId, score);
       setVictoryStars(stars);
       sound.playChapterVictory?.();
 
-      const nextUnlocked = Math.min(10, Math.max(unlockedChapters, currentChapterId + 1));
-      setUnlockedChapters(nextUnlocked);
-      localStorage.setItem('retrovision_bubblecool_unlocked_ch', nextUnlocked.toString());
+      setUnlockedChapters(10);
+      localStorage.setItem('retrovision_bubblecool_unlocked_ch', '10');
 
       setChapterStars((prev) => {
         const next = { ...prev, [currentChapterId]: Math.max(prev[currentChapterId] || 0, stars) };
@@ -1417,14 +1486,6 @@ export default function BubbleCool({
 
     } else {
       sound.playSudokuSuccess?.();
-      if (isIntermission && onIntermissionComplete) {
-        if (replaySameIntermission) {
-          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-          setTimeout(initGame, 1800);
-        } else {
-          setTimeout(onIntermissionComplete, 1800);
-        }
-      }
     }
   };
 
@@ -1625,7 +1686,7 @@ export default function BubbleCool({
       )}
 
       {/* CHAPTER INTRO OVERLAY */}
-      {showChapterIntroModal && (
+      {showChapterIntroModal && !isIntermission && (
         <div style={modalOverlayStyle}>
           <div style={modalCardStyle}>
             <div style={{ fontSize: '38px', marginBottom: '8px' }}>{activeChapter.icon}</div>
@@ -1790,10 +1851,9 @@ export default function BubbleCool({
               </button>
             </div>
 
-            {/* 10 Chapters List */}
+            {/* 10 Chapters List - Tous débloqués et accessibles sans restriction */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
               {CHAPTERS.map((ch) => {
-                const isUnlocked = ch.id <= unlockedChapters;
                 const stars = chapterStars[ch.id] || 0;
                 const bestSc = chapterScores[ch.id] || 0;
                 const isCurrent = ch.id === currentChapterId;
@@ -1801,16 +1861,16 @@ export default function BubbleCool({
                 return (
                   <div
                     key={ch.id}
-                    onClick={() => isUnlocked && startChapter(ch.id)}
+                    onClick={() => startChapter(ch.id)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       padding: '12px',
                       borderRadius: '12px',
                       background: isCurrent ? `${ch.accentColor}25` : 'rgba(15,23,42,0.6)',
-                      border: `1.5px solid ${isCurrent ? ch.accentColor : isUnlocked ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}`,
-                      cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                      opacity: isUnlocked ? 1 : 0.45,
+                      border: `1.5px solid ${isCurrent ? ch.accentColor : 'rgba(255,255,255,0.1)'}`,
+                      cursor: 'pointer',
+                      opacity: 1,
                       transition: 'all 0.2s'
                     }}
                   >
@@ -1831,19 +1891,13 @@ export default function BubbleCool({
                     </div>
 
                     <div style={{ textAlign: 'right' }}>
-                      {isUnlocked ? (
-                        <>
-                          <div style={{ fontSize: '14px' }}>
-                            {'⭐'.repeat(stars) + '☆'.repeat(3 - stars)}
-                          </div>
-                          {bestSc > 0 && (
-                            <div style={{ fontSize: '10px', color: '#38BDF8', fontFamily: 'Orbitron, sans-serif', marginTop: '2px' }}>
-                              {bestSc} pts
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div style={{ fontSize: '18px' }}>🔒</div>
+                      <div style={{ fontSize: '14px' }}>
+                        {'⭐'.repeat(stars) + '☆'.repeat(3 - stars)}
+                      </div>
+                      {bestSc > 0 && (
+                        <div style={{ fontSize: '10px', color: '#38BDF8', fontFamily: 'Orbitron, sans-serif', marginTop: '2px' }}>
+                          {bestSc} pts
+                        </div>
                       )}
                     </div>
                   </div>
@@ -2015,22 +2069,17 @@ export default function BubbleCool({
           </div>
         )}
 
-        {isIntermission && (() => {
-          const totalBubbles = 40;
-          const remaining = gameStateRef.current ? gameStateRef.current.grid.flat().filter(Boolean).length : 0;
-          const bcProgress = victory ? 1.0 : Math.max(0, (totalBubbles - remaining) / totalBubbles);
-          return (
-            <IntermissionHeader
-              instructionText="Videz toutes les bulles pour retourner au jeu principal."
-              onRestart={initGame}
-              onOtherGame={onIntermissionRequest}
-              onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
-              replaySame={replaySameIntermission}
-              onToggleReplaySame={onToggleReplaySameIntermission}
-              progress={bcProgress}
-            />
-          );
-        })()}
+        {isIntermission && (
+          <IntermissionHeader
+            instructionText={`Chapitre ${activeChapter.id} : ${activeChapter.title} — Videz toutes les bulles pour terminer.`}
+            onRestart={() => handleRestart(false)}
+            onOtherGame={onIntermissionRequest}
+            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+            replaySame={replaySameIntermission}
+            onToggleReplaySame={onToggleReplaySameIntermission}
+            progress={intermissionProgress}
+          />
+        )}
 
         {/* Canvas Screen */}
         <div style={canvasWrapperStyle} className="bubbleBlock">
@@ -2055,10 +2104,10 @@ export default function BubbleCool({
                 Score: {score}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '220px' }}>
-                <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
+                <button onClick={() => handleRestart(true)} className="retro-btn pulse-glow" style={overlayBtnStyle}>
                   Réessayer 🔄
                 </button>
-                {gameMode === 'chapter' && (
+                {gameMode === 'chapter' && !isIntermission && (
                   <button onClick={() => setShowChapterSelect(true)} className="retro-btn" style={{ ...overlayBtnStyle, borderColor: '#94a3b8', color: '#94a3b8' }}>
                     Menu des Chapitres 🗺️
                   </button>
@@ -2067,21 +2116,25 @@ export default function BubbleCool({
             </div>
           )}
 
-          {/* Victory Overlay (Arcade Mode) */}
-          {victory && gameMode === 'arcade' && (
+          {/* Victory Overlay (Arcade Mode ou Entracte Aventure) */}
+          {victory && (gameMode === 'arcade' || isIntermission) && (
             <div style={overlayStyle}>
               <div style={{ ...titleStyle, color: '#10B981', textShadow: '0 0 12px #10B981' }}>
                 VICTOIRE ÉCLATANTE !
               </div>
               <div style={{ color: '#94a3b8', marginBottom: '16px' }}>
-                Vous avez entièrement vidé la grille !
+                {isIntermission
+                  ? `Chapitre ${activeChapter.id} réussi ! Retour imminent...`
+                  : 'Vous avez entièrement vidé la grille !'}
               </div>
               <div style={{ fontSize: '24px', color: '#10B981', fontWeight: 'bold', marginBottom: '20px' }}>
                 Score: {score}
               </div>
-              <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
-                Nouvelle Partie 🎮
-              </button>
+              {!isIntermission && (
+                <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
+                  Nouvelle Partie 🎮
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -2090,7 +2143,7 @@ export default function BubbleCool({
         <div style={powerupRowStyle} className="bubbleOptions">
           <button
             onClick={handleUseBombPower}
-            disabled={bombsCount <= 0 || gameStateRef.current.isShooting}
+            disabled={bombsCount <= 0 || isShootingState}
             className="retro-btn"
             style={{
               ...powerupBtnStyle,
@@ -2106,7 +2159,7 @@ export default function BubbleCool({
 
           <button
             onClick={handleUseRainbowPower}
-            disabled={rainbowsCount <= 0 || gameStateRef.current.isShooting}
+            disabled={rainbowsCount <= 0 || isShootingState}
             className="retro-btn"
             style={{
               ...powerupBtnStyle,
@@ -2122,7 +2175,7 @@ export default function BubbleCool({
 
           <button
             onClick={handleUseLightningPower}
-            disabled={lightningCount <= 0 || gameStateRef.current.isShooting}
+            disabled={lightningCount <= 0 || isShootingState}
             className="retro-btn"
             style={{
               ...powerupBtnStyle,

@@ -386,32 +386,32 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
         }} 
       />}
       
-      {isIntermission && gameState === 'playing' && (() => {
-        const totalSafe = (boardSize * boardSize) - numMines;
-        let revealedSafe = 0;
-        if (grid) {
-          for (let r = 0; r < boardSize; r++) {
-            for (let c = 0; c < boardSize; c++) {
-              if (grid[r][c] && grid[r][c].isRevealed && !grid[r][c].isMine) revealedSafe++;
+      <div className="game-container minesweeper-container" style={{ ...containerStyle, background: theme.bg }}>
+        {isIntermission && gameState === 'playing' && (() => {
+          const totalSafe = (boardSize * boardSize) - numMines;
+          let revealedSafe = 0;
+          if (grid) {
+            for (let r = 0; r < boardSize; r++) {
+              for (let c = 0; c < boardSize; c++) {
+                if (grid[r][c] && grid[r][c].isRevealed && !grid[r][c].isMine) revealedSafe++;
+              }
             }
           }
-        }
-        const msProgress = totalSafe > 0 ? (revealedSafe / totalSafe) : 0;
-        return (
-          <IntermissionHeader
-            instructionText="Gagnez le Démineur pour retourner au jeu principal."
-            onRestart={() => startGame(boardSize, numMines)}
-            onOtherGame={onIntermissionRequest}
-            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
-            replaySame={replaySameIntermission}
-            onToggleReplaySame={onToggleReplaySameIntermission}
-            progress={msProgress}
-          />
-        );
-      })()}
-      
-      <div className="game-container minesweeper-container" style={{ ...containerStyle, background: theme.bg }}>
-      {!isIntermission && (
+          const msProgress = victoryPhase > 0 ? 1.0 : (totalSafe > 0 ? (revealedSafe / totalSafe) : 0);
+          return (
+            <IntermissionHeader
+              instructionText="Gagnez le Démineur pour retourner au jeu principal."
+              onRestart={() => startGame(boardSize, numMines)}
+              onOtherGame={onIntermissionRequest}
+              onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+              replaySame={replaySameIntermission}
+              onToggleReplaySame={onToggleReplaySameIntermission}
+              progress={msProgress}
+            />
+          );
+        })()}
+
+        {!isIntermission && (
         <GameHeader
           key={randomThemeActive ? 'rand' : 'fixed'}
           title="DÉMINEUR"
@@ -452,7 +452,7 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
         />
       )}
 
-      {gameState === 'menu' && (
+      {gameState === 'menu' && !isIntermission && (
         <div style={menuStyle}>
           <div style={{fontSize: '5rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.5))'}}>💣</div>
           <h2 style={{color: '#fff', marginBottom: '30px', textAlign: 'center'}}>Nettoyez le champ de mines !</h2>
@@ -480,8 +480,39 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
 
       {gameState === 'playing' && (
         <div style={gameplayContainerStyle}>
-          
-
+          {isIntermission && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+              maxWidth: 'min(380px, 48vh)',
+              marginBottom: '10px',
+              padding: '0 4px',
+              boxSizing: 'border-box'
+            }}>
+              <div style={mineCounterStyle}>
+                💣 {minesLeft}
+              </div>
+              <button 
+                onClick={() => { sound.playClick(); setFlagMode(!flagMode); }}
+                className={`retro-btn ${flagMode ? 'pulse-glow' : ''}`}
+                style={{
+                  padding: '6px 14px', fontSize: '13px', 
+                  backgroundColor: flagMode ? 'rgba(239, 68, 68, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                  border: `1px solid ${flagMode ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                  color: flagMode ? '#ef4444' : '#ffffff',
+                  borderRadius: '20px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {flagMode ? '🚩 Drapeau' : '⛏️ Creuser'}
+              </button>
+            </div>
+          )}
 
           <div style={{...boardWrapperStyle, padding: boardSize === 9 ? '15px' : '10px'}}>
             <div style={{
@@ -539,7 +570,14 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
         }}>
           <h2 style={{ fontSize: '3rem', color: '#ef4444', margin: '0 0 20px 0', animation: 'popIn 0.5s' }}>BOUM !</h2>
           <button
-            onClick={() => { setGameOver(false); setGameState('menu'); }}
+            onClick={() => {
+              setGameOver(false);
+              if (isIntermission) {
+                startGame(boardSize, numMines);
+              } else {
+                setGameState('menu');
+              }
+            }}
             className="retro-btn"
             style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#ef4444', color: '#ef4444' }}
           >
