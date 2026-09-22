@@ -5,6 +5,7 @@ import GameHeader from '../components/GameHeader';
 import Grid2048Collection from './Grid2048Collection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
 
@@ -22,7 +23,21 @@ const addRandomTile = (currentBoard) => {
   return newBoard;
 };
 
-export default function Grid2048({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+export default function Grid2048({
+  onBack,
+  onScoreSave,
+  isIntermission,
+  intermissionDifficulty,
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
+}) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [customizations, setCustomizations] = useState(() => getGameConfig('2048', 'customizations', { difficulty: 'moyen', theme: 'neon' }));
@@ -496,28 +511,49 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
             <div style={{ ...overlayStyle, animation: 'delayFadeIn 2s forwards' }}>
               <div style={victoryTitleStyle}>VICTOIRE !</div>
               <div style={descStyle}>Vous avez atteint la tuile 2048.</div>
-              <div style={btnRowStyle}>
-                <button 
-                  onClick={() => setKeepPlaying(true)} 
-                  className="retro-btn"
-                  style={{ ...overlayBtnStyle, borderColor: '#ff007f', color: '#ff007f' }}
-                >
-                  Continuer
-                </button>
-                <button 
-                  onClick={() => {
-                    if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
-                      onIntermissionRequest();
-                    } else {
-                      initGame();
-                    }
-                  }} 
-                  className="retro-btn pulse-glow"
-                  style={overlayBtnStyle}
-                >
-                  Recommencer
-                </button>
-              </div>
+              {isIntermission ? (
+                <div style={btnRowStyle}>
+                  <button 
+                    onClick={() => onIntermissionComplete && onIntermissionComplete()} 
+                    className="retro-btn pulse-glow"
+                    style={overlayBtnStyle}
+                  >
+                    Terminer l'Entracte 🏁
+                  </button>
+                </div>
+              ) : (
+                <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+                  <IntermissionProposal
+                    onIntermissionRequest={onIntermissionRequest}
+                    upcomingIntermission={upcomingIntermission}
+                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                    intermissionConfig={intermissionConfig}
+                    intermissionGames={intermissionGames}
+                    excludeGameKey="2048"
+                    onContinue={initGame}
+                    continueText="Recommencer"
+                    showDirectContinue={true}
+                    customStyle={{ marginBottom: '16px' }}
+                  />
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                    <button 
+                      onClick={() => setKeepPlaying(true)} 
+                      className="retro-btn"
+                      style={{ ...overlayBtnStyle, borderColor: '#ff007f', color: '#ff007f' }}
+                    >
+                      Poursuivre en Infini ♾️
+                    </button>
+                    <button 
+                      onClick={initGame} 
+                      className="retro-btn"
+                      style={overlayBtnStyle}
+                    >
+                      🔄 Rejouer
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

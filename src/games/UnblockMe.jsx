@@ -4,9 +4,21 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import LEVELS from '../utils/unblockLevels.json';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { useConfirm } from '../components/ConfirmContext';
 
-export default function UnblockMe({ onBack, onScoreSave, onIntermissionRequest, isIntermission = false }) {
+export default function UnblockMe({
+  onBack,
+  onScoreSave,
+  onIntermissionRequest,
+  onIntermissionComplete,
+  isIntermission = false,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
+}) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing' | 'levelSelect'
@@ -428,31 +440,58 @@ export default function UnblockMe({ onBack, onScoreSave, onIntermissionRequest, 
               <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
                 Score: <strong style={{ color: '#E53E3E', fontSize: '2rem' }}>{Math.max(1000 - moves * 10, 100)}</strong>
               </div>
-              <div style={{display: 'flex', gap: '20px', justifyContent: 'center'}}>
-                <button
-                  onClick={() => { setVictoryPhase(0); setGameState('levelSelect'); }}
-                  className="retro-btn"
-                  style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#333', color: '#333' }}
-                >
-                  Niveaux
-                </button>
-                {currentLevelIdx < LEVELS.length - 1 && (
+              {isIntermission ? (
+                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                   <button
-                    onClick={() => {
+                    onClick={() => onIntermissionComplete && onIntermissionComplete()}
+                    className="retro-btn pulse-glow"
+                    style={{ fontSize: '1.2rem', padding: '12px 30px', borderColor: '#E53E3E', color: '#E53E3E' }}
+                  >
+                    Terminer l'Entracte 🏁
+                  </button>
+                </div>
+              ) : (
+                <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+                  <IntermissionProposal
+                    onIntermissionRequest={onIntermissionRequest}
+                    upcomingIntermission={upcomingIntermission}
+                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                    intermissionConfig={intermissionConfig}
+                    intermissionGames={intermissionGames}
+                    excludeGameKey="unblock"
+                    onContinue={() => {
                       setVictoryPhase(0);
-                      if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
-                        onIntermissionRequest();
-                      } else {
+                      if (currentLevelIdx < LEVELS.length - 1) {
                         loadLevel(currentLevelIdx + 1);
+                      } else {
+                        setGameState('levelSelect');
                       }
                     }}
-                    className="retro-btn pulse-glow"
-                    style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#E53E3E', color: '#E53E3E' }}
-                  >
-                    Niveau Suivant
-                  </button>
-                )}
-              </div>
+                    continueText={currentLevelIdx < LEVELS.length - 1 ? "Niveau Suivant" : "Sélection Niveaux"}
+                    showDirectContinue={true}
+                    customStyle={{ marginBottom: '16px' }}
+                  />
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                    {currentLevelIdx < LEVELS.length - 1 && (
+                      <button
+                        onClick={() => { setVictoryPhase(0); loadLevel(currentLevelIdx + 1); }}
+                        className="retro-btn"
+                        style={{ fontSize: '14px', padding: '10px 20px', borderColor: '#E53E3E', color: '#E53E3E' }}
+                      >
+                        Niveau Suivant ➔
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setVictoryPhase(0); setGameState('levelSelect'); }}
+                      className="retro-btn"
+                      style={{ fontSize: '14px', padding: '10px 20px', borderColor: '#333', color: '#333' }}
+                    >
+                      📋 Niveaux
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

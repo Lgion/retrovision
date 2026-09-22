@@ -6,6 +6,7 @@ import GameHeader from '../components/GameHeader';
 import HangmanCollection from './HangmanCollection';
 import hangmanData from '../utils/hangmanData.json';
 import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { useConfirm } from '../components/ConfirmContext';
 
 const shuffleArray = (arr) => {
@@ -22,7 +23,21 @@ const getRandomItem = (arr) => {
   return arr[Math.floor(Math.random() * arr.length)];
 };
 
-export default function Hangman({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+export default function Hangman({
+  onBack,
+  onScoreSave,
+  isIntermission,
+  intermissionDifficulty,
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
+}) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
 
@@ -700,16 +715,42 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
               Le mot était bien <br />
               <span style={{ color: '#10b981', fontSize: '30px', letterSpacing: '2px' }}>{targetWord}</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '85%', maxWidth: '300px' }}>
-              <button onClick={nextLevel} className="retro-btn" style={{ ...nextLevelBtnStyle, fontSize: '20px', padding: '12px 20px', cursor: 'pointer' }}>
-                Devinette Suivante ⏭
-              </button>
-              {isIntermission && onIntermissionComplete && (
-                <button onClick={onIntermissionComplete} className="retro-btn" style={{ ...nextLevelBtnStyle, background: '#3b82f6', fontSize: '18px', padding: '10px 18px', cursor: 'pointer' }}>
-                  Terminer l'entracte 🏁
+            {isIntermission ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '85%', maxWidth: '300px' }}>
+                <button onClick={forceNextQuestion} className="retro-btn" style={{ ...nextLevelBtnStyle, fontSize: '20px', padding: '12px 20px', cursor: 'pointer' }}>
+                  Devinette Suivante ⏭
                 </button>
-              )}
-            </div>
+                {onIntermissionComplete && (
+                  <button onClick={onIntermissionComplete} className="retro-btn" style={{ ...nextLevelBtnStyle, background: '#3b82f6', fontSize: '18px', padding: '10px 18px', cursor: 'pointer' }}>
+                    Terminer l'entracte 🏁
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+                <IntermissionProposal
+                  onIntermissionRequest={onIntermissionRequest}
+                  upcomingIntermission={upcomingIntermission}
+                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                  intermissionConfig={intermissionConfig}
+                  intermissionGames={intermissionGames}
+                  excludeGameKey="hangman"
+                  onContinue={forceNextQuestion}
+                  continueText="Devinette Suivante"
+                  showDirectContinue={true}
+                  customStyle={{ marginBottom: '16px' }}
+                />
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button onClick={forceNextQuestion} className="retro-btn" style={{ ...nextLevelBtnStyle, fontSize: '15px', padding: '10px 18px', cursor: 'pointer' }}>
+                    Mot Suivant ⏭
+                  </button>
+                  <button onClick={resetLevel} className="retro-btn" style={{ ...nextLevelBtnStyle, background: '#64748b', fontSize: '15px', padding: '10px 18px', cursor: 'pointer' }}>
+                    🔄 Rejouer
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

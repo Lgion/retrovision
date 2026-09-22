@@ -179,10 +179,6 @@ function App() {
     [isIntermissionMode, returnView, view, pickRandomIntermissionGame, intermissionConfig]
   );
 
-  const handleMahjongNextLevel = useCallback(
-    (forcedGameKey = null) => handleIntermissionRequest('mahjong', forcedGameKey),
-    [handleIntermissionRequest]
-  );
 
   const handleIntermissionComplete = useCallback((isSuccess = true) => {
     setIntermissionResult(isSuccess === false ? 'passed' : 'success');
@@ -226,12 +222,18 @@ function App() {
   }, [view]);
 
   // Sauvegarde centralisée et factorisée des scores
-  const handleScoreSave = useCallback((gameName, score) => {
-    recordScore(gameName, score);
+  const handleScoreSave = useCallback((gameNameOrData, rawScore) => {
+    let gameKey = gameNameOrData;
+    let score = rawScore;
+    if (gameNameOrData && typeof gameNameOrData === 'object') {
+      gameKey = gameNameOrData.game || gameNameOrData.gameId || gameNameOrData.id;
+      score = gameNameOrData.score;
+    }
+    recordScore(gameKey, score);
 
-    const conf = findGameConfig(gameName);
+    const conf = findGameConfig(gameKey);
     if (conf?.storageKey) {
-      localStorage.setItem(conf.storageKey, conf.binaryScore ? '1' : score.toString());
+      localStorage.setItem(conf.storageKey, conf.binaryScore ? '1' : (score !== undefined ? score.toString() : '1'));
     }
 
     setStatsUpdated((prev) => prev + 1);
@@ -262,6 +264,7 @@ function App() {
           intermissionDifficulty:
             sessionIntermissionDifficulty || intermissionConfig[gameKey]?.difficulty || 'facile',
           onIntermissionComplete: handleIntermissionComplete,
+          onIntermissionRequest: () => handleIntermissionRequest(returnView || 'mahjong'),
           replaySameIntermission,
           onToggleReplaySameIntermission: setReplaySameIntermission,
         }
@@ -269,17 +272,24 @@ function App() {
           isIntermission: false,
         };
 
-    // Spécificités pour l'hôte d'entracte (Mahjong)
-    const hostProps =
-      gameKey === 'mahjong'
-        ? {
-            onIntermissionRequest: handleMahjongNextLevel,
-            upcomingIntermission: activeUpcomingIntermissionGame,
-            onSelectUpcomingIntermission: setUpcomingIntermissionGame,
-            onShuffleUpcomingIntermission: shuffleUpcomingIntermissionGame,
-            intermissionConfig,
-          }
-        : {};
+    // Spécificités pour l'hôte d'entracte (disponible pour tout jeu joué en mode normal)
+    const hostProps = !isIntermissionMode
+      ? {
+          onIntermissionRequest: (targetKey) => handleIntermissionRequest(gameKey, targetKey),
+          upcomingIntermission: activeUpcomingIntermissionGame,
+          onSelectUpcomingIntermission: setUpcomingIntermissionGame,
+          onShuffleUpcomingIntermission: shuffleUpcomingIntermissionGame,
+          intermissionConfig,
+          intermissionGames: Object.values(GAMES_CONFIG)
+            .filter((g) => g.supportsIntermission && g.id !== gameKey)
+            .map((g) => ({
+              key: g.id,
+              name: g.name,
+              icon: g.settingsIcon || g.icon,
+              subtitle: g.subtitle || "Mini-jeu d'entracte",
+            })),
+        }
+      : {};
 
     const wrapperClass = gameDef.fullscreen ? 'game-wrapper-fullscreen' : 'game-wrapper';
 

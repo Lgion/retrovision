@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
+import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { sound } from '../utils/sound';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
@@ -74,7 +76,15 @@ export default function FireflyGarden({
   onScoreSave,
   isIntermission = false,
   intermissionDifficulty = 'facile',
-  onIntermissionComplete
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
 }) {
   const confirm = useConfirm();
 
@@ -369,80 +379,97 @@ export default function FireflyGarden({
         }
       `}</style>
 
-      {/* Header Unifié avec bouton retour haute visibilité */}
-      <GameHeader
-        title="JARDIN DES LUCIOLES"
-        onBack={handleBackWithConfirm}
-        showShop={false}
-        centerContent={
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(56, 189, 248, 0.3)'
+      {/* Header Unifié ou Header Entracte */}
+      {isIntermission ? (
+        <div style={{ width: '100%', marginBottom: '6px', zIndex: 10, flexShrink: 0, padding: '0 8px', boxSizing: 'border-box' }}>
+          <IntermissionHeader
+            instructionText="Attrapez 8 lucioles lumineuses pour retourner au jeu principal."
+            onRestart={() => {
+              setCollectedInLevel(0);
+              setLevelVictory(false);
             }}
-          >
-            <span style={{ fontSize: '1.2rem' }}>✨</span>
-            <span
+            onOtherGame={onIntermissionRequest}
+            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+            replaySame={replaySameIntermission}
+            onToggleReplaySame={onToggleReplaySameIntermission}
+            progress={Math.min(1.0, collectedInLevel / targetCount)}
+          />
+        </div>
+      ) : (
+        <GameHeader
+          title="JARDIN DES LUCIOLES"
+          onBack={handleBackWithConfirm}
+          showShop={false}
+          centerContent={
+            <div
               style={{
-                fontFamily: 'Orbitron, sans-serif',
-                fontWeight: '800',
-                color: '#f8fafc',
-                fontSize: '1rem',
-                letterSpacing: '0.5px'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(56, 189, 248, 0.3)'
               }}
             >
-              {gameMode === 'constellation'
-                ? `${collectedInLevel} / ${targetCount}`
-                : `${totalCollected} captées`}
-            </span>
-          </div>
-        }
-        extraControls={
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button
-              onClick={toggleGameMode}
-              className="retro-btn"
-              style={{
-                padding: '8px 14px',
-                fontSize: '13px',
-                borderRadius: '16px',
-                minHeight: '48px',
-                background: gameMode === 'constellation' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                borderColor: gameMode === 'constellation' ? '#38bdf8' : '#10b981',
-                color: '#ffffff'
-              }}
-              title="Changer de mode"
-            >
-              {gameMode === 'constellation' ? '⭐ Constellation' : '🌿 Sérénité'}
-            </button>
-            <button
-              onClick={() => {
-                sound.playClick();
-                haptic.tap();
-                setTempo((prev) => (prev === 'douceur' ? 'eveil' : prev === 'eveil' ? 'harmonie' : 'douceur'));
-              }}
-              className="retro-btn"
-              style={{
-                padding: '8px 12px',
-                fontSize: '12px',
-                borderRadius: '16px',
-                minHeight: '48px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderColor: 'rgba(255, 255, 255, 0.2)',
-                color: '#cbd5e1'
-              }}
-              title="Ajuster le rythme"
-            >
-              ⏱️ {tempo === 'douceur' ? 'Doux' : tempo === 'eveil' ? 'Actif' : 'Vif'}
-            </button>
-          </div>
-        }
-      />
+              <span style={{ fontSize: '1.2rem' }}>✨</span>
+              <span
+                style={{
+                  fontFamily: 'Orbitron, sans-serif',
+                  fontWeight: '800',
+                  color: '#f8fafc',
+                  fontSize: '1rem',
+                  letterSpacing: '0.5px'
+                }}
+              >
+                {gameMode === 'constellation'
+                  ? `${collectedInLevel} / ${targetCount}`
+                  : `${totalCollected} captées`}
+              </span>
+            </div>
+          }
+          extraControls={
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                onClick={toggleGameMode}
+                className="retro-btn"
+                style={{
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  borderRadius: '16px',
+                  minHeight: '48px',
+                  background: gameMode === 'constellation' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                  borderColor: gameMode === 'constellation' ? '#38bdf8' : '#10b981',
+                  color: '#ffffff'
+                }}
+                title="Changer de mode"
+              >
+                {gameMode === 'constellation' ? '⭐ Constellation' : '🌿 Sérénité'}
+              </button>
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  haptic.tap();
+                  setTempo((prev) => (prev === 'douceur' ? 'eveil' : prev === 'eveil' ? 'harmonie' : 'douceur'));
+                }}
+                className="retro-btn"
+                style={{
+                  padding: '8px 12px',
+                  fontSize: '12px',
+                  borderRadius: '16px',
+                  minHeight: '48px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  color: '#cbd5e1'
+                }}
+                title="Ajuster le rythme"
+              >
+                ⏱️ {tempo === 'douceur' ? 'Doux' : tempo === 'eveil' ? 'Actif' : 'Vif'}
+              </button>
+            </div>
+          }
+        />
+      )}
 
       {/* ANCRE VISUELLE GAUCHE (Spéciale Hémi-évi) */}
       <div className={`left-anchor-bar ${hasLeftFirefly ? 'left-anchor-active' : ''}`} />
@@ -685,6 +712,24 @@ export default function FireflyGarden({
             >
               {currentConstellation.message}
             </p>
+
+            {!isIntermission && (
+              <div style={{ width: '100%', marginTop: '10px' }}>
+                <IntermissionProposal
+                  onIntermissionRequest={onIntermissionRequest}
+                  upcomingIntermission={upcomingIntermission}
+                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                  intermissionConfig={intermissionConfig}
+                  intermissionGames={intermissionGames}
+                  excludeGameKey="fireflies"
+                  onContinue={handleNextLevel}
+                  continueText="Constellation Suivante"
+                  showDirectContinue={true}
+                  customStyle={{ marginBottom: '12px' }}
+                />
+              </div>
+            )}
 
             <button
               onClick={handleNextLevel}

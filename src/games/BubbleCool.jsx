@@ -5,6 +5,7 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { CHAPTERS, getChapter, calculateStars, SPECIAL_TYPES, generateDynamicChapterGrid } from './bubblecool/chapterData';
 
@@ -90,7 +91,12 @@ export default function BubbleCool({
   onIntermissionRequest,
   replaySameIntermission,
   onToggleReplaySameIntermission,
-  skipIntro = false
+  skipIntro = false,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
 }) {
   const [showIntro, setShowIntro] = useState(!skipIntro);
   const [showStore, setShowStore] = useState(false);
@@ -1751,6 +1757,31 @@ export default function BubbleCool({
               </div>
             </div>
 
+            {!isIntermission && (
+              <div style={{ width: '100%', marginBottom: '12px' }}>
+                <IntermissionProposal
+                  onIntermissionRequest={onIntermissionRequest}
+                  upcomingIntermission={upcomingIntermission}
+                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                  intermissionConfig={intermissionConfig}
+                  intermissionGames={intermissionGames}
+                  excludeGameKey="bubblecool"
+                  onContinue={() => {
+                    setShowChapterVictoryModal(false);
+                    if (currentChapterId < 10) {
+                      startChapter(currentChapterId + 1);
+                    } else {
+                      initGame();
+                    }
+                  }}
+                  continueText={currentChapterId < 10 ? "Chapitre Suivant" : "Rejouer"}
+                  showDirectContinue={true}
+                  customStyle={{ marginBottom: '10px' }}
+                />
+              </div>
+            )}
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
               {currentChapterId < 10 && (
                 <button
@@ -2131,9 +2162,24 @@ export default function BubbleCool({
                 Score: {score}
               </div>
               {!isIntermission && (
-                <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
-                  Nouvelle Partie 🎮
-                </button>
+                <div style={{ width: '100%', maxWidth: '380px', margin: '0 auto' }}>
+                  <IntermissionProposal
+                    onIntermissionRequest={onIntermissionRequest}
+                    upcomingIntermission={upcomingIntermission}
+                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                    intermissionConfig={intermissionConfig}
+                    intermissionGames={intermissionGames}
+                    excludeGameKey="bubblecool"
+                    onContinue={initGame}
+                    continueText="Nouvelle Partie"
+                    showDirectContinue={true}
+                    customStyle={{ marginBottom: '12px' }}
+                  />
+                  <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
+                    Nouvelle Partie 🎮
+                  </button>
+                </div>
               )}
             </div>
           )}

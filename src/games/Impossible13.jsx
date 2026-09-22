@@ -5,6 +5,7 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme, GAME_THEME_DETAILS } from '../utils/themeManager';
 
 // --- CONFIGURATION ---
@@ -80,7 +81,20 @@ const hasPossibleMoves = (b) => {
   return false;
 };
 
-export default function Impossible13({ onBack, onScoreSave, isIntermission, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+export default function Impossible13({
+  onBack,
+  onScoreSave,
+  isIntermission,
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
+}) {
   const [showIntro, setShowIntro] = useState(true);
   const [showStore, setShowStore] = useState(false);
 
@@ -592,7 +606,24 @@ export default function Impossible13({ onBack, onScoreSave, isIntermission, onIn
                 <div style={{ ...titleStyle, color: '#EAB308', textShadow: '0 0 12px #EAB308' }}>IMPOSSIBLE 13 !</div>
                 <div style={{ color: '#fff', marginBottom: '20px' }}>Vous avez atteint le nombre d'or !</div>
                 <div style={{ fontSize: '20px', color: '#39FF14', fontWeight: 'bold', marginBottom: '20px' }}>Score: {score}</div>
-                <button onClick={() => { setVictory(false); initGame(); }} className="retro-btn pulse-glow" style={overlayBtnStyle}>Mode Infini</button>
+                {!isIntermission && (
+                  <div style={{ width: '100%', maxWidth: '380px', margin: '0 auto' }}>
+                    <IntermissionProposal
+                      onIntermissionRequest={onIntermissionRequest}
+                      upcomingIntermission={upcomingIntermission}
+                      onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                      onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                      intermissionConfig={intermissionConfig}
+                      intermissionGames={intermissionGames}
+                      excludeGameKey="impossible13"
+                      onContinue={() => { setVictory(false); initGame(); }}
+                      continueText="Mode Infini"
+                      showDirectContinue={true}
+                      customStyle={{ marginBottom: '12px' }}
+                    />
+                    <button onClick={() => { setVictory(false); initGame(); }} className="retro-btn pulse-glow" style={overlayBtnStyle}>Mode Infini</button>
+                  </div>
+                )}
               </div>
             )}
           </div>

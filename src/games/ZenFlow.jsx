@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
+import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { sound } from '../utils/sound';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
@@ -25,7 +27,15 @@ export default function ZenFlow({
   onScoreSave,
   isIntermission = false,
   intermissionDifficulty = 'facile',
-  onIntermissionComplete
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
 }) {
   const confirm = useConfirm();
 
@@ -555,58 +565,77 @@ export default function ZenFlow({
         }
       `}</style>
 
-      {/* Header Unifié */}
-      <GameHeader
-        title="FLUX ZEN"
-        onBack={handleBackWithConfirm}
-        showShop={false}
-        centerContent={
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
+      {/* Header Unifié ou Header Entracte */}
+      {isIntermission ? (
+        <div style={{ width: '100%', marginBottom: '6px', zIndex: 10, flexShrink: 0, padding: '0 8px', boxSizing: 'border-box' }}>
+          <IntermissionHeader
+            instructionText="Reliez toutes les paires de couleur pour retourner au jeu principal."
+            onRestart={() => {
+              setPaths({});
+              setHistory([]);
+              setActiveColor(null);
+              setLevelWon(false);
             }}
-          >
+            onOtherGame={onIntermissionRequest}
+            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+            replaySame={replaySameIntermission}
+            onToggleReplaySame={onToggleReplaySameIntermission}
+            progress={pairs.length > 0 ? completedCount / pairs.length : 0}
+          />
+        </div>
+      ) : (
+        <GameHeader
+          title="FLUX ZEN"
+          onBack={handleBackWithConfirm}
+          showShop={false}
+          centerContent={
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '16px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(6, 182, 212, 0.3)'
+                gap: '8px'
               }}
             >
-              <span style={{ fontSize: '1rem' }}>🌊</span>
-              <span
+              <div
                 style={{
-                  fontFamily: 'Orbitron, sans-serif',
-                  fontWeight: '800',
-                  color: '#f8fafc',
-                  fontSize: '0.9rem'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  borderRadius: '16px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(6, 182, 212, 0.3)'
                 }}
               >
-                Niveau {levelIndex + 1}
+                <span style={{ fontSize: '1rem' }}>🌊</span>
+                <span
+                  style={{
+                    fontFamily: 'Orbitron, sans-serif',
+                    fontWeight: '800',
+                    color: '#f8fafc',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Niveau {levelIndex + 1}
+                </span>
+              </div>
+              <span
+                style={{
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  color: completedCount === pairs.length ? '#10b981' : '#38bdf8',
+                  padding: '6px 10px',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                {completedCount} / {pairs.length} Flux
               </span>
             </div>
-            <span
-              style={{
-                fontSize: '0.82rem',
-                fontWeight: '700',
-                color: completedCount === pairs.length ? '#10b981' : '#38bdf8',
-                padding: '6px 10px',
-                background: 'rgba(255, 255, 255, 0.06)',
-                borderRadius: '14px',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
-              }}
-            >
-              {completedCount} / {pairs.length} Flux
-            </span>
-          </div>
-        }
-      />
+          }
+        />
+      )}
 
       {/* Ancre Visuelle Gauche (Hémi-évi) */}
       <div className={`left-guide-bar ${hasUnconnectedLeftEndpoints ? 'left-guide-active' : ''}`} />
@@ -897,6 +926,24 @@ export default function ZenFlow({
             >
               {encouragingMessage}
             </p>
+
+            {!isIntermission && (
+              <div style={{ width: '100%', marginTop: '10px' }}>
+                <IntermissionProposal
+                  onIntermissionRequest={onIntermissionRequest}
+                  upcomingIntermission={upcomingIntermission}
+                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                  intermissionConfig={intermissionConfig}
+                  intermissionGames={intermissionGames}
+                  excludeGameKey="zenflow"
+                  onContinue={handleNextLevel}
+                  continueText="Niveau Suivant"
+                  showDirectContinue={true}
+                  customStyle={{ marginBottom: '12px' }}
+                />
+              </div>
+            )}
 
             <button
               onClick={handleNextLevel}

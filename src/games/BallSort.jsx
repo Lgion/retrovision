@@ -6,6 +6,7 @@ import { gsap } from 'gsap';
 import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
 
@@ -185,7 +186,21 @@ const BallSortIntro = ({ onComplete }) => {
 };
 
 
-export default function BallSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+export default function BallSort({
+  onBack,
+  onScoreSave,
+  isIntermission,
+  intermissionDifficulty,
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
+}) {
   const confirm = useConfirm();
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
@@ -953,51 +968,79 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, intermis
                   filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
                 }}>MAÎTRE TRIEUR</h2>
 
-                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => {
-                      if (isIntermission && onIntermissionComplete) onIntermissionComplete();
-                      else if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') onIntermissionRequest();
-                      else initGame();
-                    }}
-                    style={{
-                      background: 'linear-gradient(135deg, #33FF77, #009933)',
-                      border: '4px solid white',
-                      color: 'white',
-                      padding: '15px 40px',
-                      borderRadius: '40px',
-                      fontSize: '1.5rem',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      boxShadow: '0 10px 20px rgba(51,255,119,0.4)',
-                      transition: 'transform 0.2s'
-                    }}
-                    onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                    onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
-                  >
-                    {isIntermission ? "Retour au Mahjong" : "Rejouer 🔄"}
-                  </button>
-                  {!isIntermission && (
+                {isIntermission ? (
+                  <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                     <button
-                      onClick={onBack}
+                      onClick={() => onIntermissionComplete && onIntermissionComplete()}
                       style={{
-                        background: 'rgba(0,0,0,0.1)',
-                        border: 'none',
-                        color: '#666',
-                        padding: '15px 30px',
+                        background: 'linear-gradient(135deg, #33FF77, #009933)',
+                        border: '4px solid white',
+                        color: 'white',
+                        padding: '15px 40px',
                         borderRadius: '40px',
                         fontSize: '1.5rem',
                         fontWeight: 'bold',
                         cursor: 'pointer',
-                        transition: 'background 0.2s'
+                        boxShadow: '0 10px 20px rgba(51,255,119,0.4)',
+                        transition: 'transform 0.2s'
                       }}
-                      onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
-                      onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
+                      onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                      onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
                     >
-                      Quitter
+                      Terminer l'Entracte 🏁
                     </button>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div style={{ width: '100%', maxWidth: '440px', margin: '0 auto' }}>
+                    <IntermissionProposal
+                      onIntermissionRequest={onIntermissionRequest}
+                      upcomingIntermission={upcomingIntermission}
+                      onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                      onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                      intermissionConfig={intermissionConfig}
+                      intermissionGames={intermissionGames}
+                      excludeGameKey="ball"
+                      onContinue={initGame}
+                      continueText="Niveau Suivant"
+                      showDirectContinue={true}
+                      customStyle={{ marginBottom: '16px' }}
+                    />
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                      <button
+                        onClick={initGame}
+                        className="retro-btn"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          borderColor: 'rgba(255, 255, 255, 0.15)',
+                          color: '#e0f2fe',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          padding: '10px 20px',
+                          borderRadius: '12px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🔄 Rejouer
+                      </button>
+                      <button
+                        onClick={onBack}
+                        className="retro-btn"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          borderColor: 'rgba(255, 255, 255, 0.15)',
+                          color: '#e0f2fe',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          padding: '10px 20px',
+                          borderRadius: '12px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🏠 Quitter
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

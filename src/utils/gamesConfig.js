@@ -28,6 +28,7 @@ export const GAMES_CONFIG = {
     name: 'Mahjong Zen',
     aliases: ['Mahjong Zen', 'mahjong'],
     icon: '🀄',
+    subtitle: 'Association de tuiles relaxante',
     color: '#eab308',
     fullscreen: true,
     storageKey: 'retrovision_mahjong_highscore',
@@ -42,6 +43,7 @@ export const GAMES_CONFIG = {
     aliases: ['Tri Eau', "Tri de l'Eau", 'water'],
     icon: '💧',
     settingsIcon: '🧪',
+    subtitle: 'Tri de couleurs relaxant',
     color: '#00ff7f',
     fullscreen: false,
     storageKey: 'retrovision_water_highscore',
@@ -56,6 +58,7 @@ export const GAMES_CONFIG = {
     aliases: ['Tri Billes', 'Tri de Billes', 'ball'],
     icon: '🔮',
     settingsIcon: '🔮',
+    subtitle: 'Tri de billes chromatiques',
     color: '#ff007f',
     fullscreen: false,
     storageKey: 'retrovision_ball_highscore',
@@ -70,6 +73,7 @@ export const GAMES_CONFIG = {
     aliases: ['Neon 2048', '2048', 'grid2048'],
     icon: '🔢',
     settingsIcon: '✨',
+    subtitle: 'Fusion numérique',
     color: '#00f0ff',
     fullscreen: false,
     storageKey: 'retrovision_2048_highscore',
@@ -84,6 +88,7 @@ export const GAMES_CONFIG = {
     aliases: ['Puzzle Magique', 'Jigsaw Puzzle', 'jigsaw'],
     icon: '🧩',
     settingsIcon: '🧩',
+    subtitle: 'Reconstitution visuelle',
     color: '#39FF14',
     fullscreen: false,
     storageKey: 'retrovision_jigsaw_highscore',
@@ -98,6 +103,7 @@ export const GAMES_CONFIG = {
     aliases: ['Débloque-Moi', 'Unblock Me', 'unblock'],
     icon: '🚪',
     settingsIcon: '🚪',
+    subtitle: 'Évasion du bloc rouge',
     color: '#f97316',
     fullscreen: false,
     storageKey: 'retrovision_unblock_highscore',
@@ -112,6 +118,7 @@ export const GAMES_CONFIG = {
     aliases: ['Freecell', 'FreeCell', 'freecell'],
     icon: '🃏',
     settingsIcon: '🃏',
+    subtitle: 'Cartes & patience',
     color: '#c21807',
     fullscreen: false,
     storageKey: 'retrovision_freecell_highscore',
@@ -126,6 +133,7 @@ export const GAMES_CONFIG = {
     aliases: ['Démineur', 'Minesweeper', 'mines'],
     icon: '💣',
     settingsIcon: '💣',
+    subtitle: 'Déminage tactique',
     color: '#ef4444',
     fullscreen: false,
     storageKey: 'retrovision_mines_highscore',
@@ -140,6 +148,7 @@ export const GAMES_CONFIG = {
     aliases: ['Flèches', 'Arrow Puzzle', 'arrows'],
     icon: '🏹',
     settingsIcon: '⬆️',
+    subtitle: 'Labyrinthe directionnel',
     color: '#3b82f6',
     fullscreen: false,
     storageKey: 'retrovision_arrows_highscore',
@@ -154,6 +163,7 @@ export const GAMES_CONFIG = {
     aliases: ['Le Pendu', 'Hangman', 'hangman'],
     icon: '🎈',
     settingsIcon: '🎈',
+    subtitle: 'Mots & déduction',
     color: '#ef4444',
     fullscreen: false,
     storageKey: 'retrovision_hangman_highscore',
@@ -168,6 +178,7 @@ export const GAMES_CONFIG = {
     aliases: ['Sudoku', 'sudoku'],
     icon: '🔢',
     settingsIcon: '🔢',
+    subtitle: 'Logique & chiffres',
     color: '#8b5cf6',
     fullscreen: false,
     storageKey: 'retrovision_sudoku_highscore',
@@ -182,6 +193,7 @@ export const GAMES_CONFIG = {
     aliases: ['Block Fantasy', 'blockfantasy'],
     icon: '🧱',
     settingsIcon: '🧱',
+    subtitle: 'Lignes de blocs',
     color: '#39FF14',
     fullscreen: false,
     storageKey: 'retrovision_blockfantasy_highscore',
@@ -196,6 +208,7 @@ export const GAMES_CONFIG = {
     aliases: ['Impossible 13', 'Impossible13', 'impossible13'],
     icon: '1️⃣3️⃣',
     settingsIcon: '1️⃣3️⃣',
+    subtitle: 'Addition stratégique',
     color: '#EAB308',
     fullscreen: false,
     storageKey: 'retrovision_impossible13_highscore',
@@ -210,6 +223,7 @@ export const GAMES_CONFIG = {
     aliases: ['Bubble Cool', 'BubbleCool', 'bubblecool'],
     icon: '🫧',
     settingsIcon: '🫧',
+    subtitle: 'Tir de bulles arcade',
     color: '#38BDF8',
     fullscreen: false,
     storageKey: 'retrovision_bubblecool_highscore',
@@ -224,6 +238,7 @@ export const GAMES_CONFIG = {
     aliases: ['Jardin des Lucioles', 'Jardin Lucioles', 'Lucioles', 'fireflies'],
     icon: '✨',
     settingsIcon: '✨',
+    subtitle: 'Poésie & lumière zen',
     color: '#38BDF8',
     fullscreen: false,
     storageKey: 'retrovision_fireflies_highscore',
@@ -238,6 +253,7 @@ export const GAMES_CONFIG = {
     aliases: ['Flux Zen', 'Zen Flow', 'Tracé Lumineux', 'zenflow', 'flow'],
     icon: '🌊',
     settingsIcon: '🌊',
+    subtitle: 'Lignes & harmonie',
     color: '#06B6D4',
     fullscreen: false,
     storageKey: 'retrovision_zenflow_highscore',
@@ -252,6 +268,7 @@ export const GAMES_CONFIG = {
     aliases: ['Quête des Symboles', 'Quête Symboles', 'Symbol Quest', 'symbolquest', 'symbols'],
     icon: '🔍',
     settingsIcon: '🔍',
+    subtitle: 'Balayage & symboles zen',
     color: '#10B981',
     fullscreen: false,
     storageKey: 'retrovision_symbolquest_highscore',
@@ -273,6 +290,15 @@ export const INTERMISSION_GAME_KEYS = Object.keys(GAMES_CONFIG).filter(
  */
 export const findGameConfig = (keyOrName) => {
   if (!keyOrName) return null;
+  if (typeof keyOrName !== 'string') {
+    if (typeof keyOrName === 'object') {
+      const candidate = keyOrName.game || keyOrName.gameId || keyOrName.id || keyOrName.key || keyOrName.name;
+      if (candidate && typeof candidate === 'string') {
+        return findGameConfig(candidate);
+      }
+    }
+    return null;
+  }
   if (GAMES_CONFIG[keyOrName]) return GAMES_CONFIG[keyOrName];
 
   const searchNormalized = keyOrName.trim().toLowerCase();

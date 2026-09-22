@@ -4,9 +4,24 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { useConfirm } from '../components/ConfirmContext';
 
-export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+export default function JigsawPuzzle({
+  onBack,
+  onScoreSave,
+  isIntermission,
+  intermissionDifficulty,
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
+}) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
@@ -433,20 +448,55 @@ export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, inte
               <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
                 Score: <strong style={{ color: '#00F0FF', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
               </div>
-              <button
-                onClick={() => {
-                  setVictoryPhase(0);
-                  if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
-                    onIntermissionRequest();
-                  } else {
-                    setGameState('menu');
-                  }
-                }}
-                className="retro-btn pulse-glow"
-                style={{ fontSize: '1.5rem', padding: '15px 40px', borderRadius: '50px', borderColor: '#39FF14', color: '#39FF14', background: 'transparent' }}
-              >
-                Continuer
-              </button>
+              {isIntermission ? (
+                <button
+                  onClick={() => onIntermissionComplete && onIntermissionComplete()}
+                  className="retro-btn pulse-glow"
+                  style={{ fontSize: '1.5rem', padding: '15px 40px', borderRadius: '50px', borderColor: '#39FF14', color: '#39FF14', background: 'transparent' }}
+                >
+                  Terminer l'Entracte 🏁
+                </button>
+              ) : (
+                <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+                  <IntermissionProposal
+                    onIntermissionRequest={onIntermissionRequest}
+                    upcomingIntermission={upcomingIntermission}
+                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                    intermissionConfig={intermissionConfig}
+                    intermissionGames={intermissionGames}
+                    excludeGameKey="jigsaw"
+                    onContinue={() => {
+                      setVictoryPhase(0);
+                      setGameState('menu');
+                    }}
+                    continueText="Autre Puzzle"
+                    showDirectContinue={true}
+                    customStyle={{ marginBottom: '16px' }}
+                  />
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => {
+                        setVictoryPhase(0);
+                        setGameState('menu');
+                      }}
+                      className="retro-btn"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        borderColor: 'rgba(0, 0, 0, 0.15)',
+                        color: '#333',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        padding: '10px 20px',
+                        borderRadius: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🏠 Changer de Puzzle
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

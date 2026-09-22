@@ -5,6 +5,7 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import MinesweeperCollection from './MinesweeperCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
 
@@ -66,7 +67,21 @@ const placeMines = (grid, firstR, firstC, size, minesCount) => {
   return grid;
 };
 
-export default function Minesweeper({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+export default function Minesweeper({
+  onBack,
+  onScoreSave,
+  isIntermission,
+  intermissionDifficulty,
+  onIntermissionComplete,
+  onIntermissionRequest,
+  replaySameIntermission,
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
+}) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
@@ -630,17 +645,74 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
               <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
                 Score: <strong style={{ color: '#39FF14', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
               </div>
-              <button
-                onClick={() => {
-                  if (isIntermission && onIntermissionComplete) onIntermissionComplete();
-                  else if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') onIntermissionRequest();
-                  else { setVictoryPhase(0); setGameState('menu'); }
-                }}
-                className="retro-btn pulse-glow"
-                style={{ fontSize: '1.2rem', padding: '10px 30px', borderColor: '#39FF14', color: '#39FF14' }}
-              >
-                {isIntermission ? "Retour au Mahjong" : "Super !"}
-              </button>
+              {isIntermission ? (
+                <button
+                  onClick={() => onIntermissionComplete && onIntermissionComplete()}
+                  className="retro-btn pulse-glow"
+                  style={{ fontSize: '1.2rem', padding: '12px 30px', borderColor: '#39FF14', color: '#39FF14' }}
+                >
+                  Terminer l'Entracte 🏁
+                </button>
+              ) : (
+                <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+                  <IntermissionProposal
+                    onIntermissionRequest={onIntermissionRequest}
+                    upcomingIntermission={upcomingIntermission}
+                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                    intermissionConfig={intermissionConfig}
+                    intermissionGames={intermissionGames}
+                    excludeGameKey="mines"
+                    onContinue={() => {
+                      setVictoryPhase(0);
+                      startGame(boardSize, numMines);
+                    }}
+                    continueText="Nouvelle Partie"
+                    showDirectContinue={true}
+                    customStyle={{ marginBottom: '16px' }}
+                  />
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => {
+                        setVictoryPhase(0);
+                        startGame(boardSize, numMines);
+                      }}
+                      className="retro-btn"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        borderColor: 'rgba(255, 255, 255, 0.15)',
+                        color: '#333',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        padding: '10px 20px',
+                        borderRadius: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🔄 Rejouer
+                    </button>
+                    <button
+                      onClick={() => {
+                        setVictoryPhase(0);
+                        setGameState('menu');
+                      }}
+                      className="retro-btn"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        borderColor: 'rgba(255, 255, 255, 0.15)',
+                        color: '#333',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        padding: '10px 20px',
+                        borderRadius: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🏠 Menu
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

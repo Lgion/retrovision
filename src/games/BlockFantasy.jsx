@@ -5,6 +5,7 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { ADVENTURE_LEVELS, getLevelData, calculateLevelStars } from './blockfantasy/levelsData';
 import { useConfirm } from '../components/ConfirmContext';
 
@@ -77,7 +78,12 @@ export default function BlockFantasy({
   onIntermissionComplete,
   onIntermissionRequest,
   replaySameIntermission,
-  onToggleReplaySameIntermission
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
 }) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
@@ -1348,21 +1354,36 @@ export default function BlockFantasy({
                 </div>
                 <div style={descStyle}>Objectif de niveau accompli avec brio.</div>
                 <div style={statsReportStyle}>Score Final : <span style={{ color: '#39FF14', fontWeight: 'bold' }}>{score}</span></div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={() => { setLevelVictory(false); initGame(); }}
-                    className="retro-btn pulse-glow"
-                    style={overlayBtnStyle}
-                  >
-                    {currentLevelIndex < ADVENTURE_LEVELS.length ? 'Chapitre Suivant ➔' : 'Rejouer'}
-                  </button>
-                  <button
-                    onClick={() => { setLevelVictory(false); setShowLevelSelect(true); }}
-                    className="retro-btn"
-                    style={{ ...overlayBtnStyle, borderColor: '#38BDF8', color: '#38BDF8' }}
-                  >
-                    Carte 🗺️
-                  </button>
+                <div style={{ width: '100%', maxWidth: '420px', margin: '10px auto 0 auto' }}>
+                  <IntermissionProposal
+                    onIntermissionRequest={onIntermissionRequest}
+                    upcomingIntermission={upcomingIntermission}
+                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                    intermissionConfig={intermissionConfig}
+                    intermissionGames={intermissionGames}
+                    excludeGameKey="blockfantasy"
+                    onContinue={() => { setLevelVictory(false); initGame(); }}
+                    continueText={currentLevelIndex < ADVENTURE_LEVELS.length ? 'Chapitre Suivant ➔' : 'Rejouer'}
+                    showDirectContinue={true}
+                    customStyle={{ marginBottom: '12px' }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => { setLevelVictory(false); initGame(); }}
+                      className="retro-btn pulse-glow"
+                      style={overlayBtnStyle}
+                    >
+                      {currentLevelIndex < ADVENTURE_LEVELS.length ? 'Chapitre Suivant ➔' : 'Rejouer'}
+                    </button>
+                    <button
+                      onClick={() => { setLevelVictory(false); setShowLevelSelect(true); }}
+                      className="retro-btn"
+                      style={{ ...overlayBtnStyle, borderColor: '#38BDF8', color: '#38BDF8' }}
+                    >
+                      Carte 🗺️
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

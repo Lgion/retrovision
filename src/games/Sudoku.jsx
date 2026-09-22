@@ -3,6 +3,7 @@ import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
+import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { updateGameConfig } from '../utils/config';
 import { useConfirm } from '../components/ConfirmContext';
@@ -306,7 +307,12 @@ export default function Sudoku({
   onIntermissionComplete,
   onIntermissionRequest,
   replaySameIntermission,
-  onToggleReplaySameIntermission
+  onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
 }) {
   const initialDiff = isIntermission ? (intermissionDifficulty || 'facile') : 'facile';
   const initialCfg = getSudokuConfig(initialDiff);
@@ -1264,20 +1270,64 @@ export default function Sudoku({
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  setVictory(false);
-                  if (onIntermissionRequest && localStorage.getItem('retrovision_intermission_enabled') !== 'false') {
-                    onIntermissionRequest();
-                  } else {
-                    setGameState('menu');
-                  }
-                }}
-                className="retro-btn pulse-glow"
-                style={{ fontSize: '1.1rem', padding: '12px 36px', borderColor: '#8b5cf6', color: '#8b5cf6', width: '100%' }}
-              >
-                Nouveau Jeu 🎮
-              </button>
+              <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+                <IntermissionProposal
+                  onIntermissionRequest={onIntermissionRequest}
+                  upcomingIntermission={upcomingIntermission}
+                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+                  intermissionConfig={intermissionConfig}
+                  intermissionGames={intermissionGames}
+                  excludeGameKey="sudoku"
+                  onContinue={() => {
+                    setVictory(false);
+                    startGame(difficulty);
+                  }}
+                  continueText="Nouveau Sudoku"
+                  showDirectContinue={true}
+                  customStyle={{ marginBottom: '16px' }}
+                />
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => {
+                      setVictory(false);
+                      startGame(difficulty);
+                    }}
+                    className="retro-btn"
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.06)',
+                      borderColor: '#8b5cf6',
+                      color: '#6d28d9',
+                      fontWeight: '700',
+                      fontSize: '14px',
+                      padding: '10px 20px',
+                      borderRadius: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🔄 Rejouer
+                  </button>
+                  <button
+                    onClick={() => {
+                      setVictory(false);
+                      setGameState('menu');
+                    }}
+                    className="retro-btn"
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.06)',
+                      borderColor: '#cbd5e1',
+                      color: '#475569',
+                      fontWeight: '700',
+                      fontSize: '14px',
+                      padding: '10px 20px',
+                      borderRadius: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🏠 Menu
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1467,6 +1517,6 @@ const overlayStyle = {
 
 const victoryCardStyle = {
   animation: 'scaleIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)', textAlign: 'center', background: '#ffffff',
-  padding: '36px', borderRadius: '28px', boxShadow: '0 30px 60px rgba(15, 23, 42, 0.15)',
-  border: '3px solid #8b5cf6', zIndex: 10, width: '90%', maxWidth: '360px'
+  padding: '30px 20px', borderRadius: '28px', boxShadow: '0 30px 60px rgba(15, 23, 42, 0.15)',
+  border: '3px solid #8b5cf6', zIndex: 10, width: '92%', maxWidth: '460px'
 };

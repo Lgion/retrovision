@@ -10,6 +10,7 @@ import MahjongIcon, { MAHJONG_THEME } from './MahjongIcon';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import GameMiniature from '../components/GameMiniature';
 import { useConfirm } from '../components/ConfirmContext';
+import IntermissionProposal from '../components/IntermissionProposal';
 
 
 const MahjongTile = React.memo(function MahjongTile({
@@ -181,18 +182,21 @@ const MahjongTile = React.memo(function MahjongTile({
 });
 
 const INTERMISSION_MINI_GAMES = [
-  { key: 'water', name: 'Water Sort', icon: '💧', subtitle: 'Tri de couleurs relaxant', bg: 'water_sort_bg.webp' },
-  { key: 'ball', name: 'Ball Sort', icon: '🔮', subtitle: 'Tri de billes chromatiques', bg: 'ball_sort_bg.webp' },
+  { key: 'water', name: "Tri de l'Eau", icon: '💧', subtitle: 'Tri de couleurs relaxant', bg: 'water_sort_bg.webp' },
+  { key: 'ball', name: 'Tri de Billes', icon: '🔮', subtitle: 'Tri de billes chromatiques', bg: 'ball_sort_bg.webp' },
   { key: 'bubblecool', name: 'Bubble Cool', icon: '🫧', subtitle: 'Tir de bulles arcade', bg: 'bubble_cool_bg.webp' },
   { key: 'sudoku', name: 'Sudoku', icon: '🔢', subtitle: 'Logique & chiffres', bg: 'sudoku_bg.webp' },
   { key: 'blockfantasy', name: 'Block Fantasy', icon: '🧱', subtitle: 'Lignes de blocs', bg: 'block_fantasy_bg.webp' },
   { key: '2048', name: '2048', icon: '✨', subtitle: 'Fusion numérique', bg: 'grid_2048_bg.webp' },
   { key: 'mines', name: 'Démineur', icon: '💣', subtitle: 'Déminage tactique', bg: 'minesweeper_bg.webp' },
-  { key: 'arrows', name: 'Flèches Zen', icon: '🏹', subtitle: 'Labyrinthe directionnel', bg: 'arrow_puzzle_bg.webp' },
-  { key: 'jigsaw', name: 'Puzzle', icon: '🧩', subtitle: 'Reconstitution visuelle', bg: 'jigsaw_puzzle_bg.webp' },
+  { key: 'arrows', name: 'Flèches', icon: '🏹', subtitle: 'Labyrinthe directionnel', bg: 'arrow_puzzle_bg.webp' },
+  { key: 'jigsaw', name: 'Puzzle Magique', icon: '🧩', subtitle: 'Reconstitution visuelle', bg: 'jigsaw_puzzle_bg.webp' },
   { key: 'freecell', name: 'FreeCell', icon: '🃏', subtitle: 'Cartes & patience', bg: 'freecell_bg.webp' },
-  { key: 'hangman', name: 'Pendu', icon: '🎈', subtitle: 'Mots & déduction', bg: 'hangman_bg.webp' },
-  { key: 'impossible13', name: 'Impossible 13', icon: '1️⃣3️⃣', subtitle: 'Addition stratégique', bg: 'impossible13_bg.webp' }
+  { key: 'hangman', name: 'Le Pendu', icon: '🎈', subtitle: 'Mots & déduction', bg: 'hangman_bg.webp' },
+  { key: 'impossible13', name: 'Impossible 13', icon: '1️⃣3️⃣', subtitle: 'Addition stratégique', bg: 'impossible13_bg.webp' },
+  { key: 'fireflies', name: 'Jardin des Lucioles', icon: '✨', subtitle: 'Poésie & lumière zen', bg: 'fireflies_bg.webp' },
+  { key: 'zenflow', name: 'Flux Zen', icon: '🌊', subtitle: 'Lignes & harmonie', bg: 'zenflow_bg.webp' },
+  { key: 'symbolquest', name: 'Quête des Symboles', icon: '🔍', subtitle: 'Balayage & symboles zen', bg: 'symbolquest_bg.webp' }
 ];
 
 const getGameBgUrl = (bgFile) => {
@@ -209,35 +213,10 @@ export default function MahjongZen({
   onSelectUpcomingIntermission,
   onShuffleUpcomingIntermission,
   intermissionConfig = {},
+  intermissionGames = null,
   skipIntro
 }) {
   const confirm = useConfirm();
-  const availableIntermissionGames = React.useMemo(() => {
-    const enabled = INTERMISSION_MINI_GAMES.filter((g) => {
-      const conf = intermissionConfig[g.key];
-      if (conf && typeof conf.enabled === 'boolean') {
-        return conf.enabled;
-      }
-      return true;
-    });
-    return enabled.length > 0 ? enabled : INTERMISSION_MINI_GAMES;
-  }, [intermissionConfig]);
-
-  const [userSelectedUpcoming, setUserSelectedUpcoming] = useState(null);
-
-  const currentUpcomingKey = userSelectedUpcoming || upcomingIntermission;
-  const isCurrentUpcomingAvail = availableIntermissionGames.some(
-    (g) => g.key === currentUpcomingKey
-  );
-  const effectiveSelectedUpcoming = isCurrentUpcomingAvail
-    ? currentUpcomingKey
-    : (availableIntermissionGames[0]?.key || 'water');
-
-  const activeIntermissionGame =
-    availableIntermissionGames.find((g) => g.key === effectiveSelectedUpcoming) ||
-    availableIntermissionGames[0] ||
-    INTERMISSION_MINI_GAMES[0];
-  const isIntermissionEnabled = localStorage.getItem('retrovision_intermission_enabled') !== 'false';
   const [showIntro, setShowIntro] = useState(!skipIntro);
   const [mode, setMode] = useState(() => getGameConfig('mahjong', 'mode', 'slide'));
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mahjong', 'boardSize', 'large'));
@@ -2621,325 +2600,18 @@ export default function MahjongZen({
               Plateau complété avec un score de <strong style={{ color: '#f59e0b' }}>{score}</strong> points !
             </div>
 
-            {isIntermissionEnabled && (
-              <div style={{
-                width: '100%',
-                maxWidth: '520px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                marginBottom: '16px',
-                zIndex: 10
-              }}>
-                {/* Horizontal Strip Label */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0 4px',
-                  color: '#93C5FD',
-                  fontSize: '12px',
-                  fontWeight: '800',
-                  letterSpacing: '0.6px',
-                  textTransform: 'uppercase'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>🎮</span>
-                    <span>Mini-jeux d'entracte au choix :</span>
-                  </div>
-                  <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>
-                    {availableIntermissionGames.length} jeu{availableIntermissionGames.length > 1 ? 'x' : ''} configuré{availableIntermissionGames.length > 1 ? 's' : ''} {availableIntermissionGames.length > 3 ? '(défilement ↔)' : ''}
-                  </span>
-                </div>
-
-                {/* Horizontal strip with LARGER miniatures */}
-                <div
-                  className="intermission-strip-scroll"
-                  style={{
-                    display: 'flex',
-                    gap: '12px',
-                    overflowX: 'auto',
-                    padding: '8px 4px 12px 4px',
-                    width: '100%',
-                    boxSizing: 'border-box',
-                    scrollSnapType: 'x mandatory',
-                    WebkitOverflowScrolling: 'touch',
-                    background: 'rgba(15, 23, 42, 0.65)',
-                    borderRadius: '16px',
-                    border: '1.5px solid rgba(59, 130, 246, 0.3)',
-                    boxShadow: 'inset 0 2px 10px rgba(0, 0, 0, 0.4)'
-                  }}
-                >
-                  {availableIntermissionGames.map((g) => {
-                    const isSelected = g.key === effectiveSelectedUpcoming;
-                    const gameConf = intermissionConfig[g.key] || {};
-                    const diff = gameConf.difficulty || 'facile';
-                    const diffColor = diff === 'facile' ? '#10B981' : diff === 'moyen' ? '#F59E0B' : '#EF4444';
-                    return (
-                      <div
-                        key={g.key}
-                        onClick={() => {
-                          sound.playClick();
-                          setUserSelectedUpcoming(g.key);
-                          if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(g.key);
-                        }}
-                        onDoubleClick={() => {
-                          sound.playClick();
-                          setUserSelectedUpcoming(g.key);
-                          if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(g.key);
-                          if (onIntermissionRequest) onIntermissionRequest(g.key);
-                        }}
-                        style={{
-                          flex: '0 0 135px',
-                          height: '144px',
-                          position: 'relative',
-                          borderRadius: '14px',
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          background: isSelected
-                            ? 'linear-gradient(145deg, rgba(14, 116, 144, 0.5), rgba(15, 23, 42, 0.96))'
-                            : 'linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.92))',
-                          border: isSelected ? '2.5px solid #38BDF8' : '1.5px solid rgba(255, 255, 255, 0.12)',
-                          boxShadow: isSelected
-                            ? '0 0 18px rgba(56, 189, 248, 0.6), inset 0 0 12px rgba(56, 189, 248, 0.2)'
-                            : '0 4px 10px rgba(0, 0, 0, 0.3)',
-                          transform: isSelected ? 'scale(1.03)' : 'scale(1)',
-                          transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          padding: '6px 8px 8px 8px',
-                          boxSizing: 'border-box',
-                          scrollSnapAlign: 'start',
-                          userSelect: 'none'
-                        }}
-                        title={`${g.name} - ${g.subtitle} (Difficulté : ${diff}) - Cliquez pour sélectionner`}
-                      >
-                        {/* Top bar: Icon & Badges */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '3px' }}>
-                          <span style={{ fontSize: '15px' }}>{g.icon}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span style={{
-                              fontSize: '8px',
-                              fontWeight: '800',
-                              color: diffColor,
-                              background: `${diffColor}22`,
-                              border: `1px solid ${diffColor}55`,
-                              borderRadius: '4px',
-                              padding: '1px 4px',
-                              textTransform: 'capitalize'
-                            }}>
-                              {diff}
-                            </span>
-                            {isSelected ? (
-                              <span style={{
-                                fontSize: '8px',
-                                fontWeight: '900',
-                                color: '#fff',
-                                background: '#0284C7',
-                                borderRadius: '4px',
-                                padding: '1px 5px',
-                                boxShadow: '0 0 8px #38BDF8'
-                              }}>
-                                ACTIF
-                              </span>
-                            ) : (
-                              <span style={{ fontSize: '9px', color: '#64748B', fontWeight: '700' }}>
-                                ▶
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Miniature container: LARGE & CRISP (84px high) */}
-                        <div style={{
-                          width: '100%',
-                          height: '84px',
-                          borderRadius: '8px',
-                          overflow: 'hidden',
-                          background: 'rgba(15, 23, 42, 0.5)',
-                          border: isSelected ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.06)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <GameMiniature gameKey={g.key} width="100%" height="100%" />
-                        </div>
-
-                        {/* Bottom: Game Title */}
-                        <div style={{
-                          fontSize: '11px',
-                          fontWeight: '800',
-                          color: isSelected ? '#38BDF8' : '#F1F5F9',
-                          textAlign: 'center',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          marginTop: '4px'
-                        }}>
-                          {g.name}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* 1. PRIMARY ACTION BUTTON: Glowing Emerald CTA with Animated Play Icon */}
-                <button
-                  onClick={() => {
-                    sound.playClick();
-                    if (onIntermissionRequest) {
-                      onIntermissionRequest(effectiveSelectedUpcoming);
-                    }
-                  }}
-                  className="retro-btn pulse-glow"
-                  style={{
-                    ...restartBtnStyle,
-                    background: 'linear-gradient(135deg, #10B981, #059669)',
-                    border: '2.5px solid #6EE7B7',
-                    color: '#FFFFFF',
-                    width: '100%',
-                    fontWeight: '900',
-                    fontSize: '17px',
-                    padding: '14px 20px',
-                    borderRadius: '16px',
-                    boxShadow: '0 0 28px rgba(16, 185, 129, 0.7), 0 4px 16px rgba(0, 0, 0, 0.4)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    cursor: 'pointer',
-                    letterSpacing: '0.4px',
-                    transition: 'transform 0.15s ease, box-shadow 0.15s ease'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px', fontWeight: '900' }}>
-                    <span className="primary-play-icon">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </span>
-                    <span>Aller vers l'Entracte</span>
-                  </div>
-                  <div style={{
-                    fontSize: '15px',
-                    fontWeight: '800',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    flexWrap: 'wrap',
-                    marginTop: '2px'
-                  }}>
-                    <span style={{ color: '#D1FAE5', opacity: 0.95 }}>Jouer :</span>
-                    <span style={{
-                      color: '#FDE047',
-                      background: 'rgba(0, 0, 0, 0.3)',
-                      padding: '3px 12px',
-                      borderRadius: '8px',
-                      border: '1.5px solid rgba(253, 224, 71, 0.5)',
-                      fontSize: '16px',
-                      fontWeight: '900',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-                    }}>
-                      <span>{activeIntermissionGame.icon}</span>
-                      <span>{activeIntermissionGame.name}</span>
-                    </span>
-                    <span style={{
-                      fontSize: '13px',
-                      color: '#6EE7B7',
-                      background: 'rgba(0, 0, 0, 0.25)',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      fontWeight: '800',
-                      textTransform: 'capitalize'
-                    }}>
-                      ({intermissionConfig[activeIntermissionGame.key]?.difficulty || 'facile'})
-                    </span>
-                  </div>
-                </button>
-
-                {/* 2. SECONDARY ACTION BUTTON: Lancer un Jeu Aléatoire (Distinctly Secondary) */}
-                <button
-                  onClick={() => {
-                    sound.playClick();
-                    let nextKey = null;
-                    if (onShuffleUpcomingIntermission) {
-                      nextKey = onShuffleUpcomingIntermission();
-                    } else {
-                      const others = availableIntermissionGames.filter(g => g.key !== effectiveSelectedUpcoming);
-                      const pool = others.length > 0 ? others : availableIntermissionGames;
-                      nextKey = pool[Math.floor(Math.random() * pool.length)].key;
-                      setUserSelectedUpcoming(nextKey);
-                      if (onSelectUpcomingIntermission) onSelectUpcomingIntermission(nextKey);
-                    }
-                    if (onIntermissionRequest && nextKey) {
-                      onIntermissionRequest(nextKey);
-                    }
-                  }}
-                  className="retro-btn"
-                  style={{
-                    ...restartBtnStyle,
-                    background: 'rgba(30, 41, 59, 0.75)',
-                    border: '1.5px solid rgba(96, 165, 250, 0.45)',
-                    color: '#93C5FD',
-                    width: '100%',
-                    fontWeight: '700',
-                    fontSize: '13.5px',
-                    padding: '9px 16px',
-                    borderRadius: '12px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.22)';
-                    e.currentTarget.style.borderColor = '#60A5FA';
-                    e.currentTarget.style.color = '#FFFFFF';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(30, 41, 59, 0.75)';
-                    e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.45)';
-                    e.currentTarget.style.color = '#93C5FD';
-                  }}
-                >
-                  <span style={{ fontSize: '1.15rem' }}>🎲</span>
-                  <span>Lancer un jeu aléatoire</span>
-                  <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>(Surprise)</span>
-                </button>
-              </div>
-            )}
-
-            {!isIntermissionEnabled && (
-              <div style={{ width: '100%', maxWidth: '360px', marginBottom: '12px', zIndex: 10 }}>
-                <button
-                  onClick={initGame}
-                  className="retro-btn pulse-glow"
-                  style={{
-                    ...restartBtnStyle,
-                    background: '#10b981',
-                    borderColor: '#10b981',
-                    color: '#ffffff',
-                    width: '100%',
-                    fontWeight: '800',
-                    fontSize: '15px',
-                    padding: '12px 14px',
-                    borderRadius: '12px',
-                    boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)'
-                  }}
-                >
-                  🔄 Nouveau Niveau
-                </button>
-              </div>
-            )}
+            <IntermissionProposal
+              onIntermissionRequest={onIntermissionRequest}
+              upcomingIntermission={upcomingIntermission}
+              onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+              onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+              intermissionConfig={intermissionConfig}
+              intermissionGames={intermissionGames}
+              excludeGameKey="mahjong"
+              onContinue={initGame}
+              continueText="Nouveau Niveau"
+              customStyle={{ marginBottom: '16px' }}
+            />
 
             {/* Secondary actions: Rejouer ce plateau & Retour au Hub */}
             <div style={{ display: 'flex', gap: '10px', width: '100%', maxWidth: '360px', zIndex: 10 }}>
@@ -3112,25 +2784,6 @@ const roundTitleStyle = {
   fontFamily: 'system-ui, -apple-system, sans-serif',
 };
 
-const helpersContainerStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  gap: '12px',
-  marginBottom: '16px',
-};
-
-const helperBtnStyle = {
-  padding: '6px 14px',
-  fontSize: MAHJONG_THEME.fonts.helperBtnSize,
-  fontWeight: '800',
-  color: '#1e3a8a',
-  background: '#ffffff',
-  border: '2px solid #60a5fa',
-  borderRadius: '12px',
-  cursor: 'pointer',
-  minHeight: '38px',
-  boxShadow: '0 3px 5px rgba(0,0,0,0.1)',
-};
 
 const boardWrapperStyle = {
   width: '100%',
@@ -3150,47 +2803,6 @@ const boardStyle = {
   margin: '0 auto',
 };
 
-const bottomControlsStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginTop: '16px',
-  position: 'relative',
-  zIndex: 2,
-};
-
-const hintCircleBtnStyle = {
-  position: 'relative',
-  width: '68px',
-  height: '68px',
-  borderRadius: '50%',
-  background: 'linear-gradient(180deg, #38bdf8 0%, #0284c7 100%)',
-  border: '3.5px solid #ffffff',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxShadow: '0 6px 12px rgba(0,0,0,0.25)',
-  transition: 'transform 0.1s active',
-};
-
-const badgeStyle = {
-  position: 'absolute',
-  top: '-4px',
-  right: '-4px',
-  width: '24px',
-  height: '24px',
-  background: '#ef4444',
-  borderRadius: '50%',
-  color: '#ffffff',
-  fontSize: MAHJONG_THEME.fonts.badgeSize,
-  fontWeight: '800',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  border: '2px solid #ffffff',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
-};
 
 const overlayStyle = {
   position: 'absolute',
@@ -3210,21 +2822,6 @@ const overlayStyle = {
   border: '3px solid #ffffff'
 };
 
-const victoryTitleStyle = {
-  fontFamily: 'system-ui, -apple-system, sans-serif',
-  fontSize: '32px',
-  color: '#ffffff',
-  fontWeight: '900',
-  marginBottom: '12px',
-  textShadow: '0 2px 6px rgba(0,0,0,0.3)',
-};
-
-const descStyle = {
-  color: '#e0f2fe',
-  fontSize: MAHJONG_THEME.fonts.descSize,
-  fontWeight: '600',
-  marginBottom: '24px',
-};
 
 const restartBtnStyle = {
   padding: '14px 28px',
