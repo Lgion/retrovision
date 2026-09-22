@@ -6,6 +6,7 @@ import GameHeader from '../components/GameHeader';
 import HangmanCollection from './HangmanCollection';
 import hangmanData from '../utils/hangmanData.json';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { useConfirm } from '../components/ConfirmContext';
 
 const shuffleArray = (arr) => {
   const result = [...arr];
@@ -22,6 +23,7 @@ const getRandomItem = (arr) => {
 };
 
 export default function Hangman({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+  const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
 
   const [coins, setCoins] = useState(() => getGameConfig('hangman', 'coins', 100)); // Stars/coins
@@ -91,9 +93,16 @@ export default function Hangman({ onBack, onScoreSave, isIntermission, intermiss
 
   const [recentCorrectLetter, setRecentCorrectLetter] = useState(null);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     if (gameState === 'playing' && guessedLetters.length > 0) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter Le Pendu ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         sound.stopBGM();
         onBack();
       }

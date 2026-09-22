@@ -6,6 +6,7 @@ import Grid2048Collection from './Grid2048Collection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { useConfirm } from '../components/ConfirmContext';
 
 const addRandomTile = (currentBoard) => {
   const emptyIndices = currentBoard
@@ -22,6 +23,7 @@ const addRandomTile = (currentBoard) => {
 };
 
 export default function Grid2048({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+  const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [customizations, setCustomizations] = useState(() => getGameConfig('2048', 'customizations', { difficulty: 'moyen', theme: 'neon' }));
 
@@ -89,10 +91,17 @@ export default function Grid2048({ onBack, onScoreSave, isIntermission, intermis
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameOver, victory, score]);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     const isGameInProgress = !gameOver && !victory && score > 0;
     if (isGameInProgress) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter Neon 2048 ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         onBack();
       }
     } else {

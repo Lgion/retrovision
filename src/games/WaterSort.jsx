@@ -7,8 +7,10 @@ import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { useConfirm } from '../components/ConfirmContext';
 
 export default function WaterSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+  const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
@@ -469,13 +471,27 @@ export default function WaterSort({ onBack, onScoreSave, isIntermission, intermi
               updateGameConfig('water', 'customizations', { ...customizations, theme: nextTheme });
               sound.playPowerup?.();
             }}
-            onBack={() => {
+            onBack={async () => {
               if (victoryPhase === 0 && history.length > 0) {
-                if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) onBack();
+                const ok = await confirm({
+                  title: "Quitter le Tri de l'Eau ?",
+                  message: "Voulez-vous vraiment quitter la partie en cours ?",
+                  confirmText: "Oui, quitter",
+                  cancelText: "Continuer à jouer",
+                  confirmVariant: "danger"
+                });
+                if (ok) onBack();
               } else onBack();
             }}
-            onRestart={() => {
-              if (window.confirm("Recommencer ce niveau ?")) {
+            onRestart={async () => {
+              const ok = await confirm({
+                title: "Recommencer ce niveau ?",
+                message: "Voulez-vous réinitialiser les fioles de ce niveau ?",
+                confirmText: "Recommencer",
+                cancelText: "Continuer à jouer",
+                confirmVariant: "warning"
+              });
+              if (ok) {
                 initGame();
                 setVictoryPhase(0);
                 sound.playClick();

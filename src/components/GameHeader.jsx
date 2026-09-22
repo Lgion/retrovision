@@ -15,6 +15,7 @@ export default function GameHeader({
   onShuffle,
   shuffleDisabled = false,
   onShop,
+  showShop = true,
   showBgmToggle = true,
   bgmOn,
   onBgmToggle,
@@ -128,10 +129,10 @@ export default function GameHeader({
           filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
         }
 
-        /* Mobile Responsiveness */
+        /* Mobile Responsiveness & Touch Target Compliance (>= 48px) */
         .gh-container {
-          padding: 15px 20px;
-          gap: 10px;
+          padding: 12px 18px;
+          gap: 12px;
         }
         .gh-title {
           display: block;
@@ -140,27 +141,84 @@ export default function GameHeader({
           display: inline;
         }
         
+        .gh-back-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          min-height: 48px;
+          min-width: 48px;
+          padding: 10px 18px;
+          border-radius: 24px;
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.3));
+          border: 2px solid #38bdf8;
+          color: #ffffff;
+          font-weight: 800;
+          font-size: 15px;
+          letter-spacing: 0.5px;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+          touch-action: manipulation;
+          user-select: none;
+        }
+        .gh-back-btn:hover {
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(99, 102, 241, 0.45));
+          border-color: #7dd3fc;
+          box-shadow: 0 6px 18px rgba(56, 189, 248, 0.5);
+          transform: translateY(-1px);
+        }
+        .gh-back-btn:active {
+          transform: scale(0.96);
+          background: rgba(56, 189, 248, 0.4);
+        }
+
+        .gh-controls {
+          display: flex;
+          gap: 14px;
+          width: 100%;
+          align-items: center;
+          flex-wrap: wrap;
+          justify-content: center;
+          padding: 4px 0;
+        }
+        
         @media (max-width: 600px) {
           .gh-container {
             padding: 8px 10px !important;
-            gap: 5px !important;
+            gap: 8px !important;
           }
+          .gh-back-btn {
+            min-height: 48px !important;
+            padding: 8px 14px !important;
+            font-size: 14px !important;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
+          }
+          /* Keep candy buttons at safe minimum 48px on mobile */
           .candy-btn {
-            width: 40px !important;
-            height: 40px !important;
+            width: 48px !important;
+            height: 48px !important;
+            min-width: 48px !important;
+            min-height: 48px !important;
+            touch-action: manipulation;
           }
           .candy-btn.btn-shop {
-            padding: 0 10px !important;
+            padding: 0 14px !important;
+            min-height: 48px !important;
           }
           .btn-icon {
-            width: 20px;
-            height: 20px;
+            width: 22px !important;
+            height: 22px !important;
           }
           .gh-title {
             display: none !important;
           }
           .btn-shop-text {
-            display: none !important;
+            display: inline !important;
+            font-size: 0.85rem !important;
+          }
+          .gh-controls {
+            gap: 10px !important;
           }
         }
       `}</style>
@@ -175,24 +233,15 @@ export default function GameHeader({
         flexWrap: 'wrap',
         ...style
       }}>
-        {/* Left Area: Back Button & Title */}
+        {/* Left Area: Back Button & Title with high visual contrast for left neglect */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <button
-            onClick={onBack}
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '20px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
-              whiteSpace: 'nowrap'
+            onClick={() => {
+              sound.playClick();
+              if (onBack) onBack();
             }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-            onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+            className="gh-back-btn"
+            title="Retour au menu"
           >
             {backText}
           </button>
@@ -217,7 +266,7 @@ export default function GameHeader({
         )}
 
         {/* Right Area: Controls */}
-        <div style={{ display: 'flex', gap: '2em', width: "100%", alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div className="gh-controls">
 
           {onRestart && (
             <button
@@ -295,20 +344,22 @@ export default function GameHeader({
             </button>
           )}
 
-          {/* ALWAYS SHOW SHOP */}
-          <button
-            onClick={() => {
-              if (onShop) {
-                onShop();
-              } else {
-                alert("Boutique bientôt disponible pour ce jeu ! Préparez vos pièces !");
-              }
-            }}
-            className="candy-btn btn-shop"
-            title="Boutique"
-          >
-            🛍️<span className="btn-shop-text"> Boutique</span>
-          </button>
+          {/* ALWAYS SHOW SHOP UNLESS EXPLICITLY DISABLED */}
+          {showShop && (
+            <button
+              onClick={() => {
+                if (onShop) {
+                  onShop();
+                } else {
+                  alert("Boutique bientôt disponible pour ce jeu ! Préparez vos pièces !");
+                }
+              }}
+              className="candy-btn btn-shop"
+              title="Boutique"
+            >
+              🛍️<span className="btn-shop-text"> Boutique</span>
+            </button>
+          )}
 
           {extraControls}
         </div>

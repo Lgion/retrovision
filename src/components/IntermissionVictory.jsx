@@ -95,6 +95,24 @@ export default function IntermissionVictory({ isPassed = false, returnGameName =
         Retour au {returnGameName}...
       </p>
 
+      <div
+        style={{
+          marginTop: '16px',
+          padding: '8px 18px',
+          borderRadius: '20px',
+          background: 'rgba(56, 189, 248, 0.12)',
+          border: '1px solid rgba(56, 189, 248, 0.3)',
+          color: '#7dd3fc',
+          fontSize: '0.95rem',
+          fontWeight: '600',
+          textAlign: 'center',
+          maxWidth: '85%',
+          animation: 'victorySlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both'
+        }}
+      >
+        🌸 Prends tout ton temps, chaque instant de jeu fait progresser ton cerveau.
+      </div>
+
       {/* Barre de progression épurée */}
       <div
         style={{

@@ -1,3 +1,5 @@
+import { haptic } from './haptics';
+
 class SoundController {
   constructor() {
     this.ctx = null;
@@ -63,6 +65,7 @@ class SoundController {
   }
 
   playScore() {
+    haptic.success();
     if (this.muted) return;
     try {
       this.init();
@@ -91,7 +94,7 @@ class SoundController {
   }
 
   playExplosion() {
-    // We repurpose explosion to be a cute poof
+    haptic.warning();
     if (this.muted) return;
     try {
       this.init();
@@ -115,6 +118,7 @@ class SoundController {
   }
 
   playPowerup() {
+    haptic.success();
     if (this.muted) return;
     try {
       this.init();
@@ -140,6 +144,7 @@ class SoundController {
   }
 
   playClick() {
+    haptic.tap();
     if (this.muted) return;
     try {
       this.init();

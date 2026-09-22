@@ -6,6 +6,7 @@ import GameHeader from '../components/GameHeader';
 import ArrowPuzzleCollection from './ArrowPuzzleCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { useConfirm } from '../components/ConfirmContext';
 
 const DIRS = {
   'up': { dr: -1, dc: 0, symbol: '▲', color: '#ef4444' }, // Red
@@ -300,6 +301,7 @@ const generateWireBoard = (size, numWiresTarget) => {
 };
 
 export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+  const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [mode, setMode] = useState(() => (isIntermission ? 'wire' : getGameConfig('arrows', 'mode', 'dense'))); // 'scattered' | 'dense' | 'wire'
@@ -396,9 +398,16 @@ export default function ArrowPuzzle({ onBack, onScoreSave, isIntermission, inter
     }
   }, [isIntermission, gameState, intermissionDifficulty, startGame]);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     if (gameState === 'playing' && victoryPhase === 0 && moves > 0 && arrowsLeft > 0) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter Arrow Puzzle ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         sound.stopBGM();
         onBack();
       }

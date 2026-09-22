@@ -4,8 +4,10 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
+import { useConfirm } from '../components/ConfirmContext';
 
 export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+  const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [gridSize, setGridSize] = useState(() => getGameConfig('jigsaw', 'difficulty', 3)); // 3x3, 4x4
@@ -47,9 +49,16 @@ export default function JigsawPuzzle({ onBack, onScoreSave, isIntermission, inte
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, victoryPhase, moves]);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     if (gameState === 'playing' && victoryPhase === 0 && moves > 0) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter le Puzzle ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         sound.stopBGM();
         onBack();
       }

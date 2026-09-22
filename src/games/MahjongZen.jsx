@@ -9,6 +9,7 @@ import MahjongCollection from './MahjongCollection';
 import MahjongIcon, { MAHJONG_THEME } from './MahjongIcon';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import GameMiniature from '../components/GameMiniature';
+import { useConfirm } from '../components/ConfirmContext';
 
 
 const MahjongTile = React.memo(function MahjongTile({
@@ -210,6 +211,7 @@ export default function MahjongZen({
   intermissionConfig = {},
   skipIntro
 }) {
+  const confirm = useConfirm();
   const availableIntermissionGames = React.useMemo(() => {
     const enabled = INTERMISSION_MINI_GAMES.filter((g) => {
       const conf = intermissionConfig[g.key];
@@ -410,10 +412,17 @@ export default function MahjongZen({
     return () => clearInterval(interval);
   }, [lost, mode]);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     const isGameInProgress = !won && !lost && tiles.some(t => !t.active);
     if (isGameInProgress) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter le Mahjong ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         onBack();
       }
     } else {

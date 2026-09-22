@@ -12,6 +12,7 @@ import {
   getGameIcon,
 } from './utils/gamesConfig';
 import { recordPlay, recordTime, recordScore } from './utils/stats';
+import { ConfirmProvider } from './components/ConfirmContext';
 import './App.css';
 
 function App() {
@@ -317,7 +318,7 @@ function App() {
   };
 
   return (
-    <>
+    <ConfirmProvider>
       {/* Filtre d'ambiance écran rétro CRT */}
       <div className="crt-overlay"></div>
 
@@ -365,7 +366,7 @@ function App() {
           }}
         />
       )}
-    </>
+    </ConfirmProvider>
   );
 }
 

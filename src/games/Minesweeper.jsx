@@ -6,6 +6,7 @@ import GameHeader from '../components/GameHeader';
 import MinesweeperCollection from './MinesweeperCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { useConfirm } from '../components/ConfirmContext';
 
 const getDifficultySettings = (diffId) => {
   switch (diffId) {
@@ -66,6 +67,7 @@ const placeMines = (grid, firstR, firstC, size, minesCount) => {
 };
 
 export default function Minesweeper({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+  const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [boardSize, setBoardSize] = useState(() => getGameConfig('mines', 'boardSize', 9)); // 9 or 12
@@ -148,9 +150,16 @@ export default function Minesweeper({ onBack, onScoreSave, isIntermission, inter
     }
   }, [isIntermission, gameState, intermissionDifficulty, startGame]);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     if (gameState === 'playing' && victoryPhase === 0 && !gameOver && moves > 0) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter le Démineur ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         sound.stopBGM();
         onBack();
       }

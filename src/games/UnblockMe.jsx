@@ -4,8 +4,10 @@ import { getGameConfig, updateGameConfig } from '../utils/config';
 import LEVELS from '../utils/unblockLevels.json';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import { useConfirm } from '../components/ConfirmContext';
 
 export default function UnblockMe({ onBack, onScoreSave, onIntermissionRequest, isIntermission = false }) {
+  const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing' | 'levelSelect'
   const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(() => {
@@ -36,9 +38,16 @@ export default function UnblockMe({ onBack, onScoreSave, onIntermissionRequest, 
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, victoryPhase, moves]);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     if (gameState === 'playing' && victoryPhase === 0 && moves > 0) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter Débloque-moi ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         sound.stopBGM();
         onBack();
       }

@@ -5,6 +5,7 @@ import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { updateGameConfig } from '../utils/config';
+import { useConfirm } from '../components/ConfirmContext';
 
 // Deterministic confetti particles for victory celebration
 const CONFETTI_PARTICLES = Array.from({ length: 30 }, (_, i) => ({
@@ -313,6 +314,7 @@ export default function Sudoku({
   const [showIntro, setShowIntro] = useState(!isIntermission);
   const [gameState, setGameState] = useState(isIntermission ? 'playing' : 'menu'); // 'menu' | 'playing'
   const [difficulty, setDifficulty] = useState(initialDiff); // 'facile' | 'moyen' | 'difficile'
+  const confirm = useConfirm();
 
   const [showStore, setShowStore] = useState(false);
   const [activeThemeId, setActiveThemeId] = useState(() => {
@@ -465,10 +467,17 @@ export default function Sudoku({
     };
   }, [gameState, victory]);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     sound.playClick();
     if (gameState === 'playing' && !victory && (mistakes > 0 || history.length > 0)) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie de Sudoku en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter le Sudoku ?",
+        message: "Voulez-vous vraiment quitter la partie de Sudoku en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         sound.stopBGM?.();
         if (onBack) onBack();
       }

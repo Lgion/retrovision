@@ -6,6 +6,7 @@ import GameIntro from '../components/GameIntro';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { ADVENTURE_LEVELS, getLevelData, calculateLevelStars } from './blockfantasy/levelsData';
+import { useConfirm } from '../components/ConfirmContext';
 
 // ── CONSTANTES DES FORMES DE BLOCS ──────────────────────────────────────────
 const SHAPE_TEMPLATES = [
@@ -78,6 +79,7 @@ export default function BlockFantasy({
   replaySameIntermission,
   onToggleReplaySameIntermission
 }) {
+  const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [showCustomization, setShowCustomization] = useState(false);
   const [showLevelSelect, setShowLevelSelect] = useState(false);
@@ -863,9 +865,16 @@ export default function BlockFantasy({
     }
   };
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     if (!gameOver && !levelVictory && score > 0) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) onBack();
+      const ok = await confirm({
+        title: "Quitter Block Fantasy ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) onBack();
     } else {
       onBack();
     }

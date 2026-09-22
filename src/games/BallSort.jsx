@@ -7,6 +7,7 @@ import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { useConfirm } from '../components/ConfirmContext';
 
 const BallSortIntro = ({ onComplete }) => {
   const canvasRef = useRef(null);
@@ -185,6 +186,7 @@ const BallSortIntro = ({ onComplete }) => {
 
 
 export default function BallSort({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+  const confirm = useConfirm();
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
   // Game state
@@ -337,10 +339,17 @@ export default function BallSort({ onBack, onScoreSave, isIntermission, intermis
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [victoryPhase, history]);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     const isGameInProgress = victoryPhase === 0 && history.length > 0;
     if (isGameInProgress) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter le Tri de Billes ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         sound.stopBGM();
         onBack();
       }

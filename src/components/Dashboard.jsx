@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { sound } from '../utils/sound';
 import { getStats, saveStats, resetAllStats, getRecommendation } from '../utils/stats';
 import { getConfigs, saveConfigs, resetAllConfigs } from '../utils/config';
+import { useConfirm } from './ConfirmContext';
+import KindWordsBanner from './KindWordsBanner';
 
 export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissionSettings }) {
   const [profileName, setProfileName] = useState(() => {
@@ -32,7 +34,10 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     sudoku: 0,
     blockfantasy: 0,
     impossible13: 0,
-    bubblecool: 0
+    bubblecool: 0,
+    fireflies: 0,
+    zenflow: 0,
+    symbolquest: 0
   });
 
   const avatars = ['✦', '♥', '★', '●', '☘', '☾', '☀'];
@@ -55,7 +60,10 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     const blockfantasy = detailedStats.blockfantasy?.highScore || 0;
     const impossible13 = detailedStats.impossible13?.highScore || 0;
     const bubblecool = detailedStats.bubblecool?.highScore || 0;
-    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku, blockfantasy, impossible13, bubblecool });
+    const fireflies = detailedStats.fireflies?.highScore || 0;
+    const zenflow = detailedStats.zenflow?.highScore || 0;
+    const symbolquest = detailedStats.symbolquest?.highScore || 0;
+    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku, blockfantasy, impossible13, bubblecool, fireflies, zenflow, symbolquest });
   }, [statsUpdated]);
 
   const totalPlays = Object.values(stats).reduce((acc, curr) => acc + (curr.plays || 0), 0);
@@ -127,15 +135,22 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     }
   };
 
-  const handleReset = () => {
-    if (window.confirm("Êtes-vous sûr de vouloir réinitialiser TOUTES vos statistiques, préférences, et historiques ? Cette action est irréversible.")) {
-      if (window.confirm("Confirmation finale : réinitialiser toutes les données ?")) {
-        resetAllStats();
-        resetAllConfigs();
-        localStorage.removeItem('retrovision_player_name');
-        localStorage.removeItem('retrovision_player_avatar');
-        window.location.reload();
-      }
+  const confirm = useConfirm();
+
+  const handleReset = async () => {
+    const ok = await confirm({
+      title: "Réinitialisation",
+      message: "Êtes-vous sûr de vouloir réinitialiser toutes vos statistiques, préférences et historiques ? Cette action est irréversible.",
+      confirmText: "Oui, tout réinitialiser",
+      cancelText: "Annuler et conserver",
+      confirmVariant: "danger"
+    });
+    if (ok) {
+      resetAllStats();
+      resetAllConfigs();
+      localStorage.removeItem('retrovision_player_name');
+      localStorage.removeItem('retrovision_player_avatar');
+      window.location.reload();
     }
   };
 
@@ -427,6 +442,33 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       color: '#38BDF8',
       textColor: '#0284C7',
       icon: '🫧'
+    },
+    {
+      id: 'fireflies',
+      title: 'JARDIN DES LUCIOLES',
+      desc: 'Touchez les lucioles lumineuses au creux de la nuit pour révéler les constellations. Stimule l’attention visuelle gauche en douceur.',
+      highscore: highScores.fireflies,
+      color: '#38BDF8',
+      textColor: '#0284C7',
+      icon: '✨'
+    },
+    {
+      id: 'zenflow',
+      title: 'FLUX ZEN',
+      desc: 'Reliez les gemmes de même couleur par des chemins lumineux sans les croiser. Stimule le franchissement de la ligne médiane.',
+      highscore: highScores.zenflow,
+      color: '#06B6D4',
+      textColor: '#0891B2',
+      icon: '🌊'
+    },
+    {
+      id: 'symbolquest',
+      title: 'QUÊTE DES SYMBOLES',
+      desc: 'Repérez les symboles cibles cachés dans le jardin zen. Stimule le balayage visuel méthodique et l’attention gauche.',
+      highscore: highScores.symbolquest,
+      color: '#10B981',
+      textColor: '#059669',
+      icon: '🔍'
     }
   ];
 
@@ -439,6 +481,9 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
 
   return (
     <div style={containerStyle}>
+      {/* Mot doux bienveillant d'accueil */}
+      <KindWordsBanner />
+
       {/* Profile Header */}
       <div style={profileHeaderStyle} className="neon-border-subtle">
         <div style={profileInfoStyle}>

@@ -12,6 +12,9 @@ import Sudoku from '../games/Sudoku';
 import BlockFantasy from '../games/BlockFantasy';
 import Impossible13 from '../games/Impossible13';
 import BubbleCool from '../games/BubbleCool';
+import FireflyGarden from '../games/FireflyGarden';
+import ZenFlow from '../games/ZenFlow';
+import SymbolQuest from '../games/SymbolQuest';
 
 /**
  * Registre centralisé de tous les jeux de RetroVision.
@@ -213,6 +216,48 @@ export const GAMES_CONFIG = {
     binaryScore: false,
     supportsIntermission: true,
     supportsIntro: true,
+  },
+  fireflies: {
+    id: 'fireflies',
+    component: FireflyGarden,
+    name: 'Jardin des Lucioles',
+    aliases: ['Jardin des Lucioles', 'Jardin Lucioles', 'Lucioles', 'fireflies'],
+    icon: '✨',
+    settingsIcon: '✨',
+    color: '#38BDF8',
+    fullscreen: false,
+    storageKey: 'retrovision_fireflies_highscore',
+    binaryScore: false,
+    supportsIntermission: true,
+    supportsIntro: false,
+  },
+  zenflow: {
+    id: 'zenflow',
+    component: ZenFlow,
+    name: 'Flux Zen',
+    aliases: ['Flux Zen', 'Zen Flow', 'Tracé Lumineux', 'zenflow', 'flow'],
+    icon: '🌊',
+    settingsIcon: '🌊',
+    color: '#06B6D4',
+    fullscreen: false,
+    storageKey: 'retrovision_zenflow_highscore',
+    binaryScore: false,
+    supportsIntermission: true,
+    supportsIntro: false,
+  },
+  symbolquest: {
+    id: 'symbolquest',
+    component: SymbolQuest,
+    name: 'Quête des Symboles',
+    aliases: ['Quête des Symboles', 'Quête Symboles', 'Symbol Quest', 'symbolquest', 'symbols'],
+    icon: '🔍',
+    settingsIcon: '🔍',
+    color: '#10B981',
+    fullscreen: false,
+    storageKey: 'retrovision_symbolquest_highscore',
+    binaryScore: false,
+    supportsIntermission: true,
+    supportsIntro: false,
   },
 };
 

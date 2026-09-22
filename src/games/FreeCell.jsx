@@ -7,6 +7,7 @@ import GameHeader from '../components/GameHeader';
 import FreeCellCollection from './FreeCellCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
 import { pickRandomTheme } from '../utils/themeManager';
+import { useConfirm } from '../components/ConfirmContext';
 
 const SUITS = [
   { id: '♥', color: '#c21807' },
@@ -40,6 +41,7 @@ const createDeck = () => {
 };
 
 export default function FreeCell({ onBack, onScoreSave, isIntermission, intermissionDifficulty, onIntermissionComplete, onIntermissionRequest, replaySameIntermission, onToggleReplaySameIntermission }) {
+  const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
   const [gameState, setGameState] = useState(isIntermission ? 'playing' : 'menu'); // 'menu' | 'playing'
   const containerRef = useRef(null);
@@ -111,9 +113,16 @@ export default function FreeCell({ onBack, onScoreSave, isIntermission, intermis
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, victoryPhase, moves]);
 
-  const handleBackWithConfirm = () => {
+  const handleBackWithConfirm = async () => {
     if (gameState === 'playing' && victoryPhase === 0 && moves > 0) {
-      if (window.confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+      const ok = await confirm({
+        title: "Quitter FreeCell ?",
+        message: "Voulez-vous vraiment quitter la partie en cours ?",
+        confirmText: "Oui, quitter",
+        cancelText: "Continuer à jouer",
+        confirmVariant: "danger"
+      });
+      if (ok) {
         sound.stopBGM();
         onBack();
       }
