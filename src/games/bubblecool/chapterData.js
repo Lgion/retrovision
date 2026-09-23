@@ -1,4 +1,5 @@
 // chapterData.js - 10 Chapitres Évolutifs avec Variations Dynamiques pour Bubble Cool
+import { shuffle, randomChoice } from '../../utils/commonUtils';
 
 export const SPECIAL_TYPES = {
   STONE: 'stone',        // 🪨 Indestructible par couleur, doit chuter par gravité ou bombe
@@ -357,15 +358,10 @@ export const generateDynamicChapterGrid = (chapterId, maxRows = 12, colsEven = 9
 
   // 1. Choisir aléatoirement une variante de structure
   const variants = chapter.layoutVariants || [];
-  const chosenVariant = variants[Math.floor(Math.random() * variants.length)] || [];
+  const chosenVariant = randomChoice(variants) || [];
 
-  // 2. Mélanger aléatoirement les couleurs autorisées pour créer une palette unique
-  const colors = [...chapter.allowedColors];
-  // Algorithme de Fisher-Yates shuffle
-  for (let i = colors.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [colors[i], colors[j]] = [colors[j], colors[i]];
-  }
+  // 2. Mélanger aléatoirement les couleurs autorisées (DRY Fisher-Yates)
+  const colors = shuffle(chapter.allowedColors);
 
   // Mapper c1, c2, c3... vers les couleurs mélangées
   const colorMap = {

@@ -4,9 +4,12 @@ import GameIntro from '../components/GameIntro';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
-import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { updateGameConfig } from '../utils/config';
 import { useConfirm } from '../components/ConfirmContext';
+import { shuffle, shuffleInPlace } from '../utils/commonUtils';
+import { useRandomTheme } from '../hooks/useRandomTheme';
+import { storage } from '../utils/storage';
 
 // Deterministic confetti particles for victory celebration
 const CONFETTI_PARTICLES = Array.from({ length: 30 }, (_, i) => ({
@@ -83,11 +86,7 @@ function generateFullBoard(rowsPerBlock, colsPerBlock, size) {
     const r = Math.floor(index / size);
     const c = index % size;
 
-    const numbers = Array.from({ length: size }, (_, i) => i + 1);
-    for (let i = numbers.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-    }
+    const numbers = shuffle(Array.from({ length: size }, (_, i) => i + 1));
 
     for (let val of numbers) {
       if (isValid(grid, r, c, val, rowsPerBlock, colsPerBlock, size)) {
@@ -115,10 +114,7 @@ function generatePuzzle(rowsPerBlock, colsPerBlock, size, targetClues) {
   }
 
   // Shuffle positions
-  for (let i = positions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [positions[i], positions[j]] = [positions[j], positions[i]];
-  }
+  shuffleInPlace(positions);
 
   const cellsCount = size * size;
   let removed = 0;
@@ -327,26 +323,16 @@ export default function Sudoku({
     if (isRandomThemeEnabled('sudoku')) {
       return pickRandomTheme('sudoku');
     }
-    return localStorage.getItem('retrovision_sudoku_theme') || 'neon';
+    return storage.getItem('retrovision_sudoku_theme', 'neon') || 'neon';
   });
   
-  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('sudoku'));
-
-  useEffect(() => {
-    const handleToggle = (e) => {
-      if (e.detail?.gameId === 'sudoku') {
-        setRandomThemeActive(e.detail.enabled);
-      }
-    };
-    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
-    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
-  }, []);
+  const randomThemeActive = useRandomTheme('sudoku');
 
   const currentTheme = THEMES[activeThemeId] || THEMES['classic'];
 
   const handleSelectTheme = (themeId) => {
     setActiveThemeId(themeId);
-    localStorage.setItem('retrovision_sudoku_theme', themeId);
+    storage.setItem('retrovision_sudoku_theme', themeId);
     sound.playClick();
     setShowStore(false);
   };
@@ -411,7 +397,7 @@ export default function Sudoku({
     if (isRandomThemeEnabled('sudoku')) {
       const nextTheme = pickRandomTheme('sudoku', activeThemeId);
       setActiveThemeId(nextTheme);
-      localStorage.setItem('retrovision_sudoku_theme', nextTheme);
+      storage.setItem('retrovision_sudoku_theme', nextTheme);
     }
     setDifficulty(diff);
     setMistakes(0);
@@ -724,11 +710,11 @@ export default function Sudoku({
           onComplete={(isRandomTheme) => {
             setShowIntro(false);
             const isRand = isRandomTheme || isRandomThemeEnabled('sudoku');
-            setRandomThemeActive(isRand);
+            setRandomThemeEnabled('sudoku', isRand);
             if (isRand) {
               const nextTheme = pickRandomTheme('sudoku', activeThemeId);
               setActiveThemeId(nextTheme);
-              localStorage.setItem('retrovision_sudoku_theme', nextTheme);
+              storage.setItem('retrovision_sudoku_theme', nextTheme);
             }
           }}
         />

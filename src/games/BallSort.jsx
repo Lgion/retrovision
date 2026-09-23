@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { sound } from '../utils/sound';
 import BallSortCollection from './BallSortCollection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
@@ -9,6 +9,7 @@ import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
+import { shuffleInPlace } from '../utils/commonUtils';
 
 const BallSortIntro = ({ onComplete }) => {
   const canvasRef = useRef(null);
@@ -280,10 +281,7 @@ export default function BallSort({
       }
     });
 
-    for (let i = ballPool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [ballPool[i], ballPool[j]] = [ballPool[j], ballPool[i]];
-    }
+    shuffleInPlace(ballPool);
 
     const initialTubes = [];
     for (let i = 0; i < numFilled; i++) {

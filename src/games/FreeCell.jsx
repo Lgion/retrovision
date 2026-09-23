@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
@@ -9,6 +9,7 @@ import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import { pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
+import { shuffleInPlace } from '../utils/commonUtils';
 
 const SUITS = [
   { id: '♥', color: '#c21807' },
@@ -33,12 +34,7 @@ const createDeck = () => {
       });
     }
   }
-  // Fisher-Yates shuffle
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  return deck;
+  return shuffleInPlace(deck);
 };
 
 export default function FreeCell({
@@ -797,7 +793,7 @@ export default function FreeCell({
           );
         })()}
 
-        {gameState === 'menu' && (
+        {gameState === 'menu' && !isIntermission && (
           <div style={menuStyle}>
             <div style={{ fontSize: '5rem', marginBottom: '20px', filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.5))' }}>🃏</div>
             <h2 style={{ color: '#fff', marginBottom: '30px', textAlign: 'center' }}>Prêt à empiler les cartes ?</h2>

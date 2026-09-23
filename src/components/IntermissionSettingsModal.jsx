@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { GAMES_CONFIG } from '../utils/gamesConfig';
+import { getIntermissionGames } from '../utils/gamesConfig';
+import { storage } from '../utils/storage';
 
 /**
  * Modale de configuration des entractes (activation des jeux, fréquence, difficulté, panneau d'intro).
@@ -55,14 +56,9 @@ export default function IntermissionSettingsModal({ config, onClose, onSave, onC
         ...prev,
         showIntroModal: !prev.showIntroModal,
       };
-      try {
-        const saved = localStorage.getItem('retrovision_intermission_config');
-        const parsed = saved ? JSON.parse(saved) : {};
-        parsed.showIntroModal = next.showIntroModal;
-        localStorage.setItem('retrovision_intermission_config', JSON.stringify(parsed));
-      } catch (e) {
-        console.warn('Could not persist showIntroModal to localStorage', e);
-      }
+      const parsed = storage.getJSON('retrovision_intermission_config', {}) || {};
+      parsed.showIntroModal = next.showIntroModal;
+      storage.setJSON('retrovision_intermission_config', parsed);
       if (onChange) onChange(next);
       return next;
     });
@@ -90,8 +86,8 @@ export default function IntermissionSettingsModal({ config, onClose, onSave, onC
     }
   };
 
-  // Liste des jeux disponibles pour les entractes depuis la configuration centralisée
-  const intermissionGames = Object.values(GAMES_CONFIG).filter((g) => g.supportsIntermission);
+  // Liste des jeux disponibles pour les entractes depuis la configuration centralisée (SSOT)
+  const intermissionGames = getIntermissionGames();
 
   return (
     <div

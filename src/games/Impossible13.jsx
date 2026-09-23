@@ -6,7 +6,9 @@ import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
-import { isRandomThemeEnabled, pickRandomTheme, GAME_THEME_DETAILS } from '../utils/themeManager';
+import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme, GAME_THEME_DETAILS } from '../utils/themeManager';
+import { useRandomTheme } from '../hooks/useRandomTheme';
+import { storage } from '../utils/storage';
 
 // --- CONFIGURATION ---
 const GRID_SIZE = 5;
@@ -104,17 +106,7 @@ export default function Impossible13({
 
   const activeTheme = isIntermission ? 'neon' : (customizations.theme || 'neon');
 
-  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('impossible13'));
-
-  useEffect(() => {
-    const handleToggle = (e) => {
-      if (e.detail?.gameId === 'impossible13') {
-        setRandomThemeActive(e.detail.enabled);
-      }
-    };
-    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
-    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
-  }, []);
+  const randomThemeActive = useRandomTheme('impossible13');
 
   const handleChangeTheme = useCallback(() => {
     const nextTheme = pickRandomTheme('impossible13', activeTheme);
@@ -144,7 +136,7 @@ export default function Impossible13({
     return newBoard;
   });
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('retrovision_impossible13_highscore') || '0', 10));
+  const [highScore, setHighScore] = useState(() => storage.getNumber('retrovision_impossible13_highscore', 0));
   const [currentMax, setCurrentMax] = useState(3);
   const [gameOver, setGameOver] = useState(false);
   const [victory, setVictory] = useState(false);
@@ -359,9 +351,9 @@ export default function Impossible13({
 
     if (newScore > highScore) {
       setHighScore(newScore);
-      localStorage.setItem('retrovision_impossible13_highscore', newScore.toString());
-      if (onScoreSave) onScoreSave('Impossible 13', newScore);
+      storage.setItem('retrovision_impossible13_highscore', newScore.toString());
     }
+    if (onScoreSave) onScoreSave('Impossible 13', newScore);
 
     // Check Game Over
     if (!hasPossibleMoves(newBoard)) {
@@ -475,7 +467,7 @@ export default function Impossible13({
           onComplete={(isRandomTheme) => {
             setShowIntro(false);
             const isRand = isRandomTheme || isRandomThemeEnabled('impossible13');
-            setRandomThemeActive(isRand);
+            setRandomThemeEnabled('impossible13', isRand);
             if (isRand) {
               const nextTheme = pickRandomTheme('impossible13', activeTheme);
               setCustomizations(prev => {

@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import { sound } from '../utils/sound';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
-
-// Gamme pentatonique apaisante (notes en Hz) : C5, D5, E5, G5, A5, C6, D6, E6
-const PENTATONIC_FREQS = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51];
 
 // Constellations à débloquer
 const CONSTELLATIONS = [
@@ -103,49 +100,15 @@ export default function FireflyGarden({
   // Particules d'ondulation / étincelles après capture
   const [ripples, setRipples] = useState([]);
 
-  // Audio Context pour carillons cristallins
-  const audioCtxRef = useRef(null);
   const fireflyIdRef = useRef(0);
   const spawnTimerRef = useRef(null);
 
   const currentConstellation = CONSTELLATIONS[constellationIdx % CONSTELLATIONS.length];
   const targetCount = isIntermission ? 8 : currentConstellation.target;
 
-  // Initialisation Web Audio
+  // Synthèse Web Audio centralisée (DRY)
   const playCrystalChime = useCallback((isLeft = false) => {
-    if (sound.muted) return;
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-
-      // Sélection d'une note pentatonique (plus aiguë si trouvée à gauche pour valoriser)
-      const freq = isLeft
-        ? PENTATONIC_FREQS[Math.floor(Math.random() * 4) + 4] // Notes hautes C6-E6
-        : PENTATONIC_FREQS[Math.floor(Math.random() * 5)];
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = isLeft ? 'triangle' : 'sine';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      // Léger glissando harmonique
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.01, ctx.currentTime + 0.1);
-
-      gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(isLeft ? 0.12 : 0.08, ctx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.9);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.9);
-    } catch {
-      // Ignorer si audio non disponible
-    }
+    sound.playPentatonicNote(Math.floor(Math.random() * 5), isLeft, 0.9);
   }, []);
 
   // Génération d'une nouvelle luciole avec PONDÉRATION GAUCHE (Anti-Hémi-évi)

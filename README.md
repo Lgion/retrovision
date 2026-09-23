@@ -1,3 +1,5 @@
+22/09/26: perplexity: https://www.perplexity.ai/search/45d73b2c-4e54-485d-ab05-eb9df3848e3c
+
 # TODOs
 - https://poki.com/fr/g/impossible-13
 - https://poki.com/fr/g/bubble-storm

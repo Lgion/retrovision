@@ -1,4 +1,7 @@
 // Utility for managing random theme preferences, allowed themes pool, and selecting random themes across RetroVision games
+import { resolveGameId } from './gamesConfig';
+import { storage } from './storage';
+import { randomChoice } from './commonUtils';
 
 export const GAME_THEME_DETAILS = {
   mahjong: [
@@ -92,66 +95,33 @@ export const GAME_THEME_DETAILS = {
 
 // Simple list of theme ids for backward compatibility
 export const GAME_THEMES = Object.fromEntries(
-  Object.entries(GAME_THEME_DETAILS).map(([key, details]) => [key, details.map(d => d.id)])
+  Object.entries(GAME_THEME_DETAILS).map(([key, details]) => [key, details.map((d) => d.id)])
 );
 
+/**
+ * Normalise un identifiant ou nom de jeu vers son identifiant canonique.
+ * @param {string} nameOrId
+ * @returns {string}
+ */
 export const normalizeGameId = (nameOrId) => {
+  const resolved = resolveGameId(nameOrId);
+  if (resolved) return resolved;
   if (!nameOrId) return 'generic';
-  const n = nameOrId.toLowerCase();
-  if (n.includes('mahjong')) return 'mahjong';
-  if (n.includes('bubble')) return 'bubblecool';
-  if (n.includes('water') || n.includes('eau')) return 'water';
-  if (n.includes('ball') || n.includes('bille')) return 'ball';
-  if (n.includes('sudoku')) return 'sudoku';
-  if (n.includes('freecell')) return 'freecell';
-  if (n.includes('mine') || n.includes('demineur')) return 'mines';
-  if (n.includes('arrow') || n.includes('fleche')) return 'arrows';
-  if (n.includes('2048')) return '2048';
-  if (n.includes('jigsaw') || n.includes('puzzle')) return 'jigsaw';
-  if (n.includes('hangman') || n.includes('pendu')) return 'hangman';
-  if (n.includes('block')) return 'blockfantasy';
+  const n = String(nameOrId).toLowerCase();
   if (n.includes('brick') || n.includes('casse')) return 'brickbreaker';
   if (n.includes('snake')) return 'snakewave';
   if (n.includes('flappy')) return 'flappyneon';
-  if (n.includes('unblock')) return 'unblock';
-  if (n.includes('impossible')) return 'impossible13';
   return n.replace(/[^a-z0-9]/g, '');
-};
-
-const _memoryStorage = {};
-
-const safeStorage = {
-  getItem: (key) => {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        const val = localStorage.getItem(key);
-        if (val !== null) return val;
-      }
-    } catch {
-      // LocalStorage unavailable
-    }
-    return _memoryStorage[key] || null;
-  },
-  setItem: (key, val) => {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(key, String(val));
-      }
-    } catch {
-      // LocalStorage unavailable
-    }
-    _memoryStorage[key] = String(val);
-  }
 };
 
 export const isRandomThemeEnabled = (gameIdOrName) => {
   const gameId = normalizeGameId(gameIdOrName);
-  return safeStorage.getItem(`retrovision_random_theme_${gameId}`) === 'true';
+  return storage.getBoolean(`retrovision_random_theme_${gameId}`);
 };
 
 export const setRandomThemeEnabled = (gameIdOrName, enabled) => {
   const gameId = normalizeGameId(gameIdOrName);
-  safeStorage.setItem(`retrovision_random_theme_${gameId}`, enabled ? 'true' : 'false');
+  storage.setItem(`retrovision_random_theme_${gameId}`, enabled ? 'true' : 'false');
   if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new CustomEvent('retrovision_random_theme_toggled', { detail: { gameId, enabled } }));
   }
@@ -163,20 +133,13 @@ export const setRandomThemeEnabled = (gameIdOrName, enabled) => {
  */
 export const getAllowedThemes = (gameIdOrName) => {
   const gameId = normalizeGameId(gameIdOrName);
-  const allThemes = (GAME_THEME_DETAILS[gameId] || []).map(t => t.id);
+  const allThemes = (GAME_THEME_DETAILS[gameId] || []).map((t) => t.id);
   if (!allThemes || allThemes.length === 0) return [];
 
-  try {
-    const raw = safeStorage.getItem(`retrovision_allowed_themes_${gameId}`);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const valid = parsed.filter(t => allThemes.includes(t));
-        if (valid.length > 0) return valid;
-      }
-    }
-  } catch {
-    // Ignore parse errors and fallback
+  const parsed = storage.getJSON(`retrovision_allowed_themes_${gameId}`, null);
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    const valid = parsed.filter((t) => allThemes.includes(t));
+    if (valid.length > 0) return valid;
   }
 
   return allThemes;
@@ -187,7 +150,7 @@ export const getAllowedThemes = (gameIdOrName) => {
  */
 export const setAllowedThemes = (gameIdOrName, allowedThemes) => {
   const gameId = normalizeGameId(gameIdOrName);
-  safeStorage.setItem(`retrovision_allowed_themes_${gameId}`, JSON.stringify(allowedThemes));
+  storage.setJSON(`retrovision_allowed_themes_${gameId}`, allowedThemes);
   if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new CustomEvent('retrovision_allowed_themes_changed', { detail: { gameId, allowedThemes } }));
   }
@@ -204,7 +167,7 @@ export const toggleAllowedTheme = (gameIdOrName, themeId) => {
   if (current.includes(themeId)) {
     // Cannot uncheck if it's the last remaining theme
     if (current.length <= 1) return current;
-    next = current.filter(t => t !== themeId);
+    next = current.filter((t) => t !== themeId);
   } else {
     next = [...current, themeId];
   }
@@ -217,7 +180,7 @@ export const toggleAllowedTheme = (gameIdOrName, themeId) => {
  */
 export const selectAllThemes = (gameIdOrName) => {
   const gameId = normalizeGameId(gameIdOrName);
-  const allThemes = (GAME_THEME_DETAILS[gameId] || []).map(t => t.id);
+  const allThemes = (GAME_THEME_DETAILS[gameId] || []).map((t) => t.id);
   setAllowedThemes(gameId, allThemes);
   return allThemes;
 };
@@ -230,13 +193,12 @@ export const pickRandomTheme = (gameIdOrName, currentTheme = null) => {
   const gameId = normalizeGameId(gameIdOrName);
   const allowed = getAllowedThemes(gameId);
   if (!allowed || allowed.length === 0) {
-    const all = (GAME_THEME_DETAILS[gameId] || []).map(t => t.id);
+    const all = (GAME_THEME_DETAILS[gameId] || []).map((t) => t.id);
     return all[0] || currentTheme;
   }
   if (allowed.length === 1) return allowed[0];
 
-  const pool = currentTheme ? allowed.filter(t => t !== currentTheme) : allowed;
+  const pool = currentTheme ? allowed.filter((t) => t !== currentTheme) : allowed;
   const finalPool = pool.length > 0 ? pool : allowed;
-  const chosen = finalPool[Math.floor(Math.random() * finalPool.length)];
-  return chosen;
+  return randomChoice(finalPool) || finalPool[0];
 };

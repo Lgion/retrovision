@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
@@ -40,6 +40,38 @@ export default function JigsawPuzzle({
     { id: 'cat', url: '/puzzles/cat.png', name: 'Chat Zen' },
   ];
 
+  const startGame = useCallback((img, size = gridSize || 3) => {
+    sound.playClick();
+    setSelectedImage(img);
+    setGridSize(size);
+    
+    // Generate pieces
+    const newPieces = [];
+    let idCounter = 0;
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        newPieces.push({
+          id: `p_${idCounter++}`,
+          correctRow: r,
+          correctCol: c,
+        });
+      }
+    }
+    
+    // Shuffle pieces for the pool
+    const shuffled = [...newPieces].sort(() => Math.random() - 0.5);
+    
+    setPieces(shuffled);
+    setPlacedPieces({});
+    setSelectedPieceId(null);
+    setMoves(0);
+    setVictoryPhase(0);
+    setGameState('playing');
+    
+    // Start ambient background music
+    sound.startBGM();
+  }, [gridSize]);
+
   useEffect(() => {
     if (isIntermission && gameState === 'menu') {
       const randomImg = images[Math.floor(Math.random() * images.length)];
@@ -49,7 +81,7 @@ export default function JigsawPuzzle({
       else if (intermissionDifficulty === 'difficile') diff = 5;
       startGame(randomImg, diff);
     }
-  }, [isIntermission]);
+  }, [isIntermission, gameState, intermissionDifficulty, startGame]);
 
   // Protection against leaving during game
   useEffect(() => {
@@ -81,38 +113,6 @@ export default function JigsawPuzzle({
       sound.stopBGM();
       onBack();
     }
-  };
-
-  const startGame = (img, size = gridSize || 3) => {
-    sound.playClick();
-    setSelectedImage(img);
-    setGridSize(size);
-    
-    // Generate pieces
-    const newPieces = [];
-    let idCounter = 0;
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        newPieces.push({
-          id: `p_${idCounter++}`,
-          correctRow: r,
-          correctCol: c,
-        });
-      }
-    }
-    
-    // Shuffle pieces for the pool
-    const shuffled = [...newPieces].sort(() => Math.random() - 0.5);
-    
-    setPieces(shuffled);
-    setPlacedPieces({});
-    setSelectedPieceId(null);
-    setMoves(0);
-    setVictoryPhase(0);
-    setGameState('playing');
-    
-    // Start ambient background music
-    sound.startBGM();
   };
 
   const handlePieceSelect = (pieceId) => {
@@ -236,7 +236,7 @@ export default function JigsawPuzzle({
         );
       })()}
 
-      {gameState === 'menu' && (
+      {gameState === 'menu' && !isIntermission && (
         <div style={menuStyle}>
           <h2 style={menuTitleStyle}>Choisissez une image</h2>
           <div style={imageGridStyle}>

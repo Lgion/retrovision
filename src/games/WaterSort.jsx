@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 import WaterSortCollection from './WaterSortCollection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
@@ -9,6 +9,7 @@ import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
+import { shuffleInPlace } from '../utils/commonUtils';
 
 export default function WaterSort({
   onBack,
@@ -115,10 +116,7 @@ export default function WaterSort({
       for (let i = 0; i < defaultCap; i++) liquidPool.push(col);
     });
 
-    for (let i = liquidPool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [liquidPool[i], liquidPool[j]] = [liquidPool[j], liquidPool[i]];
-    }
+    shuffleInPlace(liquidPool);
 
     const initialTubes = [];
     for (let i = 0; i < numFilled; i++) {

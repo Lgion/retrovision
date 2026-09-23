@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import { sound } from '../utils/sound';
+import { storage } from '../utils/storage';
+import { shuffle, randomChoice } from '../utils/commonUtils';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
-
-// Gamme pentatonique pour les découvertes de cibles
-const PENTATONIC_FREQS = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51];
 
 // Bibliothèque de symboles zen à haute lisibilité visuelle
 const SYMBOLS = [
@@ -78,9 +77,8 @@ export default function SymbolQuest({
     if (isIntermission) {
       return intermissionDifficulty === 'difficile' ? 5 : 0;
     }
-    const saved = localStorage.getItem('retrovision_symbolquest_level');
-    const parsed = parseInt(saved, 10);
-    return isNaN(parsed) ? 0 : Math.min(Math.max(0, parsed), LEVELS_CONFIG.length - 1);
+    const saved = storage.getNumber('retrovision_symbolquest_level', 0);
+    return Math.min(Math.max(0, saved), LEVELS_CONFIG.length - 1);
   });
 
   const currentLevel = LEVELS_CONFIG[levelIndex % LEVELS_CONFIG.length];
@@ -93,41 +91,9 @@ export default function SymbolQuest({
   // Écran de victoire de niveau
   const [levelWon, setLevelWon] = useState(false);
 
-  // Audio Context Web Audio
-  const audioCtxRef = useRef(null);
-
-  // Initialisation Web Audio
+  // Synthèse Web Audio centralisée
   const playChimeNote = useCallback((step = 0, isLeft = false) => {
-    if (sound.muted) return;
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-
-      const baseIdx = (step % 5) + (isLeft ? 3 : 0);
-      const freq = PENTATONIC_FREQS[Math.min(baseIdx, PENTATONIC_FREQS.length - 1)];
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = isLeft ? 'triangle' : 'sine';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.015, ctx.currentTime + 0.08);
-
-      gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(isLeft ? 0.12 : 0.08, ctx.currentTime + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.5);
-    } catch {
-      // Audio ignoré
-    }
+    sound.playPentatonicNote(step, isLeft);
   }, []);
 
   // Génération du tableau avec pondération gauche (60% cibles à gauche)
@@ -149,22 +115,22 @@ export default function SymbolQuest({
       }
     }
 
-    // Mélanger
-    leftPositions.sort(() => Math.random() - 0.5);
-    rightPositions.sort(() => Math.random() - 0.5);
+    // Mélange équitable avec Knuth / Fisher-Yates (DRY)
+    const shuffledLeft = shuffle(leftPositions);
+    const shuffledRight = shuffle(rightPositions);
 
     // Répartition : ~60% cibles à gauche
-    const leftTargetQuota = Math.min(leftPositions.length, Math.ceil(targetCount * 0.6));
+    const leftTargetQuota = Math.min(shuffledLeft.length, Math.ceil(targetCount * 0.6));
     const rightTargetQuota = targetCount - leftTargetQuota;
 
     const chosenTargetCoords = new Set();
 
     for (let i = 0; i < leftTargetQuota; i++) {
-      const [r, c] = leftPositions[i];
+      const [r, c] = shuffledLeft[i];
       chosenTargetCoords.add(`${r},${c}`);
     }
-    for (let i = 0; i < rightTargetQuota && i < rightPositions.length; i++) {
-      const [r, c] = rightPositions[i];
+    for (let i = 0; i < rightTargetQuota && i < shuffledRight.length; i++) {
+      const [r, c] = shuffledRight[i];
       chosenTargetCoords.add(`${r},${c}`);
     }
 
@@ -181,11 +147,11 @@ export default function SymbolQuest({
         let symbol;
 
         if (isTarget) {
-          // Choix aléatoire parmi les cibles valides
-          const chosenTargetId = targetIds[Math.floor(Math.random() * targetIds.length)];
+          // Choix aléatoire uniforme parmi les cibles valides
+          const chosenTargetId = randomChoice(targetIds);
           symbol = SYMBOLS.find((s) => s.id === chosenTargetId);
         } else {
-          symbol = distractorSymbols[Math.floor(Math.random() * distractorSymbols.length)];
+          symbol = randomChoice(distractorSymbols);
         }
 
         newGrid.push({
@@ -255,8 +221,8 @@ export default function SymbolQuest({
         haptic.success();
         setLevelWon(true);
 
-        const nextHigh = Math.max(levelIndex + 1, parseInt(localStorage.getItem('retrovision_symbolquest_highscore') || '0', 10));
-        localStorage.setItem('retrovision_symbolquest_highscore', nextHigh.toString());
+        const nextHigh = Math.max(levelIndex + 1, storage.getNumber('retrovision_symbolquest_highscore', 0));
+        storage.setItem('retrovision_symbolquest_highscore', nextHigh.toString());
         if (onScoreSave) onScoreSave('symbolquest', nextHigh);
 
         if (isIntermission && onIntermissionComplete) {
@@ -280,9 +246,7 @@ export default function SymbolQuest({
 
     // Priorité à gauche pour stimuler l'exploration de l'espace négligé
     const leftUnfound = unfound.filter((c) => c.isLeft);
-    const chosen = leftUnfound.length > 0
-      ? leftUnfound[Math.floor(Math.random() * leftUnfound.length)]
-      : unfound[Math.floor(Math.random() * unfound.length)];
+    const chosen = leftUnfound.length > 0 ? randomChoice(leftUnfound) : randomChoice(unfound);
 
     setHintCellId(chosen.id);
 
@@ -298,7 +262,7 @@ export default function SymbolQuest({
     haptic.tap();
     const nextIdx = (levelIndex + 1) % LEVELS_CONFIG.length;
     setLevelIndex(nextIdx);
-    localStorage.setItem('retrovision_symbolquest_level', nextIdx.toString());
+    storage.setItem('retrovision_symbolquest_level', nextIdx.toString());
   };
 
   // Sortie avec confirmation si des cibles ont déjà été trouvées

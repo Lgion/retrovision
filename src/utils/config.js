@@ -1,3 +1,5 @@
+import { storage } from './storage';
+
 const DEFAULT_CONFIGS = {
   global: {
     soundMuted: false
@@ -17,33 +19,29 @@ const DEFAULT_CONFIGS = {
   }
 };
 
+const STORAGE_KEY = 'retrovision_game_configs';
+
 export function getConfigs() {
-  const stored = localStorage.getItem('retrovision_game_configs');
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      // Ensure structure is correct
-      return {
-        global: parsed.global || DEFAULT_CONFIGS.global,
-        games: parsed.games || DEFAULT_CONFIGS.games
-      };
-    } catch (e) {
-      console.error('Error parsing configs:', e);
-    }
+  const parsed = storage.getJSON(STORAGE_KEY, null);
+  if (parsed) {
+    return {
+      global: parsed.global || { ...DEFAULT_CONFIGS.global },
+      games: parsed.games || { ...DEFAULT_CONFIGS.games }
+    };
   }
   // Try to migrate legacy keys if present
   const configs = JSON.parse(JSON.stringify(DEFAULT_CONFIGS));
   
-  const legacyMahjongMode = localStorage.getItem('retrovision_mahjong_mode');
+  const legacyMahjongMode = storage.getItem('retrovision_mahjong_mode');
   if (legacyMahjongMode) configs.games.mahjong.mode = legacyMahjongMode;
 
-  const legacyMahjongSize = localStorage.getItem('retrovision_mahjong_size');
+  const legacyMahjongSize = storage.getItem('retrovision_mahjong_size');
   if (legacyMahjongSize) configs.games.mahjong.boardSize = legacyMahjongSize;
 
-  const legacyArrowMode = localStorage.getItem('retrovision_arrow_mode');
+  const legacyArrowMode = storage.getItem('retrovision_arrow_mode');
   if (legacyArrowMode) configs.games.arrows.mode = legacyArrowMode;
 
-  const legacyUnblockProgress = localStorage.getItem('retrovision_unblock_progress');
+  const legacyUnblockProgress = storage.getItem('retrovision_unblock_progress');
   if (legacyUnblockProgress) configs.games.unblock.levelProgress = parseInt(legacyUnblockProgress, 10);
 
   saveConfigs(configs);
@@ -51,7 +49,7 @@ export function getConfigs() {
 }
 
 export function saveConfigs(configs) {
-  localStorage.setItem('retrovision_game_configs', JSON.stringify(configs));
+  storage.setJSON(STORAGE_KEY, configs);
 }
 
 export function getGameConfig(gameId, key, defaultValue) {
@@ -86,9 +84,10 @@ export function updateGlobalConfig(key, value) {
 }
 
 export function resetAllConfigs() {
-  localStorage.removeItem('retrovision_game_configs');
-  localStorage.removeItem('retrovision_mahjong_mode');
-  localStorage.removeItem('retrovision_mahjong_size');
-  localStorage.removeItem('retrovision_arrow_mode');
-  localStorage.removeItem('retrovision_unblock_progress');
+  storage.removeItem(STORAGE_KEY);
+  storage.removeItem('retrovision_mahjong_mode');
+  storage.removeItem('retrovision_mahjong_size');
+  storage.removeItem('retrovision_arrow_mode');
+  storage.removeItem('retrovision_unblock_progress');
 }
+

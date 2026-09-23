@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { sound } from '../utils/sound';
 import { getStats, saveStats, resetAllStats, getRecommendation } from '../utils/stats';
 import { getConfigs, saveConfigs, resetAllConfigs } from '../utils/config';
+import { storage } from '../utils/storage';
 import { useConfirm } from './ConfirmContext';
 import KindWordsBanner from './KindWordsBanner';
 
 export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissionSettings }) {
   const [profileName, setProfileName] = useState(() => {
-    return localStorage.getItem('retrovision_player_name') || 'PATIENT_READY';
+    return storage.getItem('retrovision_player_name', 'PATIENT_READY') || 'PATIENT_READY';
   });
   const [isEditingName, setIsEditingName] = useState(false);
   const [avatar, setAvatar] = useState(() => {
-    return localStorage.getItem('retrovision_player_avatar') || '✦';
+    return storage.getItem('retrovision_player_avatar', '✦') || '✦';
   });
   const [muted, setMuted] = useState(sound.muted);
 
@@ -19,51 +20,21 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [recommendation, setRecommendation] = useState(null);
 
-  // Load high scores to calculate achievements
-  const [highScores, setHighScores] = useState({
-    mahjong: 0,
-    water: 0,
-    ball: 0,
-    grid2048: 0,
-    jigsaw: 0,
-    unblock: 0,
-    freecell: 0,
-    mines: 0,
-    arrows: 0,
-    hangman: 0,
-    sudoku: 0,
-    blockfantasy: 0,
-    impossible13: 0,
-    bubblecool: 0,
-    fireflies: 0,
-    zenflow: 0,
-    symbolquest: 0
-  });
+  // Dérivation dynamique des high scores pour les trophées (DRY)
+  const highScores = React.useMemo(() => {
+    const scores = {};
+    Object.entries(stats).forEach(([key, val]) => {
+      scores[key] = val?.highScore || 0;
+    });
+    scores.grid2048 = stats['2048']?.highScore || 0;
+    return scores;
+  }, [stats]);
 
   const avatars = ['✦', '♥', '★', '●', '☘', '☾', '☀'];
 
   useEffect(() => {
     const detailedStats = getStats();
     setStats(detailedStats);
-
-    const mahjong = detailedStats.mahjong?.highScore || 0;
-    const water = detailedStats.water?.highScore || 0;
-    const ball = detailedStats.ball?.highScore || 0;
-    const grid2048 = detailedStats['2048']?.highScore || 0;
-    const jigsaw = detailedStats.jigsaw?.highScore || 0;
-    const unblock = detailedStats.unblock?.highScore || 0;
-    const freecell = detailedStats.freecell?.highScore || 0;
-    const mines = detailedStats.mines?.highScore || 0;
-    const arrows = detailedStats.arrows?.highScore || 0;
-    const hangman = detailedStats.hangman?.highScore || 0;
-    const sudoku = detailedStats.sudoku?.highScore || 0;
-    const blockfantasy = detailedStats.blockfantasy?.highScore || 0;
-    const impossible13 = detailedStats.impossible13?.highScore || 0;
-    const bubblecool = detailedStats.bubblecool?.highScore || 0;
-    const fireflies = detailedStats.fireflies?.highScore || 0;
-    const zenflow = detailedStats.zenflow?.highScore || 0;
-    const symbolquest = detailedStats.symbolquest?.highScore || 0;
-    setHighScores({ mahjong, water, ball, grid2048, jigsaw, unblock, freecell, mines, arrows, hangman, sudoku, blockfantasy, impossible13, bubblecool, fireflies, zenflow, symbolquest });
   }, [statsUpdated]);
 
   const totalPlays = Object.values(stats).reduce((acc, curr) => acc + (curr.plays || 0), 0);
@@ -117,8 +88,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
               if (imported.stats) saveStats(imported.stats);
               if (imported.configs) saveConfigs(imported.configs);
               if (imported.player) {
-                if (imported.player.name) localStorage.setItem('retrovision_player_name', imported.player.name);
-                if (imported.player.avatar) localStorage.setItem('retrovision_player_avatar', imported.player.avatar);
+                if (imported.player.name) storage.setItem('retrovision_player_name', imported.player.name);
+                if (imported.player.avatar) storage.setItem('retrovision_player_avatar', imported.player.avatar);
               }
             } else {
               // Backward compatibility for old stats-only file
@@ -148,8 +119,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     if (ok) {
       resetAllStats();
       resetAllConfigs();
-      localStorage.removeItem('retrovision_player_name');
-      localStorage.removeItem('retrovision_player_avatar');
+      storage.removeItem('retrovision_player_name');
+      storage.removeItem('retrovision_player_avatar');
       window.location.reload();
     }
   };
@@ -164,16 +135,16 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     setIsEditingName(false);
     if (!profileName.trim()) {
       setProfileName('PATIENT_READY');
-      localStorage.setItem('retrovision_player_name', 'PATIENT_READY');
+      storage.setItem('retrovision_player_name', 'PATIENT_READY');
     } else {
-      localStorage.setItem('retrovision_player_name', profileName.toUpperCase());
+      storage.setItem('retrovision_player_name', profileName.toUpperCase());
     }
     sound.playClick();
   };
 
   const handleAvatarChange = (selectedAvatar) => {
     setAvatar(selectedAvatar);
-    localStorage.setItem('retrovision_player_avatar', selectedAvatar);
+    storage.setItem('retrovision_player_avatar', selectedAvatar);
     sound.playClick();
   };
 

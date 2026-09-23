@@ -6,7 +6,10 @@ import Grid2048Collection from './Grid2048Collection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
-import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { useRandomTheme } from '../hooks/useRandomTheme';
+import { storage } from '../utils/storage';
+import { randomChoice } from '../utils/commonUtils';
 import { useConfirm } from '../components/ConfirmContext';
 
 const addRandomTile = (currentBoard) => {
@@ -16,7 +19,7 @@ const addRandomTile = (currentBoard) => {
 
   if (emptyIndices.length === 0) return currentBoard;
 
-  const randomIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+  const randomIndex = randomChoice(emptyIndices);
   const newBoard = [...currentBoard];
   // 90% chance of 2, 10% chance of 4
   newBoard[randomIndex] = Math.random() < 0.9 ? 2 : 4;
@@ -62,7 +65,7 @@ export default function Grid2048({
   });
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
-    return parseInt(localStorage.getItem('retrovision_2048_highscore') || '0', 10);
+    return storage.getNumber('retrovision_2048_highscore', 0);
   });
   const [gameOver, setGameOver] = useState(false);
   const [victory, setVictory] = useState(false);
@@ -70,17 +73,7 @@ export default function Grid2048({
   const touchStartRef = useRef(null);
   const [showCollection, setShowCollection] = useState(false);
 
-  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('2048'));
-
-  useEffect(() => {
-    const handleToggle = (e) => {
-      if (e.detail?.gameId === '2048') {
-        setRandomThemeActive(e.detail.enabled);
-      }
-    };
-    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
-    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
-  }, []);
+  const randomThemeActive = useRandomTheme('2048');
 
   const handleChangeTheme = () => {
     const nextTheme = pickRandomTheme('2048', customizations.theme);
@@ -271,7 +264,7 @@ export default function Grid2048({
       
       if (newScore > highScore) {
         setHighScore(newScore);
-        localStorage.setItem('retrovision_2048_highscore', newScore.toString());
+        storage.setItem('retrovision_2048_highscore', newScore.toString());
         if (onScoreSave) {
           onScoreSave('Neon 2048', newScore);
         }
@@ -421,7 +414,7 @@ export default function Grid2048({
         onComplete={(isRandomTheme) => {
           setShowIntro(false);
           const isRand = isRandomTheme || isRandomThemeEnabled('2048');
-          setRandomThemeActive(isRand);
+          setRandomThemeEnabled('2048', isRand);
           if (isRand) {
             const nextTheme = pickRandomTheme('2048', customizations.theme);
             setCustomizations(prev => {

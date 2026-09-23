@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
@@ -6,7 +6,8 @@ import GameHeader from '../components/GameHeader';
 import ArrowPuzzleCollection from './ArrowPuzzleCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
-import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { useRandomTheme } from '../hooks/useRandomTheme';
 import { useConfirm } from '../components/ConfirmContext';
 
 const DIRS = {
@@ -317,37 +318,34 @@ export default function ArrowPuzzle({
   intermissionGames
 }) {
   const confirm = useConfirm();
-  const [showIntro, setShowIntro] = useState(true);
-  const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
-  const [mode, setMode] = useState(() => (isIntermission ? 'wire' : getGameConfig('arrows', 'mode', 'dense'))); // 'scattered' | 'dense' | 'wire'
-  const [boardSize, setBoardSize] = useState(6);
-  const [grid, setGrid] = useState([]);
+  const [customizations, setCustomizations] = useState(() => getGameConfig('arrows', 'customizations', { difficulty: 'moyen', theme: 'classic' }));
+  const initialDiff = isIntermission ? (intermissionDifficulty || 'facile') : (customizations?.difficulty || 'moyen');
+  const initialMode = isIntermission ? 'wire' : getGameConfig('arrows', 'mode', 'dense');
+  const initialSettings = getDifficultySettings(initialDiff, initialMode);
+  const initialBoardData = isIntermission
+    ? generateWireBoard(initialSettings.size, initialSettings.arrows)
+    : null;
+
+  const [showIntro, setShowIntro] = useState(!isIntermission);
+  const [gameState, setGameState] = useState(() => (isIntermission ? 'playing' : 'menu')); // 'menu' | 'playing'
+  const [mode, setMode] = useState(initialMode); // 'scattered' | 'dense' | 'wire'
+  const [boardSize, setBoardSize] = useState(() => (isIntermission ? initialSettings.size : 6));
+  const [grid, setGrid] = useState(() => (initialBoardData ? initialBoardData.grid : []));
   const [moves, setMoves] = useState(0);
-  const [arrowsLeft, setArrowsLeft] = useState(0);
-  const [wires, setWires] = useState([]);
+  const [arrowsLeft, setArrowsLeft] = useState(() => (initialBoardData ? initialBoardData.placed : 0));
+  const [wires, setWires] = useState(() => (initialBoardData ? initialBoardData.wires : []));
   const [victoryPhase, setVictoryPhase] = useState(0);
   const [flyingArrows, setFlyingArrows] = useState([]); // Array of flying animations for standard mode
   const [lives, setLives] = useState(3);
   const [hints, setHints] = useState(3);
   const [showCollection, setShowCollection] = useState(false);
-  const [customizations, setCustomizations] = useState(() => getGameConfig('arrows', 'customizations', { difficulty: 'moyen', theme: 'classic' }));
-  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('arrows'));
+  const randomThemeActive = useRandomTheme('arrows');
   const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 400));
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    const handleToggle = (e) => {
-      if (e.detail?.gameId === 'arrows') {
-        setRandomThemeActive(e.detail.enabled);
-      }
-    };
-    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
-    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
   }, []);
 
   const handleChangeTheme = () => {
@@ -404,12 +402,15 @@ export default function ArrowPuzzle({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, victoryPhase, moves, arrowsLeft]);
 
+  const prevDiffRef = useRef(intermissionDifficulty);
   useEffect(() => {
-    if (isIntermission && gameState === 'menu') {
-      const diff = intermissionDifficulty || 'facile';
-      const settings = getDifficultySettings(diff, 'wire');
-      const timer = setTimeout(() => startGame(settings.size, settings.arrows, 'wire'), 100);
-      return () => clearTimeout(timer);
+    if (isIntermission) {
+      if (gameState === 'menu' || (intermissionDifficulty && prevDiffRef.current !== intermissionDifficulty)) {
+        prevDiffRef.current = intermissionDifficulty;
+        const diff = intermissionDifficulty || 'facile';
+        const settings = getDifficultySettings(diff, 'wire');
+        startGame(settings.size, settings.arrows, 'wire');
+      }
     }
   }, [isIntermission, gameState, intermissionDifficulty, startGame]);
 
@@ -550,7 +551,8 @@ export default function ArrowPuzzle({
     if (isIntermission && onIntermissionComplete) {
       if (replaySameIntermission) {
         if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-        setTimeout(() => startGame(boardSize, arrowsLeft), 1000);
+        const settings = getDifficultySettings(intermissionDifficulty || 'facile', 'wire');
+        setTimeout(() => startGame(settings.size, settings.arrows, 'wire'), 1000);
         return;
       }
       setTimeout(() => onIntermissionComplete(), 1000);
@@ -706,7 +708,7 @@ export default function ArrowPuzzle({
         onComplete={(isRandomTheme) => {
           setShowIntro(false);
           const isRand = isRandomTheme || isRandomThemeEnabled('arrows');
-          setRandomThemeActive(isRand);
+          setRandomThemeEnabled('arrows', isRand);
           if (isRand) {
             const nextTheme = pickRandomTheme('arrows', customizations.theme);
             setCustomizations(prev => {
@@ -719,7 +721,7 @@ export default function ArrowPuzzle({
       />}
 
       <div className="game-container arrow-puzzle-container" style={{ ...containerStyle, background: theme.container }}>
-        {isIntermission && gameState === 'playing' && (() => {
+        {isIntermission && (() => {
           const diff = intermissionDifficulty || 'facile';
           const settings = getDifficultySettings(diff, 'wire');
           const total = settings.arrows || 1;
@@ -763,7 +765,7 @@ export default function ArrowPuzzle({
           />
         )}
 
-        {gameState === 'menu' && (
+        {gameState === 'menu' && !isIntermission && (
           <div style={menuStyle}>
             <div style={{ fontSize: '5rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.5))' }}>⬆️</div>
             <h2 style={{ color: '#fff', marginBottom: '30px', textAlign: 'center' }}>Démêlez les flèches !</h2>
@@ -1005,7 +1007,14 @@ export default function ArrowPuzzle({
                 </div>
                 <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
                   <button
-                    onClick={() => startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250))}
+                    onClick={() => {
+                      if (isIntermission) {
+                        const settings = getDifficultySettings(intermissionDifficulty || 'facile', 'wire');
+                        startGame(settings.size, settings.arrows, 'wire');
+                      } else {
+                        startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250));
+                      }
+                    }}
                     className="retro-btn pulse-glow"
                     style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#f59e0b', color: '#f59e0b' }}
                   >

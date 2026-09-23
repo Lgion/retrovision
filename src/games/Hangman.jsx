@@ -8,20 +8,10 @@ import hangmanData from '../utils/hangmanData.json';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import { useConfirm } from '../components/ConfirmContext';
+import { shuffle, randomChoice } from '../utils/commonUtils';
 
-const shuffleArray = (arr) => {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-};
-
-const getRandomItem = (arr) => {
-  if (!arr || arr.length === 0) return null;
-  return arr[Math.floor(Math.random() * arr.length)];
-};
+const shuffleArray = shuffle;
+const getRandomItem = randomChoice;
 
 export default function Hangman({
   onBack,

@@ -12,6 +12,8 @@ import {
   getGameIcon,
 } from './utils/gamesConfig';
 import { recordPlay, recordTime, recordScore } from './utils/stats';
+import { storage } from './utils/storage';
+import { randomChoice } from './utils/commonUtils';
 import { ConfirmProvider } from './components/ConfirmContext';
 import './App.css';
 
@@ -52,34 +54,29 @@ function App() {
       defaultConfig[key] = { enabled: true, frequency: 'medium', difficulty: 'facile' };
     });
 
-    const saved = localStorage.getItem('retrovision_intermission_config');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const merged = { ...defaultConfig };
-        if (typeof parsed.showIntroModal === 'boolean') {
-          merged.showIntroModal = parsed.showIntroModal;
-        }
-        INTERMISSION_GAME_KEYS.forEach((key) => {
-          if (parsed[key]) {
-            merged[key] = {
-              enabled: parsed[key].enabled !== false,
-              frequency: parsed[key].frequency || 'medium',
-              difficulty: parsed[key].difficulty || 'facile',
-            };
-          }
-        });
-        return merged;
-      } catch {
-        // ignore
+    const parsed = storage.getJSON('retrovision_intermission_config', null);
+    if (parsed) {
+      const merged = { ...defaultConfig };
+      if (typeof parsed.showIntroModal === 'boolean') {
+        merged.showIntroModal = parsed.showIntroModal;
       }
+      INTERMISSION_GAME_KEYS.forEach((key) => {
+        if (parsed[key]) {
+          merged[key] = {
+            enabled: parsed[key].enabled !== false,
+            frequency: parsed[key].frequency || 'medium',
+            difficulty: parsed[key].difficulty || 'facile',
+          };
+        }
+      });
+      return merged;
     }
     return defaultConfig;
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [lastIntermissionGame, setLastIntermissionGame] = useState(() => {
-    return localStorage.getItem('retrovision_last_intermission_game') || null;
+    return storage.getItem('retrovision_last_intermission_game', null);
   });
 
   // Sélection aléatoire pondérée d'un jeu d'entracte (exclusivement parmi les jeux activés)
@@ -117,7 +114,7 @@ function App() {
       });
 
       return weightedList.length > 0
-        ? weightedList[Math.floor(Math.random() * weightedList.length)]
+        ? randomChoice(weightedList)
         : candidates[0] || 'water';
     },
     [intermissionConfig, lastIntermissionGame]
@@ -159,7 +156,7 @@ function App() {
       const chosenGame = targetGameKey || pickRandomIntermissionGame(mainGame, currentGame);
 
       setLastIntermissionGame(chosenGame);
-      localStorage.setItem('retrovision_last_intermission_game', chosenGame);
+      storage.setItem('retrovision_last_intermission_game', chosenGame);
 
       if (!isIntermissionMode) {
         setReturnView(fromGameKey);
@@ -233,7 +230,7 @@ function App() {
 
     const conf = findGameConfig(gameKey);
     if (conf?.storageKey) {
-      localStorage.setItem(conf.storageKey, conf.binaryScore ? '1' : (score !== undefined ? score.toString() : '1'));
+      storage.setItem(conf.storageKey, conf.binaryScore ? '1' : (score !== undefined ? score.toString() : '1'));
     }
 
     setStatsUpdated((prev) => prev + 1);
@@ -367,11 +364,11 @@ function App() {
           onClose={() => setIsSettingsOpen(false)}
           onChange={(newConfig) => {
             setIntermissionConfig(newConfig);
-            localStorage.setItem('retrovision_intermission_config', JSON.stringify(newConfig));
+            storage.setJSON('retrovision_intermission_config', newConfig);
           }}
           onSave={(newConfig) => {
             setIntermissionConfig(newConfig);
-            localStorage.setItem('retrovision_intermission_config', JSON.stringify(newConfig));
+            storage.setJSON('retrovision_intermission_config', newConfig);
             setIsSettingsOpen(false);
           }}
         />

@@ -1,76 +1,44 @@
-const DEFAULT_GAMES = [
-  { id: 'mahjong', name: 'Mahjong Zen' },
-  { id: 'water', name: 'Tri de l\'eau' },
-  { id: 'ball', name: 'Tri de billes' },
-  { id: '2048', name: 'Neon 2048' },
-  { id: 'jigsaw', name: 'Puzzle Magique' },
-  { id: 'unblock', name: 'Débloque-moi' },
-  { id: 'freecell', name: 'FreeCell' },
-  { id: 'mines', name: 'Démineur' },
-  { id: 'arrows', name: 'Arrow Puzzle' },
-  { id: 'hangman', name: 'Le Pendu' },
-  { id: 'sudoku', name: 'Sudoku' },
-  { id: 'blockfantasy', name: 'Block Fantasy' },
-  { id: 'impossible13', name: 'Impossible 13' }
-];
+import { GAMES_CONFIG, resolveGameId } from './gamesConfig';
+import { storage } from './storage';
+import { randomChoice } from './commonUtils';
 
-// Map from the game name sent in onScoreSave to our game ID
-const NAME_TO_ID = {
-  'Mahjong Zen': 'mahjong',
-  'Tri Eau': 'water',
-  'Tri Billes': 'ball',
-  'Neon 2048': '2048',
-  'Puzzle Magique': 'jigsaw',
-  'Débloque-Moi': 'unblock',
-  'FreeCell': 'freecell',
-  'Démineur': 'mines',
-  'Flèches': 'arrows',
-  'Le Pendu': 'hangman',
-  'Sudoku': 'sudoku',
-  'Block Fantasy': 'blockfantasy',
-  'Impossible 13': 'impossible13'
-};
+const STATS_STORAGE_KEY = 'retrovision_detailed_stats';
 
-// Map from ID to the old highscore key
-const ID_TO_LEGACY_KEY = {
-  mahjong: 'retrovision_mahjong_highscore',
-  water: 'retrovision_water_highscore',
-  ball: 'retrovision_ball_highscore',
-  '2048': 'retrovision_2048_highscore',
-  jigsaw: 'retrovision_jigsaw_highscore',
-  unblock: 'retrovision_unblock_highscore',
-  freecell: 'retrovision_freecell_highscore',
-  mines: 'retrovision_mines_highscore',
-  arrows: 'retrovision_arrows_highscore',
-  hangman: 'retrovision_hangman_highscore',
-  sudoku: 'retrovision_sudoku_highscore',
-  blockfantasy: 'retrovision_blockfantasy_highscore',
-  impossible13: 'retrovision_impossible13_highscore'
-};
+/**
+ * Liste des jeux par défaut dérivée de la configuration centralisée (SSOT).
+ */
+export const DEFAULT_GAMES = Object.values(GAMES_CONFIG).map((g) => ({
+  id: g.id,
+  name: g.name
+}));
 
+/**
+ * Obtient la clé de stockage legacy pour un identifiant de jeu donné.
+ * @param {string} gameId
+ * @returns {string}
+ */
+export function getLegacyStorageKey(gameId) {
+  return GAMES_CONFIG[gameId]?.storageKey || `retrovision_${gameId}_highscore`;
+}
+
+/**
+ * Récupère les statistiques détaillées de tous les jeux, avec initialisation
+ * et migration transparente des scores historiques.
+ * @returns {Record<string, { plays: number, wins: number, highScore: number, timeSpent: number }>}
+ */
 export function getStats() {
-  const stored = localStorage.getItem('retrovision_detailed_stats');
-  let stats = {};
-  if (stored) {
-    try {
-      stats = JSON.parse(stored);
-    } catch (e) {
-      console.error('Error parsing detailed stats:', e);
-    }
-  }
-
-  // Ensure all games exist in the stats, and migrate from legacy highscores if needed
+  const stats = storage.getJSON(STATS_STORAGE_KEY, {}) || {};
   let updated = false;
-  DEFAULT_GAMES.forEach(game => {
+
+  DEFAULT_GAMES.forEach((game) => {
     if (!stats[game.id]) {
-      // Migrate legacy highscore if present
-      const legacyKey = ID_TO_LEGACY_KEY[game.id];
-      const legacyVal = parseInt(localStorage.getItem(legacyKey) || '0', 10);
+      const legacyKey = getLegacyStorageKey(game.id);
+      const legacyVal = storage.getNumber(legacyKey, 0);
       stats[game.id] = {
         plays: legacyVal > 0 ? 1 : 0,
         wins: legacyVal > 0 ? 1 : 0,
         highScore: legacyVal,
-        timeSpent: 0 // ms
+        timeSpent: 0
       };
       updated = true;
     }
@@ -83,11 +51,22 @@ export function getStats() {
   return stats;
 }
 
+/**
+ * Enregistre l'ensemble des statistiques de façon persistante et résiliente.
+ * @param {Object} stats
+ */
 export function saveStats(stats) {
-  localStorage.setItem('retrovision_detailed_stats', JSON.stringify(stats));
+  storage.setJSON(STATS_STORAGE_KEY, stats);
 }
 
-export function recordPlay(gameId) {
+/**
+ * Enregistre une partie jouée pour un jeu.
+ * @param {string} gameIdOrName
+ */
+export function recordPlay(gameIdOrName) {
+  const gameId = resolveGameId(gameIdOrName);
+  if (!gameId) return;
+
   const stats = getStats();
   if (stats[gameId]) {
     stats[gameId].plays = (stats[gameId].plays || 0) + 1;
@@ -95,8 +74,16 @@ export function recordPlay(gameId) {
   }
 }
 
-export function recordTime(gameId, ms) {
+/**
+ * Enregistre le temps passé sur un jeu (en ms).
+ * @param {string} gameIdOrName
+ * @param {number} ms
+ */
+export function recordTime(gameIdOrName, ms) {
   if (ms <= 0) return;
+  const gameId = resolveGameId(gameIdOrName);
+  if (!gameId) return;
+
   const stats = getStats();
   if (stats[gameId]) {
     stats[gameId].timeSpent = (stats[gameId].timeSpent || 0) + ms;
@@ -104,57 +91,62 @@ export function recordTime(gameId, ms) {
   }
 }
 
+/**
+ * Enregistre le score ou la victoire d'un jeu, et synchronise le highscore legacy.
+ * @param {string} gameIdOrName
+ * @param {number} score
+ */
 export function recordScore(gameIdOrName, score) {
-  // Can be passed either the ID or the Game Name
-  const gameId = NAME_TO_ID[gameIdOrName] || gameIdOrName;
+  const gameId = resolveGameId(gameIdOrName);
+  if (!gameId) return;
+
   const stats = getStats();
   if (stats[gameId]) {
-    // If they score, it means a win/completed game
     stats[gameId].wins = (stats[gameId].wins || 0) + 1;
     if (score > (stats[gameId].highScore || 0)) {
       stats[gameId].highScore = score;
-      // also save legacy highscore for backward compatibility
-      const legacyKey = ID_TO_LEGACY_KEY[gameId];
-      if (legacyKey) {
-        localStorage.setItem(legacyKey, score.toString());
-      }
+      const legacyKey = getLegacyStorageKey(gameId);
+      storage.setItem(legacyKey, score.toString());
     }
     saveStats(stats);
   }
 }
 
+/**
+ * Réinitialise toutes les statistiques et les highscores legacy.
+ */
 export function resetAllStats() {
-  localStorage.removeItem('retrovision_detailed_stats');
-  DEFAULT_GAMES.forEach(game => {
-    const legacyKey = ID_TO_LEGACY_KEY[game.id];
-    if (legacyKey) {
-      localStorage.removeItem(legacyKey);
-    }
+  storage.removeItem(STATS_STORAGE_KEY);
+  DEFAULT_GAMES.forEach((game) => {
+    const legacyKey = getLegacyStorageKey(game.id);
+    storage.removeItem(legacyKey);
   });
 }
 
+/**
+ * Fournit une recommandation intelligente de jeu basé sur l'historique du joueur (DRY).
+ * @returns {{ gameId: string, name: string, reason: string }}
+ */
 export function getRecommendation() {
   const stats = getStats();
-  
-  // Create list of active games with their statistics
-  const gamesWithStats = DEFAULT_GAMES.map(game => {
+
+  const gamesWithStats = DEFAULT_GAMES.map((game) => {
     const gameStat = stats[game.id] || { plays: 0, wins: 0, timeSpent: 0, highScore: 0 };
-    const winRate = gameStat.plays > 0 ? (gameStat.wins / gameStat.plays) : 0;
+    const winRate = gameStat.plays > 0 ? gameStat.wins / gameStat.plays : 0;
     return {
       id: game.id,
       name: game.name,
       plays: gameStat.plays || 0,
       wins: gameStat.wins || 0,
       timeSpent: gameStat.timeSpent || 0,
-      winRate: winRate
+      winRate
     };
   });
 
-  // Recommendation logic:
-  // 1. Identify unplayed games (plays === 0)
-  const unplayed = gamesWithStats.filter(g => g.plays === 0);
+  // 1. Jeux non encore essayés
+  const unplayed = gamesWithStats.filter((g) => g.plays === 0);
   if (unplayed.length > 0) {
-    const chosen = unplayed[Math.floor(Math.random() * unplayed.length)];
+    const chosen = randomChoice(unplayed);
     return {
       gameId: chosen.id,
       name: chosen.name,
@@ -162,10 +154,10 @@ export function getRecommendation() {
     };
   }
 
-  // 2. Identify games with plays but 0 wins
-  const playedButNotWon = gamesWithStats.filter(g => g.plays > 0 && g.wins === 0);
+  // 2. Jeux essayés sans aucune victoire
+  const playedButNotWon = gamesWithStats.filter((g) => g.plays > 0 && g.wins === 0);
   if (playedButNotWon.length > 0) {
-    const chosen = playedButNotWon[Math.floor(Math.random() * playedButNotWon.length)];
+    const chosen = randomChoice(playedButNotWon);
     return {
       gameId: chosen.id,
       name: chosen.name,
@@ -173,12 +165,12 @@ export function getRecommendation() {
     };
   }
 
-  // 3. Find the game with the absolute lowest number of plays
+  // 3. Jeu avec le plus faible nombre de parties
   const sortedByPlays = [...gamesWithStats].sort((a, b) => a.plays - b.plays);
   const minPlays = sortedByPlays[0].plays;
-  const leastPlayed = sortedByPlays.filter(g => g.plays === minPlays);
+  const leastPlayed = sortedByPlays.filter((g) => g.plays === minPlays);
   if (leastPlayed.length > 0) {
-    const chosen = leastPlayed[Math.floor(Math.random() * leastPlayed.length)];
+    const chosen = randomChoice(leastPlayed);
     return {
       gameId: chosen.id,
       name: chosen.name,
@@ -186,7 +178,7 @@ export function getRecommendation() {
     };
   }
 
-  // 4. Default: Pick the one with the lowest win rate
+  // 4. Jeu avec le taux de victoire le plus bas
   const sortedByWinRate = [...gamesWithStats].sort((a, b) => a.winRate - b.winRate);
   const chosen = sortedByWinRate[0];
   return {

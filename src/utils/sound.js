@@ -958,6 +958,64 @@ class SoundController {
       console.warn("Fever active sound failed", e);
     }
   }
+
+  // ── Centralized Zen & Pentatonic Synthesis (DRY) ──────────────────
+  playPentatonicNote(stepIndex = 0, isHighNote = false, duration = 0.45) {
+    if (this.muted) return;
+    try {
+      this.init();
+      const freqIdx = (Math.abs(stepIndex) % 5) + (isHighNote ? 3 : 0);
+      const freq = PENTATONIC_FREQS[Math.min(freqIdx, PENTATONIC_FREQS.length - 1)];
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = isHighNote ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.015, this.ctx.currentTime + 0.08);
+
+      gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(isHighNote ? 0.12 : 0.08, this.ctx.currentTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    } catch (e) {
+      console.warn('Pentatonic note play failed', e);
+    }
+  }
+
+  playConnectionChime() {
+    if (this.muted) return;
+    try {
+      this.init();
+      [1046.50, 1318.51].forEach((freq, i) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        const startTime = this.ctx.currentTime + i * 0.08;
+        osc.frequency.setValueAtTime(freq, startTime);
+
+        gain.gain.setValueAtTime(0.01, startTime);
+        gain.gain.linearRampToValueAtTime(0.07, startTime + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.6);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + 0.6);
+      });
+    } catch (e) {
+      console.warn('Connection chime failed', e);
+    }
+  }
 }
 
+export const PENTATONIC_FREQS = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51];
+
 export const sound = new SoundController();
+

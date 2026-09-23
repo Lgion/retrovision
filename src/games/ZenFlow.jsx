@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import { sound } from '../utils/sound';
+import { storage } from '../utils/storage';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
 import { ZEN_FLOW_LEVELS } from './zenflowLevels';
-
-// Notes pentatoniques cristallines (Hz)
-const PENTATONIC_FREQS = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51];
 
 // Mots doux de félicitations spécifiques
 const ENCOURAGING_WORDS = [
@@ -44,9 +42,8 @@ export default function ZenFlow({
     if (isIntermission) {
       return intermissionDifficulty === 'difficile' ? 5 : 0;
     }
-    const saved = localStorage.getItem('retrovision_zenflow_level');
-    const parsed = parseInt(saved, 10);
-    return isNaN(parsed) ? 0 : Math.min(Math.max(0, parsed), ZEN_FLOW_LEVELS.length - 1);
+    const saved = storage.getNumber('retrovision_zenflow_level', 0);
+    return Math.min(Math.max(0, saved), ZEN_FLOW_LEVELS.length - 1);
   });
 
   const currentLevel = ZEN_FLOW_LEVELS[levelIndex % ZEN_FLOW_LEVELS.length];
@@ -63,72 +60,15 @@ export default function ZenFlow({
   // Écran de victoire de niveau
   const [levelWon, setLevelWon] = useState(false);
 
-  // Audio Context pour synthèse Web Audio autonome
-  const audioCtxRef = useRef(null);
   const boardRef = useRef(null);
 
-  // Initialisation Web Audio
+  // Synthèse Web Audio centralisée
   const playZenNote = useCallback((stepIndex = 0, isHighNote = false) => {
-    if (sound.muted) return;
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-
-      const freqIdx = (stepIndex % 5) + (isHighNote ? 3 : 0);
-      const freq = PENTATONIC_FREQS[Math.min(freqIdx, PENTATONIC_FREQS.length - 1)];
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = isHighNote ? 'triangle' : 'sine';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.02, ctx.currentTime + 0.08);
-
-      gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(isHighNote ? 0.12 : 0.08, ctx.currentTime + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.45);
-    } catch {
-      // Ignorer si audio indisponible
-    }
+    sound.playPentatonicNote(stepIndex, isHighNote);
   }, []);
 
   const playConnectionChime = useCallback(() => {
-    if (sound.muted) return;
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-
-      // Accord cristallin ascendant C6 + E6
-      [1046.50, 1318.51].forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.08);
-
-        gain.gain.setValueAtTime(0.01, ctx.currentTime + i * 0.08);
-        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + i * 0.08 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.08 + 0.7);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + i * 0.08);
-        osc.stop(ctx.currentTime + i * 0.08 + 0.7);
-      });
-    } catch {
-      // Audio ignoré
-    }
+    sound.playConnectionChime();
   }, []);
 
   // Réinitialisation lors d'un changement de niveau
@@ -221,8 +161,8 @@ export default function ZenFlow({
       haptic.success();
       setLevelWon(true);
 
-      const nextHigh = Math.max(levelIndex + 1, parseInt(localStorage.getItem('retrovision_zenflow_highscore') || '0', 10));
-      localStorage.setItem('retrovision_zenflow_highscore', nextHigh.toString());
+      const nextHigh = Math.max(levelIndex + 1, storage.getNumber('retrovision_zenflow_highscore', 0));
+      storage.setItem('retrovision_zenflow_highscore', nextHigh.toString());
       if (onScoreSave) onScoreSave('zenflow', nextHigh);
 
       if (isIntermission && onIntermissionComplete) {
@@ -425,7 +365,7 @@ export default function ZenFlow({
     haptic.tap();
     const nextIdx = (levelIndex + 1) % ZEN_FLOW_LEVELS.length;
     setLevelIndex(nextIdx);
-    localStorage.setItem('retrovision_zenflow_level', nextIdx.toString());
+    storage.setItem('retrovision_zenflow_level', nextIdx.toString());
   };
 
   // Retour avec confirmation si des tracés existent

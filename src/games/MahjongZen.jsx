@@ -11,6 +11,7 @@ import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import GameMiniature from '../components/GameMiniature';
 import { useConfirm } from '../components/ConfirmContext';
 import IntermissionProposal from '../components/IntermissionProposal';
+import { shuffle, shuffleInPlace } from '../utils/commonUtils';
 
 
 const MahjongTile = React.memo(function MahjongTile({
@@ -486,10 +487,7 @@ export default function MahjongZen({
       symIdx++;
     }
 
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
+    shuffleInPlace(pool);
 
     const remainingSet = new Set(slots.map(s => `${s.x},${s.y},${s.z}`));
     const boardTiles = [];
@@ -596,15 +594,8 @@ export default function MahjongZen({
       let valid = false;
 
       while (!valid && attempts < 20) {
-        for (let i = pool.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [pool[i], pool[j]] = [pool[j], pool[i]];
-        }
-
-        for (let i = slots.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [slots[i], slots[j]] = [slots[j], slots[i]];
-        }
+        shuffleInPlace(pool);
+        shuffleInPlace(slots);
 
         boardTiles = [];
         for (let i = 0; i < pool.length; i++) {
@@ -1571,11 +1562,7 @@ export default function MahjongZen({
     if (active.length === 0) return;
     saveToHistory();
 
-    const activeSymbols = active.map(t => t.sym);
-    for (let i = activeSymbols.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [activeSymbols[i], activeSymbols[j]] = [activeSymbols[j], activeSymbols[i]];
-    }
+    const activeSymbols = shuffle(active.map(t => t.sym));
 
     let activeIdx = 0;
     const nextTiles = tiles.map(t => {

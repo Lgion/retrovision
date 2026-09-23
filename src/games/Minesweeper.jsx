@@ -6,7 +6,8 @@ import GameHeader from '../components/GameHeader';
 import MinesweeperCollection from './MinesweeperCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
-import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { useRandomTheme } from '../hooks/useRandomTheme';
 import { useConfirm } from '../components/ConfirmContext';
 
 const getDifficultySettings = (diffId) => {
@@ -97,17 +98,7 @@ export default function Minesweeper({
   const [moves, setMoves] = useState(0);
   const [showCollection, setShowCollection] = useState(false);
   const [customizations, setCustomizations] = useState(() => getGameConfig('mines', 'customizations', { difficulty: 'moyen', theme: 'classic' }));
-  const [randomThemeActive, setRandomThemeActive] = useState(() => isRandomThemeEnabled('mines'));
-
-  useEffect(() => {
-    const handleToggle = (e) => {
-      if (e.detail?.gameId === 'mines') {
-        setRandomThemeActive(e.detail.enabled);
-      }
-    };
-    window.addEventListener('retrovision_random_theme_toggled', handleToggle);
-    return () => window.removeEventListener('retrovision_random_theme_toggled', handleToggle);
-  }, []);
+  const randomThemeActive = useRandomTheme('mines');
 
   const handleChangeTheme = () => {
     const nextTheme = pickRandomTheme('mines', customizations.theme);
@@ -398,7 +389,7 @@ export default function Minesweeper({
         onComplete={(isRandomTheme) => {
           setShowIntro(false);
           const isRand = isRandomTheme || isRandomThemeEnabled('mines');
-          setRandomThemeActive(isRand);
+          setRandomThemeEnabled('mines', isRand);
           if (isRand) {
             const nextTheme = pickRandomTheme('mines', customizations.theme);
             setCustomizations(prev => {
