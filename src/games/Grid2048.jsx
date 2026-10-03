@@ -29,6 +29,7 @@ const addRandomTile = (currentBoard) => {
 export default function Grid2048({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -54,6 +55,13 @@ export default function Grid2048({
     if (diff === 'moyen') return 4;
     if (diff === 'difficile') return 3;
     return 4;
+  };
+
+  const getIntermissionTarget = () => {
+    const diff = intermissionDifficulty || 'facile';
+    if (diff === 'difficile') return 128;
+    if (diff === 'moyen') return 64;
+    return 32;
   };
 
   const gridSize = getGridSize();
@@ -276,8 +284,9 @@ export default function Grid2048({
         sound.playClick();
       }
 
-      // Check if 2048 achieved
-      if (!victory && !keepPlaying && finalBoard.includes(2048)) {
+      // Check if target achieved (calibrated: facile 32, moyen 64, difficile 128 in intermission; 2048 in normal)
+      const currentTarget = isIntermission ? getIntermissionTarget() : 2048;
+      if (!victory && !keepPlaying && finalBoard.some((v) => v >= currentTarget)) {
         setVictory(true);
         sound.playPowerup();
         if (isIntermission && onIntermissionComplete) {
@@ -436,6 +445,7 @@ export default function Grid2048({
           showBgmToggle={false} // BGM global
           onShop={() => setShowCollection(true)}
           onChangeTheme={handleChangeTheme}
+          onLaunchIntermission={onLaunchIntermission}
           centerContent={
             <div style={statsContainerStyle}>
               <div style={statBoxStyle}>
@@ -452,11 +462,12 @@ export default function Grid2048({
       )}
 
       {isIntermission && !victory && (() => {
+        const target = getIntermissionTarget();
         const maxVal = board ? Math.max(...board.map(v => v || 0)) : 0;
-        const g2048Progress = maxVal >= 2048 ? 1.0 : maxVal >= 1024 ? 0.85 : maxVal >= 512 ? 0.6 : (score / 3000);
+        const g2048Progress = Math.min(1, maxVal / target);
         return (
           <IntermissionHeader
-            instructionText="Fusionnez les tuiles pour retourner au jeu principal."
+            instructionText={`Fusionnez les tuiles pour atteindre ${target} !`}
             onRestart={initGame}
             onOtherGame={onIntermissionRequest}
             onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}

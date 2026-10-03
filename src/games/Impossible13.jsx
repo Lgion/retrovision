@@ -86,7 +86,9 @@ const hasPossibleMoves = (b) => {
 export default function Impossible13({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
+  intermissionDifficulty,
   onIntermissionComplete,
   onIntermissionRequest,
   replaySameIntermission,
@@ -99,6 +101,13 @@ export default function Impossible13({
 }) {
   const [showIntro, setShowIntro] = useState(true);
   const [showStore, setShowStore] = useState(false);
+
+  const getIntermissionTarget = useCallback(() => {
+    const diff = intermissionDifficulty || 'facile';
+    if (diff === 'difficile') return 6;
+    if (diff === 'moyen') return 5;
+    return 4;
+  }, [intermissionDifficulty]);
 
   const [customizations, setCustomizations] = useState(() => {
     return getGameConfig('impossible13', 'customizations', { theme: 'neon' });
@@ -312,8 +321,9 @@ export default function Impossible13({
       spawnParticleBurst(centerX, centerY, VALUE_COLORS[mergeValue] || '#fff');
     }
 
-    // Win condition check
-    if (mergeValue === TARGET_NUMBER) {
+    // Win condition check (calibrated: facile 4, moyen 5, difficile 6 in intermission; 13 in normal)
+    const targetNumber = isIntermission ? getIntermissionTarget() : TARGET_NUMBER;
+    if (mergeValue >= targetNumber) {
       sound.playSudokuSuccess();
       setVictory(true);
       if (isIntermission && onIntermissionComplete) {
@@ -360,7 +370,7 @@ export default function Impossible13({
       setGameOver(true);
       sound.playShake();
     }
-  }, [activeChain, board, currentMax, highScore, initGame, isIntermission, onIntermissionComplete, onScoreSave, replaySameIntermission, onToggleReplaySameIntermission, saveStateForUndo, score]);
+  }, [activeChain, board, currentMax, getIntermissionTarget, highScore, initGame, isIntermission, onIntermissionComplete, onScoreSave, replaySameIntermission, onToggleReplaySameIntermission, saveStateForUndo, score]);
 
   const handlePointerUp = useCallback(() => {
     if (!isDragging || gameOver || victory) return;
@@ -491,6 +501,7 @@ export default function Impossible13({
             showBgmToggle={false}
             onShop={() => setShowStore(true)}
             onChangeTheme={handleChangeTheme}
+            onLaunchIntermission={onLaunchIntermission}
             centerContent={
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={statBoxStyle}><div style={statLabelStyle}>SCORE</div><div style={statValStyle}>{score}</div></div>
@@ -500,11 +511,12 @@ export default function Impossible13({
           />
         )}
         {isIntermission && (() => {
+          const target = getIntermissionTarget();
           const maxVal = currentMax || 1;
-          const impProgress = victory ? 1.0 : (maxVal >= 11 ? 0.85 : maxVal >= 10 ? 0.7 : (maxVal / 13));
+          const impProgress = victory ? 1.0 : Math.min(1, maxVal / target);
           return (
             <IntermissionHeader
-              instructionText="Atteignez le chiffre 13 pour retourner au jeu principal."
+              instructionText={`Fusionnez des tuiles pour créer le nombre ${target} !`}
               onRestart={initGame}
               onOtherGame={onIntermissionRequest}
               onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}

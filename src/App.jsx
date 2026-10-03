@@ -13,6 +13,7 @@ import {
 } from './utils/gamesConfig';
 import { recordPlay, recordTime, recordScore } from './utils/stats';
 import { storage } from './utils/storage';
+import { sound } from './utils/sound';
 import { randomChoice } from './utils/commonUtils';
 import { ConfirmProvider } from './components/ConfirmContext';
 import './App.css';
@@ -60,6 +61,9 @@ function App() {
       if (typeof parsed.showIntroModal === 'boolean') {
         merged.showIntroModal = parsed.showIntroModal;
       }
+      if (typeof parsed.roundsCount === 'number') {
+        merged.roundsCount = parsed.roundsCount;
+      }
       INTERMISSION_GAME_KEYS.forEach((key) => {
         if (parsed[key]) {
           merged[key] = {
@@ -75,6 +79,8 @@ function App() {
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [intermissionRound, setIntermissionRound] = useState(1);
+  const [intermissionTotalRounds, setIntermissionTotalRounds] = useState(1);
   const [lastIntermissionGame, setLastIntermissionGame] = useState(() => {
     return storage.getItem('retrovision_last_intermission_game', null);
   });
@@ -161,6 +167,9 @@ function App() {
       if (!isIntermissionMode) {
         setReturnView(fromGameKey);
         setIsIntermissionMode(true);
+        const total = Number(intermissionConfig.roundsCount) || 1;
+        setIntermissionRound(1);
+        setIntermissionTotalRounds(total);
       }
 
       setReplaySameIntermission(false);
@@ -177,25 +186,33 @@ function App() {
   );
 
 
-  const handleIntermissionComplete = useCallback((isSuccess = true) => {
-    setIntermissionResult(isSuccess === false ? 'passed' : 'success');
-    setShowIntermissionIntro(false);
-    setView('intermission-victory');
-    setSkipNextIntro(true);
-  }, []);
+  const handleIntermissionComplete = useCallback(
+    (isSuccess = true) => {
+      setShowIntermissionIntro(false);
 
-  // Transition automatique après écran de victoire d'entracte vers le jeu hôte
-  useEffect(() => {
-    if (view === 'intermission-victory') {
-      const timer = setTimeout(() => {
-        setView(returnView || 'dashboard');
-        setIsIntermissionMode(false);
-        setReturnView(null);
-        setShowIntermissionIntro(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [view, returnView]);
+      if (isSuccess !== false && intermissionRound < intermissionTotalRounds) {
+        // Avancer au défi suivant de la série (Multi-défis 1 à 3)
+        const nextRound = intermissionRound + 1;
+        setIntermissionRound(nextRound);
+        const mainGame = returnView || 'mahjong';
+        const nextGame = pickRandomIntermissionGame(mainGame, view);
+        setLastIntermissionGame(nextGame);
+        storage.setItem('retrovision_last_intermission_game', nextGame);
+        const defaultDiff = intermissionConfig[nextGame]?.difficulty || 'facile';
+        setSessionIntermissionDifficulty(defaultDiff);
+        setView(nextGame);
+        sound.playPowerup?.();
+        return;
+      }
+
+      setIntermissionResult(isSuccess === false ? 'passed' : 'success');
+      setView('intermission-victory');
+      setSkipNextIntro(true);
+    },
+    [intermissionRound, intermissionTotalRounds, pickRandomIntermissionGame, returnView, view, intermissionConfig]
+  );
+
+
 
   // Suivi du temps passé sur chaque jeu
   useEffect(() => {
@@ -251,6 +268,7 @@ function App() {
       onBack: handleBackToDashboard,
       onScoreSave: handleScoreSave,
       onIntermissionRequest: (targetKey) => handleIntermissionRequest(gameKey, targetKey),
+      onLaunchIntermission: () => handleIntermissionRequest(gameKey),
       ...(gameDef.supportsIntro ? { skipIntro: skipNextIntro } : {}),
     };
 
@@ -264,6 +282,8 @@ function App() {
           onIntermissionRequest: () => handleIntermissionRequest(returnView || 'mahjong'),
           replaySameIntermission,
           onToggleReplaySameIntermission: setReplaySameIntermission,
+          intermissionRound,
+          intermissionTotalRounds,
         }
       : {
           isIntermission: false,
@@ -307,6 +327,25 @@ function App() {
         <IntermissionVictory
           isPassed={intermissionResult === 'passed'}
           returnGameName={getGameName(returnView)}
+          totalRounds={intermissionTotalRounds}
+          onReturnToMain={() => {
+            setView(returnView || 'dashboard');
+            setIsIntermissionMode(false);
+            setReturnView(null);
+            setShowIntermissionIntro(false);
+            setIntermissionRound(1);
+            setIntermissionTotalRounds(1);
+          }}
+          onReplayCurrent={() => {
+            setView(lastIntermissionGame || 'morpion');
+            setIsIntermissionMode(true);
+            setShowIntermissionIntro(false);
+            setIntermissionRound(1);
+          }}
+          onNextIntermission={() => {
+            setIntermissionRound(1);
+            handleIntermissionRequest(returnView || 'mahjong');
+          }}
         />
       );
     }

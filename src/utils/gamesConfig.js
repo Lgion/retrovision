@@ -15,6 +15,11 @@ import BubbleCool from '../games/BubbleCool';
 import FireflyGarden from '../games/FireflyGarden';
 import ZenFlow from '../games/ZenFlow';
 import SymbolQuest from '../games/SymbolQuest';
+import Morpion from '../games/Morpion';
+import MemoryPairs from '../games/MemoryPairs';
+import CarillonCeleste from '../games/CarillonCeleste';
+import MotsFlottants from '../games/MotsFlottants';
+import TangramSilhouettes from '../games/TangramSilhouettes';
 
 /**
  * Fabrique de configuration de jeu avec valeurs par défaut standardisées (DRY).
@@ -218,6 +223,70 @@ export const GAMES_CONFIG = {
     icon: '🔍',
     subtitle: 'Balayage & symboles zen',
     color: '#10B981'
+  }),
+  morpion: defineGame({
+    id: 'morpion',
+    component: Morpion,
+    name: 'Morpion Néon',
+    aliases: ['Morpion', 'Morpion Néon', 'TicTacToe', 'Tic Tac Toe', 'morpion', 'tictactoe'],
+    icon: '❌⭕',
+    settingsIcon: '❌',
+    subtitle: 'Alignement & stratégie',
+    color: '#00F0FF',
+    binaryScore: true,
+    supportsIntro: true
+  }),
+  memory: defineGame({
+    id: 'memory',
+    component: MemoryPairs,
+    name: 'Paires Mémoire',
+    aliases: ['Paires Mémoire', 'Mémoire Zen', 'Memory', 'Memory Pairs', 'memory', 'memorypairs'],
+    icon: '🎴',
+    settingsIcon: '🌸',
+    subtitle: 'Association & mémoire zen',
+    color: '#0284c7',
+    fullscreen: true,
+    binaryScore: true,
+    supportsIntro: true
+  }),
+  carillon: defineGame({
+    id: 'carillon',
+    component: CarillonCeleste,
+    name: 'Carillon Céleste',
+    aliases: ['Carillon Céleste', 'Carillon', 'carillon', 'carillonceleste'],
+    icon: '🔔',
+    settingsIcon: '🎶',
+    subtitle: 'Mémoire mélodique & résonance zen',
+    color: '#0284c7',
+    fullscreen: true,
+    binaryScore: true,
+    supportsIntro: true
+  }),
+  motsflottants: defineGame({
+    id: 'motsflottants',
+    component: MotsFlottants,
+    name: 'Mots Flottants',
+    aliases: ['Mots Flottants', 'Mots', 'motsflottants', 'mots'],
+    icon: '📖',
+    settingsIcon: '🔤',
+    subtitle: 'Exploration visuelle & mots doux',
+    color: '#0d9488',
+    fullscreen: true,
+    binaryScore: true,
+    supportsIntro: true
+  }),
+  tangram: defineGame({
+    id: 'tangram',
+    component: TangramSilhouettes,
+    name: 'Tangram Silhouettes',
+    aliases: ['Tangram Silhouettes', 'Tangram', 'tangram', 'tangramsilhouettes'],
+    icon: '🧩',
+    settingsIcon: '📐',
+    subtitle: 'Assemblage spatial & motricité zen',
+    color: '#c2410c',
+    fullscreen: true,
+    binaryScore: true,
+    supportsIntro: true
   })
 };
 

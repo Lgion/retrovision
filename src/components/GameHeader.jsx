@@ -23,7 +23,8 @@ export default function GameHeader({
   extraControls,
   style = {},
   gameId,
-  onChangeTheme
+  onChangeTheme,
+  onLaunchIntermission
 }) {
   return (
     <>
@@ -267,6 +268,27 @@ export default function GameHeader({
 
         {/* Right Area: Controls */}
         <div className="gh-controls">
+
+          {/* BOUTON ENTRACTE INSTANTANÉ (sans texte, avec tooltip) */}
+          {onLaunchIntermission && (
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                onLaunchIntermission();
+              }}
+              className="candy-btn btn-quick-intermission"
+              title="Lancer un entracte sans plus attendre"
+              aria-label="Lancer un entracte sans plus attendre"
+              style={{
+                background: '#0284c7',
+                borderBottom: '4px solid #0369a1',
+                fontSize: '1.4rem'
+              }}
+            >
+              ☕
+            </button>
+          )}
 
           {onRestart && (
             <button

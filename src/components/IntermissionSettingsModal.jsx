@@ -64,6 +64,20 @@ export default function IntermissionSettingsModal({ config, onClose, onSave, onC
     });
   };
 
+  const handleRoundsCount = (count) => {
+    setTempConfig((prev) => {
+      const next = {
+        ...prev,
+        roundsCount: count,
+      };
+      const parsed = storage.getJSON('retrovision_intermission_config', {}) || {};
+      parsed.roundsCount = count;
+      storage.setJSON('retrovision_intermission_config', parsed);
+      if (onChange) onChange(next);
+      return next;
+    });
+  };
+
   const handleSave = () => {
     const anyEnabled = Object.keys(tempConfig)
       .filter((k) => k !== 'showIntroModal')
@@ -149,6 +163,56 @@ export default function IntermissionSettingsModal({ config, onClose, onSave, onC
           >
             {tempConfig.showIntroModal ? '🟢 Activé' : '⚪ Désactivé'}
           </button>
+        </div>
+
+        {/* Option de longueur de l'entracte (1 à 3 défis consécutifs) */}
+        <div
+          style={{
+            background: 'rgba(16, 185, 129, 0.05)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            borderRadius: '16px',
+            padding: '16px 18px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '2px' }}>
+              🎯 Longueur de l'entracte
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.3' }}>
+              Nombre de mini-jeux consécutifs à réussir par entracte (1 défi par défaut).
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {[1, 2, 3].map((num) => {
+              const currentRounds = tempConfig.roundsCount || 1;
+              const isSelected = currentRounds === num;
+              return (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handleRoundsCount(num)}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '10px',
+                    border: `2px solid ${isSelected ? '#10b981' : '#cbd5e1'}`,
+                    background: isSelected ? '#10b981' : '#f8fafc',
+                    color: isSelected ? '#ffffff' : '#334155',
+                    fontWeight: '800',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {num} {num > 1 ? 'défis' : 'défi'}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {errorMsg && (

@@ -20,6 +20,18 @@ export const haptic = {
   },
 
   /**
+   * Alias pour tap discret
+   */
+  light: (duration = 20) => {
+    if (!canVibrate) return;
+    try {
+      navigator.vibrate(duration);
+    } catch {
+      // Ignorer silencieusement
+    }
+  },
+
+  /**
    * Double pulsation douce (40ms, 50ms pause, 40ms) pour action réussie ou victoire
    */
   success: () => {

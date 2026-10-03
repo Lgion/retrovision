@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { sound } from '../utils/sound';
 import { getStats, saveStats, resetAllStats, getRecommendation } from '../utils/stats';
 import { getConfigs, saveConfigs, resetAllConfigs } from '../utils/config';
@@ -16,9 +16,16 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
   });
   const [muted, setMuted] = useState(sound.muted);
 
-  const [stats, setStats] = useState({});
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [recommendation, setRecommendation] = useState(null);
+
+  // Dérivation directe des statistiques synchronisées avec statsUpdated
+  const stats = useMemo(() => {
+    if (statsUpdated !== undefined) {
+      return getStats();
+    }
+    return getStats();
+  }, [statsUpdated]);
 
   // Dérivation dynamique des high scores pour les trophées (DRY)
   const highScores = React.useMemo(() => {
@@ -31,11 +38,6 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
   }, [stats]);
 
   const avatars = ['✦', '♥', '★', '●', '☘', '☾', '☀'];
-
-  useEffect(() => {
-    const detailedStats = getStats();
-    setStats(detailedStats);
-  }, [statsUpdated]);
 
   const totalPlays = Object.values(stats).reduce((acc, curr) => acc + (curr.plays || 0), 0);
   const totalWins = Object.values(stats).reduce((acc, curr) => acc + (curr.wins || 0), 0);
@@ -99,7 +101,7 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
           } else {
             alert("Format de fichier invalide.");
           }
-        } catch (err) {
+        } catch {
           alert("Erreur lors de la lecture du fichier.");
         }
       };
@@ -284,6 +286,51 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       unlocked: highScores.bubblecool >= 1000,
       color: '#38BDF8',
       textColor: '#0284C7'
+    },
+    {
+      id: 'morpion_master',
+      title: 'Maître du Morpion',
+      desc: 'Remporter une partie de Morpion Néon',
+      icon: '❌',
+      unlocked: highScores.morpion > 0,
+      color: '#00F0FF',
+      textColor: '#0284c7'
+    },
+    {
+      id: 'memory_master',
+      title: 'Mémoire d\'Éléphant',
+      desc: 'Compléter une grille de Paires Mémoire',
+      icon: '🌸',
+      unlocked: highScores.memory > 0,
+      color: '#0284c7',
+      textColor: '#0369a1'
+    },
+    {
+      id: 'carillon_master',
+      title: 'Carillonneur Zen',
+      desc: 'Reproduire les mélodies du Carillon Céleste',
+      icon: '🔔',
+      unlocked: (highScores.carillon || 0) > 0,
+      color: '#0284c7',
+      textColor: '#0369a1'
+    },
+    {
+      id: 'mots_master',
+      title: 'Maître des Mots',
+      desc: 'Découvrir les mots apaisants de Mots Flottants',
+      icon: '📖',
+      unlocked: (highScores.motsflottants || 0) > 0,
+      color: '#0d9488',
+      textColor: '#0f766e'
+    },
+    {
+      id: 'tangram_master',
+      title: 'Architecte Silhouettes',
+      desc: 'Assembler une silhouette dans Tangram',
+      icon: '🧩',
+      unlocked: (highScores.tangram || 0) > 0,
+      color: '#c2410c',
+      textColor: '#9a3412'
     }
   ];
 
@@ -440,6 +487,51 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       color: '#10B981',
       textColor: '#059669',
       icon: '🔍'
+    },
+    {
+      id: 'morpion',
+      title: 'MORPION NÉON',
+      desc: 'Alignez 3 symboles identiques contre l’ordinateur ou à deux joueurs. Stimule l’attention visuelle gauche et l’anticipation.',
+      highscore: highScores.morpion,
+      color: '#00F0FF',
+      textColor: '#0284C7',
+      icon: '❌⭕'
+    },
+    {
+      id: 'memory',
+      title: 'PAIRES MÉMOIRE',
+      desc: 'Retrouvez les paires de tuiles zen cachées. Conçu pour stimuler la mémoire de travail et l’exploration visuo-spatiale gauche dans un style clair sobre.',
+      highscore: highScores.memory,
+      color: '#0284c7',
+      textColor: '#0369a1',
+      icon: '🎴'
+    },
+    {
+      id: 'carillon',
+      title: 'CARILLON CÉLESTE',
+      desc: 'Reproduisez les mélodies apaisantes des cloches pentatoniques. Renforce la mémoire visuo-spatiale et auditive avec ancre gauche.',
+      highscore: highScores.carillon || 0,
+      color: '#0284c7',
+      textColor: '#0369a1',
+      icon: '🔔'
+    },
+    {
+      id: 'motsflottants',
+      title: 'MOTS FLOTTANTS',
+      desc: 'Repérez les mots apaisants cachés dans la grille. Stimule le balayage visuel gauche-droite et la lecture rééducative.',
+      highscore: highScores.motsflottants || 0,
+      color: '#0d9488',
+      textColor: '#0f766e',
+      icon: '📖'
+    },
+    {
+      id: 'tangram',
+      title: 'TANGRAM DES SILHOUETTES',
+      desc: 'Assemblez les formes géométriques pour reconstituer des silhouettes élégantes. Rééducation praxique et constructive.',
+      highscore: highScores.tangram || 0,
+      color: '#c2410c',
+      textColor: '#9a3412',
+      icon: '🧩'
     }
   ];
 

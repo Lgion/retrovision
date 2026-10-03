@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { 
   isRandomThemeEnabled, 
@@ -23,6 +23,14 @@ export default function GameIntro({
   const [intermissionEnabled, setIntermissionEnabled] = useState(() => {
     return localStorage.getItem('retrovision_intermission_enabled') !== 'false';
   });
+  const [roundsCount, setRoundsCount] = useState(() => {
+    try {
+      const cfg = JSON.parse(localStorage.getItem('retrovision_intermission_config') || '{}');
+      return cfg.roundsCount || 1;
+    } catch {
+      return 1;
+    }
+  });
   const [randomThemeEnabled, setRandomThemeEnabledState] = useState(() => {
     return isRandomThemeEnabled(gameName);
   });
@@ -41,6 +49,20 @@ export default function GameIntro({
     const nextVal = !intermissionEnabled;
     setIntermissionEnabled(nextVal);
     localStorage.setItem('retrovision_intermission_enabled', nextVal ? 'true' : 'false');
+  };
+
+  const cycleRoundsCount = (e) => {
+    if (e) e.stopPropagation();
+    sound.playClick();
+    const nextCount = roundsCount >= 3 ? 1 : roundsCount + 1;
+    setRoundsCount(nextCount);
+    try {
+      const cfg = JSON.parse(localStorage.getItem('retrovision_intermission_config') || '{}');
+      cfg.roundsCount = nextCount;
+      localStorage.setItem('retrovision_intermission_config', JSON.stringify(cfg));
+    } catch (err) {
+      console.warn('Error saving intermission config', err);
+    }
   };
 
   const toggleRandomTheme = (e) => {
@@ -717,6 +739,20 @@ export default function GameIntro({
               {intermissionEnabled ? 'AVEC' : 'SANS'}
             </span>
           </div>
+
+          {intermissionEnabled && (
+            <div
+              className="intro-switch-chip"
+              onClick={cycleRoundsCount}
+              title="Nombre de défis consécutifs par entracte (Cliquez pour changer: 1, 2 ou 3 défis)"
+              style={{ cursor: 'pointer' }}
+            >
+              <span className="intro-switch-label">Défis :</span>
+              <span style={{ fontWeight: '900', color: '#10b981', fontSize: '11px', letterSpacing: '0.5px' }}>
+                {roundsCount} {roundsCount > 1 ? 'DÉFIS' : 'DÉFI'}
+              </span>
+            </div>
+          )}
 
           {hasThemes && (
             <div className="intro-switch-chip" onClick={toggleRandomTheme} title="Activer ou désactiver le choix aléatoire du thème visuel à chaque partie">
