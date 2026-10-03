@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import GameHeader from '../components/GameHeader';
 import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
@@ -125,46 +125,84 @@ export default function CarillonCeleste({
   const [isWon, setIsWon] = useState(false);
   const [encouragement, setEncouragement] = useState('');
 
-  // Objectifs en mode entracte : réussir 2 mélodies en facile, 3 en moyen/difficile
-  const targetRounds = isIntermission ? (difficulty === 'facile' ? 2 : 3) : 5;
+  // Objectifs en mode entracte : 5 mélodies à réussir (comme demandé)
+  const targetRounds = isIntermission ? 5 : 5;
 
-  // Lancement d'une manche
-  const startNewRound = useCallback((roundNum) => {
+  // Référence pour nettoyer tous les timers en cours et éviter les chevauchements
+  const timersRef = useRef([]);
+  const clearAllTimers = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+  }, []);
+
+  useEffect(() => {
+    return () => clearAllTimers();
+  }, [clearAllTimers]);
+
+  // Jouer une séquence de cloches de manière fiable et synchrone
+  const playBellSequence = useCallback((seq) => {
+    clearAllTimers();
     setIsPlayingSequence(true);
-    setPlayerStep(0);
 
-    // Longueur de la mélodie : roundNum + 1 (ex: round 1 = 2 notes, round 2 = 3 notes)
-    const seqLen = roundNum + 1;
-    const newSeq = [];
-    for (let i = 0; i < seqLen; i++) {
-      newSeq.push(randomChoice(activeBells).id);
-    }
-    setSequence(newSeq);
-
-    // Lecture de la séquence avec tempo calme
-    newSeq.forEach((bellId, index) => {
-      setTimeout(() => {
+    seq.forEach((bellId, index) => {
+      const delay = (index + 1) * 750;
+      const t1 = setTimeout(() => {
         const bell = BELLS_CONFIG.find((b) => b.id === bellId);
         if (bell) {
           synth.playChime(bell.freq, bell.isLeftAnchor);
           setActiveBellId(bell.id);
-          setTimeout(() => setActiveBellId(null), 450);
+          const tOff = setTimeout(() => setActiveBellId(null), 450);
+          timersRef.current.push(tOff);
         }
-        if (index === newSeq.length - 1) {
-          setTimeout(() => setIsPlayingSequence(false), 550);
-        }
-      }, (index + 1) * 750);
+      }, delay);
+      timersRef.current.push(t1);
     });
-  }, [activeBells]);
+
+    const totalDuration = (seq.length + 1) * 750;
+    const endTimer = setTimeout(() => {
+      setIsPlayingSequence(false);
+    }, totalDuration);
+    timersRef.current.push(endTimer);
+  }, [clearAllTimers]);
+
+  // Lancement d'une manche avec mélodies aléatoires dynamiques
+  const startNewRound = useCallback((roundNum) => {
+    setPlayerStep(0);
+
+    // En entracte : longueurs variées aléatoirement (2 à 4 notes) sans répétition prévisible
+    // En mode standard : progression douce (roundNum + 1)
+    let seqLen;
+    if (isIntermission) {
+      // Longueur aléatoire entre 2 et 4 notes par mélodie pour varier le défi
+      const possibleLengths = [2, 3, 4];
+      seqLen = possibleLengths[Math.floor(Math.random() * possibleLengths.length)];
+    } else {
+      seqLen = roundNum + 1;
+    }
+
+    const newSeq = [];
+    let lastBellId = null;
+    for (let i = 0; i < seqLen; i++) {
+      // Éviter de répéter immédiatement la même cloche 2 fois de suite pour des enchaînements plus harmonieux et variés
+      const availableChoices = activeBells.filter((b) => b.id !== lastBellId);
+      const chosenBell = randomChoice(availableChoices.length > 0 ? availableChoices : activeBells);
+      newSeq.push(chosenBell.id);
+      lastBellId = chosenBell.id;
+    }
+    setSequence(newSeq);
+    playBellSequence(newSeq);
+  }, [activeBells, isIntermission, playBellSequence]);
 
   // Initialisation
   const initGame = useCallback(() => {
+    clearAllTimers();
+    setActiveBellId(null);
     setRound(1);
     setScore(0);
     setIsWon(false);
     setEncouragement('');
     startNewRound(1);
-  }, [startNewRound]);
+  }, [clearAllTimers, startNewRound]);
 
   useEffect(() => {
     if (!showIntro) {
@@ -182,7 +220,8 @@ export default function CarillonCeleste({
     haptic.tap();
     synth.playChime(bell.freq, bell.isLeftAnchor);
     setActiveBellId(bell.id);
-    setTimeout(() => setActiveBellId(null), 300);
+    const tapTimer = setTimeout(() => setActiveBellId(null), 300);
+    timersRef.current.push(tapTimer);
 
     const expectedBellId = sequence[playerStep];
     if (bell.id === expectedBellId) {
@@ -210,46 +249,55 @@ export default function CarillonCeleste({
           if (isIntermission && onIntermissionComplete) {
             if (replaySameIntermission) {
               if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-              setTimeout(() => initGame(), 1500);
+              const replayTimer = setTimeout(() => initGame(), 1500);
+              timersRef.current.push(replayTimer);
             } else {
-              setTimeout(() => onIntermissionComplete(true), 1200);
+              const compTimer = setTimeout(() => onIntermissionComplete(true), 1200);
+              timersRef.current.push(compTimer);
             }
           }
         } else {
-          // Passer à la mélodie suivante
-          setTimeout(() => {
-            setRound((prev) => prev + 1);
-            startNewRound(round + 1);
-          }, 800);
+          // Passer à la mélodie suivante proprement
+          const nextRoundNum = round + 1;
+          setRound(nextRoundNum);
+          const nextTimer = setTimeout(() => {
+            startNewRound(nextRoundNum);
+          }, 900);
+          timersRef.current.push(nextTimer);
         }
       }
     } else {
-      // Erreur bienveillante : replay de la séquence
+      // Erreur bienveillante : replay propre de la séquence
       sound.playClick();
       setPlayerStep(0);
       setIsPlayingSequence(true);
-      setTimeout(() => {
-        sequence.forEach((bId, idx) => {
-          setTimeout(() => {
-            const b = BELLS_CONFIG.find((item) => item.id === bId);
-            if (b) {
-              synth.playChime(b.freq, b.isLeftAnchor);
-              setActiveBellId(b.id);
-              setTimeout(() => setActiveBellId(null), 450);
-            }
-            if (idx === sequence.length - 1) {
-              setTimeout(() => setIsPlayingSequence(false), 550);
-            }
-          }, (idx + 1) * 750);
-        });
+      const replayTimer = setTimeout(() => {
+        playBellSequence(sequence);
       }, 500);
+      timersRef.current.push(replayTimer);
     }
   };
 
-  const handleBackWithConfirm = () => {
-    if (confirm) {
-      confirm('Voulez-vous retourner à l\'accueil ?', () => onBack());
+  const handleBackWithConfirm = async () => {
+    if ((score > 0 || round > 1) && !isWon) {
+      if (confirm) {
+        const ok = await confirm({
+          title: 'Quitter le Carillon ?',
+          message: 'Voulez-vous vraiment retourner à l\'accueil ?',
+          confirmText: 'Oui, quitter',
+          cancelText: 'Continuer à jouer',
+          confirmVariant: 'danger'
+        });
+        if (ok) {
+          clearAllTimers();
+          onBack();
+        }
+      } else {
+        clearAllTimers();
+        onBack();
+      }
     } else {
+      clearAllTimers();
       onBack();
     }
   };

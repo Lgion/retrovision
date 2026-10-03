@@ -14,6 +14,7 @@ import { shuffleInPlace } from '../utils/commonUtils';
 export default function WaterSort({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -478,6 +479,7 @@ export default function WaterSort({
           <GameHeader
             title="WATER SORT"
             gameId="water"
+            onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
             onChangeTheme={() => {
               const nextTheme = pickRandomTheme('water', customizations.theme);
               setCustomizations(prev => ({ ...prev, theme: nextTheme }));

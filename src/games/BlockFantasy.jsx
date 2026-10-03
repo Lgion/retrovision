@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
+import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
@@ -73,6 +74,7 @@ const rotateMatrix = (matrix) => {
 export default function BlockFantasy({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -1058,75 +1060,74 @@ export default function BlockFantasy({
         {/* HEADER COMPACT ET ÉPURÉ (MOINS DE 110PX AU LIEU DE 275PX) */}
         {!isIntermission && (
           <div style={compactHeaderStyle}>
-            {/* Ligne 1 : Navigation & Stats */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', width: '100%' }}>
-              <button onClick={handleBackWithConfirm} className="retro-btn" style={smallIconBtnStyle} title="Retourner au menu">
-                ←
-              </button>
+            {/* Ligne 1 : Navigation & Stats unifiées */}
+            <GameHeader
+              title="BLOCK FANTASY"
+              onBack={handleBackWithConfirm}
+              gameId="blockfantasy"
+              onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
+              onRestart={initGame}
+              restartTitle="Recommencer"
+              onShop={() => setShowCustomization(true)}
+              showShop={true}
+              centerContent={
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {/* Mode Toggle Pills */}
+                  <div style={modePillGroupStyle}>
+                    <button
+                      onClick={() => {
+                        if (activeMode !== 'classic') {
+                          setCustomizations(prev => {
+                            const next = { ...prev, mode: 'classic' };
+                            updateGameConfig('blockfantasy', 'customizations', next);
+                            return next;
+                          });
+                        }
+                      }}
+                      style={{
+                        ...modePillStyle,
+                        background: activeMode === 'classic' ? 'rgba(57,255,20,0.2)' : 'transparent',
+                        color: activeMode === 'classic' ? '#39FF14' : '#94a3b8',
+                        border: activeMode === 'classic' ? '1px solid #39FF14' : '1px solid transparent'
+                      }}
+                    >
+                      ♾️ Classique
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (activeMode !== 'arcade') {
+                          setCustomizations(prev => {
+                            const next = { ...prev, mode: 'arcade' };
+                            updateGameConfig('blockfantasy', 'customizations', next);
+                            return next;
+                          });
+                        } else {
+                          setShowLevelSelect(true);
+                        }
+                      }}
+                      style={{
+                        ...modePillStyle,
+                        background: activeMode === 'arcade' ? 'rgba(56,189,248,0.2)' : 'transparent',
+                        color: activeMode === 'arcade' ? '#38BDF8' : '#94a3b8',
+                        border: activeMode === 'arcade' ? '1px solid #38BDF8' : '1px solid transparent'
+                      }}
+                    >
+                      🗺️ Ch.{currentLevelIndex}
+                    </button>
+                  </div>
 
-              {/* Mode Toggle Pills */}
-              <div style={modePillGroupStyle}>
-                <button
-                  onClick={() => {
-                    if (activeMode !== 'classic') {
-                      setCustomizations(prev => {
-                        const next = { ...prev, mode: 'classic' };
-                        updateGameConfig('blockfantasy', 'customizations', next);
-                        return next;
-                      });
-                    }
-                  }}
-                  style={{
-                    ...modePillStyle,
-                    background: activeMode === 'classic' ? 'rgba(57,255,20,0.2)' : 'transparent',
-                    color: activeMode === 'classic' ? '#39FF14' : '#94a3b8',
-                    border: activeMode === 'classic' ? '1px solid #39FF14' : '1px solid transparent'
-                  }}
-                >
-                  ♾️ Classique
-                </button>
-                <button
-                  onClick={() => {
-                    if (activeMode !== 'arcade') {
-                      setCustomizations(prev => {
-                        const next = { ...prev, mode: 'arcade' };
-                        updateGameConfig('blockfantasy', 'customizations', next);
-                        return next;
-                      });
-                    } else {
-                      setShowLevelSelect(true);
-                    }
-                  }}
-                  style={{
-                    ...modePillStyle,
-                    background: activeMode === 'arcade' ? 'rgba(56,189,248,0.2)' : 'transparent',
-                    color: activeMode === 'arcade' ? '#38BDF8' : '#94a3b8',
-                    border: activeMode === 'arcade' ? '1px solid #38BDF8' : '1px solid transparent'
-                  }}
-                >
-                  🗺️ Ch.{currentLevelIndex}
-                </button>
-              </div>
-
-              {/* Score & Record inline */}
-              <div style={inlineStatsStyle}>
-                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                  PTS <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '13px' }}>{score}</span>
+                  {/* Score & Record inline */}
+                  <div style={inlineStatsStyle}>
+                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                      PTS <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '13px' }}>{score}</span>
+                    </div>
+                    <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                      REC <span style={{ color: '#FACC15', fontWeight: 'bold', fontSize: '13px' }}>{highScore}</span>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                  REC <span style={{ color: '#FACC15', fontWeight: 'bold', fontSize: '13px' }}>{highScore}</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '4px' }}>
-                <button onClick={initGame} className="retro-btn" style={smallIconBtnStyle} title="Recommencer">
-                  🔄
-                </button>
-                <button onClick={() => setShowCustomization(true)} className="retro-btn" style={smallIconBtnStyle} title="Boutique & Options">
-                  🛍️
-                </button>
-              </div>
-            </div>
+              }
+            />
 
             {/* Ligne 2 : Objectif Aventure & Jauge Fever intégrés */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%', marginTop: '4px' }}>

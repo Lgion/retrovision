@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
+import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
@@ -298,6 +299,7 @@ function getSudokuConfig(diff) {
 export default function Sudoku({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -748,85 +750,29 @@ export default function Sudoku({
         <div className="sudoku-zen-orb sudoku-zen-orb-1" style={{ pointerEvents: 'none' }}></div>
         <div className="sudoku-zen-orb sudoku-zen-orb-2" style={{ pointerEvents: 'none' }}></div>
 
-        {/* Sleek single-row header */}
+        {/* Sleek unified header */}
         {!isIntermission ? (
-          <div style={{ width: '100%', zIndex: 10 }}>
-            <div style={compactHeaderStyle}>
-              {/* Left: Back button */}
-              <button
-                onClick={handleBackWithConfirm}
-                className="retro-btn"
-                style={{
-                  ...backBtnStyle,
-                  color: currentTheme.panelText,
-                  background: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
-                  borderColor: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
-                }}
-              >
-                ← Retour
-              </button>
-
-              {/* Center: Title + Timer */}
-              <div style={centerHeaderStyle}>
-                <span style={{ ...titleStyle, color: currentTheme.panelText }}>SUDOKU</span>
-                {gameState === 'playing' && (
-                  <span style={timerPillStyle}>⏱️ {formatTime(time)}</span>
-                )}
-              </div>
-
-              {/* Right: Actions */}
-              <div style={headerActionsStyle}>
-                {randomThemeActive && (
-                  <button
-                    onClick={() => {
-                      const nextTheme = pickRandomTheme('sudoku', activeThemeId);
-                      setActiveThemeId(nextTheme);
-                      updateGameConfig('sudoku', 'theme', nextTheme);
-                      sound.playPowerup?.();
-                    }}
-                    className="retro-btn"
-                    style={{
-                      ...iconBtnStyle,
-                      color: currentTheme.panelText,
-                      background: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
-                      borderColor: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
-                    }}
-                    title="Changer de thème (Thème aléatoire actif)"
-                  >
-                    🎨
-                  </button>
-                )}
-                {gameState === 'playing' && !victory && (
-                  <button
-                    onClick={() => setGameState('menu')}
-                    className="retro-btn"
-                    style={{
-                      ...iconBtnStyle,
-                      color: currentTheme.panelText,
-                      background: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
-                      borderColor: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
-                    }}
-                    title="Menu de difficulté"
-                  >
-                    🔄
-                  </button>
-                )}
-                <button
-                  onClick={() => { sound.playClick(); setShowStore(true); }}
-                  className="retro-btn"
-                  style={{
-                    ...iconBtnStyle,
-                    color: currentTheme.panelText,
-                    background: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
-                    borderColor: currentTheme.id === 'classic' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'
-                  }}
-                  title="Boutique Sudoku"
-                >
-                  🛍️
-                </button>
-              </div>
-            </div>
-          </div>
+          <GameHeader
+            title="SUDOKU"
+            onBack={handleBackWithConfirm}
+            gameId="sudoku"
+            onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
+            onChangeTheme={randomThemeActive ? () => {
+              const nextTheme = pickRandomTheme('sudoku', activeThemeId);
+              setActiveThemeId(nextTheme);
+              updateGameConfig('sudoku', 'theme', nextTheme);
+              sound.playPowerup?.();
+            } : undefined}
+            onShop={() => { sound.playClick(); setShowStore(true); }}
+            showShop={true}
+            onRestart={gameState === 'playing' && !victory ? () => setGameState('menu') : undefined}
+            restartTitle="Menu de difficulté"
+            centerContent={
+              gameState === 'playing' ? (
+                <div style={timerPillStyle}>⏱️ {formatTime(time)}</div>
+              ) : null
+            }
+          />
         ) : (
           <div style={{ width: '100%', marginBottom: '10px', zIndex: 10 }}>
             <IntermissionHeader

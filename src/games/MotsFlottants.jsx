@@ -11,9 +11,29 @@ import { useConfirm } from '../components/ConfirmContext';
 // Dictionnaire de mots réconfortants et apaisants
 const VOCABULARY = [
   'ZEN', 'PAIX', 'CALME', 'FLEUR', 'LUNE', 'JOIE', 'VENT', 'EAU', 'DOUX',
-  'SOLEIL', 'JARDIN', 'ETOILE', 'NATURE', 'SEREINE', 'LUMIERE', 'HARMONIE'
+  'SOLEIL', 'JARDIN', 'ETOILE', 'NATURE', 'SEREIN', 'LUMIERE', 'HARMONIE',
+  'AUBE', 'AIR', 'ARBRE', 'BEAU', 'BIEN', 'BOIS', 'BRISE', 'CIEL', 'COEUR',
+  'NUAGE', 'ONDE', 'OR', 'PUR', 'REPOS', 'ROSE', 'SAGE', 'SAIN', 'LENT',
+  'LIRE', 'MER', 'MIEL', 'MUR', 'NID', 'NUIT', 'OISEAU', 'OMBRE', 'ORME',
+  'PLUME', 'PONT', 'PORT', 'PRE', 'RAYON', 'RIVE', 'ROCHE', 'SABLE',
+  'SAUGE', 'SOIE', 'SOURCE', 'SUD', 'TENDRE', 'TIEDE', 'TOIT', 'AILE',
+  'ALOE', 'AMOUR', 'ANGE', 'AURA', 'AZUR', 'BAIN', 'BASE', 'BON', 'BRIN',
+  'CIME', 'CLAIR', 'CHAUD', 'CHARME', 'CHANT', 'CYGNE', 'DEDANS', 'DORER',
+  'ECLAT', 'ECUME', 'ELAN', 'EMBRUN', 'ESPRIT', 'ESSOR', 'FAUNE', 'FEE',
+  'FLOT', 'FLUX', 'FORET', 'FRAIS', 'FRUIT', 'GRACE', 'GRAIN', 'HERBE',
+  'HIVER', 'IODE', 'IRIS', 'JADE', 'JOUR', 'LAC', 'LAINE', 'LENTE',
+  'LOIN', 'LOTUS', 'LOUP', 'MAGIE', 'MARE', 'MATIN', 'MENTHE', 'MIEUX',
+  'MONT', 'MOUSSE', 'MUSE', 'NAGE', 'NEIGE', 'NOBLE', 'NORD', 'OASIS',
+  'OCEAN', 'OEIL', 'OPALE', 'ORANGE', 'OUATE', 'OUEST', 'PARC', 'PHARE',
+  'PIN', 'PLAGE', 'PLUIE', 'POEME', 'POESIE', 'POMME', 'POSER', 'PRIERE',
+  'RADE', 'RAME', 'REVE', 'RIRE', 'ROSEAU', 'ROUGE', 'SAISON', 'SALON',
+  'SAPIN', 'SAUT', 'SENS', 'SIESTE', 'SIGNE', 'SOIN', 'SON', 'SUCRE',
+  'TEMPS', 'TERRE', 'THE', 'TOILE', 'TRONC', 'UNI', 'VAGUE', 'VAL',
+  'VASTE', 'VERT', 'VIE', 'VIGNE', 'VOIE', 'VOILE', 'VOL', 'VOLER',
+  'VRAI', 'VUE', 'AIMER', 'DOUCE', 'AMIS', 'SOURIRE', 'RIANT', 'LUEUR',
+  'REVER', 'CHANTE', 'CALIN', 'BEAUTE', 'LOUER', 'VITAL', 'TISSU', 
+  'CANDEUR', 'ASTRE', 'PERLE', 'RUBIS', 'ONDEE', 'GIVRE', 'GLACE', 'FLAMME', 'FEU'
 ];
-
 const ENCOURAGEMENTS = [
   "Votre regard balaie les lettres avec calme et fluidité.",
   "Chaque mot révélé stimule agréablement votre lecture.",
@@ -205,9 +225,20 @@ export default function MotsFlottants({
     }
   };
 
-  const handleBackWithConfirm = () => {
-    if (confirm) {
-      confirm('Voulez-vous retourner à l\'accueil ?', () => onBack());
+  const handleBackWithConfirm = async () => {
+    if (foundWords.length > 0) {
+      if (confirm) {
+        const ok = await confirm({
+          title: 'Quitter Mots Flottants ?',
+          message: 'Voulez-vous vraiment retourner à l\'accueil ?',
+          confirmText: 'Oui, quitter',
+          cancelText: 'Continuer à jouer',
+          confirmVariant: 'danger'
+        });
+        if (ok) onBack();
+      } else {
+        onBack();
+      }
     } else {
       onBack();
     }

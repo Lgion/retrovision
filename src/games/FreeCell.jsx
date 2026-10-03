@@ -40,6 +40,7 @@ const createDeck = () => {
 export default function FreeCell({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -749,6 +750,7 @@ export default function FreeCell({
           <GameHeader
             title="FREECELL"
             gameId="freecell"
+            onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
             onChangeTheme={() => {
               const nextTheme = pickRandomTheme('freecell', customizations.theme);
               setCustomizations(prev => {

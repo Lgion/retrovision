@@ -10,6 +10,7 @@ import { useConfirm } from '../components/ConfirmContext';
 export default function JigsawPuzzle({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -205,7 +206,9 @@ export default function JigsawPuzzle({
       {!isIntermission && (
         <GameHeader
           title="PUZZLE MAGIQUE"
+          gameId="jigsaw"
           onBack={handleBackWithConfirm}
+          onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
           onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
           showBgmToggle={false} // bgm global
           centerContent={

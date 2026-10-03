@@ -209,6 +209,7 @@ const getGameBgUrl = (bgFile) => {
 export default function MahjongZen({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   onIntermissionRequest,
   upcomingIntermission = 'water',
   onSelectUpcomingIntermission,
@@ -2005,6 +2006,7 @@ export default function MahjongZen({
           title="MAHJONG ZEN"
           gameId="mahjong"
           onBack={handleBackWithConfirm}
+          onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
           onRestart={initGame}
           onUndo={undo}
           undoDisabled={history.length === 0}

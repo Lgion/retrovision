@@ -3,7 +3,7 @@ import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 
-export default function SnakeWave({ onBack, onScoreSave }) {
+export default function SnakeWave({ onBack, onScoreSave, onLaunchIntermission, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
@@ -353,7 +353,9 @@ export default function SnakeWave({ onBack, onScoreSave }) {
       <div className="game-container neon-border" style={containerStyle}>
       <GameHeader
         title="SNAKE WAVE"
+        gameId="snakewave"
         onBack={onBack}
+        onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
         showBgmToggle={false} // BGM handled globally
         centerContent={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', fontFamily: 'Orbitron, sans-serif' }}>

@@ -16,6 +16,7 @@ const getRandomItem = randomChoice;
 export default function Hangman({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -527,6 +528,8 @@ export default function Hangman({
                 </span>
               </div>
             }
+            gameId="hangman"
+            onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
             onBack={handleBackWithConfirm}
             showBgmToggle={false} // bgm global
             onShop={() => setShowCollection(true)}

@@ -71,6 +71,7 @@ const placeMines = (grid, firstR, firstC, size, minesCount) => {
 export default function Minesweeper({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -431,6 +432,7 @@ export default function Minesweeper({
           key={randomThemeActive ? 'rand' : 'fixed'}
           title="DÉMINEUR"
           gameId="mines"
+          onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
           onChangeTheme={handleChangeTheme}
           onBack={handleBackWithConfirm}
           onRestart={gameState === 'playing' ? () => { const s = getDifficultySettings(customizations.difficulty); startGame(s.size, s.mines); } : undefined}

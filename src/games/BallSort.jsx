@@ -190,6 +190,7 @@ const BallSortIntro = ({ onComplete }) => {
 export default function BallSort({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -697,6 +698,7 @@ export default function BallSort({
           <GameHeader
             title="TRI BILLES"
             gameId="ball"
+            onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
             onChangeTheme={() => {
               const nextTheme = pickRandomTheme('ball', customizations.theme);
               setCustomizations(prev => ({ ...prev, theme: nextTheme }));

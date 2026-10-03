@@ -71,6 +71,7 @@ const CONSTELLATIONS = [
 export default function FireflyGarden({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission = false,
   intermissionDifficulty = 'facile',
   onIntermissionComplete,
@@ -95,6 +96,12 @@ export default function FireflyGarden({
   // Vitesse / Rythme : 'douceur' (6s), 'eveil' (4.5s), 'harmonie' (3.5s)
   const [tempo, setTempo] = useState(intermissionDifficulty === 'difficile' ? 'harmonie' : 'douceur');
 
+  // Luciole cible à trouver actuellement
+  const [targetFireflyType, setTargetFireflyType] = useState(null);
+
+  // Message d'encouragement temporaire
+  const [encouragementMessage, setEncouragementMessage] = useState(null);
+
   // Liste active des lucioles affichées
   const [fireflies, setFireflies] = useState([]);
   // Particules d'ondulation / étincelles après capture
@@ -102,14 +109,36 @@ export default function FireflyGarden({
 
   const fireflyIdRef = useRef(0);
   const spawnTimerRef = useRef(null);
+  const lastMatchTimeRef = useRef(Date.now());
 
   const currentConstellation = CONSTELLATIONS[constellationIdx % CONSTELLATIONS.length];
   const targetCount = isIntermission ? 8 : currentConstellation.target;
+
+  // Types de lucioles distincts avec couleur, icône/symbole et nom descriptif
+  const FIREFLY_TYPES = useMemo(() => [
+    { id: 'cyan', name: 'Luciole d’Azur', color: '#38bdf8', icon: '❄️', aura: 'rgba(56, 189, 248, 0.6)' },
+    { id: 'gold', name: 'Luciole Dorée', color: '#facc15', icon: '☀️', aura: 'rgba(250, 204, 21, 0.6)' },
+    { id: 'emerald', name: 'Luciole d’Émeraude', color: '#34d399', icon: '🍃', aura: 'rgba(52, 211, 153, 0.6)' },
+    { id: 'rose', name: 'Luciole de Rose', color: '#f472b6', icon: '🌸', aura: 'rgba(244, 114, 182, 0.6)' },
+    { id: 'violet', name: 'Luciole Violette', color: '#a78bfa', icon: '🔮', aura: 'rgba(167, 139, 250, 0.6)' }
+  ], []);
 
   // Synthèse Web Audio centralisée (DRY)
   const playCrystalChime = useCallback((isLeft = false) => {
     sound.playPentatonicNote(Math.floor(Math.random() * 5), isLeft, 0.9);
   }, []);
+
+  // Sélectionner une nouvelle luciole cible parmi les types disponibles
+  const pickNewTarget = useCallback((typesList = FIREFLY_TYPES) => {
+    const nextTarget = typesList[Math.floor(Math.random() * typesList.length)];
+    setTargetFireflyType(nextTarget);
+    return nextTarget;
+  }, [FIREFLY_TYPES]);
+
+  // Initialiser la cible dès le départ
+  useEffect(() => {
+    pickNewTarget();
+  }, [pickNewTarget]);
 
   // Génération d'une nouvelle luciole avec PONDÉRATION GAUCHE (Anti-Hémi-évi)
   const spawnFirefly = useCallback(() => {
@@ -120,47 +149,58 @@ export default function FireflyGarden({
     const isLeft = Math.random() < 0.65;
     const x = isLeft ? 10 + Math.random() * 40 : 50 + Math.random() * 35;
     // Éviter le sommet (header) et le bas extrême
-    const y = 18 + Math.random() * 62;
-
-    // Palette de teintes zen
-    const colors = isLeft
-      ? ['#38bdf8', '#22d3ee', '#facc15', '#a78bfa'] // Teintes très lumineuses à gauche
-      : ['#fef08a', '#86efac', '#f472b6', '#38bdf8'];
-    const color = colors[Math.floor(Math.random() * colors.length)];
+    const y = 20 + Math.random() * 58;
 
     // Durée d'apparition selon le rythme
-    const lifespan = tempo === 'douceur' ? 6200 : tempo === 'eveil' ? 4800 : 3600;
-    // Les lucioles de gauche restent 800ms de plus pour donner amplement le temps de les remarquer
+    const lifespan = tempo === 'douceur' ? 7000 : tempo === 'eveil' ? 5500 : 4200;
+    // Les lucioles de gauche restent un peu plus pour donner amplement le temps de les remarquer
     const totalLife = isLeft ? lifespan + 800 : lifespan;
 
-    const newFirefly = {
-      id,
-      x,
-      y,
-      color,
-      isLeft,
-      size: isLeft ? 38 : 34, // Légèrement plus imposante à gauche
-      born: Date.now(),
-      lifespan: totalLife
-    };
-
     setFireflies((prev) => {
-      // Limiter à 4 lucioles simultanées maximum pour éviter toute surcharge cognitive
-      const maxCount = tempo === 'douceur' ? 2 : tempo === 'eveil' ? 3 : 4;
-      const filtered = prev.filter((f) => Date.now() - f.born < f.lifespan);
-      if (filtered.length >= maxCount) return filtered;
-      return [...filtered, newFirefly];
+      // Nombre de lucioles simultanées pour avoir un panel de recherche stimulant
+      const maxCount = tempo === 'douceur' ? 5 : tempo === 'eveil' ? 6 : 7;
+      const activeFireflies = prev.filter((f) => Date.now() - f.born < f.lifespan);
+
+      // S'assurer que le type cible est régulièrement présent à l'écran
+      const currentTarget = targetFireflyType;
+      const hasTargetOnScreen = currentTarget && activeFireflies.some((f) => f.type.id === currentTarget.id);
+
+      // Si la cible n'est pas à l'écran ou au hasard, favoriser son apparition
+      let chosenType;
+      if (!hasTargetOnScreen && Math.random() < 0.6 && currentTarget) {
+        chosenType = currentTarget;
+      } else {
+        chosenType = FIREFLY_TYPES[Math.floor(Math.random() * FIREFLY_TYPES.length)];
+      }
+
+      const newFirefly = {
+        id,
+        x,
+        y,
+        type: chosenType,
+        color: chosenType.color,
+        isLeft,
+        size: isLeft ? 42 : 38,
+        born: Date.now(),
+        lifespan: totalLife
+      };
+
+      if (activeFireflies.length >= maxCount) {
+        // Remplacer la plus ancienne si le plateau est plein
+        return [...activeFireflies.slice(1), newFirefly];
+      }
+      return [...activeFireflies, newFirefly];
     });
-  }, [tempo]);
+  }, [tempo, targetFireflyType, FIREFLY_TYPES]);
 
   // Boucle de spawn continue
   useEffect(() => {
     if (levelVictory) return;
 
-    const interval = tempo === 'douceur' ? 2200 : tempo === 'eveil' ? 1600 : 1200;
+    const interval = tempo === 'douceur' ? 1800 : tempo === 'eveil' ? 1400 : 1000;
     spawnTimerRef.current = setInterval(spawnFirefly, interval);
 
-    // Première luciole immédiate
+    // Lucioles immédiates
     spawnFirefly();
 
     return () => {
@@ -171,10 +211,33 @@ export default function FireflyGarden({
   // Nettoyage des lucioles expirées
   useEffect(() => {
     const cleaner = setInterval(() => {
-      setFireflies((prev) => prev.filter((f) => Date.now() - f.born < f.lifespan));
-    }, 500);
+      setFireflies((prev) => {
+        const filtered = prev.filter((f) => Date.now() - f.born < f.lifespan);
+        return filtered;
+      });
+    }, 400);
     return () => clearInterval(cleaner);
   }, []);
+
+  // Décroissance d'inactivité de 10 secondes : si le joueur ne capture pas de luciole valide
+  useEffect(() => {
+    if (levelVictory) return;
+
+    const decayInterval = setInterval(() => {
+      if (Date.now() - lastMatchTimeRef.current >= 10000) {
+        setCollectedInLevel((prev) => {
+          if (prev > 0) {
+            // Décrémentation d'une jauge/bloc
+            lastMatchTimeRef.current = Date.now(); // Réinitialise pour le prochain cycle de 10s
+            return prev - 1;
+          }
+          return 0;
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(decayInterval);
+  }, [levelVictory]);
 
   // Détection de présence de lucioles dans l'hémichamp gauche (pour pulser l'ancre visuelle)
   const hasLeftFirefly = useMemo(() => {
@@ -185,51 +248,87 @@ export default function FireflyGarden({
   const handleCatchFirefly = (e, firefly) => {
     e.stopPropagation();
 
-    // Effet sonore et vibration
-    if (firefly.isLeft) {
-      haptic.success(); // Double vibration valorisante pour la gauche
-      playCrystalChime(true);
-    } else {
-      haptic.tap();
-      playCrystalChime(false);
-    }
+    const isCorrect = targetFireflyType && firefly.type.id === targetFireflyType.id;
 
-    // Création d'une ondulation lumineuse à l'endroit touché
-    const rippleId = Date.now() + Math.random();
-    setRipples((prev) => [
-      ...prev.slice(-8),
-      {
-        id: rippleId,
-        x: firefly.x,
-        y: firefly.y,
-        color: firefly.color,
-        isLeft: firefly.isLeft
-      }
-    ]);
-    setTimeout(() => {
-      setRipples((prev) => prev.filter((r) => r.id !== rippleId));
-    }, 1000);
+    if (isCorrect) {
+      // Réinitialiser le chronomètre d'inactivité
+      lastMatchTimeRef.current = Date.now();
 
-    // Retirer la luciole attrapée
-    setFireflies((prev) => prev.filter((f) => f.id !== firefly.id));
+      // RETOUR HAPTIQUE DE SUCCÈS & ENCOURAGEMENT
+      haptic.success();
+      playCrystalChime(firefly.isLeft);
 
-    // Mise à jour des scores
-    const nextTotal = totalCollected + 1;
-    setTotalCollected(nextTotal);
-    if (onScoreSave) onScoreSave('fireflies', nextTotal);
+      // Encouragements positifs et bienveillants
+      const messages = [
+        "Merveilleux ! ✨",
+        "Excellente observation !",
+        "Bien trouvé ! 🌟",
+        "Bravo, belle attention !",
+        "Parfaitement repérée !"
+      ];
+      setEncouragementMessage(messages[Math.floor(Math.random() * messages.length)]);
+      setTimeout(() => setEncouragementMessage(null), 1800);
 
-    if (gameMode === 'constellation') {
-      const nextLevel = collectedInLevel + 1;
-      setCollectedInLevel(nextLevel);
-      if (nextLevel >= targetCount) {
-        // Niveau complété !
-        sound.playWin?.();
-        haptic.success();
-        setLevelVictory(true);
-        if (isIntermission && onIntermissionComplete) {
-          setTimeout(() => onIntermissionComplete(true), 2500);
+      // Création d'une ondulation lumineuse éclatante
+      const rippleId = Date.now() + Math.random();
+      setRipples((prev) => [
+        ...prev.slice(-8),
+        {
+          id: rippleId,
+          x: firefly.x,
+          y: firefly.y,
+          color: firefly.color,
+          isSuccess: true
+        }
+      ]);
+      setTimeout(() => {
+        setRipples((prev) => prev.filter((r) => r.id !== rippleId));
+      }, 1000);
+
+      // Retirer la luciole attrapée
+      setFireflies((prev) => prev.filter((f) => f.id !== firefly.id));
+
+      // Choisir une nouvelle luciole cible
+      pickNewTarget();
+
+      // Mise à jour des scores
+      const nextTotal = totalCollected + 1;
+      setTotalCollected(nextTotal);
+      if (onScoreSave) onScoreSave('fireflies', nextTotal);
+
+      if (gameMode === 'constellation') {
+        const nextLevel = collectedInLevel + 1;
+        setCollectedInLevel(nextLevel);
+        if (nextLevel >= targetCount) {
+          // Niveau complété !
+          sound.playWin?.();
+          haptic.success();
+          setLevelVictory(true);
+          if (isIntermission && onIntermissionComplete) {
+            setTimeout(() => onIntermissionComplete(true), 2500);
+          }
         }
       }
+    } else {
+      // RETOUR HAPTIQUE TRÈS LÉGER, SUBTIL POUR NON-CORRESPONDANCE
+      haptic.light(15);
+      sound.playClick();
+
+      // Ondulation plus discrète sans validation
+      const rippleId = Date.now() + Math.random();
+      setRipples((prev) => [
+        ...prev.slice(-8),
+        {
+          id: rippleId,
+          x: firefly.x,
+          y: firefly.y,
+          color: 'rgba(255, 255, 255, 0.3)',
+          isSuccess: false
+        }
+      ]);
+      setTimeout(() => {
+        setRipples((prev) => prev.filter((r) => r.id !== rippleId));
+      }, 700);
     }
   };
 
@@ -240,6 +339,7 @@ export default function FireflyGarden({
     setLevelVictory(false);
     setCollectedInLevel(0);
     setConstellationIdx((prev) => prev + 1);
+    pickNewTarget();
   };
 
   // Bascule entre mode constellation et méditation libre
@@ -249,6 +349,7 @@ export default function FireflyGarden({
     setGameMode((prev) => (prev === 'constellation' ? 'serenite' : 'constellation'));
     setCollectedInLevel(0);
     setLevelVictory(false);
+    pickNewTarget();
   };
 
   // Retour avec modale accessible de confirmation
@@ -336,9 +437,21 @@ export default function FireflyGarden({
           pointer-events: none;
           transition: all 0.3s ease;
         }
-        .left-anchor-active {
-          animation: left-anchor-pulse 1.4s ease-in-out infinite;
-          width: 8px;
+        @keyframes target-glow-pulse {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px currentColor) brightness(1); }
+          50% { transform: scale(1.08); filter: drop-shadow(0 0 24px currentColor) brightness(1.2); }
+        }
+        @keyframes board-border-glow {
+          0%, 100% { opacity: 0.75; }
+          50% { opacity: 1; }
+        }
+        @keyframes battery-pulse {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); }
+          50% { transform: translate(-50%, -50%) scale(1.02); }
+        }
+        @keyframes battery-block-glow {
+          0%, 100% { filter: brightness(1); }
+          50% { filter: brightness(1.25); }
         }
       `}</style>
 
@@ -346,49 +459,149 @@ export default function FireflyGarden({
       {isIntermission ? (
         <div style={{ width: '100%', marginBottom: '6px', zIndex: 10, flexShrink: 0, padding: '0 8px', boxSizing: 'border-box' }}>
           <IntermissionHeader
-            instructionText="Attrapez 8 lucioles lumineuses pour retourner au jeu principal."
+            instructionText="Trouvez les lucioles demandées pour retourner au jeu principal."
             onRestart={() => {
               setCollectedInLevel(0);
               setLevelVictory(false);
+              pickNewTarget();
             }}
             onOtherGame={onIntermissionRequest}
             onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
             replaySame={replaySameIntermission}
             onToggleReplaySame={onToggleReplaySameIntermission}
             progress={Math.min(1.0, collectedInLevel / targetCount)}
+            extraControls={
+              targetFireflyType ? (
+                <div
+                  className="target-firefly-indicator"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '3px',
+                    borderRadius: '50%',
+                    background: 'rgba(15, 23, 42, 0.95)',
+                    border: `2px solid ${targetFireflyType.color}`,
+                    boxShadow: `0 0 15px ${targetFireflyType.aura}, inset 0 0 8px ${targetFireflyType.color}55`,
+                    marginRight: '6px'
+                  }}
+                  title={`Luciole cible : ${targetFireflyType.color}`}
+                >
+                  <div
+                    style={{
+                      width: '30px',
+                      height: '30px',
+                      borderRadius: '50%',
+                      backgroundColor: targetFireflyType.color,
+                      boxShadow: `0 0 14px ${targetFireflyType.color}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      animation: 'target-glow-pulse 2s ease-in-out infinite'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        backgroundColor: '#ffffff'
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : null
+            }
           />
         </div>
       ) : (
         <GameHeader
           title="JARDIN DES LUCIOLES"
+          gameId="fireflies"
           onBack={handleBackWithConfirm}
+          onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
           showShop={false}
           centerContent={
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(56, 189, 248, 0.3)'
+                gap: '12px'
               }}
             >
-              <span style={{ fontSize: '1.2rem' }}>✨</span>
-              <span
+              {/* Indicateur épuré de la Luciole Cible (sans texte, grand, démarqué et éclatant) */}
+              {targetFireflyType && (
+                <div
+                  className="target-firefly-indicator"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '4px',
+                    borderRadius: '50%',
+                    background: 'rgba(15, 23, 42, 0.95)',
+                    border: `2.5px solid ${targetFireflyType.color}`,
+                    boxShadow: `0 0 20px ${targetFireflyType.aura}, 0 0 35px ${targetFireflyType.color}44, inset 0 0 12px ${targetFireflyType.color}55`,
+                    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                  }}
+                  title={`Luciole cible : ${targetFireflyType.color}`}
+                  aria-label={`Couleur cible : ${targetFireflyType.color}`}
+                >
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      backgroundColor: targetFireflyType.color,
+                      boxShadow: `0 0 18px ${targetFireflyType.color}, 0 0 30px ${targetFireflyType.color}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      animation: 'target-glow-pulse 2s ease-in-out infinite'
+                    }}
+                  >
+                    {/* Cœur lumineux étincelant */}
+                    <div
+                      style={{
+                        width: '14px',
+                        height: '14px',
+                        borderRadius: '50%',
+                        backgroundColor: '#ffffff',
+                        boxShadow: '0 0 8px #ffffff'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Compteur d'étoiles / score */}
+              <div
                 style={{
-                  fontFamily: 'Orbitron, sans-serif',
-                  fontWeight: '800',
-                  color: '#f8fafc',
-                  fontSize: '1rem',
-                  letterSpacing: '0.5px'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '7px 14px',
+                  borderRadius: '20px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)'
                 }}
               >
-                {gameMode === 'constellation'
-                  ? `${collectedInLevel} / ${targetCount}`
-                  : `${totalCollected} captées`}
-              </span>
+                <span style={{ fontSize: '1.2rem' }}>✨</span>
+                <span
+                  style={{
+                    fontFamily: 'Orbitron, sans-serif',
+                    fontWeight: '800',
+                    color: '#f8fafc',
+                    fontSize: '1rem',
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  {gameMode === 'constellation'
+                    ? `${collectedInLevel} / ${targetCount}`
+                    : `${totalCollected} captées`}
+                </span>
+              </div>
             </div>
           }
           extraControls={
@@ -437,13 +650,22 @@ export default function FireflyGarden({
       {/* ANCRE VISUELLE GAUCHE (Spéciale Hémi-évi) */}
       <div className={`left-anchor-bar ${hasLeftFirefly ? 'left-anchor-active' : ''}`} />
 
-      {/* Espace de jeu interactif */}
+      {/* Espace de jeu interactif avec contour dynamique de la couleur de la luciole cible */}
       <div
+        className="firefly-play-grid"
         style={{
           position: 'relative',
           flex: 1,
           width: '100%',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          boxSizing: 'border-box',
+          border: targetFireflyType
+            ? `3px solid ${targetFireflyType.color}`
+            : '2px solid rgba(56, 189, 248, 0.3)',
+          boxShadow: targetFireflyType
+            ? `inset 0 0 25px ${targetFireflyType.color}33, 0 0 20px ${targetFireflyType.color}44`
+            : 'none',
+          transition: 'border-color 0.4s ease, box-shadow 0.4s ease'
         }}
       >
         {/* Fond d'étoiles scintillantes apaisantes */}
@@ -472,6 +694,115 @@ export default function FireflyGarden({
               }}
             />
           ))}
+        </div>
+
+        {/* Jauge Centrale en Pile / Batterie Digitale HUD (20% de largeur, 40% opacité, non bloquante) */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '20%',
+            minWidth: '68px',
+            maxWidth: '120px',
+            height: '240px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            opacity: 0.4,
+            pointerEvents: 'none',
+            zIndex: 6,
+            userSelect: 'none',
+            transition: 'opacity 0.3s ease'
+          }}
+          aria-hidden="true"
+        >
+          {/* Borne / plot supérieur de la pile */}
+          <div
+            style={{
+              width: '32%',
+              height: '8px',
+              borderRadius: '4px 4px 0 0',
+              background: 'rgba(255, 255, 255, 0.4)',
+              border: '1.5px solid rgba(255, 255, 255, 0.5)',
+              borderBottom: 'none',
+              boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)'
+            }}
+          />
+
+          {/* Corps principal de la pile digitale */}
+          <div
+            style={{
+              width: '100%',
+              flex: 1,
+              borderRadius: '12px',
+              border: '2px solid rgba(255, 255, 255, 0.45)',
+              background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.7) 0%, rgba(3, 7, 18, 0.85) 100%)',
+              boxShadow: '0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.05)',
+              padding: '6px',
+              display: 'flex',
+              flexDirection: 'column-reverse',
+              gap: '4px',
+              boxSizing: 'border-box'
+            }}
+          >
+            {Array.from({ length: targetCount }).map((_, idx) => {
+              const isFilled = (collectedInLevel % (targetCount + 1)) > idx;
+              // Ratio de progression du bloc (0 = bas, 1 = haut)
+              const ratio = idx / Math.max(1, targetCount - 1);
+
+              // Palette évolutive par palier :
+              // Bas : Cyan / Azur | Milieu : Émeraude / Ambre | Haut : Or / Violet électrique
+              let blockColor = '#38bdf8';
+              let blockGlow = 'rgba(56, 189, 248, 0.7)';
+              if (ratio >= 0.7) {
+                blockColor = '#f59e0b';
+                blockGlow = 'rgba(245, 158, 11, 0.8)';
+              } else if (ratio >= 0.35) {
+                blockColor = '#34d399';
+                blockGlow = 'rgba(52, 211, 153, 0.75)';
+              }
+
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    borderRadius: '4px',
+                    transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    background: isFilled
+                      ? `linear-gradient(90deg, ${blockColor}dd, ${blockColor})`
+                      : 'rgba(255, 255, 255, 0.06)',
+                    border: isFilled
+                      ? `1px solid ${blockColor}`
+                      : '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: isFilled
+                      ? `0 0 10px ${blockGlow}, inset 0 0 4px #ffffff66`
+                      : 'none',
+                    animation: isFilled ? 'battery-block-glow 2.5s ease-in-out infinite' : 'none'
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* Indicateur numérique discret sous la pile */}
+          <div
+            style={{
+              marginTop: '4px',
+              fontFamily: 'Orbitron, monospace',
+              fontSize: '11px',
+              fontWeight: '700',
+              color: 'rgba(255, 255, 255, 0.6)',
+              letterSpacing: '1px'
+            }}
+          >
+            {gameMode === 'constellation'
+              ? `${collectedInLevel}/${targetCount}`
+              : `${collectedInLevel % targetCount}/${targetCount}`}
+          </div>
         </div>
 
         {/* Silhouette décorative zen au bas de l'écran (Nénuphars et roseaux) */}
@@ -519,7 +850,7 @@ export default function FireflyGarden({
             }}
             onClick={(e) => handleCatchFirefly(e, f)}
             role="button"
-            aria-label="Luciole lumineuse"
+            aria-label={`Luciole ${f.type?.name || ''}`}
           >
             <div
               className="firefly-core"
@@ -538,12 +869,37 @@ export default function FireflyGarden({
                   inset: '25%',
                   borderRadius: '50%',
                   backgroundColor: '#ffffff',
-                  opacity: 0.9
+                  opacity: 0.95
                 }}
               />
             </div>
           </div>
         ))}
+
+        {/* Message d'encouragement pop-up lors d'une trouvaille réussie */}
+        {encouragementMessage && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '24px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 17,
+              padding: '8px 24px',
+              borderRadius: '24px',
+              background: 'rgba(15, 23, 42, 0.9)',
+              border: `1.5px solid ${targetFireflyType ? targetFireflyType.color : '#38bdf8'}`,
+              color: '#f8fafc',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              boxShadow: `0 0 25px ${targetFireflyType ? targetFireflyType.color : 'rgba(56, 189, 248, 0.5)'}`,
+              backdropFilter: 'blur(8px)',
+              animation: 'cm-fade-in 0.2s ease-out'
+            }}
+          >
+            {encouragementMessage}
+          </div>
+        )}
 
         {/* Consigne apaisante discrète en bas d'écran */}
         <div
@@ -567,7 +923,7 @@ export default function FireflyGarden({
         >
           {gameMode === 'constellation'
             ? `Éclaire ${currentConstellation.name} (${collectedInLevel}/${targetCount})`
-            : 'Explore et touche doucement les lucioles à ton rythme'}
+            : 'Explorez et touchez les lucioles correspondant à la couleur demandée'}
         </div>
       </div>
 

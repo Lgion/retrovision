@@ -85,6 +85,7 @@ const getNeighbors = (r, c) => {
 export default function BubbleCool({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -1941,163 +1942,64 @@ export default function BubbleCool({
 
       <div className="bubble-cool-container game-container" style={containerStyle}>
         {!isIntermission && (
-          <div style={compactHeaderStyle}>
-            {/* Top row: Back button, Chapter Selector pill, and sleek action buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
-              <button
-                onClick={onBack}
-                className="retro-btn"
-                style={{
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  fontWeight: '800',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  color: '#ffffff',
-                  cursor: 'pointer'
-                }}
-              >
-                ← Retour
-              </button>
-
-              <button
-                onClick={() => setShowChapterSelect(true)}
-                className="retro-btn"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '5px 12px',
-                  fontSize: '12px',
-                  fontWeight: '800',
-                  borderRadius: '10px',
-                  background: gameMode === 'chapter' ? `${activeChapter.accentColor}25` : 'rgba(56, 189, 248, 0.15)',
-                  border: `1.5px solid ${gameMode === 'chapter' ? activeChapter.accentColor : '#38BDF8'}`,
-                  color: gameMode === 'chapter' ? activeChapter.accentColor : '#38BDF8',
-                  cursor: 'pointer',
-                  fontFamily: 'Orbitron, sans-serif'
-                }}
-                title="Changer de chapitre"
-              >
-                <span>{gameMode === 'chapter' ? activeChapter.icon : '🎮'}</span>
-                <span>{gameMode === 'chapter' ? `CH. ${activeChapter.id}` : 'ARCADE'}</span>
-                <span style={{ fontSize: '10px', opacity: 0.8 }}>▾</span>
-              </button>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <GameHeader
+            title="BUBBLE COOL"
+            onBack={onBack}
+            gameId="bubblecool"
+            onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
+            onRestart={initGame}
+            restartTitle="Recommencer la partie"
+            onShop={() => setShowStore(true)}
+            showShop={true}
+            showBgmToggle={true}
+            bgmOn={bgmOn}
+            onBgmToggle={() => setBgmOn(sound.toggleBGM?.())}
+            onChangeTheme={isRandomThemeEnabled('bubblecool') ? () => {
+              sound.playClick();
+              const randTheme = pickRandomTheme('bubblecool', customizations.theme);
+              setCustomizations(prev => ({ ...prev, theme: randTheme }));
+              updateGameConfig('bubblecool', 'theme', randTheme);
+              sound.playPowerup?.();
+            } : undefined}
+            centerContent={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button
-                  onClick={() => setBgmOn(sound.toggleBGM?.())}
+                  onClick={() => setShowChapterSelect(true)}
                   className="retro-btn"
                   style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '8px',
-                    padding: 0,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '14px',
-                    background: bgmOn ? 'rgba(168, 85, 247, 0.2)' : 'rgba(100, 116, 139, 0.2)',
-                    border: `1px solid ${bgmOn ? '#A855F7' : '#64748B'}`,
-                    color: '#fff',
-                    cursor: 'pointer'
+                    gap: '6px',
+                    padding: '5px 12px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    borderRadius: '10px',
+                    background: gameMode === 'chapter' ? `${activeChapter.accentColor}25` : 'rgba(56, 189, 248, 0.15)',
+                    border: `1.5px solid ${gameMode === 'chapter' ? activeChapter.accentColor : '#38BDF8'}`,
+                    color: gameMode === 'chapter' ? activeChapter.accentColor : '#38BDF8',
+                    cursor: 'pointer',
+                    fontFamily: 'Orbitron, sans-serif'
                   }}
-                  title={bgmOn ? 'Musique active' : 'Musique muette'}
+                  title="Changer de chapitre"
                 >
-                  {bgmOn ? '🎵' : '🔇'}
+                  <span>{gameMode === 'chapter' ? activeChapter.icon : '🎮'}</span>
+                  <span>{gameMode === 'chapter' ? `CH. ${activeChapter.id}` : 'ARCADE'}</span>
+                  <span style={{ fontSize: '10px', opacity: 0.8 }}>▾</span>
                 </button>
 
-                {/* Random theme change button - IF AND ONLY IF random theme mode is enabled */}
-                {isRandomThemeEnabled('bubblecool') && (
-                  <button
-                    onClick={() => {
-                      sound.playClick();
-                      const randTheme = pickRandomTheme('bubblecool', customizations.theme);
-                      setCustomizations(prev => ({ ...prev, theme: randTheme }));
-                      updateGameConfig('bubblecool', 'theme', randTheme);
-                      sound.playPowerup?.();
-                    }}
-                    className="retro-btn"
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '8px',
-                      padding: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '14px',
-                      background: 'rgba(56, 189, 248, 0.25)',
-                      border: '1px solid #38BDF8',
-                      color: '#fff',
-                      cursor: 'pointer',
-                      boxShadow: '0 0 10px rgba(56, 189, 248, 0.4)'
-                    }}
-                    title="Changer de thème (Thème aléatoire actif)"
-                  >
-                    🎨
-                  </button>
-                )}
-
-                <button
-                  onClick={() => setShowStore(true)}
-                  className="retro-btn"
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '8px',
-                    padding: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '14px',
-                    background: 'rgba(245, 158, 11, 0.2)',
-                    border: '1px solid #F59E0B',
-                    color: '#fff',
-                    cursor: 'pointer'
-                  }}
-                  title="Boutique"
-                >
-                  🛍️
-                </button>
-
-                <button
-                  onClick={initGame}
-                  className="retro-btn"
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '8px',
-                    padding: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '14px',
-                    background: 'rgba(56, 189, 248, 0.2)',
-                    border: '1px solid #38BDF8',
-                    color: '#fff',
-                    cursor: 'pointer'
-                  }}
-                  title="Recommencer la partie"
-                >
-                  🔄
-                </button>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <div style={statBoxStyle}>
+                    <div style={statLabelStyle}>SCORE</div>
+                    <div style={statValStyle}>{score}</div>
+                  </div>
+                  <div style={statBoxStyle}>
+                    <div style={statLabelStyle}>RECORD</div>
+                    <div style={statValStyle}>{highScore}</div>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Bottom row: High-contrast Score and Record */}
-            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-              <div style={statBoxStyle}>
-                <div style={statLabelStyle}>SCORE</div>
-                <div style={statValStyle}>{score}</div>
-              </div>
-              <div style={statBoxStyle}>
-                <div style={statLabelStyle}>MEILLEUR RECORD</div>
-                <div style={statValStyle}>{highScore}</div>
-              </div>
-            </div>
-          </div>
+            }
+          />
         )}
 
         {isIntermission && (
@@ -2195,12 +2097,12 @@ export default function BubbleCool({
               ...powerupBtnStyle,
               borderColor: '#EF4444',
               color: '#FCA5A5',
-              background: bombsCount > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.02)',
+              background: bombsCount > 0 ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.02)',
               opacity: bombsCount > 0 ? 1 : 0.4
             }}
             title="Charger une Bombe dans le canon"
           >
-            💣 Bombe ({bombsCount})
+            💣 ({bombsCount})
           </button>
 
           <button
@@ -2211,12 +2113,12 @@ export default function BubbleCool({
               ...powerupBtnStyle,
               borderColor: '#A855F7',
               color: '#E9D5FF',
-              background: rainbowsCount > 0 ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.02)',
+              background: rainbowsCount > 0 ? 'rgba(168,85,247,0.6)' : 'rgba(255,255,255,0.02)',
               opacity: rainbowsCount > 0 ? 1 : 0.4
             }}
             title="Charger un Prisme Joker dans le canon"
           >
-            🌈 Prisme ({rainbowsCount})
+            🌈 ({rainbowsCount})
           </button>
 
           <button
@@ -2227,12 +2129,12 @@ export default function BubbleCool({
               ...powerupBtnStyle,
               borderColor: '#FACC15',
               color: '#FEF08A',
-              background: lightningCount > 0 ? 'rgba(250,204,21,0.2)' : 'rgba(255,255,255,0.02)',
+              background: lightningCount > 0 ? 'rgba(250,204,21,0.6)' : 'rgba(255,255,255,0.02)',
               opacity: lightningCount > 0 ? 1 : 0.4
             }}
             title="Foudroyer la rangée la plus basse"
           >
-            ⚡ Éclair ({lightningCount})
+            ⚡ ({lightningCount})
           </button>
 
           <button onClick={handleSwapBubbles} className="retro-btn" style={swapBtnStyle} title="Permuter les deux bulles">
@@ -2318,7 +2220,7 @@ const powerupRowStyle = {
 const powerupBtnStyle = {
   flex: 1,
   padding: '6px 4px',
-  fontSize: '12px',
+  fontSize: '30px',
   fontWeight: '800',
   borderRadius: '8px',
   border: '1.5px solid',

@@ -305,6 +305,7 @@ const generateWireBoard = (size, numWiresTarget) => {
 export default function ArrowPuzzle({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission,
   intermissionDifficulty,
   onIntermissionComplete,
@@ -745,6 +746,7 @@ export default function ArrowPuzzle({
             key={randomThemeActive ? 'rand' : 'fixed'}
             title="ARROW PUZZLE"
             gameId="arrows"
+            onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
             onChangeTheme={handleChangeTheme}
             onBack={handleBackWithConfirm}
             onRestart={gameState === 'playing' ? () => { const s = getDifficultySettings(customizations.difficulty, mode); startGame(s.size, s.arrows); } : undefined}

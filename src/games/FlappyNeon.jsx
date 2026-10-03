@@ -3,7 +3,7 @@ import { sound } from '../utils/sound';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 
-export default function FlappyNeon({ onBack, onScoreSave }) {
+export default function FlappyNeon({ onBack, onScoreSave, onLaunchIntermission, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
   const canvasRef = useRef(null);
   const [gameOver, setGameOver] = useState(false);
@@ -415,7 +415,9 @@ export default function FlappyNeon({ onBack, onScoreSave }) {
       <div className="game-container neon-border" style={containerStyle}>
       <GameHeader
         title="FLAPPY NEON"
+        gameId="flappyneon"
         onBack={onBack}
+        onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
         showBgmToggle={false} // BGM handled globally
         centerContent={
           <div style={scoreBoardStyle}>

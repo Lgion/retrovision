@@ -58,6 +58,7 @@ const LEVELS_CONFIG = [
 export default function SymbolQuest({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission = false,
   intermissionDifficulty = 'facile',
   onIntermissionComplete,
@@ -380,7 +381,9 @@ export default function SymbolQuest({
       ) : (
         <GameHeader
           title="QUÊTE DES SYMBOLES"
+          gameId="symbolquest"
           onBack={handleBackWithConfirm}
+          onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
           showShop={false}
           centerContent={
             <div

@@ -23,6 +23,7 @@ const ENCOURAGING_WORDS = [
 export default function ZenFlow({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   isIntermission = false,
   intermissionDifficulty = 'facile',
   onIntermissionComplete,
@@ -37,10 +38,24 @@ export default function ZenFlow({
 }) {
   const confirm = useConfirm();
 
+  // Objectif en mode entracte : 5 parcours aléatoires à réussir
+  const targetIntermissionRounds = 5;
+  const [intermissionSolved, setIntermissionSolved] = useState(0);
+
+  // Helper pour tirer un index aléatoire parmi les niveaux disponibles
+  const pickRandomLevelIndex = useCallback((currentIndex = -1) => {
+    if (ZEN_FLOW_LEVELS.length <= 1) return 0;
+    let next;
+    do {
+      next = Math.floor(Math.random() * ZEN_FLOW_LEVELS.length);
+    } while (next === currentIndex);
+    return next;
+  }, []);
+
   // Niveau courant (1 à 15)
   const [levelIndex, setLevelIndex] = useState(() => {
     if (isIntermission) {
-      return intermissionDifficulty === 'difficile' ? 5 : 0;
+      return Math.floor(Math.random() * ZEN_FLOW_LEVELS.length);
     }
     const saved = storage.getNumber('retrovision_zenflow_level', 0);
     return Math.min(Math.max(0, saved), ZEN_FLOW_LEVELS.length - 1);
@@ -159,17 +174,31 @@ export default function ZenFlow({
     if (allConnected) {
       sound.playWin?.();
       haptic.success();
-      setLevelWon(true);
 
-      const nextHigh = Math.max(levelIndex + 1, storage.getNumber('retrovision_zenflow_highscore', 0));
-      storage.setItem('retrovision_zenflow_highscore', nextHigh.toString());
-      if (onScoreSave) onScoreSave('zenflow', nextHigh);
+      if (isIntermission) {
+        const nextSolved = intermissionSolved + 1;
+        setIntermissionSolved(nextSolved);
 
-      if (isIntermission && onIntermissionComplete) {
-        setTimeout(() => onIntermissionComplete(true), 2400);
+        if (nextSolved >= targetIntermissionRounds) {
+          setLevelWon(true);
+          if (onIntermissionComplete) {
+            setTimeout(() => onIntermissionComplete(true), 2400);
+          }
+        } else {
+          // Passer fluidement au niveau aléatoire suivant
+          setTimeout(() => {
+            const nextIdx = pickRandomLevelIndex(levelIndex);
+            setLevelIndex(nextIdx);
+          }, 900);
+        }
+      } else {
+        setLevelWon(true);
+        const nextHigh = Math.max(levelIndex + 1, storage.getNumber('retrovision_zenflow_highscore', 0));
+        storage.setItem('retrovision_zenflow_highscore', nextHigh.toString());
+        if (onScoreSave) onScoreSave('zenflow', nextHigh);
       }
     }
-  }, [pairs, levelIndex, isIntermission, onIntermissionComplete, onScoreSave]);
+  }, [pairs, levelIndex, isIntermission, intermissionSolved, targetIntermissionRounds, pickRandomLevelIndex, onIntermissionComplete, onScoreSave]);
 
   // Action : Commencer le tracé sur une case
   const startDrawingAt = (r, c) => {
@@ -509,24 +538,29 @@ export default function ZenFlow({
       {isIntermission ? (
         <div style={{ width: '100%', marginBottom: '6px', zIndex: 10, flexShrink: 0, padding: '0 8px', boxSizing: 'border-box' }}>
           <IntermissionHeader
-            instructionText="Reliez toutes les paires de couleur pour retourner au jeu principal."
+            instructionText={`Reliez les flux de 5 parcours zen aléatoires (${intermissionSolved + 1}/${targetIntermissionRounds})`}
             onRestart={() => {
               setPaths({});
               setHistory([]);
               setActiveColor(null);
               setLevelWon(false);
+              setIntermissionSolved(0);
+              const nextIdx = pickRandomLevelIndex(levelIndex);
+              setLevelIndex(nextIdx);
             }}
             onOtherGame={onIntermissionRequest}
             onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
             replaySame={replaySameIntermission}
             onToggleReplaySame={onToggleReplaySameIntermission}
-            progress={pairs.length > 0 ? completedCount / pairs.length : 0}
+            progress={(intermissionSolved + (pairs.length > 0 ? completedCount / pairs.length : 0)) / targetIntermissionRounds}
           />
         </div>
       ) : (
         <GameHeader
           title="FLUX ZEN"
+          gameId="zenflow"
           onBack={handleBackWithConfirm}
+          onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
           showShop={false}
           centerContent={
             <div
@@ -610,7 +644,11 @@ export default function ZenFlow({
           }}
         >
           <span style={{ color: '#94a3b8', fontWeight: '500' }}>
-            Pack : <strong style={{ color: '#f1f5f9' }}>{currentLevel.pack}</strong>
+            {isIntermission ? (
+              <>Entracte : <strong style={{ color: '#38bdf8' }}>Défi {intermissionSolved + 1}/{targetIntermissionRounds}</strong></>
+            ) : (
+              <>Pack : <strong style={{ color: '#f1f5f9' }}>{currentLevel.pack}</strong></>
+            )}
           </span>
           <span style={{ color: activeColor ? pairs.find((p) => p.id === activeColor)?.color : '#38bdf8', fontWeight: '700' }}>
             {activeColor
@@ -838,7 +876,7 @@ export default function ZenFlow({
                 letterSpacing: '1px'
               }}
             >
-              Niveau {levelIndex + 1} Réussi !
+              {isIntermission ? 'Entracte Réussi !' : `Niveau ${levelIndex + 1} Réussi !`}
             </h2>
 
             <div
@@ -852,7 +890,9 @@ export default function ZenFlow({
                 fontWeight: '700'
               }}
             >
-              ✨ Tous les flux sont harmonieusement reliés
+              {isIntermission
+                ? `✨ Les 5 parcours zen ont été reliés avec succès`
+                : '✨ Tous les flux sont harmonieusement reliés'}
             </div>
 
             <p
@@ -886,7 +926,13 @@ export default function ZenFlow({
             )}
 
             <button
-              onClick={handleNextLevel}
+              onClick={() => {
+                if (isIntermission) {
+                  if (onIntermissionComplete) onIntermissionComplete(true);
+                } else {
+                  handleNextLevel();
+                }
+              }}
               className="retro-btn"
               style={{
                 marginTop: '12px',
@@ -900,7 +946,7 @@ export default function ZenFlow({
                 fontWeight: '800'
               }}
             >
-              Niveau Suivant ➔
+              {isIntermission ? 'Retourner au jeu principal ➔' : 'Niveau Suivant ➔'}
             </button>
           </div>
         </div>

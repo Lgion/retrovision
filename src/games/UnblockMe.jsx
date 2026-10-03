@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { sound } from '../utils/sound';
+import { haptic } from '../utils/haptics';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import LEVELS from '../utils/unblockLevels.json';
-import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import GameIntro from '../components/GameIntro';
 import IntermissionProposal from '../components/IntermissionProposal';
 import { useConfirm } from '../components/ConfirmContext';
 
 export default function UnblockMe({
   onBack,
   onScoreSave,
+  onLaunchIntermission,
   onIntermissionRequest,
   onIntermissionComplete,
   isIntermission = false,
@@ -20,8 +22,8 @@ export default function UnblockMe({
   intermissionGames
 }) {
   const confirm = useConfirm();
-  const [showIntro, setShowIntro] = useState(true);
-  const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing' | 'levelSelect'
+  const [showIntro, setShowIntro] = useState(!isIntermission);
+  const [gameState, setGameState] = useState('playing'); // Démarrage direct dans le jeu
   const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(() => {
     return getGameConfig('unblock', 'levelProgress', 0);
   });
@@ -37,6 +39,34 @@ export default function UnblockMe({
   const GRID_SIZE = 6;
   const CELL_PX = 50;
   const BOARD_PX = GRID_SIZE * CELL_PX;
+
+  // Chargement d'un niveau spécifique
+  const loadLevel = useCallback((idx) => {
+    setCurrentLevelIdx(idx);
+    const levelBlocks = JSON.parse(JSON.stringify(LEVELS[idx])); // Deep copy
+    setBlocks(levelBlocks);
+    setHistory([]);
+    setMoves(0);
+    setVictoryPhase(0);
+    setSelectedBlockId(null);
+    setGameState('playing');
+    sound.startBGM();
+  }, []);
+
+  // Lancement d'un niveau aléatoire
+  const loadRandomLevel = useCallback((excludeIdx = currentLevelIdx) => {
+    sound.playClick();
+    haptic.tap(30);
+    const pool = LEVELS.map((_, i) => i).filter(i => i !== excludeIdx);
+    const nextIdx = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 0;
+    loadLevel(nextIdx);
+  }, [currentLevelIdx, loadLevel]);
+
+  // Initialisation immédiate avec un niveau aléatoire sans écran de départ
+  useEffect(() => {
+    const initialIdx = Math.floor(Math.random() * LEVELS.length);
+    loadLevel(initialIdx);
+  }, [loadLevel]);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -69,22 +99,10 @@ export default function UnblockMe({
     }
   };
 
-  const loadLevel = (idx) => {
-    sound.playClick();
-    setCurrentLevelIdx(idx);
-    const levelBlocks = JSON.parse(JSON.stringify(LEVELS[idx])); // Deep copy
-    setBlocks(levelBlocks);
-    setHistory([]);
-    setMoves(0);
-    setVictoryPhase(0);
-    setSelectedBlockId(null);
-    setGameState('playing');
-    sound.startBGM();
-  };
-
   const undoMove = () => {
     if (history.length === 0 || victoryPhase !== 0) return;
     sound.playClick();
+    haptic.tap(20);
     const previousState = history[history.length - 1];
     setBlocks(JSON.parse(previousState));
     setHistory(history.slice(0, -1));
@@ -109,6 +127,7 @@ export default function UnblockMe({
   const handleBlockSelect = (id) => {
     if (victoryPhase !== 0) return;
     sound.playClick();
+    haptic.tap(20);
     setSelectedBlockId(id === selectedBlockId ? null : id); // Toggle selection
   };
 
@@ -131,10 +150,12 @@ export default function UnblockMe({
 
     if (isCellOccupied(targetRow, targetCol, b.id)) {
       sound.playShake(); // Blocked!
+      haptic.light(20);
       return;
     }
 
     // Move is valid
+    haptic.tap(25);
     setHistory([...history, JSON.stringify(blocks)]);
     
     const newBlocks = [...blocks];
@@ -156,8 +177,22 @@ export default function UnblockMe({
     }
   };
 
+  // Raccourcis clavier pour le bloc sélectionné
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!selectedBlockId || victoryPhase !== 0) return;
+      if (e.key === 'ArrowUp') { e.preventDefault(); moveBlock('up'); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); moveBlock('down'); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); moveBlock('left'); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); moveBlock('right'); }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedBlockId, victoryPhase, blocks]);
+
   const handleVictory = () => {
     setVictoryPhase(-1);
+    haptic.success();
     setTimeout(() => {
       sound.stopBGM();
       setVictoryPhase(1);
@@ -264,146 +299,261 @@ export default function UnblockMe({
   };
 
   return (
-    <>
-      {showIntro && !isIntermission && <GameIntro 
-        gameName="DÉBLOQUE-MOI" 
-        icon="🧱" 
-        colors={['#E53E3E', '#F59E0B', '#3B82F6']} 
-        particleType="blocks" 
-        onComplete={() => setShowIntro(false)} 
-      />}
-      <div style={containerStyle}>
+    <div style={containerStyle}>
+      {showIntro && !isIntermission && (
+        <GameIntro
+          gameName="DÉBLOQUE-MOI"
+          icon="🚪"
+          colors={['#f97316', '#ef4444', '#fbbf24']}
+          particleType="blocks"
+          onComplete={() => setShowIntro(false)}
+        />
+      )}
+
       <GameHeader
         title="DÉBLOQUE-MOI"
+        gameId="unblock"
         onBack={handleBackWithConfirm}
-        onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
-        showBgmToggle={false} // BGM global
+        onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
+        onRestart={loadRandomLevel}
+        restartTitle="Nouveau défi aléatoire"
+        onUndo={undoMove}
+        undoDisabled={history.length === 0}
+        showBgmToggle={false}
         centerContent={
-          gameState === 'playing' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', fontFamily: 'Orbitron, sans-serif' }}>
-              <div style={{ fontSize: '14px', color: '#ffffff' }}>
-                Niv: <span style={{ color: '#F59E0B', fontWeight: 'bold' }}>{currentLevelIdx + 1}</span>
-              </div>
-              <div style={{ fontSize: '13px', color: '#8e8a9f' }}>
-                Coups: <span style={{ color: '#fff', fontWeight: 'bold' }}>{moves}</span>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', fontFamily: 'Orbitron, sans-serif' }}>
+            <div style={{ fontSize: '13px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold' }}>
+              <span>🎲 Défi #{currentLevelIdx + 1}</span>
             </div>
-          ) : null
-        }
-        extraControls={
-          gameState === 'playing' ? (
-            <button 
-              onClick={undoMove} 
-              disabled={history.length === 0}
-              className="retro-btn"
-              style={{
-                padding: '6px 12px',
-                fontSize: '13px',
-                opacity: history.length > 0 ? 1 : 0.5
-              }}
-            >
-              ↩️ Undo
-            </button>
-          ) : null
+            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+              Coups: <span style={{ color: '#f97316', fontWeight: 'bold' }}>{moves}</span>
+            </div>
+          </div>
         }
       />
 
-      {gameState === 'menu' && (
-        <div style={menuStyle}>
-          <div style={{fontSize: '5rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(229, 62, 62, 0.5))'}}>🧱</div>
-          <h2 style={{color: '#fff', marginBottom: '30px'}}>Débloque-Moi !</h2>
-          
-          <button 
-            onClick={() => loadLevel(maxUnlockedLevel)}
-            className="retro-btn pulse-glow"
-            style={{padding: '15px 40px', fontSize: '20px', borderColor: '#E53E3E', color: '#E53E3E', marginBottom: '15px', width: '250px'}}
-          >
-            {maxUnlockedLevel > 0 ? `Continuer (Niv. ${maxUnlockedLevel + 1})` : 'Jouer'}
-          </button>
+      {/* Aire de jeu principale */}
+      <div style={gameplayContainerStyle}>
+        <div style={{...boardWrapperStyle, width: BOARD_PX, height: BOARD_PX}}>
+          {/* Exit hole indicator */}
+          <div style={{
+            position: 'absolute', right: '-15px', top: `${2 * CELL_PX + 5}px`,
+            width: '15px', height: `${CELL_PX - 10}px`,
+            background: '#E53E3E', borderRadius: '0 8px 8px 0',
+            boxShadow: '0 0 10px rgba(229, 62, 62, 0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold'
+          }}>
+            ▶
+          </div>
 
-          <button 
-            onClick={() => setGameState('levelSelect')}
-            className="retro-btn"
-            style={{padding: '15px 40px', fontSize: '16px', borderColor: '#cbd5e1', color: '#cbd5e1', width: '250px'}}
-          >
-            Choisir un Niveau
-          </button>
-        </div>
-      )}
-
-      {gameState === 'levelSelect' && (
-        <div style={menuStyle}>
-          <h2 style={{color: '#fff', marginBottom: '30px'}}>Sélection du Niveau</h2>
-          <div style={{display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '300px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '10px'}}>
-            {LEVELS.map((_, idx) => (
-              <button 
-                key={idx} 
-                onClick={() => loadLevel(idx)}
-                disabled={idx > maxUnlockedLevel && idx !== 0}
-                className="retro-btn"
-                style={{
-                  padding: '15px 20px', 
-                  fontSize: '18px', 
-                  display: 'flex', 
-                  justifyContent: 'space-between',
-                  opacity: (idx > maxUnlockedLevel && idx !== 0) ? 0.5 : 1,
-                  borderColor: idx === maxUnlockedLevel ? '#E53E3E' : '#cbd5e1',
-                  color: idx === maxUnlockedLevel ? '#E53E3E' : '#cbd5e1'
-                }}
-              >
-                <span>Niveau {idx + 1}</span>
-                {(idx > maxUnlockedLevel && idx !== 0) ? <span>🔒</span> : <span>▶</span>}
-              </button>
+          {/* Grid Background */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+            display: 'grid', gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
+            background: '#451a03', // dark wood color
+            borderRadius: '8px', zIndex: 0
+          }}>
+            {Array.from({length: GRID_SIZE * GRID_SIZE}).map((_, i) => (
+              <div key={i} style={{ border: '1px solid rgba(255,255,255,0.05)' }} />
             ))}
           </div>
-          <button 
-            onClick={() => setGameState('menu')}
-            className="retro-btn"
-            style={{marginTop: '20px', padding: '10px 20px', borderColor: '#64748b', color: '#64748b'}}
-          >
-            Retour Menu
-          </button>
+
+          {/* Render Blocks */}
+          {blocks.map(renderBlock)}
         </div>
-      )}
 
-      {gameState === 'playing' && (
-        <div style={gameplayContainerStyle}>
-          
+        {/* PAVÉ DIRECTIONNEL SOUS LA GRILLE */}
+        {(() => {
+          const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
+          const isTarget = selectedBlock?.type === 'target';
+          const isHorizontal = selectedBlock?.orientation === 'h';
+          const isVertical = selectedBlock?.orientation === 'v';
 
+          return (
+            <div
+              style={{
+                marginTop: '18px',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              {selectedBlock ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    width: '100%',
+                    animation: 'cm-fade-in 0.2s ease-out'
+                  }}
+                >
+                  {/* Indicateur visuel du bloc sélectionné */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '4px 14px',
+                      borderRadius: '20px',
+                      background: isTarget
+                        ? 'rgba(239, 68, 68, 0.2)'
+                        : isHorizontal
+                        ? 'rgba(59, 130, 246, 0.2)'
+                        : 'rgba(245, 158, 11, 0.2)',
+                      border: `1px solid ${isTarget ? '#EF4444' : isHorizontal ? '#3B82F6' : '#F59E0B'}`,
+                      marginBottom: '8px'
+                    }}
+                  >
+                    <span style={{ fontSize: '1rem' }}>{isTarget ? '🔴' : isHorizontal ? '🟦' : '🟨'}</span>
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        color: isTarget ? '#F87171' : isHorizontal ? '#93C5FD' : '#FCD34D'
+                      }}
+                    >
+                      Bloc {isTarget ? 'Rouge (Sortie)' : isHorizontal ? 'Horizontal (◀ ▶)' : 'Vertical (▲ ▼)'}
+                    </span>
+                    <button
+                      onClick={() => setSelectedBlockId(null)}
+                      title="Désélectionner"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#94a3b8',
+                        cursor: 'pointer',
+                        marginLeft: '4px',
+                        fontSize: '14px',
+                        padding: '2px 4px'
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-          <div style={{...boardWrapperStyle, width: BOARD_PX, height: BOARD_PX}}>
-            {/* Exit hole indicator */}
-            <div style={{
-              position: 'absolute', right: '-15px', top: `${2 * CELL_PX + 5}px`,
-              width: '15px', height: `${CELL_PX - 10}px`,
-              background: '#E53E3E', borderRadius: '0 8px 8px 0',
-              boxShadow: '0 0 10px rgba(229, 62, 62, 0.6)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold'
-            }}>
-              ▶
+                  {/* Disposition en croix du pavé tactile */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 62px)',
+                      gridTemplateRows: 'repeat(3, 56px)',
+                      gap: '8px',
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {/* Ligne 1 : Bouton Haut */}
+                    <div style={{ gridColumn: '2 / 3', gridRow: '1 / 2', display: 'flex', justifyContent: 'center' }}>
+                      <button
+                        onClick={() => moveBlock('up')}
+                        disabled={!isVertical}
+                        style={dpadBtnStyle('up', isVertical, isTarget)}
+                        aria-label="Déplacer vers le haut"
+                      >
+                        ▲
+                      </button>
+                    </div>
+
+                    {/* Ligne 2 : Gauche, Centre (Désélection), Droite */}
+                    <div style={{ gridColumn: '1 / 2', gridRow: '2 / 3', display: 'flex', justifyContent: 'center' }}>
+                      <button
+                        onClick={() => moveBlock('left')}
+                        disabled={!isHorizontal}
+                        style={dpadBtnStyle('left', isHorizontal, isTarget)}
+                        aria-label="Déplacer vers la gauche"
+                      >
+                        ◀
+                      </button>
+                    </div>
+
+                    <div
+                      style={{
+                        gridColumn: '2 / 3',
+                        gridRow: '2 / 3',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <button
+                        onClick={() => setSelectedBlockId(null)}
+                        title="Désélectionner le bloc"
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          color: '#94a3b8',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div style={{ gridColumn: '3 / 4', gridRow: '2 / 3', display: 'flex', justifyContent: 'center' }}>
+                      <button
+                        onClick={() => moveBlock('right')}
+                        disabled={!isHorizontal}
+                        style={dpadBtnStyle('right', isHorizontal, isTarget)}
+                        aria-label="Déplacer vers la droite"
+                      >
+                        ▶
+                      </button>
+                    </div>
+
+                    {/* Ligne 3 : Bouton Bas */}
+                    <div style={{ gridColumn: '2 / 3', gridRow: '3 / 4', display: 'flex', justifyContent: 'center' }}>
+                      <button
+                        onClick={() => moveBlock('down')}
+                        disabled={!isVertical}
+                        style={dpadBtnStyle('down', isVertical, isTarget)}
+                        aria-label="Déplacer vers le bas"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '12px 18px',
+                    borderRadius: '16px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px dashed rgba(255, 255, 255, 0.15)',
+                    color: '#94a3b8',
+                    fontSize: '13px',
+                    textAlign: 'center',
+                    maxWidth: '340px'
+                  }}
+                >
+                  <span style={{ fontSize: '1.4rem' }}>👆</span>
+                  <span>
+                    Touchez un bloc sur la grille pour faire apparaître les flèches et utiliser le pavé directionnel.
+                  </span>
+                </div>
+              )}
             </div>
-
-            {/* Grid Background */}
-            <div style={{
-              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-              display: 'grid', gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
-              background: '#451a03', // dark wood color
-              borderRadius: '8px', zIndex: 0
-            }}>
-              {Array.from({length: GRID_SIZE * GRID_SIZE}).map((_, i) => (
-                <div key={i} style={{ border: '1px solid rgba(255,255,255,0.05)' }} />
-              ))}
-            </div>
-
-            {/* Render Blocks */}
-            {blocks.map(renderBlock)}
-          </div>
-          
-          <div style={{marginTop: '30px', color: '#cbd5e1', fontSize: '14px', textAlign: 'center'}}>
-            <strong>Astuce :</strong> Touchez un bloc pour le sélectionner, puis utilisez les flèches pour le faire glisser. Amenez le bloc rouge vers la sortie ▶.
-          </div>
+          );
+        })()}
+        
+        <div style={{marginTop: '16px', color: '#94a3b8', fontSize: '12px', textAlign: 'center'}}>
+          Glissez le bloc rouge <strong>vers la sortie ▶</strong> à droite.
         </div>
-      )}
+      </div>
 
       {/* Victory Overlays */}
       {victoryPhase > 0 && (
@@ -432,26 +582,27 @@ export default function UnblockMe({
 
           {victoryPhase === 3 && (
             <div style={{
-              animation: 'popIn 0.5s', textAlign: 'center', background: 'white', padding: '50px',
-              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #E53E3E', zIndex: 10
+              animation: 'popIn 0.5s', textAlign: 'center', background: 'white', padding: '40px 24px',
+              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #E53E3E', zIndex: 10,
+              maxWidth: '380px', width: '90%'
             }}>
-              <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🧠</div>
-              <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Logique Imparable !</h2>
-              <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
-                Score: <strong style={{ color: '#E53E3E', fontSize: '2rem' }}>{Math.max(1000 - moves * 10, 100)}</strong>
+              <div style={{ fontSize: '3.5rem', marginBottom: '8px' }}>🧠</div>
+              <h2 style={{ fontSize: '2rem', color: '#333', margin: '0 0 12px 0' }}>Logique Imparable !</h2>
+              <div style={{ fontSize: '1.3rem', color: '#666', marginBottom: '24px' }}>
+                Score: <strong style={{ color: '#E53E3E', fontSize: '1.8rem' }}>{Math.max(1000 - moves * 10, 100)}</strong>
               </div>
               {isIntermission ? (
                 <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                   <button
                     onClick={() => onIntermissionComplete && onIntermissionComplete()}
                     className="retro-btn pulse-glow"
-                    style={{ fontSize: '1.2rem', padding: '12px 30px', borderColor: '#E53E3E', color: '#E53E3E' }}
+                    style={{ fontSize: '1.1rem', padding: '12px 26px', borderColor: '#E53E3E', color: '#E53E3E' }}
                   >
                     Terminer l'Entracte 🏁
                   </button>
                 </div>
               ) : (
-                <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+                <div style={{ width: '100%', maxWidth: '340px', margin: '0 auto' }}>
                   <IntermissionProposal
                     onIntermissionRequest={onIntermissionRequest}
                     upcomingIntermission={upcomingIntermission}
@@ -462,32 +613,19 @@ export default function UnblockMe({
                     excludeGameKey="unblock"
                     onContinue={() => {
                       setVictoryPhase(0);
-                      if (currentLevelIdx < LEVELS.length - 1) {
-                        loadLevel(currentLevelIdx + 1);
-                      } else {
-                        setGameState('levelSelect');
-                      }
+                      loadRandomLevel();
                     }}
-                    continueText={currentLevelIdx < LEVELS.length - 1 ? "Niveau Suivant" : "Sélection Niveaux"}
+                    continueText="Nouveau Défi Aléatoire 🎲"
                     showDirectContinue={true}
                     customStyle={{ marginBottom: '16px' }}
                   />
                   <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                    {currentLevelIdx < LEVELS.length - 1 && (
-                      <button
-                        onClick={() => { setVictoryPhase(0); loadLevel(currentLevelIdx + 1); }}
-                        className="retro-btn"
-                        style={{ fontSize: '14px', padding: '10px 20px', borderColor: '#E53E3E', color: '#E53E3E' }}
-                      >
-                        Niveau Suivant ➔
-                      </button>
-                    )}
                     <button
-                      onClick={() => { setVictoryPhase(0); setGameState('levelSelect'); }}
-                      className="retro-btn"
-                      style={{ fontSize: '14px', padding: '10px 20px', borderColor: '#333', color: '#333' }}
+                      onClick={() => { setVictoryPhase(0); loadRandomLevel(); }}
+                      className="retro-btn pulse-glow"
+                      style={{ fontSize: '15px', padding: '12px 24px', borderColor: '#E53E3E', color: '#E53E3E', fontWeight: 'bold' }}
                     >
-                      📋 Niveaux
+                      Nouveau Défi Aléatoire 🎲 ➔
                     </button>
                   </div>
                 </div>
@@ -507,8 +645,7 @@ export default function UnblockMe({
           animation: pulse-arrow 1s infinite alternate;
         }
       `}} />
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -526,6 +663,33 @@ const arrowBtnStyle = (dir) => {
   if (dir === 'down') return { ...base, bottom: '-18px' };
   return base;
 };
+
+// D-pad button style logic
+const dpadBtnStyle = (dir, isEnabled, isTarget) => ({
+  width: '58px',
+  height: '52px',
+  borderRadius: '14px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '20px',
+  cursor: isEnabled ? 'pointer' : 'default',
+  border: isEnabled
+    ? `2px solid ${isTarget ? '#EF4444' : '#38BDF8'}`
+    : '1px solid rgba(255, 255, 255, 0.08)',
+  background: isEnabled
+    ? (isTarget
+        ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(185, 28, 28, 0.45) 100%)'
+        : 'linear-gradient(135deg, rgba(56, 189, 248, 0.3) 0%, rgba(37, 99, 235, 0.45) 100%)')
+    : 'rgba(15, 23, 42, 0.4)',
+  color: isEnabled ? '#FFFFFF' : 'rgba(255, 255, 255, 0.2)',
+  boxShadow: isEnabled
+    ? `0 4px 15px ${isTarget ? 'rgba(239, 68, 68, 0.35)' : 'rgba(56, 189, 248, 0.35)'}`
+    : 'none',
+  opacity: isEnabled ? 1 : 0.22,
+  transition: 'all 0.15s ease',
+  touchAction: 'manipulation'
+});
 
 // Inline Styles
 const containerStyle = {
