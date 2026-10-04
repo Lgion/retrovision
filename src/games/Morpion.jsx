@@ -162,6 +162,11 @@ export default function Morpion({
     return storage.getItem('retrovision_morpion_diff', 'moyen') || 'moyen';
   });
 
+  // Mode entracte : dynamique
+  const targetIntermissionRounds = intermissionConfig?.morpion?.roundsCount || 5;
+  const [intermissionRound, setIntermissionRound] = useState(1);
+  const [intermissionWonRounds, setIntermissionWonRounds] = useState(0);
+
   // État du plateau : 9 cases
   const [board, setBoard] = useState(Array(9).fill(null));
 
@@ -250,14 +255,28 @@ export default function Morpion({
           });
           onScoreSave?.('morpion', 100);
 
-          // Si en mode entracte et victoire du joueur
-          if (isIntermission && onIntermissionComplete) {
-            if (replaySameIntermission) {
-              if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-              setTimeout(resetRound, 1200);
-              return;
+          if (isIntermission) {
+            const nextWon = intermissionWonRounds + 1;
+            setIntermissionWonRounds(nextWon);
+            if (intermissionRound >= targetIntermissionRounds) {
+              if (onIntermissionComplete) {
+                if (replaySameIntermission) {
+                  if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+                  setTimeout(() => {
+                    setIntermissionRound(1);
+                    setIntermissionWonRounds(0);
+                    resetRound();
+                  }, 1200);
+                  return;
+                }
+                setTimeout(() => onIntermissionComplete(true), 1200);
+              }
+            } else {
+              setTimeout(() => {
+                setIntermissionRound((r) => r + 1);
+                resetRound();
+              }, 1200);
             }
-            setTimeout(() => onIntermissionComplete(true), 1200);
           }
         } else if (gameEnd.winner === 'O') {
           sound.playExplosion?.();
@@ -266,9 +285,18 @@ export default function Morpion({
             storage.setJSON('retrovision_morpion_scores', next);
             return next;
           });
-          // Si en entracte et défaite, proposer une revanche douce sans blocage
+          // Si en entracte et défaite de la manche, on passe à la manche suivante (ou fin de l'entracte si 5ème manche)
           if (isIntermission) {
-            setTimeout(resetRound, 1500);
+            if (intermissionRound >= targetIntermissionRounds) {
+              if (onIntermissionComplete) {
+                setTimeout(() => onIntermissionComplete(true), 1500);
+              }
+            } else {
+              setTimeout(() => {
+                setIntermissionRound((r) => r + 1);
+                resetRound();
+              }, 1400);
+            }
           }
         } else {
           // Égalité (Match nul)
@@ -278,9 +306,18 @@ export default function Morpion({
             storage.setJSON('retrovision_morpion_scores', next);
             return next;
           });
-          // En entracte : relancer automatiquement après 1.5s
+          // En entracte : match nul compte comme manche jouée
           if (isIntermission) {
-            setTimeout(resetRound, 1400);
+            if (intermissionRound >= targetIntermissionRounds) {
+              if (onIntermissionComplete) {
+                setTimeout(() => onIntermissionComplete(true), 1400);
+              }
+            } else {
+              setTimeout(() => {
+                setIntermissionRound((r) => r + 1);
+                resetRound();
+              }, 1400);
+            }
           }
         }
       } else {
@@ -293,6 +330,9 @@ export default function Morpion({
       result,
       isAiThinking,
       isIntermission,
+      intermissionRound,
+      intermissionWonRounds,
+      targetIntermissionRounds,
       onIntermissionComplete,
       onScoreSave,
       replaySameIntermission,
@@ -314,10 +354,11 @@ export default function Morpion({
     }
   }, [turn, gameMode, result, board, difficulty, makeMove]);
 
-  // En entracte, progression = 1 si le joueur a gagné, 0 sinon
+  // En entracte, progression = (manches terminées) / 5
   const intermissionProgress = useMemo(() => {
-    return result?.winner === 'X' ? 1 : 0;
-  }, [result]);
+    const finishedRounds = result ? intermissionRound : intermissionRound - 1;
+    return Math.min(1, finishedRounds / targetIntermissionRounds);
+  }, [result, intermissionRound, targetIntermissionRounds]);
 
   return (
     <div
@@ -361,12 +402,12 @@ export default function Morpion({
         .morpion-cell-winning {
           background: rgba(245, 158, 11, 0.25) !important;
           border-color: #f59e0b !important;
-          box-shadow: 0 0 20px rgba(245, 158, 11, 0.6) !important;
+          box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
           animation: win-pulse 0.9s ease-in-out infinite alternate;
         }
         @keyframes win-pulse {
-          from { transform: scale(1); filter: drop-shadow(0 0 8px #f59e0b); }
-          to { transform: scale(1.05); filter: drop-shadow(0 0 16px #f59e0b); }
+          from { transform: scale(1); }
+          to { transform: scale(1.04); }
         }
         @keyframes symbol-pop {
           0% { transform: scale(0.2) rotate(-15deg); opacity: 0; }
@@ -374,16 +415,14 @@ export default function Morpion({
           100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         .symbol-x {
-          color: #00f0ff;
-          text-shadow: 0 0 15px rgba(0, 240, 255, 0.75);
+          color: #38bdf8;
           animation: symbol-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
           font-weight: 900;
           font-family: 'Orbitron', sans-serif;
           line-height: 1;
         }
         .symbol-o {
-          color: #ff007f;
-          text-shadow: 0 0 15px rgba(255, 0, 127, 0.75);
+          color: #f43f5e;
           animation: symbol-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
           font-weight: 900;
           font-family: 'Orbitron', sans-serif;
@@ -415,8 +454,12 @@ export default function Morpion({
       {isIntermission ? (
         <div style={{ width: '100%', marginBottom: '10px' }}>
           <IntermissionHeader
-            instructionText="Alignez 3 symboles pour remporter l'entracte !"
-            onRestart={resetRound}
+            instructionText={`Disputez un match de ${targetIntermissionRounds} manches contre l'IA ! (Manche ${intermissionRound}/${targetIntermissionRounds})`}
+            onRestart={() => {
+              setIntermissionRound(1);
+              setIntermissionWonRounds(0);
+              resetRound();
+            }}
             onOtherGame={onIntermissionRequest}
             onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
             replaySame={replaySameIntermission}
@@ -556,8 +599,12 @@ export default function Morpion({
         </div>
 
         <div style={{ textAlign: 'center', opacity: 0.7 }}>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>Nuls</div>
-          <div style={{ fontSize: '1.1rem', color: '#cbd5e1', fontWeight: '800' }}>{scores.draws}</div>
+          <div style={{ fontSize: '0.75rem', color: isIntermission ? '#38bdf8' : '#94a3b8', fontWeight: '600' }}>
+            {isIntermission ? `Manche ${intermissionRound}/${targetIntermissionRounds}` : 'Nuls'}
+          </div>
+          <div style={{ fontSize: '1.1rem', color: '#cbd5e1', fontWeight: '800' }}>
+            {isIntermission ? `${intermissionWonRounds} vic.` : scores.draws}
+          </div>
         </div>
 
         <div style={{ textAlign: 'center' }}>
@@ -736,7 +783,7 @@ export default function Morpion({
               maxWidth: '380px',
               width: '100%',
               textAlign: 'center',
-              boxShadow: '0 20px 50px rgba(0, 240, 255, 0.25)'
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)'
             }}
           >
             <div style={{ fontSize: '3rem', marginBottom: '8px' }}>🏆</div>

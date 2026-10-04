@@ -18,9 +18,10 @@ const categories = [
     icon: '🎨',
     items: [
       { id: 'classic', name: 'Minimaliste', icon: '🏹' },
-      { id: 'neon', name: 'Néon Violet', icon: '🌌' },
+      { id: 'light', name: 'Clair Épuré', icon: '☀️' },
+      { id: 'midnight', name: 'Nuit Mate', icon: '🌙' },
       { id: 'nature', name: 'Bambou Zen', icon: '🎋' },
-      { id: 'cyberpunk', name: 'Cyber Matrix', icon: '🔮' }
+      { id: 'navy', name: 'Encre Bleue', icon: '🖋️' }
     ]
   }
 ];

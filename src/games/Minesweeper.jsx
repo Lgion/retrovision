@@ -360,7 +360,8 @@ export default function Minesweeper({
   const getThemeStyles = () => {
     switch (customizations.theme) {
       case 'dark': return { bg: '#0a0f1d', cellRevealed: '#020617', cellHidden: '#1e293b', border: '#334155 #020617 #020617 #334155' };
-      case 'neon': return { bg: '#050714', cellRevealed: '#111111', cellHidden: '#1a1033', border: '#00f0ff #000000 #000000 #00f0ff' };
+      case 'slate':
+      case 'neon': return { bg: '#0f172a', cellRevealed: '#1e293b', cellHidden: '#334155', border: '#475569 #1e293b #1e293b #475569' };
       case 'retro_green': return { bg: '#051408', cellRevealed: '#0a2e0a', cellHidden: '#0e3b18', border: '#10b981 #051408 #051408 #10b981' };
       case 'glassmorphism': return { bg: '#0b132b', cellRevealed: 'rgba(255, 255, 255, 0.05)', cellHidden: 'rgba(255, 255, 255, 0.15)', border: 'rgba(255, 255, 255, 0.25) rgba(255, 255, 255, 0.08) rgba(255, 255, 255, 0.08) rgba(255, 255, 255, 0.25)' };
       default: return { bg: 'rgba(15, 23, 42, 0.9)', cellRevealed: '#020617', cellHidden: '#334155', border: '#475569 #0f172a #0f172a #475569' };

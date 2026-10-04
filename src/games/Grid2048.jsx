@@ -44,7 +44,7 @@ export default function Grid2048({
 }) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
-  const [customizations, setCustomizations] = useState(() => getGameConfig('2048', 'customizations', { difficulty: 'moyen', theme: 'neon' }));
+  const [customizations, setCustomizations] = useState(() => getGameConfig('2048', 'customizations', { difficulty: 'moyen', theme: 'midnight' }));
 
   const getGridSize = () => {
     let diff = customizations.difficulty || 'moyen';
@@ -58,10 +58,13 @@ export default function Grid2048({
   };
 
   const getIntermissionTarget = () => {
+    if (intermissionConfig?.['2048']?.target) {
+      return Number(intermissionConfig['2048'].target);
+    }
     const diff = intermissionDifficulty || 'facile';
-    if (diff === 'difficile') return 128;
-    if (diff === 'moyen') return 64;
-    return 32;
+    if (diff === 'difficile') return 1024;
+    if (diff === 'moyen') return 512;
+    return 256;
   };
 
   const gridSize = getGridSize();
@@ -79,7 +82,23 @@ export default function Grid2048({
   const [victory, setVictory] = useState(false);
   const [keepPlaying, setKeepPlaying] = useState(false);
   const touchStartRef = useRef(null);
+  const containerRef = useRef(null);
+  const boardWrapperRef = useRef(null);
   const [showCollection, setShowCollection] = useState(false);
+
+  // Désactiver le pull-to-refresh et l'overscroll natif du navigateur mobile pendant la partie
+  useEffect(() => {
+    const originalOverscroll = document.body.style.overscrollBehavior;
+    const originalOverscrollY = document.body.style.overscrollBehaviorY;
+
+    document.body.style.overscrollBehavior = 'none';
+    document.body.style.overscrollBehaviorY = 'none';
+
+    return () => {
+      document.body.style.overscrollBehavior = originalOverscroll;
+      document.body.style.overscrollBehaviorY = originalOverscrollY;
+    };
+  }, []);
 
   const randomThemeActive = useRandomTheme('2048');
 
@@ -111,7 +130,7 @@ export default function Grid2048({
     const isGameInProgress = !gameOver && !victory && score > 0;
     if (isGameInProgress) {
       const ok = await confirm({
-        title: "Quitter Neon 2048 ?",
+        title: "Quitter 2048 Zen ?",
         message: "Voulez-vous vraiment quitter la partie en cours ?",
         confirmText: "Oui, quitter",
         cancelText: "Continuer à jouer",
@@ -137,18 +156,18 @@ export default function Grid2048({
 
   const getTileColor = (val) => {
     switch (val) {
-      case 2: return { bg: 'rgba(0, 240, 255, 0.1)', border: '#00f0ff', color: '#00f0ff', shadow: '0 0 10px rgba(0, 240, 255, 0.4)' };
-      case 4: return { bg: 'rgba(0, 240, 255, 0.2)', border: '#00f0ff', color: '#ffffff', shadow: '0 0 15px rgba(0, 240, 255, 0.7)' };
-      case 8: return { bg: 'rgba(255, 0, 127, 0.1)', border: '#ff007f', color: '#ff007f', shadow: '0 0 10px rgba(255, 0, 127, 0.4)' };
-      case 16: return { bg: 'rgba(255, 0, 127, 0.25)', border: '#ff007f', color: '#ffffff', shadow: '0 0 15px rgba(255, 0, 127, 0.7)' };
-      case 32: return { bg: 'rgba(157, 0, 255, 0.15)', border: '#9d00ff', color: '#9d00ff', shadow: '0 0 10px rgba(157, 0, 255, 0.4)' };
-      case 64: return { bg: 'rgba(157, 0, 255, 0.3)', border: '#9d00ff', color: '#ffffff', shadow: '0 0 15px rgba(157, 0, 255, 0.7)' };
-      case 128: return { bg: 'rgba(255, 140, 0, 0.15)', border: '#ff8c00', color: '#ff8c00', shadow: '0 0 12px rgba(255, 140, 0, 0.5)' };
-      case 256: return { bg: 'rgba(255, 140, 0, 0.3)', border: '#ff8c00', color: '#ffffff', shadow: '0 0 18px rgba(255, 140, 0, 0.8)' };
-      case 512: return { bg: 'rgba(0, 255, 127, 0.2)', border: '#00ff7f', color: '#00ff7f', shadow: '0 0 15px rgba(0, 255, 127, 0.5)' };
-      case 1024: return { bg: 'rgba(255, 215, 0, 0.2)', border: '#ffd700', color: '#ffd700', shadow: '0 0 18px rgba(255, 215, 0, 0.6)' };
-      case 2048: return { bg: 'rgba(255, 215, 0, 0.35)', border: '#ffd700', color: '#ffffff', shadow: '0 0 25px #ffd700, inset 0 0 10px #ffd700', pulse: true };
-      default: return { bg: 'rgba(255, 215, 0, 0.45)', border: '#ffffff', color: '#ffffff', shadow: '0 0 35px #ffffff' };
+      case 2: return { bg: '#e0f2fe', border: '#7dd3fc', color: '#0369a1', shadow: '0 2px 6px rgba(0,0,0,0.12)' };
+      case 4: return { bg: '#bae6fd', border: '#38bdf8', color: '#0284c7', shadow: '0 2px 6px rgba(0,0,0,0.14)' };
+      case 8: return { bg: '#fed7aa', border: '#fb923c', color: '#9a3412', shadow: '0 2px 6px rgba(0,0,0,0.15)' };
+      case 16: return { bg: '#fdba74', border: '#f97316', color: '#7c2d12', shadow: '0 3px 8px rgba(0,0,0,0.16)' };
+      case 32: return { bg: '#fbcfe8', border: '#f472b6', color: '#831843', shadow: '0 3px 8px rgba(0,0,0,0.16)' };
+      case 64: return { bg: '#f472b6', border: '#db2777', color: '#ffffff', shadow: '0 4px 10px rgba(0,0,0,0.18)' };
+      case 128: return { bg: '#fef08a', border: '#eab308', color: '#713f12', shadow: '0 4px 10px rgba(0,0,0,0.2)' };
+      case 256: return { bg: '#fde047', border: '#ca8a04', color: '#422006', shadow: '0 4px 12px rgba(0,0,0,0.22)' };
+      case 512: return { bg: '#86efac', border: '#22c55e', color: '#14532d', shadow: '0 4px 12px rgba(0,0,0,0.24)' };
+      case 1024: return { bg: '#4ade80', border: '#16a34a', color: '#ffffff', shadow: '0 5px 14px rgba(0,0,0,0.25)' };
+      case 2048: return { bg: '#fbbf24', border: '#d97706', color: '#ffffff', shadow: '0 6px 16px rgba(0,0,0,0.28)' };
+      default: return { bg: '#f59e0b', border: '#b45309', color: '#ffffff', shadow: '0 6px 18px rgba(0,0,0,0.3)' };
     }
   };
 
@@ -345,34 +364,45 @@ export default function Grid2048({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Touch Swipe Handlers for Mobile
+  // Touch Swipe Handlers for Mobile (Anti-Pull-To-Refresh)
   const handleTouchStart = (e) => {
-    const touch = e.touches[0];
-    touchStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY
-    };
+    if (e.touches && e.touches.length > 0) {
+      const touch = e.touches[0];
+      touchStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY
+      };
+    }
+  };
+
+  const handleTouchCancel = () => {
+    touchStartRef.current = null;
   };
 
   const handleTouchEnd = (e) => {
     if (!touchStartRef.current) return;
     
-    const touch = e.changedTouches[0];
+    const touch = e.changedTouches ? e.changedTouches[0] : null;
+    if (!touch) {
+      touchStartRef.current = null;
+      return;
+    }
+
     const diffX = touch.clientX - touchStartRef.current.x;
     const diffY = touch.clientY - touchStartRef.current.y;
     
-    const threshold = 40; // minimum swipe distance in pixels
+    const threshold = 32; // seuil de balayage optimisé pour mobile
     
     if (Math.max(Math.abs(diffX), Math.abs(diffY)) > threshold) {
       if (Math.abs(diffX) > Math.abs(diffY)) {
-        // Horizontal swipe
+        // Balayage horizontal
         if (diffX > 0) {
           move('right');
         } else {
           move('left');
         }
       } else {
-        // Vertical swipe
+        // Balayage vertical
         if (diffY > 0) {
           move('down');
         } else {
@@ -383,6 +413,30 @@ export default function Grid2048({
     
     touchStartRef.current = null;
   };
+
+  // Empêche le pull-to-refresh et les gestes de navigation natifs lors du glissement tactile
+  useEffect(() => {
+    const boardEl = boardWrapperRef.current;
+    const containerEl = containerRef.current;
+
+    const handlePreventScroll = (e) => {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    if (boardEl) {
+      boardEl.addEventListener('touchmove', handlePreventScroll, { passive: false });
+    }
+    if (containerEl) {
+      containerEl.addEventListener('touchmove', handlePreventScroll, { passive: false });
+    }
+
+    return () => {
+      if (boardEl) boardEl.removeEventListener('touchmove', handlePreventScroll);
+      if (containerEl) containerEl.removeEventListener('touchmove', handlePreventScroll);
+    };
+  }, []);
 
   if (showCollection) {
     return (
@@ -406,9 +460,10 @@ export default function Grid2048({
 
   const getThemeStyles = () => {
     switch(customizations.theme) {
-      case 'dark': return { bg: '#111', tileBg: 'rgba(255,255,255,0.05)', color: '#fff' };
-      case 'light': return { bg: '#f5f5f5', tileBg: 'rgba(0,0,0,0.05)', color: '#333' };
-      default: return { bg: 'rgba(10, 8, 19, 0.85)', tileBg: 'rgba(255, 255, 255, 0.02)', color: '#00f0ff' };
+      case 'dark': return { bg: '#0f172a', tileBg: 'rgba(255,255,255,0.06)', color: '#f8fafc' };
+      case 'light': return { bg: '#f8fafc', tileBg: 'rgba(0,0,0,0.05)', color: '#0f172a' };
+      case 'midnight':
+      default: return { bg: '#0b1329', tileBg: 'rgba(255, 255, 255, 0.04)', color: '#38bdf8' };
     }
   };
   const theme = getThemeStyles();
@@ -416,9 +471,9 @@ export default function Grid2048({
   return (
     <>
       {showIntro && !isIntermission && <GameIntro 
-        gameName="NEON 2048" 
+        gameName="2048 ZEN" 
         icon="🔢" 
-        colors={['#00f0ff', '#ff007f', '#ffd700']} 
+        colors={['#0284c7', '#0d9488', '#f59e0b']} 
         particleType="blocks" 
         onComplete={(isRandomTheme) => {
           setShowIntro(false);
@@ -434,11 +489,34 @@ export default function Grid2048({
           }
         }} 
       />}
-      <div className="game-container neon-border neon-2048-container" style={{...containerStyle, background: theme.bg}}>
+      <div 
+        ref={containerRef}
+        className="game-container zen-2048-container" 
+        style={{...containerStyle, background: theme.bg}}
+      >
+        <style>{`
+          .zen-2048-container {
+            touch-action: none;
+            overscroll-behavior: none;
+            overscroll-behavior-y: none;
+            -webkit-user-select: none;
+            user-select: none;
+          }
+          .zen-2048-board-area {
+            touch-action: none;
+            overscroll-behavior: none;
+            overscroll-behavior-y: none;
+            -webkit-user-select: none;
+            user-select: none;
+          }
+          .zen-2048-container button {
+            touch-action: manipulation;
+          }
+        `}</style>
       {!isIntermission && (
         <GameHeader
           key={randomThemeActive ? 'rand' : 'fixed'}
-          title="NEON 2048"
+          title="2048 ZEN"
           gameId="2048"
           onBack={handleBackWithConfirm}
           onRestart={initGame}
@@ -478,17 +556,37 @@ export default function Grid2048({
         );
       })()}
 
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', flexGrow: 1, margin: 'auto 0' }}>
+      <div 
+        ref={boardWrapperRef}
+        className="neon-2048-board-area"
+        style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          width: '100%', 
+          flexGrow: 1, 
+          margin: 'auto 0',
+          touchAction: 'none',
+          overscrollBehavior: 'none',
+          userSelect: 'none'
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
+      >
         <div 
           style={{
             ...gridContainerStyle, 
             maxWidth: 'min(380px, 48vh)',
             gridTemplateColumns: `repeat(${gridSize}, 1fr)`, 
             gridTemplateRows: `repeat(${gridSize}, 1fr)`, 
-            background: theme.tileBg
+            background: theme.tileBg,
+            touchAction: 'none',
+            overscrollBehavior: 'none'
           }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchCancel}
         >
           {board.map((tileValue, index) => {
             const styles = tileValue ? getTileColor(tileValue) : null;
@@ -587,7 +685,7 @@ export default function Grid2048({
 
     <style>{`
       @media (max-width: 600px) {
-        .neon-2048-container {
+        .zen-2048-container {
           border-radius: 0 !important;
           border: none !important;
           padding: 12px 10px !important;
@@ -615,7 +713,12 @@ const containerStyle = {
   padding: '16px',
   boxSizing: 'border-box',
   margin: '0 auto',
-  justifyContent: 'space-between'
+  justifyContent: 'space-between',
+  touchAction: 'none',
+  overscrollBehavior: 'none',
+  overscrollBehaviorY: 'none',
+  userSelect: 'none',
+  WebkitUserSelect: 'none'
 };
 
 const statsContainerStyle = {
@@ -658,6 +761,11 @@ const gridContainerStyle = {
   borderRadius: '8px',
   boxSizing: 'border-box',
   overflow: 'hidden',
+  touchAction: 'none',
+  overscrollBehavior: 'none',
+  overscrollBehaviorY: 'none',
+  userSelect: 'none',
+  WebkitUserSelect: 'none'
 };
 
 const tileStyle = {

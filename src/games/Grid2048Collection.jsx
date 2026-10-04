@@ -17,7 +17,7 @@ const categories = [
     name: 'Thème Visuel',
     icon: '🎨',
     items: [
-      { id: 'neon', name: 'Néon Original', icon: '🌌' },
+      { id: 'midnight', name: 'Nuit Mate', icon: '🌙' },
       { id: 'dark', name: 'Sombre Épuré', icon: '🌑' },
       { id: 'light', name: 'Clair Lumineux', icon: '☀️' }
     ]

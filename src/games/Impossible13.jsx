@@ -103,17 +103,20 @@ export default function Impossible13({
   const [showStore, setShowStore] = useState(false);
 
   const getIntermissionTarget = useCallback(() => {
+    if (intermissionConfig?.impossible13?.target) {
+      return Number(intermissionConfig.impossible13.target);
+    }
     const diff = intermissionDifficulty || 'facile';
-    if (diff === 'difficile') return 6;
-    if (diff === 'moyen') return 5;
-    return 4;
-  }, [intermissionDifficulty]);
+    if (diff === 'difficile') return 13;
+    if (diff === 'moyen') return 11;
+    return 9;
+  }, [intermissionDifficulty, intermissionConfig]);
 
   const [customizations, setCustomizations] = useState(() => {
-    return getGameConfig('impossible13', 'customizations', { theme: 'neon' });
+    return getGameConfig('impossible13', 'customizations', { theme: 'night_pebbles' });
   });
 
-  const activeTheme = isIntermission ? 'neon' : (customizations.theme || 'neon');
+  const activeTheme = customizations.theme || 'night_pebbles';
 
   const randomThemeActive = useRandomTheme('impossible13');
 
@@ -411,7 +414,7 @@ export default function Impossible13({
     return (
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }}>
         <path d={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" 
-              style={{ filter: activeTheme === 'neon' ? `drop-shadow(0 0 8px ${color})` : 'none', opacity: 0.8 }} />
+              style={{ opacity: 0.85 }} />
       </svg>
     );
   };
@@ -420,7 +423,7 @@ export default function Impossible13({
     switch (activeTheme) {
       case 'wood': return { background: '#4e3629', border: '4px solid #3d2417', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.8)' };
       case 'jewel': return { background: 'linear-gradient(135deg, #1e1b4b 0%, #0f0b29 100%)', border: '2px solid rgba(255,255,255,0.1)' };
-      default: return { background: 'radial-gradient(circle at center, #0f081d 0%, #030107 100%)', border: '2px solid #39FF14' };
+      default: return { background: '#0b1329', border: '2px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' };
     }
   };
 
@@ -430,10 +433,7 @@ export default function Impossible13({
   };
 
   const getCellShadow = (val, isActive) => {
-    if (activeTheme !== 'neon' && activeTheme !== 'jewel') return isActive ? 'inset 0 0 0 3px rgba(255,255,255,0.5)' : 'none';
-    const color = VALUE_COLORS[val] || '#fff';
-    if (val === 13) return `0 0 20px #EAB308, inset 0 0 10px rgba(255,255,255,0.8)`;
-    return isActive ? `0 0 15px ${color}, inset 0 0 8px rgba(255,255,255,0.6)` : `inset 0 0 6px rgba(255,255,255,0.2)`;
+    return isActive ? 'inset 0 0 0 3px rgba(255,255,255,0.7), 0 4px 10px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.2)';
   };
 
   if (showStore) {

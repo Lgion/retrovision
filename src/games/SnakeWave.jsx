@@ -262,9 +262,8 @@ export default function SnakeWave({ onBack, onScoreSave, onLaunchIntermission, o
 
     // Draw Fruit
     ctx.save();
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = state.fruit.isGold ? '#ffd700' : '#ff007f';
-    ctx.fillStyle = state.fruit.isGold ? '#ffd700' : '#ff007f';
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = state.fruit.isGold ? '#ffd700' : '#f43f5e';
     
     const fx = state.fruit.x * size + size / 2;
     const fy = state.fruit.y * size + size / 2;
@@ -278,11 +277,10 @@ export default function SnakeWave({ onBack, onScoreSave, onLaunchIntermission, o
     // Draw Snake
     state.snake.forEach((segment, idx) => {
       ctx.save();
-      ctx.shadowBlur = idx === 0 ? 12 : 5;
+      ctx.shadowBlur = 0;
       
       const isHead = idx === 0;
-      ctx.shadowColor = isHead ? '#00f0ff' : '#9d00ff';
-      ctx.fillStyle = isHead ? '#00f0ff' : '#9d00ff';
+      ctx.fillStyle = isHead ? '#38bdf8' : '#818cf8';
 
       const padding = 1.5;
       const x = segment.x * size + padding;
@@ -326,11 +324,10 @@ export default function SnakeWave({ onBack, onScoreSave, onLaunchIntermission, o
       ctx.fillRect(0, 0, w, h);
       
       ctx.font = 'bold 20px Orbitron';
-      ctx.fillStyle = '#00f0ff';
+      ctx.fillStyle = '#38bdf8';
       ctx.textAlign = 'center';
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#00f0ff';
-      ctx.fillText('SNAKE WAVE', w / 2, h / 2 - 30);
+      ctx.shadowBlur = 0;
+      ctx.fillText('SNAKE ZEN', w / 2, h / 2 - 30);
       
       ctx.font = '13px Inter';
       ctx.fillStyle = '#ffffff';
@@ -344,13 +341,13 @@ export default function SnakeWave({ onBack, onScoreSave, onLaunchIntermission, o
   return (
     <>
       {showIntro && <GameIntro 
-        gameName="SNAKE WAVE" 
+        gameName="Snake Wave" 
         icon="🐍" 
-        colors={['#00f0ff', '#9d00ff', '#ff007f']} 
-        particleType="neon" 
+        colors={['#10b981', '#0ea5e9', '#38bdf8']} 
+        particleType="default" 
         onComplete={() => setShowIntro(false)} 
       />}
-      <div className="game-container neon-border" style={containerStyle}>
+      <div className="game-container" style={containerStyle}>
       <GameHeader
         title="SNAKE WAVE"
         gameId="snakewave"
@@ -463,8 +460,7 @@ const backBtnStyle = {
 const titleStyle = {
   fontFamily: 'Orbitron, sans-serif',
   fontSize: '18px',
-  color: '#00f0ff',
-  textShadow: '0 0 8px #00f0ff',
+  color: '#38bdf8',
   letterSpacing: '1px'
 };
 
@@ -517,8 +513,7 @@ const overlayStyle = {
 const gameOverTitleStyle = {
   fontFamily: 'Orbitron, sans-serif',
   fontSize: '26px',
-  color: '#ff007f',
-  textShadow: '0 0 10px #ff007f',
+  color: '#f43f5e',
   marginBottom: '10px',
   fontWeight: 'bold',
 };
@@ -533,8 +528,7 @@ const gameOverStatsStyle = {
 const newRecordStyle = {
   fontFamily: 'Orbitron, sans-serif',
   fontSize: '14px',
-  color: '#ffd700',
-  textShadow: '0 0 8px #ffd700',
+  color: '#facc15',
   marginBottom: '20px',
   fontWeight: 'bold',
   animation: 'pulse 1s infinite alternate',
@@ -543,10 +537,11 @@ const newRecordStyle = {
 const restartBtnStyle = {
   padding: '10px 20px',
   fontSize: '14px',
-  border: '2px solid #00f0ff',
+  border: '2px solid #38bdf8',
   background: 'transparent',
-  color: '#00f0ff',
-  boxShadow: '0 0 10px rgba(0, 240, 255, 0.3)',
+  color: '#38bdf8',
+  borderRadius: '8px',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
 };
 
 const dpadContainerStyle = {

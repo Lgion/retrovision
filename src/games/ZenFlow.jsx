@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
+import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import { sound } from '../utils/sound';
@@ -34,12 +35,16 @@ export default function ZenFlow({
   onSelectUpcomingIntermission,
   onShuffleUpcomingIntermission,
   intermissionConfig,
-  intermissionGames
+  intermissionGames,
+  skipIntro = false
 }) {
   const confirm = useConfirm();
 
+  // Écran d'intro avec animation et bouton "JOUER"
+  const [showIntro, setShowIntro] = useState(!skipIntro && !isIntermission);
+
   // Objectif en mode entracte : 5 parcours aléatoires à réussir
-  const targetIntermissionRounds = 5;
+  const targetIntermissionRounds = intermissionConfig?.zenflow?.roundsCount || 5;
   const [intermissionSolved, setIntermissionSolved] = useState(0);
 
   // Helper pour tirer un index aléatoire parmi les niveaux disponibles
@@ -534,11 +539,21 @@ export default function ZenFlow({
         }
       `}</style>
 
+      {/* Animation d'Intro avec bouton "JOUER" */}
+      {showIntro && !isIntermission && (
+        <GameIntro
+          gameName="Flux Zen"
+          icon="🌊"
+          colors={['#06b6d4', '#3b82f6', '#8b5cf6']}
+          onComplete={() => setShowIntro(false)}
+        />
+      )}
+
       {/* Header Unifié ou Header Entracte */}
       {isIntermission ? (
         <div style={{ width: '100%', marginBottom: '6px', zIndex: 10, flexShrink: 0, padding: '0 8px', boxSizing: 'border-box' }}>
           <IntermissionHeader
-            instructionText={`Reliez les flux de 5 parcours zen aléatoires (${intermissionSolved + 1}/${targetIntermissionRounds})`}
+            instructionText={`Reliez les flux de ${targetIntermissionRounds} parcours zen aléatoires (${intermissionSolved + 1}/${targetIntermissionRounds})`}
             onRestart={() => {
               setPaths({});
               setHistory([]);

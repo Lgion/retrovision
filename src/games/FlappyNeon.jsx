@@ -277,9 +277,8 @@ export default function FlappyNeon({ onBack, onScoreSave, onLaunchIntermission, 
     state.pipes.forEach(pipe => {
       ctx.save();
       
-      // Glow settings
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#ff007f';
+      // Matte finish without neon glow
+      ctx.shadowBlur = 0;
 
       // Top pipe
       const gradTop = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipe.width, 0);
@@ -325,9 +324,8 @@ export default function FlappyNeon({ onBack, onScoreSave, onLaunchIntermission, 
     ctx.translate(100, state.bird.y);
     ctx.rotate(state.bird.angle);
     
-    // Add bird neon glow
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = '#00f0ff';
+    // Ship without glowing shadow
+    ctx.shadowBlur = 0;
 
     // Ship shape (triangle facing right)
     ctx.fillStyle = '#00f0ff';
@@ -358,17 +356,16 @@ export default function FlappyNeon({ onBack, onScoreSave, onLaunchIntermission, 
       ctx.fillRect(0, 0, w, h);
       
       ctx.font = 'bold 22px Orbitron';
-      ctx.fillStyle = '#00f0ff';
+      ctx.fillStyle = '#38bdf8';
       ctx.textAlign = 'center';
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#00f0ff';
-      ctx.fillText('FLAPPY NEON', w / 2, h / 2 - 40);
+      ctx.shadowBlur = 0;
+      ctx.fillText('FLAPPY ZEN', w / 2, h / 2 - 40);
       
       ctx.font = '14px Inter';
       ctx.fillStyle = '#ffffff';
       ctx.shadowBlur = 0;
-      ctx.fillText('Cliquez ou Espace pour voler', w / 2, h / 2 + 10);
-      ctx.fillText('Évitez les portails magnétiques roses', w / 2, h / 2 + 35);
+      ctx.fillText('Cliquez ou Espace pour planer', w / 2, h / 2 + 10);
+      ctx.fillText('Évitez les portails magnétiques', w / 2, h / 2 + 35);
       ctx.restore();
     }
   };
@@ -406,15 +403,15 @@ export default function FlappyNeon({ onBack, onScoreSave, onLaunchIntermission, 
   return (
     <>
       {showIntro && <GameIntro 
-        gameName="FLAPPY NEON" 
+        gameName="Flappy Zen" 
         icon="🚀" 
-        colors={['#00f0ff', '#ff007f', '#ffffff']} 
-        particleType="neon" 
+        colors={['#0284c7', '#0ea5e9', '#38bdf8']} 
+        particleType="default" 
         onComplete={() => setShowIntro(false)} 
       />}
-      <div className="game-container neon-border" style={containerStyle}>
+      <div className="game-container" style={containerStyle}>
       <GameHeader
-        title="FLAPPY NEON"
+        title="FLAPPY ZEN"
         gameId="flappyneon"
         onBack={onBack}
         onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}

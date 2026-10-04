@@ -191,7 +191,7 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     {
       id: '2048_zen',
       title: 'Calculateur Calme',
-      desc: 'Dépasser 512 points sur Neon 2048',
+      desc: 'Dépasser 512 points sur 2048 Zen',
       icon: '🧠',
       unlocked: highScores.grid2048 >= 512,
       color: '#00f0ff',
@@ -364,7 +364,7 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
     },
     {
       id: '2048',
-      title: 'NEON 2048',
+      title: '2048 ZEN',
       desc: 'Faites glisser les nombres identiques pour les fusionner. Un exercice calme de calcul et d\'orientation.',
       highscore: highScores.grid2048,
       color: '#00f0ff',

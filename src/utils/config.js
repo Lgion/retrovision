@@ -1,4 +1,5 @@
 import { storage } from './storage';
+import { migrateTheme } from './themeManager';
 
 const DEFAULT_CONFIGS = {
   global: {
@@ -8,14 +9,14 @@ const DEFAULT_CONFIGS = {
     mahjong: { mode: 'slide', boardSize: 'large' },
     water: { difficulty: 'medium' },
     ball: { difficulty: 'medium' },
-    '2048': { theme: 'neon' },
+    '2048': { theme: 'midnight' },
     jigsaw: { difficulty: 'easy' },
     unblock: { levelProgress: 0 },
     freecell: { layout: 'standard' },
     mines: { boardSize: 9, numMines: 10, flagModeDefault: false },
     arrows: { mode: 'dense' },
     blockfantasy: { theme: 'fantasy', mode: 'classic', gridSize: 10 },
-    impossible13: { customizations: { theme: 'neon' } }
+    impossible13: { customizations: { theme: 'night_pebbles' } }
   }
 };
 
@@ -54,10 +55,16 @@ export function saveConfigs(configs) {
 
 export function getGameConfig(gameId, key, defaultValue) {
   const configs = getConfigs();
+  let val = defaultValue;
   if (configs.games && configs.games[gameId] && configs.games[gameId][key] !== undefined) {
-    return configs.games[gameId][key];
+    val = configs.games[gameId][key];
   }
-  return defaultValue;
+  if (key === 'theme' && typeof val === 'string') {
+    val = migrateTheme(gameId, val);
+  } else if (key === 'customizations' && val && typeof val === 'object' && val.theme) {
+    val = { ...val, theme: migrateTheme(gameId, val.theme) };
+  }
+  return val;
 }
 
 export function updateGameConfig(gameId, key, value) {

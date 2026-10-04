@@ -71,6 +71,16 @@ const rotateMatrix = (matrix) => {
   return rotated;
 };
 
+const getIntermissionTargetScore = (diff, configTarget) => {
+  if (configTarget) return Number(configTarget);
+  switch (diff) {
+    case 'difficile': return 2000;
+    case 'moyen': return 1000;
+    case 'facile':
+    default: return 500;
+  }
+};
+
 export default function BlockFantasy({
   onBack,
   onScoreSave,
@@ -214,7 +224,7 @@ export default function BlockFantasy({
   // Initialisation à chaque changement de mode ou niveau
   useEffect(() => {
     initGame();
-  }, [gridSize, activeMode, currentLevelIndex]);
+  }, [gridSize, activeMode, currentLevelIndex, intermissionDifficulty]);
 
   // Écouteurs globaux de Drag & Drop
   useEffect(() => {
@@ -275,7 +285,8 @@ export default function BlockFantasy({
       }
       setQuestGoal({ type: activeLvl.goal.type, target: activeLvl.goal.target, current: 0 });
     } else if (isIntermission) {
-      setQuestGoal({ type: 'lines', target: 1, current: 0 });
+      const targetScore = getIntermissionTargetScore(intermissionDifficulty, intermissionConfig?.blockfantasy?.target);
+      setQuestGoal({ type: 'score', target: targetScore, current: 0 });
     }
 
     setBoard(initialBoard);
@@ -753,24 +764,6 @@ export default function BlockFantasy({
       if (activeMode === 'arcade') {
         updateQuestProgress(totalLinesCleared, isCrossBlast, nextStreak, stonesBroken, iceBroken);
       }
-
-      if (isIntermission) {
-        setQuestGoal(prev => {
-          const nextCur = Math.min(prev.target, prev.current + totalLinesCleared);
-          if (nextCur >= prev.target) {
-            setTimeout(() => {
-              sound.playSudokuSuccess?.();
-              if (replaySameIntermission) {
-                if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-                initGame();
-              } else if (onIntermissionComplete) {
-                onIntermissionComplete();
-              }
-            }, 1000);
-          }
-          return { ...prev, current: nextCur };
-        });
-      }
     } else {
       setStreak(0);
       setFeverMeter(prev => Math.max(0, prev - 6));
@@ -779,6 +772,28 @@ export default function BlockFantasy({
     setBoard(nextBoard);
     const newTotalScore = score + scoreGained;
     setScore(newTotalScore);
+
+    if (isIntermission) {
+      setQuestGoal(prev => {
+        const nextCur = Math.min(prev.target, newTotalScore);
+        if (nextCur >= prev.target && prev.current < prev.target) {
+          if (gridRef.current) {
+            const rect = gridRef.current.getBoundingClientRect();
+            addFloatingScore('🎉 SCORE ATTEINT !', rect.width / 2, rect.height / 2, '#39FF14');
+          }
+          setTimeout(() => {
+            sound.playSudokuSuccess?.();
+            if (replaySameIntermission) {
+              if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+              initGame();
+            } else if (onIntermissionComplete) {
+              onIntermissionComplete();
+            }
+          }, 1000);
+        }
+        return { ...prev, current: nextCur };
+      });
+    }
 
     if (activeMode === 'classic' && newTotalScore > highScore) {
       setHighScore(newTotalScore);
@@ -1221,15 +1236,56 @@ export default function BlockFantasy({
         )}
 
         {isIntermission && (
-          <IntermissionHeader
-            instructionText="Complétez des lignes ou colonnes pour retourner au jeu principal."
-            onRestart={initGame}
-            onOtherGame={onIntermissionRequest}
-            onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
-            replaySame={replaySameIntermission}
-            onToggleReplaySame={onToggleReplaySameIntermission}
-            progress={questGoal && questGoal.target > 0 ? (questGoal.current / questGoal.target) : 0}
-          />
+          <div style={{ width: '100%', marginBottom: '10px' }}>
+            <IntermissionHeader
+              instructionText={`🎯 Objectif Score Flash : ${score} / ${questGoal?.target || 1000} pts`}
+              onRestart={initGame}
+              onOtherGame={onIntermissionRequest}
+              onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
+              replaySame={replaySameIntermission}
+              onToggleReplaySame={onToggleReplaySameIntermission}
+              progress={questGoal && questGoal.target > 0 ? Math.min(1, score / questGoal.target) : 0}
+            />
+            {/* Barre de progression Score Flash & Fever */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '10px',
+              padding: '6px 12px',
+              background: 'rgba(15, 23, 42, 0.75)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: '10px',
+              marginTop: '4px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                <span style={{ fontSize: '13px' }}>🎯</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 'bold', marginBottom: '3px' }}>
+                    <span style={{ color: '#94a3b8' }}>SCORE FLASH</span>
+                    <span style={{ color: score >= (questGoal?.target || 1000) ? '#39FF14' : '#FACC15' }}>
+                      {score} / {questGoal?.target || 1000} pts
+                    </span>
+                  </div>
+                  <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${Math.min(100, ((score / (questGoal?.target || 1000)) * 100))}%`,
+                      height: '100%',
+                      background: 'linear-gradient(90deg, #3B82F6 0%, #10B981 100%)',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Jauge Fever */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '11px', color: isFeverActive ? '#F59E0B' : '#94a3b8', fontWeight: 'bold' }}>
+                  {isFeverActive ? `🔥 x2 (${feverTimer}s)` : `⚡ ${Math.round(feverMeter)}%`}
+                </span>
+              </div>
+            </div>
+          </div>
         )}
 
         {isRotationMode && (
@@ -1598,7 +1654,7 @@ export default function BlockFantasy({
 
         <div style={footerHelpStyle}>
           {isIntermission ? (
-            <span>Complétez n'importe quelle ligne ou colonne pour passer l'entracte.</span>
+            <span>Atteignez l'objectif de {questGoal?.target || 1000} points pour valider l'entracte !</span>
           ) : (
             <span>Glissez les formes dans la grille. Complétez lignes et colonnes pour déclencher des combos !</span>
           )}

@@ -3,24 +3,25 @@ import GameHeader from '../components/GameHeader';
 import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import MemoryPairsCollection from './MemoryPairsCollection';
+import SymbolIcon from '../components/SymbolIcon';
 import { sound } from '../utils/sound';
 import { storage } from '../utils/storage';
 import { shuffle, randomChoice } from '../utils/commonUtils';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
+import { useGameCustomizations } from '../hooks/useGameCustomizations';
 
-// Bibliothèque de 10 symboles zen - Style clair sobre inspiré du Mahjong Zen (pigments naturels)
+// Bibliothèque de 8 symboles zen artisanaux (rendus en SVG haute précision)
 const ZEN_SYMBOLS = [
-  { id: 'sakura', icon: '🌸', name: 'Cerisier', color: '#9d174d' },
-  { id: 'dragon', icon: '🐉', name: 'Dragon', color: '#166534' },
-  { id: 'koi', icon: '🎏', name: 'Carpe Koï', color: '#9a3412' },
-  { id: 'bamboo', icon: '🎋', name: 'Bambou', color: '#14532d' },
-  { id: 'moon', icon: '🌙', name: 'Lune Zen', color: '#854d0e' },
-  { id: 'crystal', icon: '💎', name: 'Cristal', color: '#075985' },
-  { id: 'lantern', icon: '🏮', name: 'Lanterne', color: '#991b1b' },
-  { id: 'butterfly', icon: '🦋', name: 'Papillon', color: '#581c87' },
-  { id: 'clover', icon: '🍀', name: 'Trèfle', color: '#064e3b' },
-  { id: 'sun', icon: '☀️', name: 'Soleil', color: '#78350f' }
+  { id: 'lotus', name: 'Lotus', color: '#db2777' },
+  { id: 'sakura', name: 'Cerisier', color: '#e11d48' },
+  { id: 'leaf', name: 'Feuille Zen', color: '#059669' },
+  { id: 'bamboo', name: 'Bambou', color: '#16a34a' },
+  { id: 'moon', name: 'Lune Zen', color: '#d97706' },
+  { id: 'crystal', name: 'Cristal', color: '#0284c7' },
+  { id: 'star', name: 'Étoile', color: '#ca8a04' },
+  { id: 'stone', name: 'Galet Zen', color: '#475569' }
 ];
 
 // Mots doux de félicitations pour la mémoire de travail et l'attention visuelle
@@ -70,6 +71,150 @@ const generateDeck = (pairsCount, cols) => {
   });
 };
 
+function getThemeStyle(themeId) {
+  switch (themeId) {
+    case 'natural_wood':
+      return {
+        id: 'natural_wood',
+        boardBg: 'linear-gradient(135deg, #f5ecd7 0%, #ebe0c8 100%)',
+        textColor: '#451a03',
+        barBg: '#fef3c7',
+        barBorder: '#d97706',
+        backBg: 'linear-gradient(145deg, #78350f 0%, #451a03 100%)',
+        backBorder: '#b45309',
+        frontBg: 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%)',
+        frontBorder: '#d97706',
+        matchedBg: '#ecfdf5',
+        matchedBorder: '#10b981',
+        patternType: 'wood'
+      };
+    case 'watercolor':
+      return {
+        id: 'watercolor',
+        boardBg: 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 50%, #fce7f3 100%)',
+        textColor: '#0f172a',
+        barBg: 'rgba(255, 255, 255, 0.9)',
+        barBorder: '#93c5fd',
+        backBg: 'linear-gradient(135deg, #0284c7 0%, #6366f1 50%, #d946ef 100%)',
+        backBorder: '#93c5fd',
+        frontBg: '#ffffff',
+        frontBorder: '#cbd5e1',
+        matchedBg: '#f0fdf4',
+        matchedBorder: '#86efac',
+        patternType: 'watercolor'
+      };
+    case 'herbarium':
+      return {
+        id: 'herbarium',
+        boardBg: 'linear-gradient(135deg, #f7fee7 0%, #ecfccb 100%)',
+        textColor: '#14532d',
+        barBg: '#fefce8',
+        barBorder: '#84cc16',
+        backBg: 'linear-gradient(145deg, #713f12 0%, #3f2207 100%)',
+        backBorder: '#a16207',
+        frontBg: '#fefefe',
+        frontBorder: '#84cc16',
+        matchedBg: '#f0fdf4',
+        matchedBorder: '#4ade80',
+        patternType: 'herbarium'
+      };
+    case 'minimal':
+      return {
+        id: 'minimal',
+        boardBg: '#f8fafc',
+        textColor: '#0f172a',
+        barBg: '#ffffff',
+        barBorder: '#cbd5e1',
+        backBg: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        backBorder: '#334155',
+        frontBg: '#ffffff',
+        frontBorder: '#cbd5e1',
+        matchedBg: '#f0fdf4',
+        matchedBorder: '#10b981',
+        patternType: 'minimal'
+      };
+    case 'japanese_paper':
+    default:
+      return {
+        id: 'japanese_paper',
+        boardBg: 'linear-gradient(135deg, #f7f4ed 0%, #efebe2 100%)',
+        textColor: '#1e293b',
+        barBg: '#ffffff',
+        barBorder: '#e2d9cc',
+        backBg: 'linear-gradient(145deg, #0f172a 0%, #1e293b 100%)',
+        backBorder: '#d4af37',
+        frontBg: '#fffdfa',
+        frontBorder: '#d6cdbd',
+        matchedBg: '#f0fdf4',
+        matchedBorder: '#86efac',
+        patternType: 'seigaiha'
+      };
+  }
+}
+
+function CardBackPattern({ theme, isLeftField }) {
+  if (theme.patternType === 'wood') {
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="100%" height="100%" viewBox="0 0 48 60" style={{ position: 'absolute', inset: 0, opacity: 0.25 }}>
+          <path d="M0,10 Q24,15 48,10 M0,25 Q24,30 48,25 M0,40 Q24,45 48,40 M0,55 Q24,60 48,55" stroke="#fef3c7" strokeWidth="1.2" fill="none" />
+        </svg>
+        <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1.5px solid #d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
+          <span style={{ fontSize: '13px', color: '#fde68a' }}>🪵</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (theme.patternType === 'watercolor') {
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px dashed rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: '14px' }}>🎨</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (theme.patternType === 'herbarium') {
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '30px', height: '30px', borderRadius: '8px', border: '1.5px solid #ca8a04', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.15)' }}>
+          <SymbolIcon name="leaf" size={18} color="#a3e635" />
+        </div>
+      </div>
+    );
+  }
+
+  if (theme.patternType === 'minimal') {
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '22px', height: '22px', border: '1.5px solid #64748b', transform: 'rotate(45deg)' }} />
+      </div>
+    );
+  }
+
+  // Japanese Paper (Seigaiha pattern)
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      <svg width="100%" height="100%" viewBox="0 0 40 50" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, opacity: 0.35 }}>
+        <defs>
+          <pattern id="seigaiha-pattern" width="16" height="8" patternUnits="userSpaceOnUse">
+            <path d="M 0,8 A 8,8 0 0,1 16,8 M 2,8 A 6,6 0 0,1 14,8 M 4,8 A 4,4 0 0,1 12,8" fill="none" stroke="#d4af37" strokeWidth="0.8" />
+            <path d="M -8,4 A 8,8 0 0,1 8,4 M -6,4 A 6,6 0 0,1 6,4 M -4,4 A 4,4 0 0,1 4,4" fill="none" stroke="#d4af37" strokeWidth="0.8" />
+            <path d="M 8,4 A 8,8 0 0,1 24,4 M 10,4 A 6,6 0 0,1 22,4 M 12,4 A 4,4 0 0,1 20,4" fill="none" stroke="#d4af37" strokeWidth="0.8" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#seigaiha-pattern)" />
+      </svg>
+      <div style={{ position: 'absolute', inset: '4px', border: '1px solid rgba(212, 175, 55, 0.7)', borderRadius: '8px', pointerEvents: 'none' }} />
+      <div style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1.5px solid #d4af37', background: 'rgba(15, 23, 42, 0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+        <SymbolIcon name="sakura" size={15} color="#d4af37" />
+      </div>
+    </div>
+  );
+}
+
 export default function MemoryPairs({
   onBack,
   onScoreSave,
@@ -89,6 +234,15 @@ export default function MemoryPairs({
 }) {
   const confirm = useConfirm();
 
+  // Customisations et thème (Boutique)
+  const { custom, updateCustom, activeTheme } = useGameCustomizations('memory', {
+    theme: 'japanese_paper',
+    difficulty: 'moyen'
+  });
+
+  const [showCollection, setShowCollection] = useState(false);
+  const themeObj = getThemeStyle(activeTheme);
+
   // Écran d'intro avec animation et bouton "JOUER"
   const [showIntro, setShowIntro] = useState(!skipIntro && !isIntermission);
 
@@ -99,7 +253,7 @@ export default function MemoryPairs({
       if (intermissionDifficulty === 'moyen') return 'moyen';
       return 'facile';
     }
-    return storage.getItem('retrovision_memory_diff', 'moyen') || 'moyen';
+    return custom.difficulty || storage.getItem('retrovision_memory_diff', 'moyen') || 'moyen';
   });
 
   const currentConfig = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.moyen;
@@ -107,13 +261,9 @@ export default function MemoryPairs({
 
   // Cartes du plateau initialisées paresseusement
   const [cards, setCards] = useState(() => generateDeck(currentConfig.pairsCount, currentConfig.cols));
-  // Cartes actuellement retournées (IDs, max 2)
   const [flippedCardIds, setFlippedCardIds] = useState([]);
-  // Paires trouvées (IDs des symboles)
   const [matchedPairIds, setMatchedPairIds] = useState(() => new Set());
-  // Verrouillage des clics pendant l'animation de vérification
   const [isLocked, setIsLocked] = useState(false);
-  // Paires mises en surbrillance par l'indice
   const [hintedPairId, setHintedPairId] = useState(null);
 
   // Statistiques de la manche
@@ -130,7 +280,7 @@ export default function MemoryPairs({
 
   const timerRef = useRef(null);
 
-  // Chronomètre fluide
+  // Chronomètre
   useEffect(() => {
     if (isTimerRunning && !isGameWon) {
       timerRef.current = setInterval(() => {
@@ -160,15 +310,13 @@ export default function MemoryPairs({
   // Clic sur une carte
   const handleCardClick = (card) => {
     if (isLocked) return;
-    if (matchedPairIds.has(card.pairId)) return; // Déjà trouvée
-    if (flippedCardIds.includes(card.id)) return; // Déjà retournée ce tour-ci
+    if (matchedPairIds.has(card.pairId)) return;
+    if (flippedCardIds.includes(card.id)) return;
 
-    // Démarrer le chronomètre au 1er clic
     if (!isTimerRunning && moves === 0) {
       setIsTimerRunning(true);
     }
 
-    // Audio & Haptique discrets
     haptic.tap();
     if (card.isLeftField) {
       sound.playPentatonicNote(3, true, 0.25);
@@ -179,7 +327,6 @@ export default function MemoryPairs({
     const newFlipped = [...flippedCardIds, card.id];
     setFlippedCardIds(newFlipped);
 
-    // Si deux cartes sont retournées, vérifier la paire
     if (newFlipped.length === 2) {
       setMoves((m) => m + 1);
       setIsLocked(true);
@@ -199,7 +346,6 @@ export default function MemoryPairs({
             const nextSet = new Set(prev);
             nextSet.add(pairId);
 
-            // Victoire si toutes les paires sont trouvées
             if (nextSet.size === pairsCount) {
               handleGameWin();
             }
@@ -210,18 +356,17 @@ export default function MemoryPairs({
           setIsLocked(false);
         }, 450);
       } else {
-        // Paire non correspondante : retournement après délai
+        // Pas de correspondance
         setTimeout(() => {
           haptic.warning();
           sound.playPentatonicNote(0, false, 0.15);
           setFlippedCardIds([]);
           setIsLocked(false);
-        }, 850);
+        }, 750);
       }
     }
   };
 
-  // Gestion de la victoire
   const handleGameWin = () => {
     setIsGameWon(true);
     setIsTimerRunning(false);
@@ -229,7 +374,6 @@ export default function MemoryPairs({
     haptic.success();
     setEncouragement(randomChoice(ZEN_ENCOURAGEMENTS));
 
-    // Sauvegarde meilleur score (moins de coups = meilleur)
     const currentBest = storage.getNumber(`retrovision_memory_${difficulty}_best`, 0);
     const newBest = currentBest === 0 ? moves + 1 : Math.min(currentBest, moves + 1);
     storage.setItem(`retrovision_memory_${difficulty}_best`, newBest);
@@ -246,15 +390,12 @@ export default function MemoryPairs({
     }
   };
 
-  // Indice Zen (révèle brièvement une paire non trouvée)
   const handleUseHint = () => {
     if (isLocked || isGameWon) return;
 
-    // Trouver les paires non encore découvertes
     const remainingCards = cards.filter((c) => !matchedPairIds.has(c.pairId));
     if (remainingCards.length === 0) return;
 
-    // Privilégier une paire ayant une carte à gauche pour stimuler le balayage visuel gauche
     let candidate = remainingCards.find((c) => c.isLeftField);
     if (!candidate) {
       candidate = randomChoice(remainingCards);
@@ -265,16 +406,15 @@ export default function MemoryPairs({
     sound.playPowerup();
     haptic.tap();
 
-    // Effet visuel temporaire pendant 1.5s
     setTimeout(() => {
       setHintedPairId(null);
     }, 1500);
   };
 
-  // Changement de difficulté (en mode standard)
   const handleSelectDifficulty = (newDiff) => {
     if (newDiff === difficulty) return;
     setDifficulty(newDiff);
+    updateCustom('difficulty', newDiff);
     storage.setItem('retrovision_memory_diff', newDiff);
     sound.playClick();
     const newCfg = DIFFICULTY_CONFIG[newDiff] || DIFFICULTY_CONFIG.moyen;
@@ -282,12 +422,11 @@ export default function MemoryPairs({
     setBestMoves(storage.getNumber(`retrovision_memory_${newDiff}_best`, 0));
   };
 
-  // Quitter avec confirmation si partie entamée
   const handleBackWithConfirm = async () => {
     if (moves > 0 && !isGameWon) {
       const ok = await confirm({
         title: 'Quitter la partie ?',
-        message: 'Une partie de Mémoire Zen est en cours. Vos coups actuels ne seront pas enregistrés.',
+        message: 'Une partie de Paires Mémoire est en cours. Vos coups actuels ne seront pas enregistrés.',
         confirmText: 'Quitter',
         cancelText: 'Continuer',
         confirmVariant: 'danger'
@@ -297,7 +436,6 @@ export default function MemoryPairs({
     onBack();
   };
 
-  // Formatage du temps mm:ss
   const formatTime = (secs) => {
     const mins = Math.floor(secs / 60);
     const remainder = secs % 60;
@@ -316,23 +454,54 @@ export default function MemoryPairs({
         minHeight: '100vh',
         boxSizing: 'border-box',
         padding: '16px',
-        color: '#0f172a',
-        background: '#f8fafc',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: themeObj.textColor,
+        background: themeObj.boardBg,
+        fontFamily: "'Outfit', system-ui, -apple-system, sans-serif",
         position: 'relative'
       }}
     >
+      <style>{`
+        .memory-card-scene {
+          perspective: 900px;
+        }
+        .memory-card-flipper {
+          width: 100%;
+          height: 100%;
+          position: relative;
+          transform-style: preserve-3d;
+          transition: transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+        }
+        .memory-card-flipper.is-flipped {
+          transform: rotateY(180deg);
+        }
+        .card-face {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          border-radius: 12px;
+          overflow: hidden;
+          box-sizing: border-box;
+          user-select: none;
+        }
+        .card-face-front {
+          transform: rotateY(180deg);
+        }
+      `}</style>
+
       {/* Animation d'Intro avec bouton "JOUER" */}
       {showIntro && !isIntermission && (
         <GameIntro
           gameName="Paires Mémoire"
           icon="🎴"
-          colors={['#0284c7', '#059669', '#d97706']}
+          colors={['#0284c7', '#d4af37', '#e11d48']}
           onComplete={() => setShowIntro(false)}
         />
       )}
 
-      {/* Repère d'ancrage visuel gauche (Héminégligence) - Ligne solide sobre bleu médical */}
+      {/* Repère d'ancrage visuel gauche (Héminégligence) */}
       <div
         aria-hidden="true"
         style={{
@@ -347,7 +516,7 @@ export default function MemoryPairs({
         }}
       />
 
-      {/* En-tête : Intermission (Standardisé avec toutes les options) ou Standard */}
+      {/* En-tête : Intermission ou Standard avec Boutique */}
       {isIntermission ? (
         <IntermissionHeader
           instructionText="Associez les paires cachées pour réussir l'entracte !"
@@ -364,26 +533,28 @@ export default function MemoryPairs({
           subtitle="Association & mémoire zen"
           onBack={handleBackWithConfirm}
           onRestart={() => initBoard()}
-          showShop={false}
+          showShop={true}
+          onOpenShop={() => setShowCollection(true)}
           onLaunchIntermission={onLaunchIntermission}
         />
       )}
 
-      {/* Barre de contrôles et statistiques claire (Style Mahjong Zen en blanc cassé) */}
+      {/* Barre de contrôles et statistiques */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           width: '100%',
+          maxWidth: '540px',
           flexWrap: 'wrap',
           gap: '10px',
           margin: '12px 0 16px 0',
-          padding: '12px 16px',
-          background: '#ffffff',
-          borderRadius: '12px',
-          border: '1px solid #cbd5e1',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
+          padding: '10px 16px',
+          background: themeObj.barBg,
+          borderRadius: '14px',
+          border: `1px solid ${themeObj.barBorder}`,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
         }}
       >
         {/* Sélecteur de difficulté (hors entracte) */}
@@ -397,15 +568,16 @@ export default function MemoryPairs({
                   type="button"
                   onClick={() => handleSelectDifficulty(diffKey)}
                   style={{
-                    padding: '8px 14px',
-                    fontSize: '13px',
-                    minHeight: '44px',
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    minHeight: '38px',
                     borderRadius: '8px',
                     fontWeight: '700',
                     cursor: 'pointer',
-                    background: isActive ? '#0284c7' : '#f1f5f9',
-                    border: isActive ? '2px solid #0284c7' : '1px solid #cbd5e1',
-                    color: isActive ? '#ffffff' : '#334155'
+                    background: isActive ? '#0284c7' : 'rgba(0,0,0,0.04)',
+                    border: isActive ? '2px solid #0284c7' : '1px solid rgba(0,0,0,0.1)',
+                    color: isActive ? '#ffffff' : themeObj.textColor,
+                    transition: 'all 0.15s ease'
                   }}
                 >
                   {diffKey === 'facile' ? '4 Paires' : diffKey === 'moyen' ? '6 Paires' : '8 Paires'}
@@ -433,25 +605,25 @@ export default function MemoryPairs({
           </div>
         )}
 
-        {/* Compteurs clairs : Paires, Coups, Temps */}
-        <div style={{ display: 'flex', gap: '14px', alignItems: 'center', fontSize: '14px', fontWeight: '600' }}>
+        {/* Compteurs : Paires, Coups, Temps */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontSize: '13px', fontWeight: '600' }}>
           <div>
-            <span style={{ color: '#64748b', marginRight: '4px' }}>Paires :</span>
+            <span style={{ opacity: 0.7, marginRight: '4px' }}>Paires :</span>
             <span style={{ color: '#0284c7', fontWeight: '800' }}>
               {matchedPairIds.size} / {pairsCount}
             </span>
           </div>
           <div>
-            <span style={{ color: '#64748b', marginRight: '4px' }}>Coups :</span>
+            <span style={{ opacity: 0.7, marginRight: '4px' }}>Coups :</span>
             <span style={{ color: '#d97706', fontWeight: '800' }}>{moves}</span>
           </div>
           <div>
-            <span style={{ color: '#64748b', marginRight: '4px' }}>Temps :</span>
+            <span style={{ opacity: 0.7, marginRight: '4px' }}>Temps :</span>
             <span style={{ color: '#16a34a', fontWeight: '800' }}>{formatTime(elapsedTime)}</span>
           </div>
         </div>
 
-        {/* Bouton Indice Zen clair */}
+        {/* Bouton Indice Zen */}
         <button
           type="button"
           onClick={handleUseHint}
@@ -459,13 +631,13 @@ export default function MemoryPairs({
           title="Révéler brièvement une paire"
           aria-label="Révéler un indice zen"
           style={{
-            minHeight: '44px',
-            padding: '8px 14px',
+            minHeight: '38px',
+            padding: '6px 12px',
             borderRadius: '8px',
-            fontSize: '13px',
+            fontSize: '12px',
             fontWeight: '700',
             background: '#fffbeb',
-            border: '2px solid #ca8a04',
+            border: '1.5px solid #ca8a04',
             color: '#b45309',
             cursor: isLocked || isGameWon ? 'not-allowed' : 'pointer',
             opacity: isLocked || isGameWon ? 0.4 : 1
@@ -475,7 +647,7 @@ export default function MemoryPairs({
         </button>
       </div>
 
-      {/* Grille de cartes sobres & claires (Style Tuiles Mahjong Zen en ivoire/blanc cassé) */}
+      {/* Grille de cartes 3D avec thème actif */}
       <div
         style={{
           display: 'grid',
@@ -493,67 +665,78 @@ export default function MemoryPairs({
           const isHinted = hintedPairId === card.pairId;
           const isFaceUp = isFlipped || isMatched || isHinted;
 
-          // Palette claire sobre inspirée des tuiles de Mahjong
-          let cardBg = '#ffffff';
-          let cardBorder = '#cbd5e1';
-          let tileShadow = '0 1px 0 #cbd5e1, 0 2px 0 #b8c2cc, 0 3px 0 #94a3b8, 0 5px 6px rgba(0,0,0,0.08)';
-
-          if (isMatched) {
-            cardBg = '#f0fdf4';
-            cardBorder = '#86efac';
-            tileShadow = '0 1px 0 #86efac, 0 2px 0 #4ade80, 0 3px 4px rgba(34, 197, 94, 0.15)';
-          } else if (isFaceUp) {
-            cardBg = '#ffffff';
-            cardBorder = isHinted ? '#eab308' : '#94a3b8';
-            tileShadow = '0 1px 0 #cbd5e1, 0 2px 0 #94a3b8, 0 4px 8px rgba(0,0,0,0.12)';
-          } else if (card.isLeftField) {
-            cardBg = '#fafaf9';
-            cardBorder = '#cbd5e1';
-            tileShadow = '0 1px 0 #cbd5e1, 0 2px 0 #b8c2cc, 0 3px 0 #0284c7, 0 4px 0 #0369a1, 0 5px 6px rgba(0,0,0,0.12)';
-          }
-
           return (
-            <button
+            <div
               key={card.id}
-              type="button"
-              onClick={() => handleCardClick(card)}
-              disabled={isLocked || isMatched}
+              className="memory-card-scene"
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                aspectRatio: '1 / 1.15',
-                minHeight: '76px',
-                padding: '8px 4px',
-                borderRadius: '10px',
-                border: `1.5px ${isHinted ? 'dashed' : 'solid'} ${cardBorder}`,
-                borderLeft: card.isLeftField ? '4px solid #0284c7' : `1.5px ${isHinted ? 'dashed' : 'solid'} ${cardBorder}`,
-                background: cardBg,
-                color: '#0f172a',
-                cursor: isMatched ? 'default' : 'pointer',
-                position: 'relative',
-                outline: 'none',
-                userSelect: 'none',
-                boxSizing: 'border-box',
-                boxShadow: tileShadow,
-                transition: 'transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease'
+                aspectRatio: '1 / 1.25',
+                minHeight: '80px',
+                width: '100%'
               }}
-              aria-label={
-                isMatched
-                  ? `Carte ${card.symbol.name}, trouvée`
-                  : isFaceUp
-                  ? `Carte ${card.symbol.name}, découverte`
-                  : `Carte cachée rangée ${card.r + 1}, colonne ${card.c + 1}`
-              }
             >
-              {isFaceUp || isMatched ? (
-                <>
-                  <span style={{ fontSize: '32px', lineHeight: '1', marginBottom: '6px' }}>
-                    {card.symbol.icon}
-                  </span>
+              <div
+                className={`memory-card-flipper ${isFaceUp ? 'is-flipped' : ''}`}
+                onClick={() => handleCardClick(card)}
+                role="button"
+                tabIndex={0}
+                aria-label={
+                  isMatched
+                    ? `Carte ${card.symbol.name}, trouvée`
+                    : isFaceUp
+                    ? `Carte ${card.symbol.name}, découverte`
+                    : `Carte cachée rangée ${card.r + 1}, colonne ${card.c + 1}`
+                }
+              >
+                {/* DOS DE LA CARTE (Affiché par défaut) */}
+                <div
+                  className="card-face card-face-back"
+                  style={{
+                    background: themeObj.backBg,
+                    border: `1.5px solid ${themeObj.backBorder}`,
+                    borderLeft: card.isLeftField ? '4px solid #0284c7' : `1.5px solid ${themeObj.backBorder}`,
+                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: isMatched ? 'default' : 'pointer'
+                  }}
+                >
+                  <CardBackPattern theme={themeObj} isLeftField={card.isLeftField} />
+                </div>
+
+                {/* FACE DE LA CARTE (Affichée retournée ou trouvée) */}
+                <div
+                  className="card-face card-face-front"
+                  style={{
+                    background: isMatched ? themeObj.matchedBg : themeObj.frontBg,
+                    border: isMatched
+                      ? `2px solid ${themeObj.matchedBorder}`
+                      : `1.5px solid ${isHinted ? '#eab308' : themeObj.frontBorder}`,
+                    borderLeft: card.isLeftField
+                      ? '4px solid #0284c7'
+                      : isMatched
+                      ? `2px solid ${themeObj.matchedBorder}`
+                      : `1.5px solid ${isHinted ? '#eab308' : themeObj.frontBorder}`,
+                    boxShadow: isMatched
+                      ? '0 2px 6px rgba(16, 185, 129, 0.2)'
+                      : '0 4px 10px rgba(0, 0, 0, 0.08)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '8px 4px',
+                    position: 'relative'
+                  }}
+                >
+                  <SymbolIcon
+                    name={card.symbol.id}
+                    size={cols > 4 ? 30 : 36}
+                    color={card.symbol.color}
+                  />
                   <span
                     style={{
+                      marginTop: '6px',
                       fontSize: '11px',
                       fontWeight: '800',
                       color: isMatched ? '#166534' : card.symbol.color,
@@ -584,54 +767,29 @@ export default function MemoryPairs({
                       ✓
                     </span>
                   )}
-                </>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span
-                    style={{
-                      fontSize: '24px',
-                      opacity: 0.6,
-                      userSelect: 'none'
-                    }}
-                  >
-                    🀄
-                  </span>
-                  {card.isLeftField && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: '5px',
-                        left: '5px',
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '50%',
-                        background: '#0284c7'
-                      }}
-                      title="Repère gauche"
-                    />
-                  )}
                 </div>
-              )}
-            </button>
+              </div>
+            </div>
           );
         })}
       </div>
 
-      {/* Boutons d'action clairs */}
+      {/* Boutons d'action */}
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', width: '100%', marginBottom: '24px' }}>
         <button
           type="button"
           onClick={() => initBoard()}
           style={{
-            minHeight: '48px',
-            padding: '10px 24px',
+            minHeight: '44px',
+            padding: '8px 20px',
             borderRadius: '10px',
             fontWeight: '700',
             fontSize: '14px',
             border: '2px solid #0284c7',
             color: '#ffffff',
             background: '#0284c7',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
           }}
         >
           🔄 Recommencer
@@ -642,8 +800,8 @@ export default function MemoryPairs({
             type="button"
             onClick={() => onIntermissionComplete && onIntermissionComplete(false)}
             style={{
-              minHeight: '48px',
-              padding: '10px 24px',
+              minHeight: '44px',
+              padding: '8px 20px',
               borderRadius: '10px',
               fontWeight: '700',
               fontSize: '14px',
@@ -658,7 +816,25 @@ export default function MemoryPairs({
         )}
       </div>
 
-      {/* Modal de Victoire Standard (Sobre & Claire) */}
+      {/* Boutique de Paires Mémoire */}
+      {showCollection && (
+        <MemoryPairsCollection
+          currentSelections={{
+            theme: activeTheme,
+            difficulty: difficulty
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'theme') {
+              updateCustom('theme', itemId);
+            } else if (catKey === 'difficulty') {
+              handleSelectDifficulty(itemId);
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
+
+      {/* Modal de Victoire Standard */}
       {!isIntermission && isGameWon && (
         <div
           style={{
@@ -685,7 +861,9 @@ export default function MemoryPairs({
               boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)'
             }}
           >
-            <div style={{ fontSize: '3rem', marginBottom: '8px' }}>🌸</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+              <SymbolIcon name="lotus" size={48} color="#db2777" />
+            </div>
             <h2 style={{ color: '#0284c7', margin: '0 0 6px 0', fontSize: '1.6rem', fontWeight: '900' }}>
               HARMONIE PARFAITE !
             </h2>

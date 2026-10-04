@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
 import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
@@ -113,7 +113,10 @@ export default function CarillonCeleste({
   });
 
   // Cloches actives selon difficulté
-  const activeBells = difficulty === 'facile' ? BELLS_CONFIG.slice(0, 4) : BELLS_CONFIG;
+  const activeBells = useMemo(
+    () => (difficulty === 'facile' ? BELLS_CONFIG.slice(0, 4) : BELLS_CONFIG),
+    [difficulty]
+  );
   // Séquence cible
   const [sequence, setSequence] = useState([]);
   const [playerStep, setPlayerStep] = useState(0);
@@ -133,6 +136,7 @@ export default function CarillonCeleste({
   const clearAllTimers = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
+    setIsPlayingSequence(false);
   }, []);
 
   useEffect(() => {
@@ -165,25 +169,15 @@ export default function CarillonCeleste({
     timersRef.current.push(endTimer);
   }, [clearAllTimers]);
 
-  // Lancement d'une manche avec mélodies aléatoires dynamiques
+  // Lancement d'une manche : progression mélodique classique (2 notes à la manche 1, 3 notes à la manche 2, etc.)
   const startNewRound = useCallback((roundNum) => {
     setPlayerStep(0);
-
-    // En entracte : longueurs variées aléatoirement (2 à 4 notes) sans répétition prévisible
-    // En mode standard : progression douce (roundNum + 1)
-    let seqLen;
-    if (isIntermission) {
-      // Longueur aléatoire entre 2 et 4 notes par mélodie pour varier le défi
-      const possibleLengths = [2, 3, 4];
-      seqLen = possibleLengths[Math.floor(Math.random() * possibleLengths.length)];
-    } else {
-      seqLen = roundNum + 1;
-    }
+    const seqLen = roundNum + 1; // 2 notes au round 1, 3 notes au round 2, etc.
 
     const newSeq = [];
     let lastBellId = null;
     for (let i = 0; i < seqLen; i++) {
-      // Éviter de répéter immédiatement la même cloche 2 fois de suite pour des enchaînements plus harmonieux et variés
+      // Éviter de répéter immédiatement la même cloche 2 fois de suite
       const availableChoices = activeBells.filter((b) => b.id !== lastBellId);
       const chosenBell = randomChoice(availableChoices.length > 0 ? availableChoices : activeBells);
       newSeq.push(chosenBell.id);
@@ -191,7 +185,7 @@ export default function CarillonCeleste({
     }
     setSequence(newSeq);
     playBellSequence(newSeq);
-  }, [activeBells, isIntermission, playBellSequence]);
+  }, [activeBells, playBellSequence]);
 
   // Initialisation
   const initGame = useCallback(() => {
@@ -239,60 +233,75 @@ export default function CarillonCeleste({
           storage.setItem('retrovision_carillon_highscore', nextScore.toString());
         }
 
-        if (round >= targetRounds) {
-          // Victoire finale de la partie ou de l'entracte
-          setIsWon(true);
-          sound.playSudokuSuccess();
-          setEncouragement(randomChoice(ENCOURAGEMENTS));
-          if (onScoreSave) onScoreSave('carillon', nextScore);
-
-          if (isIntermission && onIntermissionComplete) {
-            if (replaySameIntermission) {
-              if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-              const replayTimer = setTimeout(() => initGame(), 1500);
-              timersRef.current.push(replayTimer);
-            } else {
-              const compTimer = setTimeout(() => onIntermissionComplete(true), 1200);
-              timersRef.current.push(compTimer);
-            }
-          }
-        } else {
-          // Passer à la mélodie suivante proprement
+        if (isIntermission) {
+          // En entracte : aller le plus loin possible sans se tromper !
+          // Chaque manche réussie incrémente le round et enchaîne directement avec une note de plus
           const nextRoundNum = round + 1;
           setRound(nextRoundNum);
           const nextTimer = setTimeout(() => {
             startNewRound(nextRoundNum);
           }, 900);
           timersRef.current.push(nextTimer);
+        } else {
+          // En mode normal : objectif targetRounds (5 mélodies)
+          if (round >= targetRounds) {
+            setIsWon(true);
+            sound.playSudokuSuccess();
+            setEncouragement(randomChoice(ENCOURAGEMENTS));
+            if (onScoreSave) onScoreSave('carillon', nextScore);
+          } else {
+            const nextRoundNum = round + 1;
+            setRound(nextRoundNum);
+            const nextTimer = setTimeout(() => {
+              startNewRound(nextRoundNum);
+            }, 900);
+            timersRef.current.push(nextTimer);
+          }
         }
       }
     } else {
-      // Erreur bienveillante : replay propre de la séquence
+      // Erreur du joueur
       sound.playClick();
-      setPlayerStep(0);
-      setIsPlayingSequence(true);
-      const replayTimer = setTimeout(() => {
-        playBellSequence(sequence);
-      }, 500);
-      timersRef.current.push(replayTimer);
+      haptic.warning?.();
+
+      if (isIntermission) {
+        // En entracte : fin du parcours d'endurance dès la première erreur
+        setIsWon(true);
+        if (onScoreSave) onScoreSave('carillon', score);
+        setEncouragement(`Magnifique parcours ! Vous avez validé ${round - 1} manche${round - 1 > 1 ? 's' : ''} sans erreur.`);
+
+        if (onIntermissionComplete) {
+          if (replaySameIntermission) {
+            if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+            const replayTimer = setTimeout(() => initGame(), 2000);
+            timersRef.current.push(replayTimer);
+          } else {
+            const compTimer = setTimeout(() => onIntermissionComplete(true), 2400);
+            timersRef.current.push(compTimer);
+          }
+        }
+      } else {
+        // En mode standard : rejouer la séquence de la manche en cours
+        setPlayerStep(0);
+        setIsPlayingSequence(true);
+        const replayTimer = setTimeout(() => {
+          playBellSequence(sequence);
+        }, 500);
+        timersRef.current.push(replayTimer);
+      }
     }
   };
 
   const handleBackWithConfirm = async () => {
     if ((score > 0 || round > 1) && !isWon) {
-      if (confirm) {
-        const ok = await confirm({
-          title: 'Quitter le Carillon ?',
-          message: 'Voulez-vous vraiment retourner à l\'accueil ?',
-          confirmText: 'Oui, quitter',
-          cancelText: 'Continuer à jouer',
-          confirmVariant: 'danger'
-        });
-        if (ok) {
-          clearAllTimers();
-          onBack();
-        }
-      } else {
+      const ok = await confirm({
+        title: 'Quitter le Carillon ?',
+        message: 'Voulez-vous vraiment retourner à l\'accueil ?',
+        confirmText: 'Oui, quitter',
+        cancelText: 'Continuer à jouer',
+        confirmVariant: 'danger'
+      });
+      if (ok) {
         clearAllTimers();
         onBack();
       }
@@ -302,7 +311,9 @@ export default function CarillonCeleste({
     }
   };
 
-  const progressRatio = Math.min(1, (round - 1 + (playerStep / (sequence.length || 1))) / targetRounds);
+  const progressRatio = isIntermission
+    ? Math.min(1, (round - 1) / 5) // repère visuel montant avec les manches réussies
+    : Math.min(1, (round - 1 + (playerStep / (sequence.length || 1))) / targetRounds);
 
   return (
     <div
@@ -349,7 +360,7 @@ export default function CarillonCeleste({
         {/* En-tête : Intermission ou Standard */}
         {isIntermission ? (
           <IntermissionHeader
-            instructionText={`Reproduisez ${targetRounds} mélodies harmoniques !`}
+            instructionText={`Allez le plus loin possible sans vous tromper ! (${round - 1} réussie${round - 1 > 1 ? 's' : ''})`}
             onRestart={initGame}
             onOtherGame={onIntermissionRequest}
             onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
@@ -386,8 +397,10 @@ export default function CarillonCeleste({
         >
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center', fontSize: '14px', fontWeight: '700' }}>
             <div>
-              <span style={{ color: '#64748b', marginRight: '6px' }}>Mélodie :</span>
-              <span style={{ color: '#0284c7', fontWeight: '900' }}>{round} / {targetRounds}</span>
+              <span style={{ color: '#64748b', marginRight: '6px' }}>{isIntermission ? 'Manche :' : 'Mélodie :'}</span>
+              <span style={{ color: '#0284c7', fontWeight: '900' }}>
+                {isIntermission ? `${round}` : `${round} / ${targetRounds}`}
+              </span>
             </div>
             <div>
               <span style={{ color: '#64748b', marginRight: '6px' }}>Notes :</span>

@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Dashboard from './components/Dashboard';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import IntermissionIntroModal from './components/IntermissionIntroModal';
 import IntermissionSettingsModal from './components/IntermissionSettingsModal';
 import IntermissionVictory from './components/IntermissionVictory';
 import {
@@ -16,6 +15,12 @@ import { storage } from './utils/storage';
 import { sound } from './utils/sound';
 import { randomChoice } from './utils/commonUtils';
 import { ConfirmProvider } from './components/ConfirmContext';
+import { IntermissionContext } from './contexts/IntermissionContext';
+import {
+  getIntermissionConfig,
+  saveIntermissionConfig,
+  INTERMISSION_EVENT_KEY
+} from './utils/intermissionConfig';
 import './App.css';
 
 function App() {
@@ -41,42 +46,12 @@ function App() {
       return false;
     }
   });
-  const [showIntermissionIntro, setShowIntermissionIntro] = useState(false);
   const [intermissionResult, setIntermissionResult] = useState('success'); // 'success' | 'passed'
   const [sessionIntermissionDifficulty, setSessionIntermissionDifficulty] = useState('facile');
   const [replaySameIntermission, setReplaySameIntermission] = useState(false);
 
-  // Configuration persistée des entractes (couvrant tous les 12 jeux d'entracte)
-  const [intermissionConfig, setIntermissionConfig] = useState(() => {
-    const defaultConfig = {
-      showIntroModal: false,
-    };
-    INTERMISSION_GAME_KEYS.forEach((key) => {
-      defaultConfig[key] = { enabled: true, frequency: 'medium', difficulty: 'facile' };
-    });
-
-    const parsed = storage.getJSON('retrovision_intermission_config', null);
-    if (parsed) {
-      const merged = { ...defaultConfig };
-      if (typeof parsed.showIntroModal === 'boolean') {
-        merged.showIntroModal = parsed.showIntroModal;
-      }
-      if (typeof parsed.roundsCount === 'number') {
-        merged.roundsCount = parsed.roundsCount;
-      }
-      INTERMISSION_GAME_KEYS.forEach((key) => {
-        if (parsed[key]) {
-          merged[key] = {
-            enabled: parsed[key].enabled !== false,
-            frequency: parsed[key].frequency || 'medium',
-            difficulty: parsed[key].difficulty || 'facile',
-          };
-        }
-      });
-      return merged;
-    }
-    return defaultConfig;
-  });
+  // Configuration persistée des entractes
+  const [intermissionConfig, setIntermissionConfig] = useState(() => getIntermissionConfig());
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [intermissionRound, setIntermissionRound] = useState(1);
@@ -148,7 +123,6 @@ function App() {
   // Retour sécurisé au dashboard en réinitialisant les états d'intro/entracte
   const handleBackToDashboard = useCallback(() => {
     setSkipNextIntro(false);
-    setShowIntermissionIntro(false);
     setIsIntermissionMode(false);
     setReturnView(null);
     setView('dashboard');
@@ -176,7 +150,6 @@ function App() {
 
       const defaultDiff = intermissionConfig[chosenGame]?.difficulty || 'facile';
       setSessionIntermissionDifficulty(defaultDiff);
-      setShowIntermissionIntro(!!intermissionConfig.showIntroModal);
       setView(chosenGame);
 
       const nextPlanned = pickRandomIntermissionGame(mainGame, chosenGame);
@@ -188,8 +161,6 @@ function App() {
 
   const handleIntermissionComplete = useCallback(
     (isSuccess = true) => {
-      setShowIntermissionIntro(false);
-
       if (isSuccess !== false && intermissionRound < intermissionTotalRounds) {
         // Avancer au défi suivant de la série (Multi-défis 1 à 3)
         const nextRound = intermissionRound + 1;
@@ -213,6 +184,54 @@ function App() {
   );
 
 
+
+  useEffect(() => {
+    const handleConfigUpdate = (e) => {
+      setIntermissionConfig(e.detail);
+    };
+    window.addEventListener(INTERMISSION_EVENT_KEY, handleConfigUpdate);
+    window.addEventListener('retrovision_config_update', handleConfigUpdate);
+    return () => {
+      window.removeEventListener(INTERMISSION_EVENT_KEY, handleConfigUpdate);
+      window.removeEventListener('retrovision_config_update', handleConfigUpdate);
+    };
+  }, []);
+
+  const intermissionContextValue = useMemo(() => ({
+    isIntermissionMode,
+    sessionIntermissionDifficulty,
+    intermissionRound,
+    intermissionTotalRounds,
+    replaySameIntermission,
+    setReplaySameIntermission,
+    upcomingIntermissionGame: activeUpcomingIntermissionGame,
+    setUpcomingIntermissionGame,
+    shuffleUpcomingIntermissionGame,
+    intermissionConfig,
+    handleIntermissionRequest,
+    handleIntermissionComplete,
+    intermissionGames: Object.values(GAMES_CONFIG)
+      .filter((g) => g.supportsIntermission && g.id !== view)
+      .map((g) => ({
+        key: g.id,
+        name: g.name,
+        icon: g.settingsIcon || g.icon,
+        subtitle: g.subtitle || "Mini-jeu d'entracte",
+        intermission: g.intermission
+      }))
+  }), [
+    isIntermissionMode,
+    sessionIntermissionDifficulty,
+    intermissionRound,
+    intermissionTotalRounds,
+    replaySameIntermission,
+    activeUpcomingIntermissionGame,
+    shuffleUpcomingIntermissionGame,
+    intermissionConfig,
+    handleIntermissionRequest,
+    handleIntermissionComplete,
+    view
+  ]);
 
   // Suivi du temps passé sur chaque jeu
   useEffect(() => {
@@ -269,6 +288,7 @@ function App() {
       onScoreSave: handleScoreSave,
       onIntermissionRequest: (targetKey) => handleIntermissionRequest(gameKey, targetKey),
       onLaunchIntermission: () => handleIntermissionRequest(gameKey),
+      intermissionConfig, // passé à tous les jeux
       ...(gameDef.supportsIntro ? { skipIntro: skipNextIntro } : {}),
     };
 
@@ -332,14 +352,12 @@ function App() {
             setView(returnView || 'dashboard');
             setIsIntermissionMode(false);
             setReturnView(null);
-            setShowIntermissionIntro(false);
             setIntermissionRound(1);
             setIntermissionTotalRounds(1);
           }}
           onReplayCurrent={() => {
             setView(lastIntermissionGame || 'morpion');
             setIsIntermissionMode(true);
-            setShowIntermissionIntro(false);
             setIntermissionRound(1);
           }}
           onNextIntermission={() => {
@@ -365,53 +383,41 @@ function App() {
 
   return (
     <ConfirmProvider>
-      {/* Filtre d'ambiance écran rétro CRT */}
-      <div className="crt-overlay"></div>
+      <IntermissionContext.Provider value={intermissionContextValue}>
+        {/* Filtre d'ambiance écran rétro CRT */}
+        <div className="crt-overlay"></div>
 
-      <header className="app-header">
-        <h1 className="brand-logo">
-          Retro<span>Vision</span>
-        </h1>
-        <div className="brand-subtitle">Espace Rééducation Cognitive & Zen</div>
-      </header>
+        <header className="app-header">
+          <h1 className="brand-logo">
+            Retro<span>Vision</span>
+          </h1>
+          <div className="brand-subtitle">Espace Rééducation Cognitive & Zen</div>
+        </header>
 
-      <main style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <ErrorBoundary>{renderContent()}</ErrorBoundary>
-      </main>
+        <main style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          <ErrorBoundary>{renderContent()}</ErrorBoundary>
+        </main>
 
-      <footer className="app-footer">
-        RETROVISION © 2026 | CONÇU POUR LA RÉÉDUCATION COGNITIVE
-      </footer>
+        <footer className="app-footer">
+          RETROVISION © 2026 | CONÇU POUR LA RÉÉDUCATION COGNITIVE
+        </footer>
 
-      {isIntermissionMode && showIntermissionIntro && (
-        <IntermissionIntroModal
-          gameKey={view}
-          gameName={getGameName(view)}
-          gameIcon={getGameIcon(view)}
-          returnGameName={getGameName(returnView)}
-          currentDifficulty={sessionIntermissionDifficulty}
-          onDifficultyChange={(newDiff) => setSessionIntermissionDifficulty(newDiff)}
-          onStart={() => setShowIntermissionIntro(false)}
-          onSkip={() => handleIntermissionComplete(false)}
-          onChangeRandomGame={() => handleIntermissionRequest(returnView)}
-        />
-      )}
-
-      {isSettingsOpen && (
-        <IntermissionSettingsModal
-          config={intermissionConfig}
-          onClose={() => setIsSettingsOpen(false)}
-          onChange={(newConfig) => {
-            setIntermissionConfig(newConfig);
-            storage.setJSON('retrovision_intermission_config', newConfig);
-          }}
-          onSave={(newConfig) => {
-            setIntermissionConfig(newConfig);
-            storage.setJSON('retrovision_intermission_config', newConfig);
-            setIsSettingsOpen(false);
-          }}
-        />
-      )}
+        {isSettingsOpen && (
+          <IntermissionSettingsModal
+            config={intermissionConfig}
+            onClose={() => setIsSettingsOpen(false)}
+            onChange={(newConfig) => {
+              setIntermissionConfig(newConfig);
+              storage.setJSON('retrovision_intermission_config', newConfig);
+            }}
+            onSave={(newConfig) => {
+              setIntermissionConfig(newConfig);
+              storage.setJSON('retrovision_intermission_config', newConfig);
+              setIsSettingsOpen(false);
+            }}
+          />
+        )}
+      </IntermissionContext.Provider>
     </ConfirmProvider>
   );
 }

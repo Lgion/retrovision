@@ -1,370 +1,3936 @@
 [
-  { "category": "logique", "answer": "PAIN", "question": "Plus je suis chaud, plus je suis frais.", "hint": "On va chez le boulanger pour en acheter." },
-  { "category": "logique", "answer": "FEU", "question": "Je grandis quand je mange, mais je meurs quand je bois.", "hint": "C'est chaud et ça éclaire dans la nuit." },
-  { "category": "logique", "answer": "ECHO", "question": "Je parle sans bouche et j'entends sans oreilles.", "hint": "On m'entend souvent à la montagne ou dans une grotte." },
-  { "category": "logique", "answer": "SECRET", "question": "Si tu m'as, tu veux me partager. Si tu me partages, tu ne m'as plus.", "hint": "C'est quelque chose qu'on murmure à l'oreille." },
-  { "category": "logique", "answer": "TROU", "question": "Plus on m'en enlève, plus je deviens grand.", "hint": "On peut tomber dedans." },
-  { "category": "logique", "answer": "OMBRE", "question": "Je te suis partout, mais tu ne peux jamais me rattraper.", "hint": "Je disparais dans l'obscurité." },
-  { "category": "logique", "answer": "SILENCE", "question": "Dès que l'on prononce mon nom, je n'existe plus.", "hint": "Chut..." },
-  { "category": "logique", "answer": "AVENIR", "question": "Je suis toujours devant toi, mais tu ne peux pas me voir.", "hint": "Le contraire du passé." },
-  { "category": "logique", "answer": "EPONGE", "question": "Je suis plein de trous mais je retiens l'eau.", "hint": "Pratique pour nettoyer la vaisselle." },
-  { "category": "logique", "answer": "PROMESSE", "question": "On la fait, on la tient ou on la rompt.", "hint": "Engagement moral envers quelqu'un." },
-  { "category": "logique", "answer": "BOUGIE", "question": "Je brille en me consumant.", "hint": "Faite de cire, elle éclaire." },
-  { "category": "logique", "answer": "GLACE", "question": "Eau solide et froide qui glisse.", "hint": "Se trouve au pôle Nord ou dans le congélateur." },
-  { "category": "logique", "answer": "LETTRE", "question": "Dans une enveloppe, je voyage partout.", "hint": "Alphabet ou courrier." },
-  { "category": "logique", "answer": "CHEMIN", "question": "Je traverse les pays sans bouger d'un pouce.", "hint": "Route ou sentier." },
-  { "category": "logique", "answer": "NUAGE", "question": "Fait de vapeur d'eau céleste, je flotte.", "hint": "Il apporte la pluie." },
-  { "category": "logique", "answer": "FROID", "question": "On m'attrape sans jamais me toucher.", "hint": "Le contraire du chaud." },
-  { "category": "logique", "answer": "LIVRE", "question": "J'ai des feuilles mais pas de branches.", "hint": "On me lit pour s'instruire." },
-  { "category": "logique", "answer": "REVE", "question": "Scénario nocturne imaginaire.", "hint": "Se produit durant le sommeil." },
-  { "category": "logique", "answer": "AGE", "question": "Il augmente mais ne baisse jamais.", "hint": "Nombre de vos années." },
-  { "category": "logique", "answer": "TABLE", "question": "J'ai des pieds mais pas de jambes.", "hint": "On y pose les assiettes." },
-  { "category": "logique", "answer": "HORLOGE", "question": "J'ai des aiguilles mais je ne couds pas.", "hint": "Elle donne l'heure." },
-  { "category": "logique", "answer": "VENT", "question": "Souffle d'air invisible.", "hint": "Il fait voler les cerfs-volants." },
-  { "category": "logique", "answer": "SABLE", "question": "Poussière de roche côtière.", "hint": "Sur la plage." },
-  { "category": "logique", "answer": "PEIGNE", "question": "J'ai des dents mais je ne mords pas.", "hint": "Pour les cheveux." },
-  { "category": "logique", "answer": "SOURIRE", "question": "Il illumine le visage.", "hint": "Signe de joie." },
-  { "category": "logique", "answer": "SANG", "question": "Liquide vital rouge.", "hint": "Circule dans les veines." },
-  { "category": "logique", "answer": "CORDE", "question": "Assemblage de fils robustes.", "hint": "Pour attacher ou grimper." },
-  { "category": "logique", "answer": "CLE", "question": "J'ouvre les portes.", "hint": "En métal, tourne dans la serrure." },
-  { "category": "logique", "answer": "MIROIR", "question": "Je reflète la vérité.", "hint": "En verre, renvoie votre image." },
-  { "category": "logique", "answer": "PIECE", "question": "J'ai un côté pile et un côté face.", "hint": "Monnaie métallique." },
-  { "category": "logique", "answer": "PAPIER", "question": "Matière fine pour écrire.", "hint": "Fait à partir de bois." },
-  { "category": "logique", "answer": "SAVON", "question": "Je nettoie en moussant.", "hint": "Utilisé sous la douche." },
-  { "category": "logique", "answer": "PARAPLUIE", "question": "Je m'ouvre quand il pleut.", "hint": "Protège des gouttes d'eau." },
-  { "category": "logique", "answer": "PIED", "question": "J'ai cinq doigts mais pas de main.", "hint": "Au bout de la jambe." },
-  { "category": "logique", "answer": "ANCRE", "question": "Je tombe au fond pour s'arrêter.", "hint": "Utilisée par les navires." },
-  { "category": "logique", "answer": "POISSON", "question": "Je nage mais je ne parle pas.", "hint": "Vit sous l'eau." },
-  { "category": "logique", "answer": "PLUME", "question": "Légère, couvre les oiseaux.", "hint": "Ancien outil d'écriture." },
-  { "category": "logique", "answer": "FUMEE", "question": "Je monte au ciel quand ça brûle.", "hint": "Grise et odorante." },
-  { "category": "logique", "answer": "SEL", "question": "Je donne du goût aux plats.", "hint": "Blanc, extrait de la mer." },
-  { "category": "logique", "answer": "LARMES", "question": "Eau salée des yeux.", "hint": "Coulent quand on pleure." },
-  { "category": "logique", "answer": "BALLE", "question": "Objet rond qui rebondit.", "hint": "Utilisé au tennis." },
-  { "category": "logique", "answer": "CHAUSSURE", "question": "Protège le pied.", "hint": "Se porte par paire." },
-  { "category": "logique", "answer": "REINE", "question": "Femme du roi.", "hint": "Porte une couronne." },
-  { "category": "logique", "answer": "PONT", "question": "Je relie deux rives.", "hint": "Ouvrage d'art au-dessus de l'eau." },
-  { "category": "logique", "answer": "PORTE", "question": "On la passe pour entrer.", "hint": "A une poignée." },
-  { "category": "logique", "answer": "RIDEAU", "question": "Tissu devant la fenêtre.", "hint": "Bloque la lumière du jour." },
-  { "category": "logique", "answer": "ROUE", "question": "Objet rond pour rouler.", "hint": "Il y en a quatre sur une voiture." },
-  { "category": "logique", "answer": "VALISE", "question": "Contient les habits pour voyager.", "hint": "A des roulettes et une poignée." },
-  { "category": "logique", "answer": "VELO", "question": "Deux roues sans moteur.", "hint": "On appuie sur les pédales." },
-  { "category": "logique", "answer": "VERRE", "question": "Récipient transparent pour boire.", "hint": "Matière fragile." },
-  { "category": "logique", "answer": "AMIS", "question": "Personnes que l'on apprécie.", "hint": "On partage des moments avec eux." },
-  { "category": "logique", "answer": "ARBRE", "question": "Végétal à tronc ligneux.", "hint": "A des feuilles et des racines." },
-  { "category": "logique", "answer": "CHAPEAU", "question": "Se pose sur la tête.", "hint": "Casquette ou couvre-chef." },
-  { "category": "logique", "answer": "CHIEN", "question": "Le meilleur ami de l'homme.", "hint": "Animal qui aboie." },
-  { "category": "logique", "answer": "CHAT", "question": "Félin domestique.", "hint": "Animal qui miaule." },
-  { "category": "logique", "answer": "CRAYON", "question": "Mine de graphite pour écrire.", "hint": "S'efface avec une gomme." },
-  { "category": "logique", "answer": "ETOILE", "question": "Point brillant dans la nuit.", "hint": "Le soleil en est une." },
-  { "category": "logique", "answer": "FLEUR", "question": "Partie colorée d'une plante.", "hint": "La rose en est une." },
-  { "category": "logique", "answer": "FORET", "question": "Grand espace d'arbres.", "hint": "Où vivent les cerfs." },
-  { "category": "logique", "answer": "JARDIN", "question": "Espace vert près de la maison.", "hint": "Où poussent les légumes." },
-  { "category": "logique", "answer": "MAISON", "question": "Lieu d'habitation.", "hint": "A un toit et des murs." },
-  { "category": "logique", "answer": "MONTAGNE", "question": "Sommet de terre et roche.", "hint": "L'Everest en est une." },
-  { "category": "logique", "answer": "OISEAU", "question": "Animal à plumes volant.", "hint": "Il pond des œufs." },
-  { "category": "logique", "answer": "PAYS", "question": "Territoire géographique.", "hint": "La France en est un." },
-  { "category": "logique", "answer": "POMME", "question": "Fruit rond et sucré.", "hint": "Le fruit d'Adam et Ève." },
-  { "category": "logique", "answer": "ROUTE", "question": "Voie goudronnée pour voitures.", "hint": "A des lignes blanches." },
-  { "category": "logique", "answer": "VILLE", "question": "Grand rassemblement d'habitations.", "hint": "Paris en est une." },
-  { "category": "logique", "answer": "VOITURE", "question": "Véhicule automobile à quatre roues.", "hint": "Nécessite un permis." },
-  { "category": "logique", "answer": "YEUX", "question": "Organes de la vue.", "hint": "Au nombre de deux." },
-  { "category": "logique", "answer": "BRUIT", "question": "Sensation auditive.", "hint": "Le contraire du silence." },
-  { "category": "logique", "answer": "JOUR", "question": "Période de lumière.", "hint": "Le contraire de la nuit." },
-  { "category": "logique", "answer": "NUIT", "question": "Période d'obscurité.", "hint": "Le moment de dormir." },
-  { "category": "logique", "answer": "TERRE", "question": "Notre planète bleue.", "hint": "Troisième planète du système." },
-  { "category": "logique", "answer": "ELEPHANT", "question": "Plus grand mammifère terrestre.", "hint": "A des défenses et une trompe." },
-  { "category": "logique", "answer": "GIRAFE", "question": "Animal au cou immense.", "hint": "Vit dans la savane." },
-  { "category": "logique", "answer": "LION", "question": "Le roi de la savane.", "hint": "Félin à crinière." },
-  { "category": "logique", "answer": "TIGRE", "question": "Félin rayé orange et noir.", "hint": "Vit en Asie." },
-  { "category": "logique", "answer": "OURS", "question": "Grand mammifère poilu.", "hint": "Aime le miel." },
-  { "category": "logique", "answer": "SINGE", "question": "Primate agile.", "hint": "Aime les bananes." },
-  { "category": "logique", "answer": "DAUPHIN", "question": "Mammifère marin intelligent.", "hint": "A un aileron et un évent." },
-  { "category": "logique", "answer": "REQUIN", "question": "Poisson prédateur marin.", "hint": "A plusieurs rangées de dents." },
-  { "category": "logique", "answer": "TORTUE", "question": "Reptile à carapace.", "hint": "Connue pour sa lenteur." },
-  { "category": "logique", "answer": "GRENOUILLE", "question": "Amphibien vert sauteur.", "hint": "Dit coassement." },
-  { "category": "logique", "answer": "PAPILLON", "question": "Insecte aux ailes colorées.", "hint": "Vient d'une chenille." },
-  { "category": "logique", "answer": "ABEILLE", "question": "Insecte produisant le miel.", "hint": "Rayé noir et jaune." },
-  { "category": "logique", "answer": "FOURMI", "question": "Petit insecte travailleur.", "hint": "Vit en colonie." },
-  { "category": "logique", "answer": "ESCARGOT", "question": "Mollusque à coquille.", "hint": "Laisse de la bave." },
-  { "category": "logique", "answer": "SERPENT", "question": "Reptile sans pattes.", "hint": "Rampe et siffle." },
-  { "category": "logique", "answer": "SOURIS", "question": "Petit rongeur gris.", "hint": "Peur des chats." },
-  { "category": "logique", "answer": "LAPIN", "question": "Animal aux longues oreilles.", "hint": "Aime les carottes." },
-  { "category": "logique", "answer": "CHEVAL", "question": "Monture des cavaliers.", "hint": "Vit dans un box." },
-  { "category": "logique", "answer": "VACHE", "question": "Produit le lait.", "hint": "Dit meuglement." },
-  { "category": "logique", "answer": "COCHON", "question": "Animal rose de la ferme.", "hint": "Groigne et aime la boue." },
-  { "category": "logique", "answer": "MOUTON", "question": "Fournit la laine.", "hint": "Dit bêlement." },
-  { "category": "logique", "answer": "POULE", "question": "Pond les œufs.", "hint": "Vit dans le poulailler." },
-  { "category": "logique", "answer": "CANARD", "question": "Oiseau palmipède d'eau.", "hint": "Fait coin-coin." },
-  { "category": "logique", "answer": "CHAMEAU", "question": "Animal du désert à deux bosses.", "hint": "Peut se passer d'eau." },
-  { "category": "logique", "answer": "AIGLE", "question": "Rapace au vol majestueux.", "hint": "Symbole de liberté." },
-  { "category": "logique", "answer": "HIBOU", "question": "Oiseau nocturne aux grands yeux.", "hint": "Fait hou-hou." },
-  { "category": "logique", "answer": "PINGOUIN", "question": "Oiseau marin noir et blanc.", "hint": "Vit au pôle Sud." },
-
-  { "category": "science", "answer": "SOLEIL", "question": "Le centre lumineux de notre système.", "hint": "C'est une étoile qui nous réchauffe le jour." },
-  { "category": "science", "answer": "LUNE", "question": "Elle contrôle les marées et brille la nuit.", "hint": "Neil Armstrong a marché dessus." },
-  { "category": "science", "answer": "OXYGENE", "question": "Invisible mais indispensable pour respirer.", "hint": "Les plantes en produisent grâce à la photosynthèse." },
-  { "category": "science", "answer": "GRAVITE", "question": "La force qui fait tomber les objets.", "hint": "Isaac Newton l'a comprise grâce à une pomme." },
-  { "category": "science", "answer": "MARS", "question": "Surnommée la planète rouge.", "hint": "Elle porte le nom du dieu romain de la guerre." },
-  { "category": "science", "answer": "EAU", "question": "Composée de deux atomes d'hydrogène et d'un d'oxygène.", "hint": "Indispensable à la vie, on la boit." },
-  { "category": "science", "answer": "ADN", "question": "Molécule qui contient notre code génétique.", "hint": "Elle a la forme d'une double hélice." },
-  { "category": "science", "answer": "CERVEAU", "question": "L'organe qui te permet de résoudre ce jeu.", "hint": "Il est caché dans ta boîte crânienne." },
-  { "category": "science", "answer": "OR", "question": "Métal précieux de symbole Au.", "hint": "Utilisé pour faire des bijoux très chers." },
-  { "category": "science", "answer": "ASTRONAUTE", "question": "Personne voyageant dans l'espace.", "hint": "Thomas Pesquet en est un." },
-  { "category": "science", "answer": "ATOME", "question": "Constituant de base de la matière.", "hint": "Composé d'électrons et d'un noyau." },
-  { "category": "science", "answer": "CELLULE", "question": "Unité biologique de base du vivant.", "hint": "Notre corps en contient des milliards." },
-  { "category": "science", "answer": "VOLCAN", "question": "Montagne crachant de la lave.", "hint": "Le Vésuve en est un." },
-  { "category": "science", "answer": "METEO", "question": "Prévisions du temps qu'il fait.", "hint": "Présentée à la télé." },
-  { "category": "science", "answer": "CLIMAT", "question": "Conditions météo sur le long terme.", "hint": "Il se réchauffe actuellement." },
-  { "category": "science", "answer": "SEISME", "question": "Tremblement de terre.", "hint": "Mesuré sur l'échelle de Richter." },
-  { "category": "science", "answer": "FOUDRE", "question": "Décharge électrique céleste.", "hint": "Accompagne le tonnerre." },
-  { "category": "science", "answer": "PLANETE", "question": "Corps céleste en orbite stellaire.", "hint": "La Terre en est une." },
-  { "category": "science", "answer": "COMETE", "question": "Astre de glace avec une chevelure.", "hint": "La plus connue est celle de Halley." },
-  { "category": "science", "answer": "GALAXIE", "question": "Immense groupe d'étoiles.", "hint": "La nôtre s'appelle la Voie Lactée." },
-  { "category": "science", "answer": "TELESCOPE", "question": "Outil pour observer l'espace.", "hint": "Hubble ou James Webb." },
-  { "category": "science", "answer": "MICROSCOPE", "question": "Outil pour observer l'infiniment petit.", "hint": "Utilisé en laboratoire biologique." },
-  { "category": "science", "answer": "CHALEUR", "question": "Sensation thermique élevée.", "hint": "Produite par le feu." },
-  { "category": "science", "answer": "ENERGIE", "question": "Capacité à produire un travail.", "hint": "Électrique, solaire ou éolienne." },
-  { "category": "science", "answer": "LUMIERE", "question": "Ce qui éclaire et permet de voir.", "hint": "Voyage à 300 000 km/s." },
-  { "category": "science", "answer": "SON", "question": "Onde acoustique audible.", "hint": "Voyage à 340 m/s dans l'air." },
-  { "category": "science", "answer": "AIMANT", "question": "Objet attirant le fer.", "hint": "A un pôle Nord et un pôle Sud." },
-  { "category": "science", "answer": "BATTERIE", "question": "Stocke l'énergie électrique.", "hint": "Il y en a une dans ton téléphone." },
-  { "category": "science", "answer": "ROBOT", "question": "Machine automatique programmable.", "hint": "R2-D2 en est un." },
-  { "category": "science", "answer": "ORDINATEUR", "question": "Machine de traitement de l'information.", "hint": "A un processeur et de la mémoire." },
-  { "category": "science", "answer": "INTERNET", "question": "Réseau informatique mondial.", "hint": "Le Web." },
-  { "category": "science", "answer": "CHIMIE", "question": "Science des molécules et réactions.", "hint": "Se fait souvent en éprouvette." },
-  { "category": "science", "answer": "PHYSIQUE", "question": "Science de la matière et des forces.", "hint": "Étudiée par Albert Einstein." },
-  { "category": "science", "answer": "BIOLOGIE", "question": "Science du vivant.", "hint": "Étudie les animaux et plantes." },
-  { "category": "science", "answer": "GEOLOGIE", "question": "Science de la Terre et des roches.", "hint": "Étudie les fossiles et séismes." },
-  { "category": "science", "answer": "MEDECINE", "question": "Science de la santé et des soins.", "hint": "Pratiquée par les docteurs." },
-  { "category": "science", "answer": "VIRUS", "question": "Agent infectieux très petit.", "hint": "Le rhume en est provoqué par un." },
-  { "category": "science", "answer": "BACTERIE", "question": "Organisme unicellulaire microscopique.", "hint": "Peut être utile ou rendre malade." },
-  { "category": "science", "answer": "COEUR", "question": "Muscle qui pompe le sang.", "hint": "Bat dans ta poitrine." },
-  { "category": "science", "answer": "POUMONS", "question": "Organes de la respiration.", "hint": "Il y en a deux dans la poitrine." },
-  { "category": "science", "answer": "OS", "question": "Élément rigide du squelette.", "hint": "Le fémur en est un." },
-  { "category": "science", "answer": "MUSCLE", "question": "Organe permettant le mouvement.", "hint": "Le biceps en est un." },
-  { "category": "science", "answer": "PEAU", "question": "Organe qui enveloppe tout le corps.", "hint": "Protège des microbes." },
-  { "category": "science", "answer": "ESTOMAC", "question": "Poche où commence la digestion.", "hint": "Reçoit les aliments avalés." },
-  { "category": "science", "answer": "DENT", "question": "Sert à mâcher les aliments.", "hint": "Recouverte d'émail." },
-  { "category": "science", "answer": "CHEVEUX", "question": "Poils sur le haut du crâne.", "hint": "On les coupe chez le coiffeur." },
-  { "category": "science", "answer": "SUCRE", "question": "Glucide doux pour le goût.", "hint": "Extrait de la betterave ou canne." },
-  { "category": "science", "answer": "FER", "question": "Métal lourd très utilisé.", "hint": "Se transforme en rouille avec l'eau." },
-  { "category": "science", "answer": "APPAREIL", "question": "Machine assurant une fonction.", "hint": "Photo, ménager ou dentaire." },
-  { "category": "science", "answer": "LABO", "question": "Lieu d'expérimentations scientifiques.", "hint": "Équipé d'éprouvettes." },
-  { "category": "science", "answer": "FORMULE", "question": "Écriture scientifique d'une loi.", "hint": "E = mc²." },
-  { "category": "science", "answer": "MESURE", "question": "Détermination d'une grandeur.", "hint": "Se fait avec une règle ou balance." },
-  { "category": "science", "answer": "MASSE", "question": "Quantité de matière d'un corps.", "hint": "S'exprime en grammes." },
-  { "category": "science", "answer": "POIDS", "question": "Force d'attraction de la gravité.", "hint": "Se mesure en newtons." },
-  { "category": "science", "answer": "LITRE", "question": "Unité de mesure des liquides.", "hint": "Une bouteille d'eau en fait un." },
-  { "category": "science", "answer": "METRE", "question": "Unité de mesure des longueurs.", "hint": "Cent centimètres." },
-  { "category": "science", "answer": "DEGRE", "question": "Unité de mesure des températures.", "hint": "Celsius ou Fahrenheit." },
-  { "category": "science", "answer": "TEMPS", "question": "Dimension mesurée en secondes.", "hint": "S'écoule inexorablement." },
-  { "category": "science", "answer": "ESPACE", "question": "Étendue infinie au-delà de l'atmosphère.", "hint": "Où flottent les étoiles." },
-  { "category": "science", "answer": "VIDE", "question": "Absence totale de matière.", "hint": "Dans l'espace profond." },
-  { "category": "science", "answer": "GAZ", "question": "État de la matière expansible.", "hint": "L'air en est un mélange." },
-  { "category": "science", "answer": "LIQUIDE", "question": "État de la matière fluide.", "hint": "L'eau en est le plus commun." },
-  { "category": "science", "answer": "SOLIDE", "question": "État de la matière ferme.", "hint": "La glace par rapport à l'eau." },
-  { "category": "science", "answer": "MATIERE", "question": "Ce dont tout est constitué.", "hint": "A une masse et un volume." },
-  { "category": "science", "answer": "FUSION", "question": "Passage de solide à liquide.", "hint": "La glace qui devient de l'eau." },
-  { "category": "science", "answer": "EVAPORATION", "question": "Passage de liquide à gaz.", "hint": "L'eau qui sèche au soleil." },
-  { "category": "science", "answer": "CONDENSATION", "question": "Passage de gaz à liquide.", "hint": "Buée sur la vitre." },
-  { "category": "science", "answer": "CYCLE", "question": "Suite d'événements répétitifs.", "hint": "Celui de l'eau comprend la pluie." },
-  { "category": "science", "answer": "PLUIE", "question": "Eau tombant des nuages.", "hint": "Arrose les cultures." },
-  { "category": "science", "answer": "NEIGE", "question": "Eau congelée tombant en flocons.", "hint": "Blanchit les montagnes." },
-  { "category": "science", "answer": "GRELON", "question": "Morceau de glace tombant en averse.", "hint": "Peut abîmer les voitures." },
-  { "category": "science", "answer": "BROUILLARD", "question": "Nuage bas touchant le sol.", "hint": "Réduit la visibilité sur la route." },
-  { "category": "science", "answer": "AZOTE", "question": "Gaz majoritaire de l'atmosphère.", "hint": "Représente 78% de l'air." },
-  { "category": "science", "answer": "HYDROGENE", "question": "Élément le plus abondant de l'univers.", "hint": "Symbole H, numéro 1." },
-  { "category": "science", "answer": "CARBONE", "question": "Élément de base de la vie organique.", "hint": "Le diamant en est constitué." },
-  { "category": "science", "answer": "HELIUM", "question": "Gaz léger gonflant les ballons.", "hint": "Fait parler avec une voix aiguë." },
-  { "category": "science", "answer": "METAL", "question": "Matière conductrice brillante.", "hint": "Le fer, le cuivre ou l'or." },
-  { "category": "science", "answer": "PLASTIQUE", "question": "Matière synthétique très polluante.", "hint": "Fait à partir de pétrole." },
-  { "category": "science", "answer": "BOIS", "question": "Matière naturelle d'arbre.", "hint": "Brûle dans la cheminée." },
-  { "category": "science", "answer": "ROCHE", "question": "Matière minérale dure.", "hint": "Le granit ou le calcaire." },
-  { "category": "science", "answer": "LAVE", "question": "Roche fondue sortant d'un volcan.", "hint": "Très chaude et rouge." },
-  { "category": "science", "answer": "MAGMA", "question": "Lave sous la surface de la terre.", "hint": "Contenu dans la chambre magmatique." },
-  { "category": "science", "answer": "CRATERE", "question": "Trou au sommet d'un volcan.", "hint": "Forme de bol géant." },
-  { "category": "science", "answer": "ORBITE", "question": "Trajectoire fermée dans l'espace.", "hint": "La Terre la parcourt autour du Soleil." },
-  { "category": "science", "answer": "ECLIPSE", "question": "Masquage d'un astre par un autre.", "hint": "Solaire ou lunaire." },
-  { "category": "science", "answer": "SATELLITE", "question": "Objet en orbite autour d'une planète.", "hint": "La Lune en est un naturel." },
-  { "category": "science", "answer": "FUSEE", "question": "Véhicule pour aller dans l'espace.", "hint": "Ariane ou Saturn V." },
-  { "category": "science", "answer": "ROVER", "question": "Petit robot roulant sur une planète.", "hint": "Curiosity sur Mars." },
-  { "category": "science", "answer": "GRAINE", "question": "Organe de reproduction des plantes.", "hint": "Pousse si on l'arrose." },
-  { "category": "science", "answer": "RACINE", "question": "Partie de la plante sous terre.", "hint": "Absorbe l'eau du sol." },
-  { "category": "science", "answer": "FEUILLE", "question": "Organe vert des arbres.", "hint": "Tombe en automne." },
-  { "category": "science", "answer": "FRUIT", "question": "Contient les graines d'une plante.", "hint": "La tomate en est un." },
-  { "category": "science", "answer": "OISEAU", "question": "Vertébré bipède ovipare.", "hint": "Couvert de plumes, la plupart volent." },
-  { "category": "science", "answer": "REPTILE", "question": "Vertébré à sang froid et écailles.", "hint": "Le lézard ou le serpent." },
-  { "category": "science", "answer": "MAMMIFERE", "question": "Vertébré qui allaite ses petits.", "hint": "Le chien, la baleine ou l'homme." },
-  { "category": "science", "answer": "INSECTE", "question": "Invertébré à six pattes.", "hint": "La fourmi ou l'abeille." },
-  { "category": "science", "answer": "ARACHNIDE", "question": "Invertébré à huit pattes.", "hint": "L'araignée ou le scorpion." },
-  { "category": "science", "answer": "POISSON", "question": "Vertébré aquatique à nageoires.", "hint": "Respire par des branchies." },
-  { "category": "science", "answer": "FOSSILE", "question": "Reste d'être vivant pétrifié.", "hint": "Étudié par les paléontologues." },
-  { "category": "science", "answer": "DINOSAURE", "question": "Grand reptile disparu du Mésozoïque.", "hint": "Le T-Rex en est le plus célèbre." },
-  { "category": "science", "answer": "EVOLUTION", "question": "Processus de transformation du vivant.", "hint": "Théorisée par Charles Darwin." },
-  { "category": "science", "answer": "GRAVITE", "question": "Force invisible attirant les masses.", "hint": "Nous maintient collés au sol." },
-
-  { "category": "mythes", "answer": "DRAGON", "question": "Créature reptilienne légendaire cracheuse de feu.", "hint": "Il garde souvent des trésors dans des donjons." },
-  { "category": "mythes", "answer": "LICORNE", "question": "Cheval mythique possédant une corne.", "hint": "On l'associe souvent à la magie et aux arcs-en-ciel." },
-  { "category": "mythes", "answer": "ZEUS", "question": "Dieu grec du ciel et de la foudre.", "hint": "Il vit sur le Mont Olympe." },
-  { "category": "mythes", "answer": "MEDUSE", "question": "Femme mythologique dont le regard pétrifie.", "hint": "Elle a des serpents à la place des cheveux." },
-  { "category": "mythes", "answer": "MINOTAURE", "question": "Créature mi-homme mi-taureau.", "hint": "Il était enfermé dans le labyrinthe de Dédale." },
-  { "category": "mythes", "answer": "SIRENE", "question": "Créature envoûtant les marins par son chant.", "hint": "Elle a une queue de poisson." },
-  { "category": "mythes", "answer": "PHOENIX", "question": "Oiseau fabuleux qui renaît de ses cendres.", "hint": "Associé au feu et à l'immortalité." },
-  { "category": "mythes", "answer": "CYCLOPE", "question": "Géant de la mythologie grecque n'ayant qu'un œil.", "hint": "Ulysse en a aveuglé un célèbre, Polyphème." },
-  { "category": "mythes", "answer": "POSEIDON", "question": "Dieu grec des mers et des océans.", "hint": "Son arme est le trident." },
-  { "category": "mythes", "answer": "VAMPIRE", "question": "Créature nocturne qui se nourrit de sang.", "hint": "Dracula est le plus connu d'entre eux." },
-  { "category": "mythes", "answer": "PEGASE", "question": "Cheval ailé de la mythologie grecque.", "hint": "Né du sang de la Méduse." },
-  { "category": "mythes", "answer": "CENTAURE", "question": "Créature mi-homme mi-cheval.", "hint": "Chiron était le plus sage d'entre eux." },
-  { "category": "mythes", "answer": "GRIFFON", "question": "Créature mi-aigle mi-lion.", "hint": "Garde les trésors." },
-  { "category": "mythes", "answer": "CHIMERE", "question": "Monstre assemblé de lion, chèvre et serpent.", "hint": "Crache du feu, tuée par Bellérophon." },
-  { "category": "mythes", "answer": "CERBERE", "question": "Chien à trois têtes des Enfers.", "hint": "Garde la porte du royaume d'Hadès." },
-  { "category": "mythes", "answer": "SPHINX", "question": "Créature à corps de lion et tête humaine.", "hint": "Pose des énigmes aux voyageurs à Thèbes." },
-  { "category": "mythes", "answer": "HADES", "question": "Dieu grec du royaume des morts.", "hint": "Frère de Zeus et Poséidon." },
-  { "category": "mythes", "answer": "HERCULE", "question": "Demi-dieu romain à la force légendaire.", "hint": "Connu pour ses douze travaux." },
-  { "category": "mythes", "answer": "ACHILLE", "question": "Héros de la guerre de Troie.", "hint": "Son seul point faible était son talon." },
-  { "category": "mythes", "answer": "ULYSSE", "question": "Héros grec roi d'Ithaque.", "hint": "A voyagé pendant dix ans dans l'Odyssée." },
-  { "category": "mythes", "answer": "THOR", "question": "Dieu nordique du tonnerre.", "hint": "Possède le marteau Mjolnir." },
-  { "category": "mythes", "answer": "ODIN", "question": "Dieu suprême de la mythologie nordique.", "hint": "Père de Thor, n'a qu'un seul œil." },
-  { "category": "mythes", "answer": "LOKI", "question": "Dieu nordique de la malice.", "hint": "Peut changer de forme." },
-  { "category": "mythes", "answer": "VALKYRIE", "question": "Guerrière nordique guidant les morts.", "hint": "Emmène les braves au Valhalla." },
-  { "category": "mythes", "answer": "VALHALLA", "question": "Paradis des guerriers nordiques.", "hint": "Palais d'Odin." },
-  { "category": "mythes", "answer": "ELFES", "question": "Créatures magiques de la forêt.", "hint": "Belles, immortelles et agiles." },
-  { "category": "mythes", "answer": "NAINS", "question": "Créatures vivant sous terre.", "hint": "Petits, barbus et excellents forgerons." },
-  { "category": "mythes", "answer": "TROLL", "question": "Monstre de la mythologie nordique.", "hint": "Grand, bête et pétrifié par le soleil." },
-  { "category": "mythes", "answer": "GOBLIN", "question": "Petite créature malicieuse verte.", "hint": "Aime voler l'or." },
-  { "category": "mythes", "answer": "GEANT", "question": "Humanoïde de taille immense.", "hint": "Les Titans en Grèce ou les Jötunn chez les Nordiques." },
-  { "category": "mythes", "answer": "FENRIR", "question": "Loup géant de la mythologie nordique.", "hint": "Fils de Loki, destiné à avaler Odin." },
-  { "category": "mythes", "answer": "ANUBIS", "question": "Dieu égyptien à tête de chacal.", "hint": "Guide les âmes vers la pesée du cœur." },
-  { "category": "mythes", "answer": "RA", "question": "Dieu égyptien du soleil.", "hint": "Représenté avec une tête de faucon portant un disque." },
-  { "category": "mythes", "answer": "ISIS", "question": "Déesse égyptienne de la magie.", "hint": "Épouse et sœur d'Osiris." },
-  { "category": "mythes", "answer": "OSIRIS", "question": "Dieu égyptien du royaume des morts.", "hint": "Vert de peau, ressuscité par Isis." },
-  { "category": "mythes", "answer": "HORUS", "question": "Dieu égyptien du ciel et de la royauté.", "hint": "Son œil sert d'amulette protectrice." },
-  { "category": "mythes", "answer": "BASTET", "question": "Déesse égyptienne de la joie et du foyer.", "hint": "Représentée sous forme de chat." },
-  { "category": "mythes", "answer": "SOBEK", "question": "Dieu égyptien du Nil.", "hint": "Représenté avec une tête de crocodile." },
-  { "category": "mythes", "answer": "THOT", "question": "Dieu égyptien de la sagesse et de l'écriture.", "hint": "Représenté avec une tête d'ibis." },
-  { "category": "mythes", "answer": "APOPHIS", "question": "Serpent du chaos de la mythologie égyptienne.", "hint": "Ennemi juré du dieu soleil Râ." },
-  { "category": "mythes", "answer": "MERLIN", "question": "Enchanteur de la légende arthurienne.", "hint": "Conseiller du roi Arthur." },
-  { "category": "mythes", "answer": "ARTHUR", "question": "Roi légendaire de Bretagne.", "hint": "Possède l'épée Excalibur." },
-  { "category": "mythes", "answer": "EXCALIBUR", "question": "Épée magique retirée du rocher.", "hint": "Symbole de la royauté d'Arthur." },
-  { "category": "mythes", "answer": "AVALON", "question": "Île magique de la légende arthurienne.", "hint": "Où repose le roi Arthur." },
-  { "category": "mythes", "answer": "GRAAL", "question": "Coupe sacrée recherchée par les chevaliers.", "hint": "Recherché par la Table Ronde." },
-  { "category": "mythes", "answer": "LANCELOT", "question": "Le plus célèbre des chevaliers de la Table Ronde.", "hint": "Amoureux de la reine Guenièvre." },
-  { "category": "mythes", "answer": "GUENIEVRE", "question": "Épouse du roi Arthur.", "hint": "Reine de Camelot." },
-  { "category": "mythes", "answer": "CAMELOT", "question": "Château légendaire du roi Arthur.", "hint": "Où se trouve la Table Ronde." },
-  { "category": "mythes", "answer": "GALAHEAD", "question": "Chevalier du Graal parfait.", "hint": "Fils de Lancelot du Lac." },
-  { "category": "mythes", "answer": "MORGANE", "question": "Fée et magicienne de la légende arthurienne.", "hint": "Demi-sœur d'Arthur, rivale de Merlin." },
-  { "category": "mythes", "answer": "KRAKEN", "question": "Monstre marin géant.", "hint": "Sorte de pieuvre géante coulant les navires." },
-  { "category": "mythes", "answer": "YETI", "question": "Abominable homme des neiges.", "hint": "Créature légendaire de l'Himalaya." },
-  { "category": "mythes", "answer": "BIGFOOT", "question": "Créature simiesque des forêts américaines.", "hint": "Aussi appelé Sasquatch." },
-  { "category": "mythes", "answer": "LOCHNESS", "question": "Monstre lacustre d'Écosse.", "hint": "Surnommé affectueusement Nessie." },
-  { "category": "mythes", "answer": "GOLEM", "question": "Être d'argile animé de la mythologie juive.", "hint": "Celui de Prague est le plus célèbre." },
-  { "category": "mythes", "answer": "BASILIC", "question": "Roi des serpents qui tue du regard.", "hint": "Né d'un œuf de coq couvé par un crapaud." },
-  { "category": "mythes", "answer": "COCKATRICE", "question": "Créature hybride coq et serpent.", "hint": "Proche du basilic." },
-  { "category": "mythes", "answer": "GOULE", "question": "Monstre mangeur de cadavres.", "hint": "Vit dans les cimetières." },
-  { "category": "mythes", "answer": "DJINN", "question": "Génie de la mythologie sémitique.", "hint": "Peut exaucer trois vœux s'il sort de sa lampe." },
-  { "category": "mythes", "answer": "MOMIE", "question": "Cadavre conservé par embaumement.", "hint": "Se réveille pour maudire les profanateurs." },
-  { "category": "mythes", "answer": "ZOMBIE", "question": "Mort-vivant affamé de cerveaux.", "hint": "Réanimé par la magie vaudou ou un virus." },
-  { "category": "mythes", "answer": "LOUPGAROU", "question": "Humain se transformant en loup à la pleine lune.", "hint": "Aussi appelé lycanthrope." },
-  { "category": "mythes", "answer": "BANSHEE", "question": "Créature celte annonçant la mort par ses cris.", "hint": "Esprit féminin en pleurs." },
-  { "category": "mythes", "answer": "LEPRECHAUN", "question": "Petit lutin irlandais cordonnier.", "hint": "Cache son pot d'or au bout de l'arc-en-ciel." },
-  { "category": "mythes", "answer": "YGGDRASIL", "question": "Arbre-monde de la mythologie nordique.", "hint": "Soutient les neuf royaumes." },
-  { "category": "mythes", "answer": "RAGNAROK", "question": "Fin du monde dans la mythologie nordique.", "hint": "Bataille finale détruisant l'univers." },
-  { "category": "mythes", "answer": "HELHEIM", "question": "Royaume des morts nordique.", "hint": "Gouverné par la déesse Hel." },
-  { "category": "mythes", "answer": "TITANS", "question": "Géants divins ayant précédé les dieux de l'Olympe.", "hint": "Chronos était leur chef." },
-  { "category": "mythes", "answer": "CHRONOS", "question": "Titan du temps.", "hint": "Mangeait ses propres enfants pour garder le pouvoir." },
-  { "category": "mythes", "answer": "PROMETHEE", "question": "Titan ayant donné le feu aux hommes.", "hint": "Puni par Zeus, attaché à un rocher." },
-  { "category": "mythes", "answer": "PANDORE", "question": "Première femme humaine de la mythologie grecque.", "hint": "A ouvert la boîte contenant tous les maux." },
-  { "category": "mythes", "answer": "NARCISSE", "question": "Jene homme amoureux de son reflet.", "hint": "S'est noyé en voulant s'embrasser." },
-  { "category": "mythes", "answer": "MIDAS", "question": "Roi transformant tout en or.", "hint": "A eu des oreilles d'âne en punition." },
-  { "category": "mythes", "answer": "ICARE", "question": "Fils de Dédale mort pour avoir volé trop près du soleil.", "hint": "Ses ailes de cire ont fondu." },
-  { "category": "mythes", "answer": "DEDALE", "question": "Architecte génial grec.", "hint": "A conçu le labyrinthe du Minotaure." },
-  { "category": "mythes", "answer": "THESE", "question": "Héros grec ayant vaincu le Minotaure.", "hint": "A retrouvé son chemin grâce au fil d'Ariane." },
-  { "category": "mythes", "answer": "ARIANE", "question": "Fille du roi Minos.", "hint": "A donné le fil pour sortir du labyrinthe." },
-  { "category": "mythes", "answer": "ORPHEE", "question": "Musicien grec allé aux Enfers.", "hint": "A tenté de ramener Eurydice." },
-  { "category": "mythes", "answer": "EURYDICE", "question": "Épouse d'Orphée.", "hint": "Morte d'une morsure de serpent." },
-  { "category": "mythes", "answer": "PERSEE", "question": "Héros grec ayant tranché la tête de Méduse.", "hint": "Armé d'un bouclier miroir." },
-  { "category": "mythes", "answer": "BELLEROPHON", "question": "Héros grec ayant vaincu la Chimère.", "hint": "Monté sur Pégase." },
-  { "category": "mythes", "answer": "JASON", "question": "Héros grec chef des Argonautes.", "hint": "Est parti chercher la Toison d'or." },
-  { "category": "mythes", "answer": "ARGO", "question": "Navire des Argonautes.", "hint": "Construit avec l'aide d'Athéna." },
-  { "category": "mythes", "answer": "MEDEE", "question": "Magicienne épouse de Jason.", "hint": "A aidé à voler la Toison d'or." },
-  { "category": "mythes", "answer": "VALENTIN", "question": "Saint patron des amoureux.", "hint": "Fête célébrée le 14 février." },
-  { "category": "mythes", "answer": "CUPIDON", "question": "Dieu romain de l'amour.", "hint": "Tire des flèches en forme de cœur." },
-  { "category": "mythes", "answer": "VENUS", "question": "Déesse romaine de l'amour.", "hint": "Née de l'écume de la mer." },
-  { "category": "mythes", "answer": "APOLLON", "question": "Dieu grec des arts et de la lumière.", "hint": "Joue de la lyre." },
-  { "category": "mythes", "answer": "ATHENA", "question": "Déesse grecque de la sagesse et de la guerre.", "hint": "Née armée du crâne de Zeus." },
-  { "category": "mythes", "answer": "ARES", "question": "Dieu grec de la guerre brute.", "hint": "Fils de Zeus et d'Héra." },
-  { "category": "mythes", "answer": "HERMES", "question": "Dieu messager des dieux.", "hint": "Porte des sandales ailées." },
-  { "category": "mythes", "answer": "ARTEMIS", "question": "Déesse grecque de la chasse et de la lune.", "hint": "Sœur jumelle d'Apollon." },
-  { "category": "mythes", "answer": "HEPHAISTOS", "question": "Dieu grec de la forge et du feu.", "hint": "Boiteux, mari d'Aphrodite." },
-  { "category": "mythes", "answer": "APHRODITE", "question": "Déesse grecque de la beauté et de l'amour.", "hint": "Mère d'Éros." },
-  { "category": "mythes", "answer": "DIONYSOS", "question": "Dieu grec de la vigne et du vin.", "hint": "Fils de Zeus et de Sémélé." },
-  { "category": "mythes", "answer": "DEMETER", "question": "Déesse grecque de l'agriculture.", "hint": "Mère de Perséphone." },
-  { "category": "mythes", "answer": "PERSEPHONE", "question": "Épouse d'Hadès et reine des Enfers.", "hint": "Fille de Déméter." },
-  { "category": "mythes", "answer": "HERA", "question": "Reine des dieux grecs.", "hint": "Épouse jalouse de Zeus." },
-  { "category": "mythes", "answer": "PAN", "question": "Dieu de la nature à cornes et sabots.", "hint": "Joue de la flûte de roseau." },
-  { "category": "mythes", "answer": "ASGARD", "question": "Royaume des dieux nordiques.", "hint": "Où se trouve le Valhalla." },
-
-  { "category": "gastronomie", "answer": "CROISSANT", "question": "Viennoiserie feuilletée au beurre en forme de demi-lune.", "hint": "L'incontournable du petit-déjeuner français." },
-  { "category": "gastronomie", "answer": "BAGUETTE", "question": "Pain long et croustillant emblématique.", "hint": "On la prend sous le bras en sortant de la boulangerie." },
-  { "category": "gastronomie", "answer": "CHOCOLAT", "question": "Friandise faite à partir de fèves de cacao.", "hint": "Noir, au lait ou blanc, il réconforte." },
-  { "category": "gastronomie", "answer": "FROMAGE", "question": "Produit laitier fermenté très varié.", "hint": "Camembert, Roquefort ou Comté." },
-  { "category": "gastronomie", "answer": "PIZZA", "question": "Disque de pâte garni de tomate et de fromage.", "hint": "Spécialité italienne cuite au four." },
-  { "category": "gastronomie", "answer": "SUSHI", "question": "Bouchée de riz vinaigré et poisson cru.", "hint": "Spécialité japonaise servie avec de la sauce soja." },
-  { "category": "gastronomie", "answer": "RECETTE", "question": "Liste d'ingrédients et d'instructions culinaires.", "hint": "On la suit dans un livre de cuisine." },
-  { "category": "gastronomie", "answer": "CANDY", "question": "Douceur sucrée colorée appréciée des enfants.", "hint": "Un bonbon." },
-  { "category": "gastronomie", "answer": "CREPE", "question": "Galette très fine cuite à la poêle.", "hint": "On la mange à la Chandeleur avec du sucre ou de la pâte à tartiner." },
-  { "category": "gastronomie", "answer": "FONDUE", "question": "Plat convivial de fromage fondu au chaudron.", "hint": "Spécialité savoyarde où l'on trempe du pain." },
-  { "category": "gastronomie", "answer": "SOUPE", "question": "Bouillon chaud de légumes mixés.", "hint": "Parfait pour se réchauffer en hiver." },
-  { "category": "gastronomie", "answer": "CAFE", "question": "Boisson chaude stimulante infusée.", "hint": "Prend la forme d'un espresso ou d'un cappuccino." },
-  { "category": "gastronomie", "answer": "MACARON", "question": "Petit gâteau circulaire aux amandes et ganache.", "hint": "Douceur parisienne colorée." },
-  { "category": "gastronomie", "answer": "VANILLE", "question": "Épice parfumée extraite d'une gousse d'orchidée.", "hint": "Parfum classique pour les glaces." },
-  { "category": "gastronomie", "answer": "PASTA", "question": "Aliment de semoule de blé cuit à l'eau.", "hint": "Spaghetti, penne ou tagliatelles." },
-
-  { "category": "cinema", "answer": "OSCAR", "question": "Statuette dorée récompensant le 7ème art.", "hint": "Cérémonie prestigieuse à Hollywood." },
-  { "category": "cinema", "answer": "ACTEUR", "question": "Personne qui incarne un rôle à l'écran.", "hint": "Joue devant la caméra." },
-  { "category": "cinema", "answer": "CAMERA", "question": "Appareil servant à enregistrer les scènes.", "hint": "Moteur... Action !" },
-  { "category": "cinema", "answer": "SCENARIO", "question": "Texte décrivant le déroulement du film et ses dialogues.", "hint": "Écrit par le scénariste." },
-  { "category": "cinema", "answer": "TITANIC", "question": "Film culte sur le naufrage d'un paquebot géant.", "hint": "Avec Leonardo DiCaprio et Kate Winslet." },
-  { "category": "cinema", "answer": "AVATAR", "question": "Film futuriste sur la planète Pandora.", "hint": "Réalisé par James Cameron avec des êtres bleus." },
-  { "category": "cinema", "answer": "POPCORN", "question": "Maïs soufflé sucré ou salé.", "hint": "Le grignotage indispensable au cinéma." },
-  { "category": "cinema", "answer": "WESTERN", "question": "Genre cinématographique avec cow-boys et shérifs.", "hint": "Duels au soleil dans le Far West." },
-  { "category": "cinema", "answer": "COMEDIE", "question": "Film dont le but est d'amuser et de faire rire.", "hint": "Le contraire du drame." },
-  { "category": "cinema", "answer": "JEDI", "question": "Chevalier maniant le sabre laser.", "hint": "Guerrier de la paix dans Star Wars." },
-  { "category": "cinema", "answer": "SUPERHEROS", "question": "Personnage doté de pouvoirs sauvant le monde.", "hint": "Batman, Spider-Man ou Iron Man." },
-  { "category": "cinema", "answer": "PROJECTEUR", "question": "Appareil diffusant le film sur le grand écran.", "hint": "Situé dans la cabine au fond de la salle." },
-  { "category": "cinema", "answer": "CADREUR", "question": "Technicien tenant la caméra.", "hint": "Il compose les plans visuels." },
-  { "category": "cinema", "answer": "RESERVOIR", "question": "Titre du premier grand film de Quentin Tarantino.", "hint": "Reservoir Dogs." },
-  { "category": "cinema", "answer": "CASCADE", "question": "Action spectaculaire et dangereuse au cinéma.", "hint": "Réalisée par un doublure professionnelle." },
-
-  { "category": "nature", "answer": "OCEAN", "question": "Immensité d'eau salée couvant la majeure partie du globe.", "hint": "L'Atlantique ou le Pacifique." },
-  { "category": "nature", "answer": "CASCADE", "question": "Chute d'eau naturelle sur une falaise.", "hint": "L'eau se déverse avec fracas." },
-  { "category": "nature", "answer": "JUNGLE", "question": "Forêt tropicale dense et sauvage.", "hint": "Où vit le Livre de la Jungle." },
-  { "category": "nature", "answer": "DESERT", "question": "Zone aride couverte de sable et de dunes.", "hint": "Le Sahara en est un vaste exemple." },
-  { "category": "nature", "answer": "RECIF", "question": "Structure de corail sous-marine aux mille couleurs.", "hint": "Abrite de nombreuses espèces de poissons." },
-  { "category": "nature", "answer": "BAMBOU", "question": "Plante géante ligneuse très appréciée des pandas.", "hint": "Tige creuse et très résistante." },
-  { "category": "nature", "answer": "AURORE", "question": "Phénomène lumineux coloré dans le ciel polaire.", "hint": "Aurore boréale." },
-  { "category": "nature", "answer": "GLACIER", "question": "Masse de glace accumulée en haute montagne.", "hint": "Avance très lentement dans la vallée." },
-  { "category": "nature", "answer": "SAVANE", "question": "Prairie tropicale parsemée d'acacias.", "hint": "Habitat des lions et des zèbres." },
-  { "category": "nature", "answer": "ORAGE", "question": "Perturbation atmosphérique avec éclairs et pluie.", "hint": "Fait gronder le tonnerre." },
-  { "category": "nature", "answer": "FLEUVE", "question": "Grand cours d'eau se jetant dans la mer.", "hint": "La Seine, l'Amazone ou le Nil." },
-  { "category": "nature", "answer": "CANYON", "question": "Gorge profonde creusée par un cours d'eau.", "hint": "Le Grand Canyon en Arizona." },
-  { "category": "nature", "answer": "NENUPHAR", "question": "Plante aquatique à grandes feuilles rondes.", "hint": "Les grenouilles s'y posent souvent." },
-  { "category": "nature", "answer": "PANDA", "question": "Ours noir et blanc friand de bambou.", "hint": "Symbole de la Chine et du WWF." },
-  { "category": "nature", "answer": "COLIBRI", "question": "Minuscule oiseau capable de voler en arrière.", "hint": "Batte des ailes extrêmement vite." },
-
-  { "category": "histoire", "answer": "PYRAMIDE", "question": "Monument antique égyptien en pierre à base carrée.", "hint": "Tombeau des pharaons." },
-  { "category": "histoire", "answer": "PHARAON", "question": "Souverain de l'Égypte antique.", "hint": "Ramsès II ou Toutânkhamon." },
-  { "category": "histoire", "answer": "CHATEAU", "question": "Demeure fortifiée du Moyen Âge.", "hint": "Construit avec donjon et créneaux." },
-  { "category": "histoire", "answer": "CHEVALIER", "question": "Guerrier en armure combattant à cheval.", "hint": "Prêtait serment d'allégeance au seigneur." },
-  { "category": "histoire", "answer": "EMPEREUR", "question": "Dirigeant d'un grand empire.", "hint": "Jules César ou Napoléon." },
-  { "category": "histoire", "answer": "VIKING", "question": "Navigateur et explorateur scandinave du Moyen Âge.", "hint": "Voyageait sur des drakkars." },
-  { "category": "histoire", "answer": "GLADIATEUR", "question": "Combattant luttant dans l'arène romaine.", "hint": "Faisait le spectacle au Colisée." },
-  { "category": "histoire", "answer": "REVOLUTION", "question": "Changement politique majeur et soudain.", "hint": "Celle de 1789 en France." },
-  { "category": "histoire", "answer": "COLISEE", "question": "Amphithéâtre antique géant au cœur de Rome.", "hint": "Symbole de la Rome antique." },
-  { "category": "histoire", "answer": "COURONNE", "question": "Ornement royal serti de pierres précieuses.", "hint": "Portée sur la tête des monarques." },
-  { "category": "histoire", "answer": "MANUSCRIT", "question": "Document historique rédigé à la main.", "hint": "Écrit par les moines copistes." },
-  { "category": "histoire", "answer": "ARMURE", "question": "Protection métallique du corps au combat.", "hint": "Composée de casque, cuirasse et jambières." },
-  { "category": "histoire", "answer": "MUSEE", "question": "Lieu de conservation des trésors du passé.", "hint": "Le Louvre en est un grand exemple." },
-  { "category": "histoire", "answer": "PAX", "question": "Période de paix sous l'Empire romain.", "hint": "La Pax Romana." },
-  { "category": "histoire", "answer": "DRAKKAR", "question": "Bateau à proue de dragon des scandinaves.", "hint": "Armé de rames et d'une grande voile." }
+  {
+    "category": "logique",
+    "answer": "CLE",
+    "question": "J'ouvre les portes.",
+    "hint": "En métal, tourne dans la serrure.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "SEL",
+    "question": "Je donne du goût aux plats.",
+    "hint": "Blanc, extrait de la mer.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "AGE",
+    "question": "Il augmente mais ne baisse jamais.",
+    "hint": "Nombre de vos années.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "FEU",
+    "question": "Je grandis quand je mange, mais je meurs quand je bois.",
+    "hint": "C'est chaud et ça éclaire dans la nuit.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "CHAT",
+    "question": "Félin domestique.",
+    "hint": "Animal qui miaule.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "YEUX",
+    "question": "Organes de la vue.",
+    "hint": "Au nombre de deux.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "JOUR",
+    "question": "Période de lumière.",
+    "hint": "Le contraire de la nuit.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "SANG",
+    "question": "Liquide vital rouge.",
+    "hint": "Circule dans les veines.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "PONT",
+    "question": "Je relie deux rives.",
+    "hint": "Ouvrage d'art au-dessus de l'eau.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "NUIT",
+    "question": "Période d'obscurité.",
+    "hint": "Le moment de dormir.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "LION",
+    "question": "Le roi de la savane.",
+    "hint": "Félin à crinière.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "OURS",
+    "question": "Grand mammifère poilu.",
+    "hint": "Aime le miel.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "ROUE",
+    "question": "Objet rond pour rouler.",
+    "hint": "Il y en a quatre sur une voiture.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "VELO",
+    "question": "Deux roues sans moteur.",
+    "hint": "On appuie sur les pédales.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "VENT",
+    "question": "Souffle d'air invisible.",
+    "hint": "Il fait voler les cerfs-volants.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "PAYS",
+    "question": "Territoire géographique.",
+    "hint": "La France en est un.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "AMIS",
+    "question": "Personnes que l'on apprécie.",
+    "hint": "On partage des moments avec eux.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "REVE",
+    "question": "Scénario nocturne imaginaire.",
+    "hint": "Se produit durant le sommeil.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "PIED",
+    "question": "J'ai cinq doigts mais pas de main.",
+    "hint": "Au bout de la jambe.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "PAIN",
+    "question": "Plus je suis chaud, plus je suis frais.",
+    "hint": "On va chez le boulanger pour en acheter.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "TROU",
+    "question": "Plus on m'en enlève, plus je deviens grand.",
+    "hint": "On peut tomber dedans.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "ECHO",
+    "question": "Je parle sans bouche et j'entends sans oreilles.",
+    "hint": "On m'entend souvent à la montagne ou dans une grotte.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "REINE",
+    "question": "Femme du roi.",
+    "hint": "Porte une couronne.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "SINGE",
+    "question": "Primate agile.",
+    "hint": "Aime les bananes.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "POULE",
+    "question": "Pond les œufs.",
+    "hint": "Vit dans le poulailler.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "VACHE",
+    "question": "Produit le lait.",
+    "hint": "Dit meuglement.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "BRUIT",
+    "question": "Sensation auditive.",
+    "hint": "Le contraire du silence.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "POMME",
+    "question": "Fruit rond et sucré.",
+    "hint": "Le fruit d'Adam et Ève.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "TERRE",
+    "question": "Notre planète bleue.",
+    "hint": "Troisième planète du système.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "FORET",
+    "question": "Grand espace d'arbres.",
+    "hint": "Où vivent les cerfs.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "SAVON",
+    "question": "Je nettoie en moussant.",
+    "hint": "Utilisé sous la douche.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "BALLE",
+    "question": "Objet rond qui rebondit.",
+    "hint": "Utilisé au tennis.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "PORTE",
+    "question": "On la passe pour entrer.",
+    "hint": "A une poignée.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "ARBRE",
+    "question": "Végétal à tronc ligneux.",
+    "hint": "A des feuilles et des racines.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "AIGLE",
+    "question": "Rapace au vol majestueux.",
+    "hint": "Symbole de liberté.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "TIGRE",
+    "question": "Félin rayé orange et noir.",
+    "hint": "Vit en Asie.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "SABLE",
+    "question": "Poussière de roche côtière.",
+    "hint": "Sur la plage.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "PLUME",
+    "question": "Légère, couvre les oiseaux.",
+    "hint": "Ancien outil d'écriture.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "CHIEN",
+    "question": "Le meilleur ami de l'homme.",
+    "hint": "Animal qui aboie.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "CORDE",
+    "question": "Assemblage de fils robustes.",
+    "hint": "Pour attacher ou grimper.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "FLEUR",
+    "question": "Partie colorée d'une plante.",
+    "hint": "La rose en est une.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "LAPIN",
+    "question": "Animal aux longues oreilles.",
+    "hint": "Aime les carottes.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "ROUTE",
+    "question": "Voie goudronnée pour voitures.",
+    "hint": "A des lignes blanches.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "GLACE",
+    "question": "Eau solide et froide qui glisse.",
+    "hint": "Se trouve au pôle Nord ou dans le congélateur.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "ANCRE",
+    "question": "Je tombe au fond pour s'arrêter.",
+    "hint": "Utilisée par les navires.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "FUMEE",
+    "question": "Je monte au ciel quand ça brûle.",
+    "hint": "Grise et odorante.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "HIBOU",
+    "question": "Oiseau nocturne aux grands yeux.",
+    "hint": "Fait hou-hou.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "VERRE",
+    "question": "Récipient transparent pour boire.",
+    "hint": "Matière fragile.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "TABLE",
+    "question": "J'ai des pieds mais pas de jambes.",
+    "hint": "On y pose les assiettes.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "PIECE",
+    "question": "J'ai un côté pile et un côté face.",
+    "hint": "Monnaie métallique.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "VILLE",
+    "question": "Grand rassemblement d'habitations.",
+    "hint": "Paris en est une.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "FROID",
+    "question": "On m'attrape sans jamais me toucher.",
+    "hint": "Le contraire du chaud.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "logique",
+    "answer": "LIVRE",
+    "question": "J'ai des feuilles mais pas de branches.",
+    "hint": "On me lit pour s'instruire.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "NUAGE",
+    "question": "Fait de vapeur d'eau céleste, je flotte.",
+    "hint": "Il apporte la pluie.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "OMBRE",
+    "question": "Je te suis partout, mais tu ne peux jamais me rattraper.",
+    "hint": "Je disparais dans l'obscurité.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "MOUTON",
+    "question": "Fournit la laine.",
+    "hint": "Dit bêlement.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "MAISON",
+    "question": "Lieu d'habitation.",
+    "hint": "A un toit et des murs.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "LARMES",
+    "question": "Eau salée des yeux.",
+    "hint": "Coulent quand on pleure.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "TORTUE",
+    "question": "Reptile à carapace.",
+    "hint": "Connue pour sa lenteur.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "SOURIS",
+    "question": "Petit rongeur gris.",
+    "hint": "Peur des chats.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "MIROIR",
+    "question": "Je reflète la vérité.",
+    "hint": "En verre, renvoie votre image.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "GIRAFE",
+    "question": "Animal au cou immense.",
+    "hint": "Vit dans la savane.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "CHEVAL",
+    "question": "Monture des cavaliers.",
+    "hint": "Vit dans un box.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "OISEAU",
+    "question": "Animal à plumes volant.",
+    "hint": "Il pond des œufs.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "CANARD",
+    "question": "Oiseau palmipède d'eau.",
+    "hint": "Fait coin-coin.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "RIDEAU",
+    "question": "Tissu devant la fenêtre.",
+    "hint": "Bloque la lumière du jour.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "REQUIN",
+    "question": "Poisson prédateur marin.",
+    "hint": "A plusieurs rangées de dents.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "COCHON",
+    "question": "Animal rose de la ferme.",
+    "hint": "Groigne et aime la boue.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "PAPIER",
+    "question": "Matière fine pour écrire.",
+    "hint": "Fait à partir de bois.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "BOUGIE",
+    "question": "Je brille en me consumant.",
+    "hint": "Faite de cire, elle éclaire.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "FOURMI",
+    "question": "Petit insecte travailleur.",
+    "hint": "Vit en colonie.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "ETOILE",
+    "question": "Point brillant dans la nuit.",
+    "hint": "Le soleil en est une.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "CRAYON",
+    "question": "Mine de graphite pour écrire.",
+    "hint": "S'efface avec une gomme.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "JARDIN",
+    "question": "Espace vert près de la maison.",
+    "hint": "Où poussent les légumes.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "VALISE",
+    "question": "Contient les habits pour voyager.",
+    "hint": "A des roulettes et une poignée.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "PEIGNE",
+    "question": "J'ai des dents mais je ne mords pas.",
+    "hint": "Pour les cheveux.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "LETTRE",
+    "question": "Dans une enveloppe, je voyage partout.",
+    "hint": "Alphabet ou courrier.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "CHEMIN",
+    "question": "Je traverse les pays sans bouger d'un pouce.",
+    "hint": "Route ou sentier.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "EPONGE",
+    "question": "Je suis plein de trous mais je retiens l'eau.",
+    "hint": "Pratique pour nettoyer la vaisselle.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "AVENIR",
+    "question": "Je suis toujours devant toi, mais tu ne peux pas me voir.",
+    "hint": "Le contraire du passé.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "SECRET",
+    "question": "Si tu m'as, tu veux me partager. Si tu me partages, tu ne m'as plus.",
+    "hint": "C'est quelque chose qu'on murmure à l'oreille.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "CHAPEAU",
+    "question": "Se pose sur la tête.",
+    "hint": "Casquette ou couvre-chef.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "SERPENT",
+    "question": "Reptile sans pattes.",
+    "hint": "Rampe et siffle.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "SOURIRE",
+    "question": "Il illumine le visage.",
+    "hint": "Signe de joie.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "logique",
+    "answer": "ABEILLE",
+    "question": "Insecte produisant le miel.",
+    "hint": "Rayé noir et jaune.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "DAUPHIN",
+    "question": "Mammifère marin intelligent.",
+    "hint": "A un aileron et un évent.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "POISSON",
+    "question": "Je nage mais je ne parle pas.",
+    "hint": "Vit sous l'eau.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "CHAMEAU",
+    "question": "Animal du désert à deux bosses.",
+    "hint": "Peut se passer d'eau.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "VOITURE",
+    "question": "Véhicule automobile à quatre roues.",
+    "hint": "Nécessite un permis.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "HORLOGE",
+    "question": "J'ai des aiguilles mais je ne couds pas.",
+    "hint": "Elle donne l'heure.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "SILENCE",
+    "question": "Dès que l'on prononce mon nom, je n'existe plus.",
+    "hint": "Chut...",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "ESCARGOT",
+    "question": "Mollusque à coquille.",
+    "hint": "Laisse de la bave.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "MONTAGNE",
+    "question": "Sommet de terre et roche.",
+    "hint": "L'Everest en est une.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "PAPILLON",
+    "question": "Insecte aux ailes colorées.",
+    "hint": "Vient d'une chenille.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "PINGOUIN",
+    "question": "Oiseau marin noir et blanc.",
+    "hint": "Vit au pôle Sud.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "ELEPHANT",
+    "question": "Plus grand mammifère terrestre.",
+    "hint": "A des défenses et une trompe.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "PROMESSE",
+    "question": "On la fait, on la tient ou on la rompt.",
+    "hint": "Engagement moral envers quelqu'un.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "CHAUSSURE",
+    "question": "Protège le pied.",
+    "hint": "Se porte par paire.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "PARAPLUIE",
+    "question": "Je m'ouvre quand il pleut.",
+    "hint": "Protège des gouttes d'eau.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "logique",
+    "answer": "GRENOUILLE",
+    "question": "Amphibien vert sauteur.",
+    "hint": "Dit coassement.",
+    "difficulty": "difficile"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CLEF",
+    "question": "Objet métallique qui permet de déverrouiller un cadenas.",
+    "hint": "Tourne dans la serrure.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "LIT",
+    "question": "Meuble confortable pour s'allonger et dormir la nuit.",
+    "hint": "Garni d'un matelas et d'un oreiller.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "LAMPE",
+    "question": "Appareil électrique qui produit de la clarté dans la pièce.",
+    "hint": "On appuie sur l'interrupteur.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "MONTRE",
+    "question": "Petit cadran que l'on porte au poignet pour lire l'heure.",
+    "hint": "Ses aiguilles tournent en continu.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BOITE",
+    "question": "Contenant fermé à couvercle pour ranger des objets.",
+    "hint": "En carton, en bois ou en métal.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "TASSE",
+    "question": "Petit récipient avec une anse pour boire le café ou le thé.",
+    "hint": "Posée sur une soucoupe.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BILLE",
+    "question": "Petite sphère de verre colorée pour jouer dans la cour.",
+    "hint": "Les enfants en font des collections.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BOUTEILLE",
+    "question": "Récipient cylindrique à goulot étroit pour contenir l'eau.",
+    "hint": "Fermée par un bouchon.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FENETRE",
+    "question": "Ouverture vitrée dans le mur laissant passer la lumière du jour.",
+    "hint": "On l'ouvre pour aérer la pièce.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ESCALIER",
+    "question": "Suite de marches permettant de monter d'un étage à l'autre.",
+    "hint": "On le gravit marche après marche.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "RUE",
+    "question": "Voie publique bordée de maisons et d'immeubles en ville.",
+    "hint": "Comprend une chaussée et des trottoirs.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "JARDIN",
+    "question": "Espace de verdure aménagé autour d'une maison.",
+    "hint": "On y fait pousser des fleurs ou des légumes.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "PARC",
+    "question": "Grand espace vert public avec des arbres et des bancs.",
+    "hint": "Idéal pour une promenade relaxante.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "GARE",
+    "question": "Bâtiment où s'arrêtent les trains pour les voyageurs.",
+    "hint": "On y consulte les horaires sur les quais.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BATEAU",
+    "question": "Moyen de transport flottant pour naviguer sur l'eau.",
+    "hint": "Navire ou barque.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "AVION",
+    "question": "Grand appareil ailé volant dans les airs avec des passagers.",
+    "hint": "Atterrit sur la piste d'un aéroport.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "TRAIN",
+    "question": "Convoi de wagons roulant sur des rails de chemin de fer.",
+    "hint": "Tiré par une locomotive.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BALLON",
+    "question": "Grosse sphère gonflée d'air pour jouer au football.",
+    "hint": "On tape dedans avec le pied.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "LUNETTES",
+    "question": "Monture à deux verres posée sur le nez pour mieux voir.",
+    "hint": "Prescrites par l'ophtalmologue.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "SAC",
+    "question": "Accessoire en tissu ou cuir pour transporter des affaires.",
+    "hint": "À dos ou à main.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "MANTEAU",
+    "question": "Vêtement chaud et épais qu'on enfile en hiver.",
+    "hint": "Protège du froid et du vent.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BOUTON",
+    "question": "Petit disque cousu sur un habit passant dans une boutonnière.",
+    "hint": "Sert à fermer une chemise.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "POCHE",
+    "question": "Petit compartiment de tissu cousu sur un vêtement.",
+    "hint": "On y glisse ses mains ou ses clés.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "COUTEAU",
+    "question": "Ustensile tranchant doté d'une lame pour découper.",
+    "hint": "Posé à droite de l'assiette.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FOURCHETTE",
+    "question": "Ustensile de table à quatre pointes pour piquer la nourriture.",
+    "hint": "Posée à gauche de l'assiette.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CUILLERE",
+    "question": "Ustensile creux servant à porter les liquides à la bouche.",
+    "hint": "Sert à déguster la soupe.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ENGRENAGE",
+    "question": "Roue dentée transmettant le mouvement mécanique.",
+    "hint": "Composant essentiel d'une horloge.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "BOUSSOLE",
+    "question": "Instrument dont l'aiguille aimantée indique le nord magnétique.",
+    "hint": "Outil d'orientation des explorateurs.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "SABLIER",
+    "question": "Instrument mesurant le temps par l'écoulement d'un sable fin.",
+    "hint": "Deux ampoules de verre reliées.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "LABYRINTHE",
+    "question": "Réseau complexe de chemins entremêlés où il est facile de se perdre.",
+    "hint": "On en cherche la sortie avec méthode.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "PARADOXE",
+    "question": "Proposition qui va contre le sens commun tout en étant logique.",
+    "hint": "Défie la logique apparente.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ENIGME",
+    "question": "Question mystérieuse posée pour exercer la sagacité.",
+    "hint": "Attend une réponse ingénieuse.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "SYMETRIE",
+    "question": "Harmonie régulière des parties d'un objet par rapport à un axe.",
+    "hint": "Comme un reflet dans un miroir.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ORIGAMI",
+    "question": "Art traditionnel japonais du pliage du papier.",
+    "hint": "Permet de créer des grues de papier.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "MOSAIQUE",
+    "question": "Assemblage décoratif de petits fragments de tesselles colorées.",
+    "hint": "Technique décorative gréco-romaine.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "KALEIDOSCOPE",
+    "question": "Tube optique où des miroirs multiplient des motifs colorés.",
+    "hint": "Chaque rotation crée une image neuve.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "BIVOUAC",
+    "question": "Campement sommaire et temporaire en pleine nature.",
+    "hint": "Nuit sous la tente en randonnée.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ECHELLE",
+    "question": "Dispositif portable à barreaux pour atteindre une hauteur.",
+    "hint": "Permet d'accéder au toit.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "PASSERELLE",
+    "question": "Pont léger étroit réservé au passage des piétons.",
+    "hint": "Enjambe une voie sans voiture.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CADENAS",
+    "question": "Serrure mobile en métal fermée par une anse recourbée.",
+    "hint": "Sécurise un casier ou un vélo.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "PHARE",
+    "question": "Tour côtière émettant un faisceau lumineux pour guider les marins.",
+    "hint": "Éclaire les écueils dans la nuit.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "BALANCE",
+    "question": "Instrument à deux plateaux pour comparer des masses.",
+    "hint": "Symbole classique de la justice.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "ANAGRAMME",
+    "question": "Mot formé en transposant les lettres d'un autre mot.",
+    "hint": "'Gare' est celui de 'Rage'.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "PALINDROME",
+    "question": "Mot ou phrase se lisant de la même façon dans les deux sens.",
+    "hint": "'Kayak' ou 'Radar' en sont des exemples.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "METAPHORE",
+    "question": "Figure de style comparant deux éléments sans outil de liaison.",
+    "hint": "Image poétique suggestive.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "OXYMORE",
+    "question": "Alliance expressive de deux termes de sens opposés.",
+    "hint": "'Une obscure clarté'.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "ALGORITHME",
+    "question": "Suite finie et ordonnée d'instructions résolvant un problème.",
+    "hint": "Cœur de la logique informatique.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "DILATATION",
+    "question": "Augmentation du volume d'un corps sous l'effet de la chaleur.",
+    "hint": "Les métaux s'allongent en chauffant.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "REFRACTION",
+    "question": "Déviation que subit un rayon lumineux en changeant de milieu.",
+    "hint": "Brise l'apparence d'une paille dans l'eau.",
+    "category": "logique"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "QUINTESSENCE",
+    "question": "Ce qu'il y a de plus pur et essentiel dans une chose.",
+    "hint": "Le degré suprême d'une qualité.",
+    "category": "logique"
+  },
+  {
+    "category": "science",
+    "answer": "OS",
+    "question": "Élément rigide du squelette.",
+    "hint": "Le fémur en est un.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "OR",
+    "question": "Métal précieux de symbole Au.",
+    "hint": "Utilisé pour faire des bijoux très chers.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "SON",
+    "question": "Onde acoustique audible.",
+    "hint": "Voyage à 340 m/s dans l'air.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "FER",
+    "question": "Métal lourd très utilisé.",
+    "hint": "Se transforme en rouille avec l'eau.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "GAZ",
+    "question": "État de la matière expansible.",
+    "hint": "L'air en est un mélange.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "ADN",
+    "question": "Molécule qui contient notre code génétique.",
+    "hint": "Elle a la forme d'une double hélice.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "EAU",
+    "question": "Composée de deux atomes d'hydrogène et d'un d'oxygène.",
+    "hint": "Indispensable à la vie, on la boit.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "VIDE",
+    "question": "Absence totale de matière.",
+    "hint": "Dans l'espace profond.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "BOIS",
+    "question": "Matière naturelle d'arbre.",
+    "hint": "Brûle dans la cheminée.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "MARS",
+    "question": "Surnommée la planète rouge.",
+    "hint": "Elle porte le nom du dieu romain de la guerre.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "DENT",
+    "question": "Sert à mâcher les aliments.",
+    "hint": "Recouverte d'émail.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "LAVE",
+    "question": "Roche fondue sortant d'un volcan.",
+    "hint": "Très chaude et rouge.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "PEAU",
+    "question": "Organe qui enveloppe tout le corps.",
+    "hint": "Protège des microbes.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "LABO",
+    "question": "Lieu d'expérimentations scientifiques.",
+    "hint": "Équipé d'éprouvettes.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "LUNE",
+    "question": "Elle contrôle les marées et brille la nuit.",
+    "hint": "Neil Armstrong a marché dessus.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "ROCHE",
+    "question": "Matière minérale dure.",
+    "hint": "Le granit ou le calcaire.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "PLUIE",
+    "question": "Eau tombant des nuages.",
+    "hint": "Arrose les cultures.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "COEUR",
+    "question": "Muscle qui pompe le sang.",
+    "hint": "Bat dans ta poitrine.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "SUCRE",
+    "question": "Glucide doux pour le goût.",
+    "hint": "Extrait de la betterave ou canne.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "VIRUS",
+    "question": "Agent infectieux très petit.",
+    "hint": "Le rhume en est provoqué par un.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "LITRE",
+    "question": "Unité de mesure des liquides.",
+    "hint": "Une bouteille d'eau en fait un.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "METRE",
+    "question": "Unité de mesure des longueurs.",
+    "hint": "Cent centimètres.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "TEMPS",
+    "question": "Dimension mesurée en secondes.",
+    "hint": "S'écoule inexorablement.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "CYCLE",
+    "question": "Suite d'événements répétitifs.",
+    "hint": "Celui de l'eau comprend la pluie.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "METAL",
+    "question": "Matière conductrice brillante.",
+    "hint": "Le fer, le cuivre ou l'or.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "METEO",
+    "question": "Prévisions du temps qu'il fait.",
+    "hint": "Présentée à la télé.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "MASSE",
+    "question": "Quantité de matière d'un corps.",
+    "hint": "S'exprime en grammes.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "NEIGE",
+    "question": "Eau congelée tombant en flocons.",
+    "hint": "Blanchit les montagnes.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "AZOTE",
+    "question": "Gaz majoritaire de l'atmosphère.",
+    "hint": "Représente 78% de l'air.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "ROBOT",
+    "question": "Machine automatique programmable.",
+    "hint": "R2-D2 en est un.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "POIDS",
+    "question": "Force d'attraction de la gravité.",
+    "hint": "Se mesure en newtons.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "DEGRE",
+    "question": "Unité de mesure des températures.",
+    "hint": "Celsius ou Fahrenheit.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "MAGMA",
+    "question": "Lave sous la surface de la terre.",
+    "hint": "Contenu dans la chambre magmatique.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "ATOME",
+    "question": "Constituant de base de la matière.",
+    "hint": "Composé d'électrons et d'un noyau.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "FUSEE",
+    "question": "Véhicule pour aller dans l'espace.",
+    "hint": "Ariane ou Saturn V.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "FRUIT",
+    "question": "Contient les graines d'une plante.",
+    "hint": "La tomate en est un.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "ROVER",
+    "question": "Petit robot roulant sur une planète.",
+    "hint": "Curiosity sur Mars.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "SEISME",
+    "question": "Tremblement de terre.",
+    "hint": "Mesuré sur l'échelle de Richter.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "AIMANT",
+    "question": "Objet attirant le fer.",
+    "hint": "A un pôle Nord et un pôle Sud.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "OISEAU",
+    "question": "Vertébré bipède ovipare.",
+    "hint": "Couvert de plumes, la plupart volent.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "SOLIDE",
+    "question": "État de la matière ferme.",
+    "hint": "La glace par rapport à l'eau.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "FOUDRE",
+    "question": "Décharge électrique céleste.",
+    "hint": "Accompagne le tonnerre.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "FUSION",
+    "question": "Passage de solide à liquide.",
+    "hint": "La glace qui devient de l'eau.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "VOLCAN",
+    "question": "Montagne crachant de la lave.",
+    "hint": "Le Vésuve en est un.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "MESURE",
+    "question": "Détermination d'une grandeur.",
+    "hint": "Se fait avec une règle ou balance.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "MUSCLE",
+    "question": "Organe permettant le mouvement.",
+    "hint": "Le biceps en est un.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "HELIUM",
+    "question": "Gaz léger gonflant les ballons.",
+    "hint": "Fait parler avec une voix aiguë.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "RACINE",
+    "question": "Partie de la plante sous terre.",
+    "hint": "Absorbe l'eau du sol.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "ORBITE",
+    "question": "Trajectoire fermée dans l'espace.",
+    "hint": "La Terre la parcourt autour du Soleil.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "COMETE",
+    "question": "Astre de glace avec une chevelure.",
+    "hint": "La plus connue est celle de Halley.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "CLIMAT",
+    "question": "Conditions météo sur le long terme.",
+    "hint": "Il se réchauffe actuellement.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "CHIMIE",
+    "question": "Science des molécules et réactions.",
+    "hint": "Se fait souvent en éprouvette.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "GRELON",
+    "question": "Morceau de glace tombant en averse.",
+    "hint": "Peut abîmer les voitures.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "science",
+    "answer": "GRAINE",
+    "question": "Organe de reproduction des plantes.",
+    "hint": "Pousse si on l'arrose.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "SOLEIL",
+    "question": "Le centre lumineux de notre système.",
+    "hint": "C'est une étoile qui nous réchauffe le jour.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "ESPACE",
+    "question": "Étendue infinie au-delà de l'atmosphère.",
+    "hint": "Où flottent les étoiles.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "FEUILLE",
+    "question": "Organe vert des arbres.",
+    "hint": "Tombe en automne.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "INSECTE",
+    "question": "Invertébré à six pattes.",
+    "hint": "La fourmi ou l'abeille.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "GALAXIE",
+    "question": "Immense groupe d'étoiles.",
+    "hint": "La nôtre s'appelle la Voie Lactée.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "POUMONS",
+    "question": "Organes de la respiration.",
+    "hint": "Il y en a deux dans la poitrine.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "LIQUIDE",
+    "question": "État de la matière fluide.",
+    "hint": "L'eau en est le plus commun.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "CHALEUR",
+    "question": "Sensation thermique élevée.",
+    "hint": "Produite par le feu.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "CHEVEUX",
+    "question": "Poils sur le haut du crâne.",
+    "hint": "On les coupe chez le coiffeur.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "MATIERE",
+    "question": "Ce dont tout est constitué.",
+    "hint": "A une masse et un volume.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "CRATERE",
+    "question": "Trou au sommet d'un volcan.",
+    "hint": "Forme de bol géant.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "FOSSILE",
+    "question": "Reste d'être vivant pétrifié.",
+    "hint": "Étudié par les paléontologues.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "ENERGIE",
+    "question": "Capacité à produire un travail.",
+    "hint": "Électrique, solaire ou éolienne.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "ESTOMAC",
+    "question": "Poche où commence la digestion.",
+    "hint": "Reçoit les aliments avalés.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "POISSON",
+    "question": "Vertébré aquatique à nageoires.",
+    "hint": "Respire par des branchies.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "FORMULE",
+    "question": "Écriture scientifique d'une loi.",
+    "hint": "E = mc².",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "LUMIERE",
+    "question": "Ce qui éclaire et permet de voir.",
+    "hint": "Voyage à 300 000 km/s.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "ECLIPSE",
+    "question": "Masquage d'un astre par un autre.",
+    "hint": "Solaire ou lunaire.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "PLANETE",
+    "question": "Corps céleste en orbite stellaire.",
+    "hint": "La Terre en est une.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "REPTILE",
+    "question": "Vertébré à sang froid et écailles.",
+    "hint": "Le lézard ou le serpent.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "CELLULE",
+    "question": "Unité biologique de base du vivant.",
+    "hint": "Notre corps en contient des milliards.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "GRAVITE",
+    "question": "La force qui fait tomber les objets.",
+    "hint": "Isaac Newton l'a comprise grâce à une pomme.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "CARBONE",
+    "question": "Élément de base de la vie organique.",
+    "hint": "Le diamant en est constitué.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "GRAVITE",
+    "question": "Force invisible attirant les masses.",
+    "hint": "Nous maintient collés au sol.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "CERVEAU",
+    "question": "L'organe qui te permet de résoudre ce jeu.",
+    "hint": "Il est caché dans ta boîte crânienne.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "OXYGENE",
+    "question": "Invisible mais indispensable pour respirer.",
+    "hint": "Les plantes en produisent grâce à la photosynthèse.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "BIOLOGIE",
+    "question": "Science du vivant.",
+    "hint": "Étudie les animaux et plantes.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "BATTERIE",
+    "question": "Stocke l'énergie électrique.",
+    "hint": "Il y en a une dans ton téléphone.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "INTERNET",
+    "question": "Réseau informatique mondial.",
+    "hint": "Le Web.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "APPAREIL",
+    "question": "Machine assurant une fonction.",
+    "hint": "Photo, ménager ou dentaire.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "MEDECINE",
+    "question": "Science de la santé et des soins.",
+    "hint": "Pratiquée par les docteurs.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "GEOLOGIE",
+    "question": "Science de la Terre et des roches.",
+    "hint": "Étudie les fossiles et séismes.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "science",
+    "answer": "PHYSIQUE",
+    "question": "Science de la matière et des forces.",
+    "hint": "Étudiée par Albert Einstein.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "BACTERIE",
+    "question": "Organisme unicellulaire microscopique.",
+    "hint": "Peut être utile ou rendre malade.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "ARACHNIDE",
+    "question": "Invertébré à huit pattes.",
+    "hint": "L'araignée ou le scorpion.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "TELESCOPE",
+    "question": "Outil pour observer l'espace.",
+    "hint": "Hubble ou James Webb.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "MAMMIFERE",
+    "question": "Vertébré qui allaite ses petits.",
+    "hint": "Le chien, la baleine ou l'homme.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "PLASTIQUE",
+    "question": "Matière synthétique très polluante.",
+    "hint": "Fait à partir de pétrole.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "DINOSAURE",
+    "question": "Grand reptile disparu du Mésozoïque.",
+    "hint": "Le T-Rex en est le plus célèbre.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "SATELLITE",
+    "question": "Objet en orbite autour d'une planète.",
+    "hint": "La Lune en est un naturel.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "HYDROGENE",
+    "question": "Élément le plus abondant de l'univers.",
+    "hint": "Symbole H, numéro 1.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "EVOLUTION",
+    "question": "Processus de transformation du vivant.",
+    "hint": "Théorisée par Charles Darwin.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "BROUILLARD",
+    "question": "Nuage bas touchant le sol.",
+    "hint": "Réduit la visibilité sur la route.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "ASTRONAUTE",
+    "question": "Personne voyageant dans l'espace.",
+    "hint": "Thomas Pesquet en est un.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "MICROSCOPE",
+    "question": "Outil pour observer l'infiniment petit.",
+    "hint": "Utilisé en laboratoire biologique.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "ORDINATEUR",
+    "question": "Machine de traitement de l'information.",
+    "hint": "A un processeur et de la mémoire.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "EVAPORATION",
+    "question": "Passage de liquide à gaz.",
+    "hint": "L'eau qui sèche au soleil.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "science",
+    "answer": "CONDENSATION",
+    "question": "Passage de gaz à liquide.",
+    "hint": "Buée sur la vitre.",
+    "difficulty": "difficile"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "PLANETE",
+    "question": "Corps céleste sphérique gravitant en orbite autour d'une étoile.",
+    "hint": "La Terre en est une.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "LUNE",
+    "question": "Unique satellite naturel de la Terre éclairant nos nuits.",
+    "hint": "Montre des phases croissantes et décroissantes.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "SOL",
+    "question": "Couche meuble de terre superficielle où poussent les plantes.",
+    "hint": "On marche dessus chaque jour.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FER",
+    "question": "Métal magnétique gris abondant servant à fabriquer l'acier.",
+    "hint": "Attiré par les aimants.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "OR",
+    "question": "Métal précieux jaune brillant inaltérable très recherché.",
+    "hint": "Sert à façonner des bijoux et couronnes.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ARGENT",
+    "question": "Métal blanc étincelant excellent conducteur électrique.",
+    "hint": "Métal de la médaille de deuxième place.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CUIVRE",
+    "question": "Métal rougeâtre conducteur utilisé dans les câbles électriques.",
+    "hint": "Sert aussi aux casseroles traditionnelles.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "EAU",
+    "question": "Molécule indispensable à la vie formée d'hydrogène et d'oxygène.",
+    "hint": "Formule chimique H2O.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "AIR",
+    "question": "Mélange gazeux invisible constituant l'atmosphère terrestre.",
+    "hint": "Composé d'azote et d'oxygène.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CHALEUR",
+    "question": "Énergie thermique transmise qui élève la température.",
+    "hint": "Dégagée par une flamme.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "VAPEUR",
+    "question": "État gazeux de l'eau chauffée à plus de 100 degrés.",
+    "hint": "S'échappe d'une bouilloire qui siffle.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ROCHE",
+    "question": "Matière minérale dure et solide formant l'écorce terrestre.",
+    "hint": "Pierre ou bloc de falaise.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "SON",
+    "question": "Vibration mécanique de l'air perceptible par notre ouïe.",
+    "hint": "Se propage en ondes acoustiques.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ONDE",
+    "question": "Propagation d'une perturbation transportant de l'énergie sans matière.",
+    "hint": "Ondule comme des vagues à la surface.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "GRAINE",
+    "question": "Structure végétale renfermant l'embryon d'une future plante.",
+    "hint": "Germe une fois enfouie dans la terre.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "RACINE",
+    "question": "Organe souterrain de la plante absorbant l'eau et les minéraux.",
+    "hint": "Ancre l'arbre solidement au sol.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FEUILLE",
+    "question": "Organe végétal plat et vert réalisant la photosynthèse.",
+    "hint": "Change de couleur et tombe en automne.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CELLULE",
+    "question": "Unité de base structurale et fonctionnelle de tous les êtres vivants.",
+    "hint": "Constituée d'une membrane et d'un noyau.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FOSSILE",
+    "question": "Reste pétrifié ou empreinte d'un organisme ancien conservé dans la roche.",
+    "hint": "Permet d'étudier les dinosaures.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CLIMAT",
+    "question": "Ensemble des conditions météorologiques moyennes d'une région.",
+    "hint": "Tempéré, polaire ou tropical.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "METEO",
+    "question": "Science prévoyant le temps qu'il va faire au jour le jour.",
+    "hint": "Présentée après le journal télévisé.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "PLUIE",
+    "question": "Précipitation de gouttes d'eau tombant des nuages.",
+    "hint": "Arrose les cultures champêtres.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "NEIGE",
+    "question": "Cristaux de glace blancs et légers tombant par temps froid.",
+    "hint": "Recouvre les montagnes de poudreuse.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "VENT",
+    "question": "Déplacement horizontal de masses d'air atmosphériques.",
+    "hint": "Actionne les pales des éoliennes.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ORAGE",
+    "question": "Phénomène météo violent mêlant éclairs, tonnerre et averses.",
+    "hint": "Ciel zébré de foudre.",
+    "category": "science"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "AIMANT",
+    "question": "Corps minéral ou métallique créant un champ attirant le fer.",
+    "hint": "Possède un pôle nord et un pôle sud.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ATMOSPHERE",
+    "question": "Enveloppe gazeuse entourant une planète comme la Terre.",
+    "hint": "Nous protège des rayons cosmiques nocifs.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "GRAVITE",
+    "question": "Force d'attraction mutuelle qui retient les corps vers le sol.",
+    "hint": "Découverte par Newton sous un pommier.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ECOSYSTEME",
+    "question": "Communauté d'êtres vivants en interaction avec leur milieu.",
+    "hint": "Équilibre fragile entre faune et flore.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "MOLECULE",
+    "question": "Groupe d'atomes liés entre eux par des liaisons chimiques.",
+    "hint": "H2O ou CO2 par exemple.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "MAGMA",
+    "question": "Roche en fusion sous haute pression située dans les entrailles de la Terre.",
+    "hint": "Devient de la lave en sortant du cratère.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "FUSION",
+    "question": "Passage d'un corps de l'état solide à l'état liquide.",
+    "hint": "La glace qui fond au soleil.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "EVAPORATION",
+    "question": "Transformation lente d'un liquide en vapeur sans ébullition.",
+    "hint": "Fait sécher le linge au grand air.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "SATELLITE",
+    "question": "Corps naturel ou artificiel en orbite circulaire autour d'un astre.",
+    "hint": "La Lune ou les engins GPS.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "MICROSCOPE",
+    "question": "Instrument optique grossissant pour observer l'infiniment petit.",
+    "hint": "Révèle bactéries et cellules.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "TELESCOPE",
+    "question": "Instrument d'astronomie observant les étoiles et galaxies lointaines.",
+    "hint": "Hubble et James Webb en sont des modèles spatiaux.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "FIBRE",
+    "question": "Filament mince d'origine végétale ou synthétique très souple.",
+    "hint": "La fibre optique transmet internet à grande vitesse.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CRISTAL",
+    "question": "Solide dont les atomes sont assemblés selon un motif périodique régulier.",
+    "hint": "Le quartz ou le flocon de neige.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "PRISME",
+    "question": "Bloc de verre transparent décomposant la lumière blanche en arc-en-ciel.",
+    "hint": "Sépare les différentes longueurs d'onde.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "SPECTRE",
+    "question": "Décomposition ordonnée de la lumière selon ses longueurs d'onde.",
+    "hint": "Montre les couleurs de l'arc-en-ciel.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "NEBULEUSE",
+    "question": "Vaste nuage interstellaire de gaz et de poussières cosmiques.",
+    "hint": "Berceau de naissance des nouvelles étoiles.",
+    "category": "science"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ASTEROIDE",
+    "question": "Petit corps céleste rocheux gravitant entre Mars et Jupiter.",
+    "hint": "Circule dans la ceinture principale.",
+    "category": "science"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "CHROMOSOME",
+    "question": "Structure filamenteuse constituée d'ADN portant les gènes.",
+    "hint": "L'être humain en possède 23 paires.",
+    "category": "science"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "PHOTOSYNTHESE",
+    "question": "Processus biochimique transformant la lumière solaire en énergie végétale.",
+    "hint": "Consomme du CO2 et rejette de l'oxygène.",
+    "category": "science"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "SUPERNOVA",
+    "question": "Explosion cataclysmique phénoménale marquant la mort d'une étoile massive.",
+    "hint": "Brille brièvement autant qu'une galaxie entière.",
+    "category": "science"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "TROUNOIR",
+    "question": "Région cosmique si dense que même la lumière ne peut s'en échapper.",
+    "hint": "Courbe l'espace-temps à l'extrême.",
+    "category": "science"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "FERMENTATION",
+    "question": "Dégradation anaérobie de matière organique par des levures.",
+    "hint": "Transforme le jus de raisin en vin.",
+    "category": "science"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "ENTROPIE",
+    "question": "Mesure thermodynamique du degré de désordre d'un système fermé.",
+    "hint": "Principe universel qui tend toujours à croître.",
+    "category": "science"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "EXOPLANETE",
+    "question": "Planète orbitant autour d'une autre étoile que notre Soleil.",
+    "hint": "Découverte hors de notre système solaire.",
+    "category": "science"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "RADIOACTIVITE",
+    "question": "Désintégration spontanée de noyaux atomiques instables avec émission.",
+    "hint": "Découverte par Becquerel et étudiée par Marie Curie.",
+    "category": "science"
+  },
+  {
+    "category": "nature",
+    "answer": "PANDA",
+    "question": "Ours noir et blanc friand de bambou.",
+    "hint": "Symbole de la Chine et du WWF.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "ORAGE",
+    "question": "Perturbation atmosphérique avec éclairs et pluie.",
+    "hint": "Fait gronder le tonnerre.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "RECIF",
+    "question": "Structure de corail sous-marine aux mille couleurs.",
+    "hint": "Abrite de nombreuses espèces de poissons.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "OCEAN",
+    "question": "Immensité d'eau salée couvant la majeure partie du globe.",
+    "hint": "L'Atlantique ou le Pacifique.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "JUNGLE",
+    "question": "Forêt tropicale dense et sauvage.",
+    "hint": "Où vit le Livre de la Jungle.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "SAVANE",
+    "question": "Prairie tropicale parsemée d'acacias.",
+    "hint": "Habitat des lions et des zèbres.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "FLEUVE",
+    "question": "Grand cours d'eau se jetant dans la mer.",
+    "hint": "La Seine, l'Amazone ou le Nil.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "DESERT",
+    "question": "Zone aride couverte de sable et de dunes.",
+    "hint": "Le Sahara en est un vaste exemple.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "CANYON",
+    "question": "Gorge profonde creusée par un cours d'eau.",
+    "hint": "Le Grand Canyon en Arizona.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "AURORE",
+    "question": "Phénomène lumineux coloré dans le ciel polaire.",
+    "hint": "Aurore boréale.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "nature",
+    "answer": "BAMBOU",
+    "question": "Plante géante ligneuse très appréciée des pandas.",
+    "hint": "Tige creuse et très résistante.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "nature",
+    "answer": "CASCADE",
+    "question": "Chute d'eau naturelle sur une falaise.",
+    "hint": "L'eau se déverse avec fracas.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "nature",
+    "answer": "GLACIER",
+    "question": "Masse de glace accumulée en haute montagne.",
+    "hint": "Avance très lentement dans la vallée.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "nature",
+    "answer": "COLIBRI",
+    "question": "Minuscule oiseau capable de voler en arrière.",
+    "hint": "Batte des ailes extrêmement vite.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "nature",
+    "answer": "NENUPHAR",
+    "question": "Plante aquatique à grandes feuilles rondes.",
+    "hint": "Les grenouilles s'y posent souvent.",
+    "difficulty": "difficile"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "VOLCAN",
+    "question": "Montagne crachant de la lave et des cendres brûlantes.",
+    "hint": "Possède un cratère sommital.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "RIVIERE",
+    "question": "Cours d'eau naturel se jetant dans un autre cours d'eau.",
+    "hint": "Plus petite qu'un fleuve.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "COLLINE",
+    "question": "Relief naturel arrondi moins élevé qu'une montagne.",
+    "hint": "Petite élévation de terrain couverte d'herbe.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "PRAIRIE",
+    "question": "Vaste étendue d'herbe verdoyante où broutent les troupeaux.",
+    "hint": "Champs fleuris de printemps.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "VALLEE",
+    "question": "Espace allongé creusé entre deux chaînes de montagnes.",
+    "hint": "Où serpente souvent un ruisseau.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "PLAGE",
+    "question": "Bande côtière couverte de sable fin ou de galets.",
+    "hint": "On s'y baigne en vacances d'été.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "LION",
+    "question": "Grand félin carnivore prédateur roi des savanes africaines.",
+    "hint": "Le mâle arbore une imposante crinière.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "TIGRE",
+    "question": "Plus grand félin sauvage à pelage rayé noir et roux.",
+    "hint": "Vit dans les forêts et jungles d'Asie.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ZEBRE",
+    "question": "Équidé africain au pelage strié de bandes noires et blanches.",
+    "hint": "Broute en harde dans la savane.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "GIRAFE",
+    "question": "Grand mammifère herbivore doté d'un cou démesuré.",
+    "hint": "Broute le sommet des acacias.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ELEPHANT",
+    "question": "Plus grand animal terrestre doté d'une longue trompe.",
+    "hint": "Possède d'impressionnantes défenses d'ivoire.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "SINGE",
+    "question": "Primate agile grimpant de branche en branche dans les arbres.",
+    "hint": "Très intelligent et joueur.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "OISEAU",
+    "question": "Vertébré ailé au corps couvert de plumes pondant des oeufs.",
+    "hint": "Construit son nid au printemps.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "AIGLE",
+    "question": "Grand rapace diurne au regard perçant et serres acérées.",
+    "hint": "Emblème des cimes montagneuses.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "DAUPHIN",
+    "question": "Cétacé marin joueur réputé pour sa vive intelligence.",
+    "hint": "Communique par cliquetis et sifflements.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BALEINE",
+    "question": "Géant marin à fanons filtrant le krill des océans.",
+    "hint": "Le plus volumineux mammifère aquatique.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "REQUIN",
+    "question": "Poisson cartilagineux prédateur doté d'un aileron dorsal.",
+    "hint": "Célèbre prédateur des profondeurs.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "TORTUE",
+    "question": "Reptile placide abrité dans une solide carapace osseuse.",
+    "hint": "Marche avec une grande lenteur.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "GRENOUILLE",
+    "question": "Amphibien sauteur coassant près des mares et étangs.",
+    "hint": "Passe par le stade de têtard nageur.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "PAPILLON",
+    "question": "Insecte volant aux ailes chatoyantes issu d'une chenille.",
+    "hint": "Butine les fleurs au soleil.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ABEILLE",
+    "question": "Insecte pollinisateur indispensable fabriquant la cire.",
+    "hint": "Vit dans une ruche organisée.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FOURMI",
+    "question": "Petit insecte travailleur vivant en société souterraine.",
+    "hint": "Capable de porter plusieurs fois son poids.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "SAPIN",
+    "question": "Conifère toujours vert résistant aux grands froids.",
+    "hint": "Décoré dans les salons à Noël.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CHENE",
+    "question": "Arbre majestueux robuste produisant des glands en automne.",
+    "hint": "Symbole de force et de longévité.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "LAGON",
+    "question": "Étendue d'eau turquoise abritée derrière une barrière de corail.",
+    "hint": "Typique des atolls du Pacifique.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "FALAISE",
+    "question": "Escarpement rocheux abrupt surplombant la mer.",
+    "hint": "Les côtes d'Étretat en sont célèbres.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "GEISER",
+    "question": "Source chaude propulsant par intermittence de la vapeur d'eau.",
+    "hint": "Spectacle géologique fréquent en Islande.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "OASIS",
+    "question": "Point d'eau miraculeux entouré de palmiers au milieu du désert.",
+    "hint": "Halte salvatrice pour les caravanes.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "GROTTE",
+    "question": "Cavité souterraine naturelle creusée dans la roche calcaire.",
+    "hint": "Abrite parfois des stalactites.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "MAREE",
+    "question": "Mouvement oscillatoire de montée et descente de la mer.",
+    "hint": "Régie par l'attraction de la Lune.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CYCLONE",
+    "question": "Violent tourbillon atmosphérique tropical aux vents dévastateurs.",
+    "hint": "Possède un oeil calme en son centre.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "GUEPARD",
+    "question": "Félin le plus rapide sur terre capable de pointes à 110 km/h.",
+    "hint": "A deux lignes noires sous les yeux.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "KANGOUROU",
+    "question": "Marsupial australien bondissant doté d'une poche ventrale.",
+    "hint": "Porte son petit dans sa poche.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "KOALA",
+    "question": "Marsupial arboricole d'Australie se nourrissant d'eucalyptus.",
+    "hint": "Passe la majeure partie du temps endormi.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CAMALEON",
+    "question": "Reptile capable d'ajuster sa teinte et aux yeux mobiles.",
+    "hint": "Possède une longue langue gluante.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "LUCIOLE",
+    "question": "Petit coléoptère produisant une lueur douce dans la nuit.",
+    "hint": "Brille par bioluminescence estivale.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "LIBELLULE",
+    "question": "Insecte volant gracieux aux quatre ailes transparentes.",
+    "hint": "Patrouille au-dessus de l'eau calme.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "HIBOU",
+    "question": "Oiseau rapace nocturne aux aigrettes de plumes sur la tête.",
+    "hint": "Chasse les petits rongeurs la nuit.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CORAIL",
+    "question": "Organisme marin formant de vastes récifs multicolores.",
+    "hint": "Menacé par le réchauffement des océans.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "BAOBAB",
+    "question": "Arbre africain colossal au tronc renflé retenant l'eau.",
+    "hint": "Arbre bouteille de Madagascar.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "SEQUOIA",
+    "question": "Conifère géant millénaire de Californie atteignant 100 mètres.",
+    "hint": "Compté parmi les plus vieux arbres terrestres.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ORCHIDEE",
+    "question": "Fleur tropicale exotique aux corolles fascinantes et complexes.",
+    "hint": "Plante épiphyte poussant sur les troncs.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "TOUNDRA",
+    "question": "Végétation rase subarctique de mousses et lichens sur permafrost.",
+    "hint": "Plaine gelée du grand Nord sans arbres.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "TAIGA",
+    "question": "Immense forêt boréale de conifères ceinturant le pôle Nord.",
+    "hint": "S'étend à travers la Sibérie et le Canada.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "MANGROVE",
+    "question": "Forêt côtière tropicale amphibie aux racines échasses.",
+    "hint": "Écosystème protégeant les littoraux vaseux.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "CENOTE",
+    "question": "Gouffre naturel inondé d'eau douce sacrée au Mexique.",
+    "hint": "Puits naturels de la péninsule du Yucatan.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "ORNITHORYNQUE",
+    "question": "Mammifère australien semi-aquatique à bec de canard pondant des oeufs.",
+    "hint": "Monotrème unique au pelage brun.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "AXOLOTL",
+    "question": "Amphibien mexicain néoténique aux branchies plumeuses roses.",
+    "hint": "Capacité prodigieuse de régénérer ses membres.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "NARCISSE",
+    "question": "Fleur printanière à corolle blanche et trompette jaune d'or.",
+    "hint": "Emblème floral de la renaissance de la nature.",
+    "category": "nature"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "VOLUBILIS",
+    "question": "Plante grimpante annuelle aux clochettes s'ouvrant avec le soleil.",
+    "hint": "Ses fleurs s'épanouissent le matin.",
+    "category": "nature"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "CAFE",
+    "question": "Boisson chaude stimulante infusée.",
+    "hint": "Prend la forme d'un espresso ou d'un cappuccino.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "SOUPE",
+    "question": "Bouillon chaud de légumes mixés.",
+    "hint": "Parfait pour se réchauffer en hiver.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "CREPE",
+    "question": "Galette très fine cuite à la poêle.",
+    "hint": "On la mange à la Chandeleur avec du sucre ou de la pâte à tartiner.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "SUSHI",
+    "question": "Bouchée de riz vinaigré et poisson cru.",
+    "hint": "Spécialité japonaise servie avec de la sauce soja.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "PASTA",
+    "question": "Aliment de semoule de blé cuit à l'eau.",
+    "hint": "Spaghetti, penne ou tagliatelles.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "PIZZA",
+    "question": "Disque de pâte garni de tomate et de fromage.",
+    "hint": "Spécialité italienne cuite au four.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "CANDY",
+    "question": "Douceur sucrée colorée appréciée des enfants.",
+    "hint": "Un bonbon.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "FONDUE",
+    "question": "Plat convivial de fromage fondu au chaudron.",
+    "hint": "Spécialité savoyarde où l'on trempe du pain.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "FROMAGE",
+    "question": "Produit laitier fermenté très varié.",
+    "hint": "Camembert, Roquefort ou Comté.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "MACARON",
+    "question": "Petit gâteau circulaire aux amandes et ganache.",
+    "hint": "Douceur parisienne colorée.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "VANILLE",
+    "question": "Épice parfumée extraite d'une gousse d'orchidée.",
+    "hint": "Parfum classique pour les glaces.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "RECETTE",
+    "question": "Liste d'ingrédients et d'instructions culinaires.",
+    "hint": "On la suit dans un livre de cuisine.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "BAGUETTE",
+    "question": "Pain long et croustillant emblématique.",
+    "hint": "On la prend sous le bras en sortant de la boulangerie.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "CHOCOLAT",
+    "question": "Friandise faite à partir de fèves de cacao.",
+    "hint": "Noir, au lait ou blanc, il réconforte.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "gastronomie",
+    "answer": "CROISSANT",
+    "question": "Viennoiserie feuilletée au beurre en forme de demi-lune.",
+    "hint": "L'incontournable du petit-déjeuner français.",
+    "difficulty": "difficile"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "TARTE",
+    "question": "Pâtisserie ronde cuite sur un fond de pâte garni.",
+    "hint": "Souvent aux pommes ou aux fraises.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "GATEAU",
+    "question": "Douceur sucrée cuite au four pour les anniversaires.",
+    "hint": "On y plante et souffle des bougies.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BONBON",
+    "question": "Petite confiserie très sucrée que les enfants adorent.",
+    "hint": "Aux fruits ou au caramel.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "POMME",
+    "question": "Fruit croquant du verger, vert, jaune ou rouge.",
+    "hint": "Tombe du pommier.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "POULET",
+    "question": "Volaille rôtie très populaire pour le déjeuner dominical.",
+    "hint": "Cuit souvent avec des pommes de terre.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "SALADE",
+    "question": "Mélange frais de légumes crus ou feuilles vertes assaisonnées.",
+    "hint": "Arrosée de vinaigrette.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BEURRE",
+    "question": "Matière grasse onctueuse obtenue en battant la crème de lait.",
+    "hint": "Tartiné sur du pain frais.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "OEUF",
+    "question": "Aliment ovoïde pondu par la poule, jaune et blanc.",
+    "hint": "Cuit dur, au plat ou en omelette.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "LAIT",
+    "question": "Boisson blanche nourrissante issue des vaches ou des chèvres.",
+    "hint": "Sert à fabriquer yaourts et fromages.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "SUCRE",
+    "question": "Poudre cristalline blanche adoucissant les desserts.",
+    "hint": "Extrait de la betterave ou de la canne.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "MIEL",
+    "question": "Nectar doré et sirupeux produit par les abeilles.",
+    "hint": "Récolté dans les ruches.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FARINE",
+    "question": "Poudre fine issue du blé moulu servant de base au pain.",
+    "hint": "Indispensable pour faire des crêpes.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "RIZ",
+    "question": "Céréale en petits grains blancs pilier de la cuisine asiatique.",
+    "hint": "Cultivé dans des rizières inondées.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "TOMATE",
+    "question": "Fruit rouge charnu cuisiné en légume dans nos salades.",
+    "hint": "Base de la sauce bolognaise.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CAROTTE",
+    "question": "Racine orange sucrée et croquante, favorite des lapins.",
+    "hint": "Riche en bêtacarotène.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ORANGE",
+    "question": "Agrume rond et juteux riche en vitamine C.",
+    "hint": "On le presse pour son jus au petit déjeuner.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FRAISE",
+    "question": "Petit fruit rouge printanier ponctué de minuscules akènes.",
+    "hint": "Délicieuse avec un nuage de chantilly.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CERISE",
+    "question": "Fruit rouge vif poussant par paires sur une longue tige.",
+    "hint": "Utilisée dans le gâteau basque ou le clafoutis.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "POIRE",
+    "question": "Fruit à chair fondante en forme de goutte d'eau.",
+    "hint": "La variété Williams est célèbre.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "JAMBON",
+    "question": "Charcuterie traditionnelle tirée de la cuisse du porc.",
+    "hint": "Ingrédient clé du sandwich parisien.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BISCUIT",
+    "question": "Pâtisserie sèche et croquante cuite deux fois.",
+    "hint": "Parfait pour tremper dans le thé.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "GLACE",
+    "question": "Entremets glacé onctueux parfumé à la crème ou aux fruits.",
+    "hint": "Servie en cornet ou en pot en été.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "SAUCE",
+    "question": "Préparation liquide onctueuse pour napper les plats.",
+    "hint": "Béchamel ou poivre par exemple.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FRITE",
+    "question": "Bâtonnet de pomme de terre plongé dans l'huile bouillante.",
+    "hint": "Accompagne le steak dans les brasseries.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "QUICHE",
+    "question": "Tarte salée garnie d'un appareil aux oeufs, crème et lardons.",
+    "hint": "La plus réputée vient de Lorraine.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "BRIOCHE",
+    "question": "Viennoiserie dorée à pâte levée riche en beurre et oeufs.",
+    "hint": "Tressée ou en couronne moelleuse.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ECLAIR",
+    "question": "Pâtisserie allongée en pâte à choux fourrée et glacée.",
+    "hint": "Le plus classique est au chocolat ou café.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "GRATIN",
+    "question": "Plat doré au four recouvert d'une croûte croustillante.",
+    "hint": "Le dauphinois utilise des pommes de terre.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "RISOTTO",
+    "question": "Spécialité italienne de riz crémeux cuit au bouillon.",
+    "hint": "Souvent parfumé au parmesan et champignons.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "RAVIOLI",
+    "question": "Petits carrés de pâte farcis de viande ou de ricotta.",
+    "hint": "Pâtes farcies d'origine italienne.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "RATATOUILLE",
+    "question": "Mijoté provençal d'aubergines, courgettes et poivrons.",
+    "hint": "Parfumée aux herbes de Provence.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CANARD",
+    "question": "Volaille savoureuse préparée en magret ou confit.",
+    "hint": "Spécialité réputée du Sud-Ouest.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "AUBERGINE",
+    "question": "Légume violet foncé charnu pilier du caviar végétal.",
+    "hint": "Ingrédient central de la moussaka.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CHAMPIGNON",
+    "question": "Organisme forestier à chapeau cuisiné en poêlée.",
+    "hint": "Celui de Paris pousse en champignonnière.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CITRON",
+    "question": "Agrume jaune très acide utilisé pour rehausser les poissons.",
+    "hint": "Son zeste parfume les desserts.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "AVOCAT",
+    "question": "Fruit crémeux à gros noyau vert foncé et chair tendre.",
+    "hint": "Base mexicaine du guacamole.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "MOUTARDE",
+    "question": "Condiment piquant élaboré avec des graines broyées.",
+    "hint": "Celle de Dijon est renommée mondialement.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "VINAIGRE",
+    "question": "Liquide acide résultant de la fermentation du vin.",
+    "hint": "Élément acide de la vinaigrette.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "POIVRE",
+    "question": "Épice universelle en petits grains noirs moulus.",
+    "hint": "Compagnon inséparable de la salière.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "BASILIC",
+    "question": "Herbe aromatique méditerranéenne aux feuilles parfumées.",
+    "hint": "Composant principal du pesto génois.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "EPINARD",
+    "question": "Feuille verte riche en fer consommée cuite ou en salade.",
+    "hint": "Donnait sa force au marin Popeye.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "SAUMON",
+    "question": "Poisson gras à chair rose remontant les rivières d'eau douce.",
+    "hint": "Souvent consommé fumé sur des toasts.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "BOUILLABAISSE",
+    "question": "Ragoût traditionnel de poissons variés de roche marseillais.",
+    "hint": "Servi avec des croûtons et de la rouille.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "FOIEGRAS",
+    "question": "Mets gastronomique de fête issu du gavage traditionnel.",
+    "hint": "Spécialité luxueuse du terroir français.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "TRUFFE",
+    "question": "Champignon souterrain noir rare et extrêmement parfumé.",
+    "hint": "Recherché dans les bois par des chiens truffiers.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "SAFRAN",
+    "question": "Épice précieuse rouge foncé issue des stigmates de crocus.",
+    "hint": "L'or rouge des cuisiniers pour la paella.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "CARDAMOME",
+    "question": "Épice indienne en gousse verte au parfum camphré raffiné.",
+    "hint": "Parfume le thé chaï et les currys.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "MILLEFEUILLE",
+    "question": "Pâtisserie multicouche superposant feuilletage et crème.",
+    "hint": "Garni de crème pâtissière et glacé de sucre fondant.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "CASSOULET",
+    "question": "Plat mijoté du Sud-Ouest aux haricots blancs et canard confit.",
+    "hint": "Castelnaudary en revendique le berceau.",
+    "category": "gastronomie"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "SOUFFLE",
+    "question": "Appareil léger aux blancs battus gonflant spectaculairement au four.",
+    "hint": "Doit être servi dès la sortie du four avant qu'il ne retombe.",
+    "category": "gastronomie"
+  },
+  {
+    "category": "mythes",
+    "answer": "RA",
+    "question": "Dieu égyptien du soleil.",
+    "hint": "Représenté avec une tête de faucon portant un disque.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "THOR",
+    "question": "Dieu nordique du tonnerre.",
+    "hint": "Possède le marteau Mjolnir.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "LOKI",
+    "question": "Dieu nordique de la malice.",
+    "hint": "Peut changer de forme.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "YETI",
+    "question": "Abominable homme des neiges.",
+    "hint": "Créature légendaire de l'Himalaya.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ARES",
+    "question": "Dieu grec de la guerre brute.",
+    "hint": "Fils de Zeus et d'Héra.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ISIS",
+    "question": "Déesse égyptienne de la magie.",
+    "hint": "Épouse et sœur d'Osiris.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ZEUS",
+    "question": "Dieu grec du ciel et de la foudre.",
+    "hint": "Il vit sur le Mont Olympe.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ODIN",
+    "question": "Dieu suprême de la mythologie nordique.",
+    "hint": "Père de Thor, n'a qu'un seul œil.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "NAINS",
+    "question": "Créatures vivant sous terre.",
+    "hint": "Petits, barbus et excellents forgerons.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "GEANT",
+    "question": "Humanoïde de taille immense.",
+    "hint": "Les Titans en Grèce ou les Jötunn chez les Nordiques.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "HADES",
+    "question": "Dieu grec du royaume des morts.",
+    "hint": "Frère de Zeus et Poséidon.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ELFES",
+    "question": "Créatures magiques de la forêt.",
+    "hint": "Belles, immortelles et agiles.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "MOMIE",
+    "question": "Cadavre conservé par embaumement.",
+    "hint": "Se réveille pour maudire les profanateurs.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "TROLL",
+    "question": "Monstre de la mythologie nordique.",
+    "hint": "Grand, bête et pétrifié par le soleil.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "HORUS",
+    "question": "Dieu égyptien du ciel et de la royauté.",
+    "hint": "Son œil sert d'amulette protectrice.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "GRAAL",
+    "question": "Coupe sacrée recherchée par les chevaliers.",
+    "hint": "Recherché par la Table Ronde.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "GOLEM",
+    "question": "Être d'argile animé de la mythologie juive.",
+    "hint": "Celui de Prague est le plus célèbre.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ICARE",
+    "question": "Fils de Dédale mort pour avoir volé trop près du soleil.",
+    "hint": "Ses ailes de cire ont fondu.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "KRAKEN",
+    "question": "Monstre marin géant.",
+    "hint": "Sorte de pieuvre géante coulant les navires.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "HERMES",
+    "question": "Dieu messager des dieux.",
+    "hint": "Porte des sandales ailées.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ULYSSE",
+    "question": "Héros grec roi d'Ithaque.",
+    "hint": "A voyagé pendant dix ans dans l'Odyssée.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ARTHUR",
+    "question": "Roi légendaire de Bretagne.",
+    "hint": "Possède l'épée Excalibur.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ANUBIS",
+    "question": "Dieu égyptien à tête de chacal.",
+    "hint": "Guide les âmes vers la pesée du cœur.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "ZOMBIE",
+    "question": "Mort-vivant affamé de cerveaux.",
+    "hint": "Réanimé par la magie vaudou ou un virus.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "OSIRIS",
+    "question": "Dieu égyptien du royaume des morts.",
+    "hint": "Vert de peau, ressuscité par Isis.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "PEGASE",
+    "question": "Cheval ailé de la mythologie grecque.",
+    "hint": "Né du sang de la Méduse.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "mythes",
+    "answer": "FENRIR",
+    "question": "Loup géant de la mythologie nordique.",
+    "hint": "Fils de Loki, destiné à avaler Odin.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "MERLIN",
+    "question": "Enchanteur de la légende arthurienne.",
+    "hint": "Conseiller du roi Arthur.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "SPHINX",
+    "question": "Créature à corps de lion et tête humaine.",
+    "hint": "Pose des énigmes aux voyageurs à Thèbes.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "MEDUSE",
+    "question": "Femme mythologique dont le regard pétrifie.",
+    "hint": "Elle a des serpents à la place des cheveux.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "SIRENE",
+    "question": "Créature envoûtant les marins par son chant.",
+    "hint": "Elle a une queue de poisson.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "ATHENA",
+    "question": "Déesse grecque de la sagesse et de la guerre.",
+    "hint": "Née armée du crâne de Zeus.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "DRAGON",
+    "question": "Créature reptilienne légendaire cracheuse de feu.",
+    "hint": "Il garde souvent des trésors dans des donjons.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "GRIFFON",
+    "question": "Créature mi-aigle mi-lion.",
+    "hint": "Garde les trésors.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "ACHILLE",
+    "question": "Héros de la guerre de Troie.",
+    "hint": "Son seul point faible était son talon.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "CERBERE",
+    "question": "Chien à trois têtes des Enfers.",
+    "hint": "Garde la porte du royaume d'Hadès.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "LICORNE",
+    "question": "Cheval mythique possédant une corne.",
+    "hint": "On l'associe souvent à la magie et aux arcs-en-ciel.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "APOLLON",
+    "question": "Dieu grec des arts et de la lumière.",
+    "hint": "Joue de la lyre.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "HERCULE",
+    "question": "Demi-dieu romain à la force légendaire.",
+    "hint": "Connu pour ses douze travaux.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "VAMPIRE",
+    "question": "Créature nocturne qui se nourrit de sang.",
+    "hint": "Dracula est le plus connu d'entre eux.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "PHOENIX",
+    "question": "Oiseau fabuleux qui renaît de ses cendres.",
+    "hint": "Associé au feu et à l'immortalité.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "CHIMERE",
+    "question": "Monstre assemblé de lion, chèvre et serpent.",
+    "hint": "Crache du feu, tuée par Bellérophon.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "mythes",
+    "answer": "CYCLOPE",
+    "question": "Géant de la mythologie grecque n'ayant qu'un œil.",
+    "hint": "Ulysse en a aveuglé un célèbre, Polyphème.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "mythes",
+    "answer": "CENTAURE",
+    "question": "Créature mi-homme mi-cheval.",
+    "hint": "Chiron était le plus sage d'entre eux.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "mythes",
+    "answer": "VALHALLA",
+    "question": "Paradis des guerriers nordiques.",
+    "hint": "Palais d'Odin.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "mythes",
+    "answer": "POSEIDON",
+    "question": "Dieu grec des mers et des océans.",
+    "hint": "Son arme est le trident.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "mythes",
+    "answer": "VALKYRIE",
+    "question": "Guerrière nordique guidant les morts.",
+    "hint": "Emmène les braves au Valhalla.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "mythes",
+    "answer": "MINOTAURE",
+    "question": "Créature mi-homme mi-taureau.",
+    "hint": "Il était enfermé dans le labyrinthe de Dédale.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "mythes",
+    "answer": "EXCALIBUR",
+    "question": "Épée magique retirée du rocher.",
+    "hint": "Symbole de la royauté d'Arthur.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "mythes",
+    "answer": "APHRODITE",
+    "question": "Déesse grecque de la beauté et de l'amour.",
+    "hint": "Mère d'Éros.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "histoire",
+    "answer": "PAX",
+    "question": "Période de paix sous l'Empire romain.",
+    "hint": "La Pax Romana.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "histoire",
+    "answer": "MUSEE",
+    "question": "Lieu de conservation des trésors du passé.",
+    "hint": "Le Louvre en est un grand exemple.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "histoire",
+    "answer": "ARMURE",
+    "question": "Protection métallique du corps au combat.",
+    "hint": "Composée de casque, cuirasse et jambières.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "histoire",
+    "answer": "VIKING",
+    "question": "Navigateur et explorateur scandinave du Moyen Âge.",
+    "hint": "Voyageait sur des drakkars.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "histoire",
+    "answer": "PHARAON",
+    "question": "Souverain de l'Égypte antique.",
+    "hint": "Ramsès II ou Toutânkhamon.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "histoire",
+    "answer": "CHATEAU",
+    "question": "Demeure fortifiée du Moyen Âge.",
+    "hint": "Construit avec donjon et créneaux.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "histoire",
+    "answer": "DRAKKAR",
+    "question": "Bateau à proue de dragon des scandinaves.",
+    "hint": "Armé de rames et d'une grande voile.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "histoire",
+    "answer": "COLISEE",
+    "question": "Amphithéâtre antique géant au cœur de Rome.",
+    "hint": "Symbole de la Rome antique.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "histoire",
+    "answer": "EMPEREUR",
+    "question": "Dirigeant d'un grand empire.",
+    "hint": "Jules César ou Napoléon.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "histoire",
+    "answer": "COURONNE",
+    "question": "Ornement royal serti de pierres précieuses.",
+    "hint": "Portée sur la tête des monarques.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "histoire",
+    "answer": "PYRAMIDE",
+    "question": "Monument antique égyptien en pierre à base carrée.",
+    "hint": "Tombeau des pharaons.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "histoire",
+    "answer": "MANUSCRIT",
+    "question": "Document historique rédigé à la main.",
+    "hint": "Écrit par les moines copistes.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "histoire",
+    "answer": "CHEVALIER",
+    "question": "Guerrier en armure combattant à cheval.",
+    "hint": "Prêtait serment d'allégeance au seigneur.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "histoire",
+    "answer": "REVOLUTION",
+    "question": "Changement politique majeur et soudain.",
+    "hint": "Celle de 1789 en France.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "histoire",
+    "answer": "GLADIATEUR",
+    "question": "Combattant luttant dans l'arène romaine.",
+    "hint": "Faisait le spectacle au Colisée.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "cinema",
+    "answer": "JEDI",
+    "question": "Chevalier maniant le sabre laser.",
+    "hint": "Guerrier de la paix dans Star Wars.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "cinema",
+    "answer": "OSCAR",
+    "question": "Statuette dorée récompensant le 7ème art.",
+    "hint": "Cérémonie prestigieuse à Hollywood.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "cinema",
+    "answer": "AVATAR",
+    "question": "Film futuriste sur la planète Pandora.",
+    "hint": "Réalisé par James Cameron avec des êtres bleus.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "cinema",
+    "answer": "ACTEUR",
+    "question": "Personne qui incarne un rôle à l'écran.",
+    "hint": "Joue devant la caméra.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "cinema",
+    "answer": "CAMERA",
+    "question": "Appareil servant à enregistrer les scènes.",
+    "hint": "Moteur... Action !",
+    "difficulty": "facile"
+  },
+  {
+    "category": "cinema",
+    "answer": "POPCORN",
+    "question": "Maïs soufflé sucré ou salé.",
+    "hint": "Le grignotage indispensable au cinéma.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "cinema",
+    "answer": "CADREUR",
+    "question": "Technicien tenant la caméra.",
+    "hint": "Il compose les plans visuels.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "cinema",
+    "answer": "CASCADE",
+    "question": "Action spectaculaire et dangereuse au cinéma.",
+    "hint": "Réalisée par un doublure professionnelle.",
+    "difficulty": "facile"
+  },
+  {
+    "category": "cinema",
+    "answer": "TITANIC",
+    "question": "Film culte sur le naufrage d'un paquebot géant.",
+    "hint": "Avec Leonardo DiCaprio et Kate Winslet.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "cinema",
+    "answer": "COMEDIE",
+    "question": "Film dont le but est d'amuser et de faire rire.",
+    "hint": "Le contraire du drame.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "cinema",
+    "answer": "WESTERN",
+    "question": "Genre cinématographique avec cow-boys et shérifs.",
+    "hint": "Duels au soleil dans le Far West.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "cinema",
+    "answer": "SCENARIO",
+    "question": "Texte décrivant le déroulement du film et ses dialogues.",
+    "hint": "Écrit par le scénariste.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "cinema",
+    "answer": "RESERVOIR",
+    "question": "Titre du premier grand film de Quentin Tarantino.",
+    "hint": "Reservoir Dogs.",
+    "difficulty": "moyen"
+  },
+  {
+    "category": "cinema",
+    "answer": "SUPERHEROS",
+    "question": "Personnage doté de pouvoirs sauvant le monde.",
+    "hint": "Batman, Spider-Man ou Iron Man.",
+    "difficulty": "difficile"
+  },
+  {
+    "category": "cinema",
+    "answer": "PROJECTEUR",
+    "question": "Appareil diffusant le film sur le grand écran.",
+    "hint": "Situé dans la cabine au fond de la salle.",
+    "difficulty": "difficile"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "COEUR",
+    "question": "Organe musculaire qui pompe le sang dans tout le corps.",
+    "hint": "Il bat dans notre poitrine.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "POUMON",
+    "question": "Organe respiratoire extrayant l'oxygène de l'air.",
+    "hint": "Nous en avons deux dans la cage thoracique.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CERVEAU",
+    "question": "Centre de commande de la pensée et du système nerveux.",
+    "hint": "Protégé par les os du crâne.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "OEIL",
+    "question": "Organe de la vue qui capte la lumière.",
+    "hint": "Possède un iris et une pupille.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "NEZ",
+    "question": "Organe central du visage dédié à l'odorat.",
+    "hint": "Situé entre les deux yeux.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "OREILLE",
+    "question": "Organe de l'ouïe et de l'équilibre.",
+    "hint": "Composé d'un pavillon et d'un tympan.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BOUCHE",
+    "question": "Ouverture du visage pour s'alimenter et parler.",
+    "hint": "Elle abrite la langue et les dents.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "MAIN",
+    "question": "Extrémité du bras dotée de cinq doigts.",
+    "hint": "Permet la préhension des objets.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "PIED",
+    "question": "Extrémité de la jambe qui supporte le poids du corps.",
+    "hint": "On y enfile des chaussettes.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "DENT",
+    "question": "Organe minéralisé dans la bouche servant à mâcher.",
+    "hint": "Recouverte d'émail blanc.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "LANGUE",
+    "question": "Muscle mobile dans la bouche pour le goût et l'élocution.",
+    "hint": "Tapissée de papilles gustatives.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "BRAS",
+    "question": "Membre supérieur articulé à l'épaule.",
+    "hint": "Comprend le biceps et l'avant-bras.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "JAMBE",
+    "question": "Membre inférieur essentiel à la marche.",
+    "hint": "Va de la hanche au pied.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "GENOU",
+    "question": "Articulation majeure reliant la cuisse à la jambe.",
+    "hint": "Protégé par la rotule.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "COUDE",
+    "question": "Articulation médiane du bras permettant de plier.",
+    "hint": "Entre le bras et l'avant-bras.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "EPAULE",
+    "question": "Articulation rattachant le bras au tronc.",
+    "hint": "Formée par la clavicule et l'omoplate.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "CHEVEU",
+    "question": "Fibre de kératine poussant sur le cuir chevelu.",
+    "hint": "On va chez le coiffeur pour le tailler.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ONGLE",
+    "question": "Lame cornée protégeant le bout des doigts.",
+    "hint": "On le coupe ou le vernit.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "PEAU",
+    "question": "Plus grand organe du corps qui nous enveloppe entièrement.",
+    "hint": "Protège contre les agressions extérieures.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "ESTOMAC",
+    "question": "Poche musculaire du tube digestif brassant les aliments.",
+    "hint": "Produit des sucs gastriques acides.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "DOS",
+    "question": "Face postérieure du tronc humain.",
+    "hint": "Soutenu par la colonne vertébrale.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "COU",
+    "question": "Partie étroite reliant la tête au torse.",
+    "hint": "Contient les vertèbres cervicales.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "VENTRE",
+    "question": "Partie antérieure inférieure du tronc abritant les viscères.",
+    "hint": "On y observe le nombril.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "GORGE",
+    "question": "Conduit interne reliant le fond de la bouche au pharynx.",
+    "hint": "Elle devient rouge lors d'une angine.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "LEVRE",
+    "question": "Bordure charnue mobile encadrant la bouche.",
+    "hint": "On y dépose un baiser.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "facile",
+    "answer": "FRONT",
+    "question": "Partie supérieure et plane du visage au-dessus des yeux.",
+    "hint": "On y pose la main pour sentir la fièvre.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "FOIE",
+    "question": "Plus volumineuse glande de l'organisme, purifie les toxines.",
+    "hint": "Situé sous le diaphragme à droite.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "REIN",
+    "question": "Organe en forme de haricot filtrant les déchets sanguins.",
+    "hint": "Produit l'urine pour l'élimination.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "SQUELETTE",
+    "question": "Charpente osseuse interne composée de 206 os.",
+    "hint": "Donne sa forme au corps humain.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CRANE",
+    "question": "Boîte osseuse protectrice enveloppant l'encéphale.",
+    "hint": "Abrite et protège le cerveau.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ROTULE",
+    "question": "Petit os sésamoïde situé sur l'avant du genou.",
+    "hint": "Également appelée patella.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CLAVICULE",
+    "question": "Os horizontal reliant le haut du sternum à l'épaule.",
+    "hint": "Visible à la base du cou.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "OMOPLATE",
+    "question": "Os plat et triangulaire situé en haut du dos.",
+    "hint": "Nommé scapula en anatomie moderne.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "INTESTIN",
+    "question": "Long canal replié chargé d'absorber les nutriments.",
+    "hint": "Se compose du grêle et du côlon.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CARTILAGE",
+    "question": "Tissu conjonctif souple et résistant protégeant les articulations.",
+    "hint": "Forme l'armature souple des oreilles et du nez.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "VEINE",
+    "question": "Vaisseau ramenant le sang désoxygéné vers le coeur.",
+    "hint": "Apparaît bleuâtre sous la peau fine.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "ARTERE",
+    "question": "Vaisseau élastique propulsant le sang rouge sous pression.",
+    "hint": "L'aorte en est le tronc principal.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "TENDON",
+    "question": "Cordelette fibreuse solide amarrant le muscle à l'os.",
+    "hint": "Le plus célèbre est au talon (Achille).",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "NERF",
+    "question": "Faisceau conducteur transmettant les signaux électriques.",
+    "hint": "Permet la sensibilité et la motricité.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CIL",
+    "question": "Poil court bordant les paupières pour protéger la cornée.",
+    "hint": "Empêche les poussières d'entrer dans l'oeil.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "SOURCIL",
+    "question": "Arcade pileuse protégeant les yeux de la sueur du front.",
+    "hint": "On le fronce quand on réfléchit.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "moyen",
+    "answer": "CHEVILLE",
+    "question": "Articulation porteuse reliant la jambe au tarse du pied.",
+    "hint": "Sujette aux entorses lors des faux pas.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "TYMPAN",
+    "question": "Fine membrane vibrante de l'oreille interne transmettant le son.",
+    "hint": "Sépare le conduit auditif de la caisse moyenne.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "STERNUM",
+    "question": "Os plat médian du thorax fermant la cage sur l'avant.",
+    "hint": "Point d'attache ventral des côtes vraies.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "TIBIA",
+    "question": "Os antérieur majeur et robuste du bas de la jambe.",
+    "hint": "Voisin latéral de la fibula (péroné).",
+    "category": "corps"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "FEMUR",
+    "question": "Os de la cuisse, le plus long et résistant du corps.",
+    "hint": "S'emboîte dans la hanche par sa tête sphérique.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "DIAPHRAGME",
+    "question": "Vaste muscle bombé séparant le thorax de l'abdomen.",
+    "hint": "Moteur principal de l'inspiration d'air.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "PANCREAS",
+    "question": "Organe glandulaire sécrétant l'insuline et des enzymes.",
+    "hint": "Régule la glycémie dans le sang.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "HYPOPHYSE",
+    "question": "Glande endocrine logée dans la selle turcique du crâne.",
+    "hint": "Chef d'orchestre des hormones corporelles.",
+    "category": "corps"
+  },
+  {
+    "difficulty": "difficile",
+    "answer": "RADIUS",
+    "question": "Os de l'avant-bras qui tourne pour orienter la paume.",
+    "hint": "Situé du côté latéral du pouce.",
+    "category": "corps"
+  }
 ]

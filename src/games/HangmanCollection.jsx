@@ -8,6 +8,7 @@ const categories = [
     icon: '📚',
     items: [
       { id: 'mixte', name: 'Mélange (Aléatoire)', icon: '🎲' },
+      { id: 'corps', name: 'Corps Humain', icon: '🫀' },
       { id: 'logique', name: 'Logique & Énigmes', icon: '🧠' },
       { id: 'science', name: 'Science & Espace', icon: '🚀' },
       { id: 'mythes', name: 'Mythes & Légendes', icon: '🐉' },
@@ -34,7 +35,7 @@ const categories = [
     items: [
       { id: 'chalk', name: 'Tableau Noir', icon: '🖍️' },
       { id: 'paper', name: 'Cahier d\'écolier', icon: '📝' },
-      { id: 'neon', name: 'Cyber-Pendu', icon: '🌌' },
+      { id: 'night_ink', name: 'Encre de Nuit', icon: '🖋️' },
       { id: 'parchment', name: 'Parchemin Ancien', icon: '📜' }
     ]
   }

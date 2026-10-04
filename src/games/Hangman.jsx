@@ -413,15 +413,16 @@ export default function Hangman({
           keyBg: 'rgba(255,255,255,0.15)',
           keyColor: '#f8fafc'
         };
+      case 'night_ink':
       case 'neon':
         return {
           bg: '#0f172a',
           bgImage: 'none',
-          color: '#38bdf8',
-          riddleBg: 'rgba(56, 189, 248, 0.1)',
-          border: '1px solid #38bdf8',
-          keyBg: 'rgba(56, 189, 248, 0.15)',
-          keyColor: '#38bdf8'
+          color: '#e2e8f0',
+          riddleBg: 'rgba(30, 41, 59, 0.75)',
+          border: '1px solid #475569',
+          keyBg: 'rgba(30, 41, 59, 0.9)',
+          keyColor: '#f8fafc'
         };
       default:
         return {
@@ -459,7 +460,7 @@ export default function Hangman({
         }
         .letter-pop {
           animation: popLetter 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-          text-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+          font-weight: 800;
         }
         @keyframes popLetter {
           0% { transform: scale(0.5); opacity: 0; }
@@ -604,7 +605,7 @@ export default function Hangman({
               border = '2px solid #8b5cf6';
               color = '#8b5cf6';
               bg = 'rgba(139, 92, 246, 0.15)';
-              boxShadow = '0 0 10px rgba(139, 92, 246, 0.3)';
+              boxShadow = '0 2px 6px rgba(139, 92, 246, 0.35)';
             }
 
             return (
@@ -633,7 +634,7 @@ export default function Hangman({
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
             <button
               onClick={forceNextQuestion}
-              className="retro-btn pulse-glow"
+              className="retro-btn"
               style={{
                 padding: '9px 22px',
                 background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
@@ -646,7 +647,7 @@ export default function Hangman({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 0 16px rgba(139, 92, 246, 0.6)'
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)'
               }}
               title="Passer à la devinette suivante sans compléter"
             >

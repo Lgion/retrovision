@@ -114,21 +114,20 @@ export default function ThemeMiniature({
   // =========================================================================
   if (g.includes('bubble')) {
     switch (t) {
+      case 'midnight':
       case 'neon':
         return (
           <svg viewBox="0 0 80 60" width={width} height={height} style={style} fill="none">
-            <rect x="8" y="6" width="64" height="48" rx="8" fill="#080C16" stroke="#1E293B" strokeWidth="1" />
-            {/* Glowing neon bubbles */}
-            <circle cx="28" cy="26" r="11" fill="#00F0FF" opacity="0.3" filter="drop-shadow(0 0 6px #00F0FF)" />
-            <circle cx="28" cy="26" r="9" fill="none" stroke="#00F0FF" strokeWidth="2.2" />
-            <circle cx="26" cy="23" r="2" fill="#FFFFFF" />
+            <rect x="8" y="6" width="64" height="48" rx="8" fill="#0F172A" stroke="#1E293B" strokeWidth="1" />
+            {/* Velvet matte bubbles */}
+            <circle cx="28" cy="26" r="10" fill="#38BDF8" />
+            <circle cx="25" cy="23" r="2.5" fill="#FFFFFF" opacity="0.6" />
 
-            <circle cx="50" cy="30" r="13" fill="#EC4899" opacity="0.3" filter="drop-shadow(0 0 6px #EC4899)" />
-            <circle cx="50" cy="30" r="11" fill="none" stroke="#EC4899" strokeWidth="2.2" />
-            <circle cx="47" cy="26" r="2.5" fill="#FFFFFF" />
+            <circle cx="50" cy="30" r="12" fill="#F43F5E" />
+            <circle cx="47" cy="27" r="3" fill="#FFFFFF" opacity="0.6" />
 
-            <circle cx="36" cy="42" r="9" fill="#FACC15" opacity="0.3" filter="drop-shadow(0 0 6px #FACC15)" />
-            <circle cx="36" cy="42" r="7" fill="none" stroke="#FACC15" strokeWidth="2" />
+            <circle cx="36" cy="42" r="8" fill="#FBBF24" />
+            <circle cx="34" cy="40" r="2" fill="#FFFFFF" opacity="0.6" />
           </svg>
         );
 
@@ -176,6 +175,7 @@ export default function ThemeMiniature({
   // =========================================================================
   if (g.includes('sudoku')) {
     switch (t) {
+      case 'slate_dark':
       case 'neon':
         return (
           <svg viewBox="0 0 80 60" width={width} height={height} style={style} fill="none">
@@ -332,17 +332,18 @@ export default function ThemeMiniature({
           </svg>
         );
 
+      case 'slate':
       case 'neon':
         return (
           <svg viewBox="0 0 80 60" width={width} height={height} style={style} fill="none">
-            <rect x="14" y="8" width="52" height="44" rx="5" fill="#050505" stroke="#00F0FF" strokeWidth="1.5" />
-            <rect x="17" y="11" width="22" height="18" fill="#111111" stroke="#00F0FF" strokeWidth="1" rx="2" />
-            <text x="28" y="24" fill="#00F0FF" fontSize="10" fontWeight="bold" textAnchor="middle">1</text>
-            <rect x="41" y="11" width="22" height="18" fill="#111111" stroke="#EC4899" strokeWidth="1" rx="2" />
-            <text x="52" y="24" fill="#EC4899" fontSize="10" fontWeight="bold" textAnchor="middle">2</text>
-            <rect x="17" y="31" width="22" height="18" fill="#111111" stroke="#FACC15" strokeWidth="1" rx="2" />
-            <text x="28" y="44" fill="#FACC15" fontSize="9" textAnchor="middle">🚩</text>
-            <rect x="41" y="31" width="22" height="18" fill="#111111" stroke="#00F0FF" strokeWidth="1" rx="2" />
+            <rect x="14" y="8" width="52" height="44" rx="5" fill="#1E293B" stroke="#475569" strokeWidth="1.5" />
+            <rect x="17" y="11" width="22" height="18" fill="#334155" stroke="#475569" strokeWidth="1" rx="2" />
+            <text x="28" y="24" fill="#38BDF8" fontSize="10" fontWeight="bold" textAnchor="middle">1</text>
+            <rect x="41" y="11" width="22" height="18" fill="#334155" stroke="#475569" strokeWidth="1" rx="2" />
+            <text x="52" y="24" fill="#34D399" fontSize="10" fontWeight="bold" textAnchor="middle">2</text>
+            <rect x="17" y="31" width="22" height="18" fill="#334155" stroke="#475569" strokeWidth="1" rx="2" />
+            <text x="28" y="44" fill="#F87171" fontSize="9" textAnchor="middle">🚩</text>
+            <rect x="41" y="31" width="22" height="18" fill="#334155" stroke="#475569" strokeWidth="1" rx="2" />
           </svg>
         );
 
@@ -371,6 +372,65 @@ export default function ThemeMiniature({
             <rect x="17" y="31" width="22" height="18" fill="#475569" stroke="#94A3B8" strokeWidth="1" rx="1" />
             <text x="28" y="44" fill="#EF4444" fontSize="9" textAnchor="middle">🚩</text>
             <rect x="41" y="31" width="22" height="18" fill="#475569" stroke="#94A3B8" strokeWidth="1" rx="1" />
+          </svg>
+        );
+    }
+  }
+
+  // =========================================================================
+  // 6. MEMORY PAIRS THEMES
+  // =========================================================================
+  if (g.includes('memory')) {
+    switch (t) {
+      case 'natural_wood':
+        return (
+          <svg viewBox="0 0 80 60" width={width} height={height} style={style} fill="none">
+            <rect x="14" y="8" width="52" height="44" rx="5" fill="#78350F" stroke="#B45309" strokeWidth="1.5" />
+            <rect x="20" y="13" width="18" height="24" rx="3" fill="#FEF3C7" stroke="#D97706" strokeWidth="1" />
+            <circle cx="29" cy="25" r="5" fill="#D97706" />
+            <rect x="42" y="13" width="18" height="24" rx="3" fill="#451A03" stroke="#D97706" strokeWidth="1" />
+            <circle cx="51" cy="25" r="4" fill="#FEF3C7" opacity="0.4" />
+          </svg>
+        );
+      case 'watercolor':
+        return (
+          <svg viewBox="0 0 80 60" width={width} height={height} style={style} fill="none">
+            <rect x="14" y="8" width="52" height="44" rx="5" fill="#F0FDF4" stroke="#93C5FD" strokeWidth="1.5" />
+            <rect x="20" y="13" width="18" height="24" rx="3" fill="#FFFFFF" stroke="#93C5FD" strokeWidth="1" />
+            <circle cx="29" cy="25" r="6" fill="#38BDF8" opacity="0.7" />
+            <rect x="42" y="13" width="18" height="24" rx="3" fill="#6366F1" stroke="#C4B5FD" strokeWidth="1" />
+            <circle cx="51" cy="25" r="5" fill="#FFFFFF" opacity="0.6" />
+          </svg>
+        );
+      case 'herbarium':
+        return (
+          <svg viewBox="0 0 80 60" width={width} height={height} style={style} fill="none">
+            <rect x="14" y="8" width="52" height="44" rx="5" fill="#ECFCCB" stroke="#84CC16" strokeWidth="1.5" />
+            <rect x="20" y="13" width="18" height="24" rx="3" fill="#FEFEFE" stroke="#84CC16" strokeWidth="1" />
+            <path d="M29,20 C27,24 27,28 29,30 C31,28 31,24 29,20Z" fill="#15803D" />
+            <rect x="42" y="13" width="18" height="24" rx="3" fill="#713F12" stroke="#CA8A04" strokeWidth="1" />
+            <circle cx="51" cy="25" r="4" fill="#A3E635" opacity="0.6" />
+          </svg>
+        );
+      case 'minimal':
+        return (
+          <svg viewBox="0 0 80 60" width={width} height={height} style={style} fill="none">
+            <rect x="14" y="8" width="52" height="44" rx="5" fill="#F8FAFC" stroke="#CBD5E1" strokeWidth="1.5" />
+            <rect x="20" y="13" width="18" height="24" rx="3" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="1" />
+            <rect x="26" y="22" width="6" height="6" fill="#0F172A" />
+            <rect x="42" y="13" width="18" height="24" rx="3" fill="#1E293B" stroke="#475569" strokeWidth="1" />
+            <rect x="48" y="22" width="6" height="6" fill="#64748B" />
+          </svg>
+        );
+      case 'japanese_paper':
+      default:
+        return (
+          <svg viewBox="0 0 80 60" width={width} height={height} style={style} fill="none">
+            <rect x="14" y="8" width="52" height="44" rx="5" fill="#F5F2EB" stroke="#D4AF37" strokeWidth="1.5" />
+            <rect x="20" y="13" width="18" height="24" rx="3" fill="#FFFDFA" stroke="#D6CDBD" strokeWidth="1" />
+            <circle cx="29" cy="25" r="5" fill="#E11D48" />
+            <rect x="42" y="13" width="18" height="24" rx="3" fill="#0F172A" stroke="#D4AF37" strokeWidth="1" />
+            <circle cx="51" cy="25" r="4" fill="#D4AF37" opacity="0.8" />
           </svg>
         );
     }

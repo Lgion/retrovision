@@ -17,9 +17,18 @@ const DIRS = {
   'right': { dr: 0, dc: 1, symbol: '▶', color: '#f59e0b' } // Orange
 };
 
-const WIRE_COLORS = [
-  '#0f172a', // Dark Navy for the unified shape look
-];
+const getDirectionColor = (dirName, isLight = false) => {
+  if (isLight) {
+    switch (dirName) {
+      case 'up': return '#dc2626'; // Deep vibrant red
+      case 'down': return '#1d4ed8'; // Deep royal blue
+      case 'left': return '#047857'; // Deep emerald green
+      case 'right': return '#b45309'; // Deep warm amber
+      default: return '#1d4ed8';
+    }
+  }
+  return DIRS[dirName]?.color || '#38bdf8';
+};
 
 const HORSE_MASK_16 = [
   "       XXX      ",
@@ -284,7 +293,7 @@ const generateWireBoard = (size, numWiresTarget) => {
     if (currentWire.length < 3) continue;
 
     const wireId = `wire_${newWires.length}`;
-    const color = WIRE_COLORS[newWires.length % WIRE_COLORS.length];
+    const color = DIRS[dirName]?.color || '#38bdf8';
 
     for (let cell of currentWire) {
       newGrid[cell.r][cell.c] = wireId;
@@ -678,11 +687,60 @@ export default function ArrowPuzzle({
 
   const getThemeStyles = () => {
     switch (customizations.theme) {
-      case 'neon': return { bg: '#130924', wireBg: '#1e1b4b', container: 'rgba(26, 16, 51, 0.9)' };
+      case 'light':
+      case 'clair':
+        return {
+          bg: '#f8fafc',
+          wireBg: '#e2e8f0',
+          container: '#ffffff',
+          boardBorder: '#94a3b8',
+          gridCellBorder: 'rgba(15, 23, 42, 0.15)',
+          text: '#0f172a',
+          isLight: true
+        };
+      case 'midnight':
+      case 'neon':
+        return {
+          bg: '#0b1329',
+          wireBg: '#1e293b',
+          container: 'rgba(15, 23, 42, 0.95)',
+          boardBorder: 'rgba(56, 189, 248, 0.3)',
+          gridCellBorder: 'rgba(56, 189, 248, 0.15)',
+          text: '#f8fafc',
+          isLight: false
+        };
       case 'nature':
-      case 'forest': return { bg: '#042f24', wireBg: '#022c22', container: 'rgba(6, 60, 46, 0.9)' };
-      case 'cyberpunk': return { bg: '#080d1a', wireBg: '#0f172a', container: 'rgba(10, 15, 30, 0.9)' };
-      default: return { bg: '#0f172a', wireBg: '#1e293b', container: 'rgba(15, 23, 42, 0.9)' };
+      case 'forest':
+        return {
+          bg: '#042f24',
+          wireBg: '#022c22',
+          container: 'rgba(6, 60, 46, 0.9)',
+          boardBorder: 'rgba(52, 211, 153, 0.4)',
+          gridCellBorder: 'rgba(52, 211, 153, 0.2)',
+          text: '#f8fafc',
+          isLight: false
+        };
+      case 'navy':
+      case 'cyberpunk':
+        return {
+          bg: '#02182b',
+          wireBg: '#072a4a',
+          container: 'rgba(3, 30, 54, 0.95)',
+          boardBorder: 'rgba(14, 165, 233, 0.3)',
+          gridCellBorder: 'rgba(14, 165, 233, 0.15)',
+          text: '#f8fafc',
+          isLight: false
+        };
+      default:
+        return {
+          bg: '#0f172a',
+          wireBg: '#1e293b',
+          container: 'rgba(15, 23, 42, 0.9)',
+          boardBorder: 'rgba(255, 255, 255, 0.2)',
+          gridCellBorder: 'rgba(255, 255, 255, 0.12)',
+          text: '#f8fafc',
+          isLight: false
+        };
     }
   };
   const theme = getThemeStyles();
@@ -758,8 +816,8 @@ export default function ArrowPuzzle({
             centerContent={
               gameState === 'playing' ? (
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                  <div><span style={{ color: '#8e8a9f' }}>Vies: </span><span style={{ color: '#ef4444', fontSize: '1rem' }}>{'❤️'.repeat(lives)}{'🖤'.repeat(3 - lives)}</span></div>
-                  <div><span style={{ color: '#8e8a9f' }}>Restes: </span><span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem' }}>{arrowsLeft}</span></div>
+                  <div><span style={{ color: theme.isLight ? '#64748b' : '#8e8a9f' }}>Vies: </span><span style={{ color: '#ef4444', fontSize: '1rem' }}>{'❤️'.repeat(lives)}{'🖤'.repeat(3 - lives)}</span></div>
+                  <div><span style={{ color: theme.isLight ? '#64748b' : '#8e8a9f' }}>Restes: </span><span style={{ color: theme.isLight ? '#0f172a' : '#fff', fontWeight: 'bold', fontSize: '1rem' }}>{arrowsLeft}</span></div>
                 </div>
               ) : null
             }
@@ -770,14 +828,14 @@ export default function ArrowPuzzle({
         {gameState === 'menu' && !isIntermission && (
           <div style={menuStyle}>
             <div style={{ fontSize: '5rem', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.5))' }}>⬆️</div>
-            <h2 style={{ color: '#fff', marginBottom: '30px', textAlign: 'center' }}>Démêlez les flèches !</h2>
+            <h2 style={{ color: theme.isLight ? '#0f172a' : '#fff', marginBottom: '30px', textAlign: 'center' }}>Démêlez les flèches !</h2>
 
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '30px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', background: theme.isLight ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '30px', flexWrap: 'wrap', justifyContent: 'center' }}>
               <button
                 onClick={() => { setMode('scattered'); updateGameConfig('arrows', 'mode', 'scattered'); sound.playClick(); }}
                 style={{
                   background: mode === 'scattered' ? '#3b82f6' : 'transparent',
-                  color: mode === 'scattered' ? 'white' : '#cbd5e1',
+                  color: mode === 'scattered' ? 'white' : (theme.isLight ? '#334155' : '#cbd5e1'),
                   border: 'none', padding: '10px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold'
                 }}
               >
@@ -787,7 +845,7 @@ export default function ArrowPuzzle({
                 onClick={() => { setMode('dense'); updateGameConfig('arrows', 'mode', 'dense'); sound.playClick(); }}
                 style={{
                   background: mode === 'dense' ? '#10b981' : 'transparent',
-                  color: mode === 'dense' ? 'white' : '#cbd5e1',
+                  color: mode === 'dense' ? 'white' : (theme.isLight ? '#334155' : '#cbd5e1'),
                   border: 'none', padding: '10px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold'
                 }}
               >
@@ -797,7 +855,7 @@ export default function ArrowPuzzle({
                 onClick={() => { setMode('wire'); updateGameConfig('arrows', 'mode', 'wire'); sound.playClick(); }}
                 style={{
                   background: mode === 'wire' ? '#ec4899' : 'transparent',
-                  color: mode === 'wire' ? 'white' : '#cbd5e1',
+                  color: mode === 'wire' ? 'white' : (theme.isLight ? '#334155' : '#cbd5e1'),
                   border: 'none', padding: '10px 20px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold'
                 }}
               >
@@ -815,7 +873,7 @@ export default function ArrowPuzzle({
               </button>
             </div>
 
-            <div style={{ marginTop: '30px', color: '#cbd5e1', textAlign: 'center', fontSize: '14px', maxWidth: '300px' }}>
+            <div style={{ marginTop: '30px', color: theme.isLight ? '#475569' : '#cbd5e1', textAlign: 'center', fontSize: '14px', maxWidth: '300px' }}>
               <strong>Règle :</strong> {mode === 'wire' ? "Touchez un fil pour le faire glisser. Il ne peut s'enfuir que si la sortie en face de sa tête est libre !" : "Touchez une flèche pour la faire voler. Elle ne peut partir que si son chemin est libre !"}
             </div>
           </div>
@@ -829,8 +887,8 @@ export default function ArrowPuzzle({
             <div style={{
               position: 'relative', width: boardSize * CELL_SIZE, height: boardSize * CELL_SIZE,
               backgroundColor: mode === 'wire' ? theme.wireBg : theme.bg,
-              borderRadius: '12px', border: '2px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)', margin: '0 auto', overflow: 'hidden',
+              borderRadius: '12px', border: `2px solid ${theme.boardBorder || 'rgba(255,255,255,0.1)'}`,
+              boxShadow: theme.isLight ? '0 10px 25px rgba(0,0,0,0.08)' : '0 10px 30px rgba(0,0,0,0.5)', margin: '0 auto', overflow: 'hidden',
               animation: 'boardEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both' // Staging & Appeal
             }}>
               <div style={{
@@ -838,7 +896,7 @@ export default function ArrowPuzzle({
                 display: 'grid', gridTemplateColumns: `repeat(${boardSize}, 1fr)`, zIndex: 0
               }}>
                 {Array.from({ length: boardSize * boardSize }).map((_, i) => (
-                  <div key={i} style={{ border: `1px ${mode === 'wire' ? 'solid transparent' : 'dashed rgba(255,255,255,0.05)'}` }} />
+                  <div key={i} style={{ border: `1px ${mode === 'wire' ? 'solid' : 'dashed'} ${theme.gridCellBorder}` }} />
                 ))}
               </div>
 
@@ -860,6 +918,8 @@ export default function ArrowPuzzle({
                     if (wire.dir === 'left') arrowPoly = `${cx + size * 0.4},${cy - size * 0.7} ${cx - size * 0.8},${cy} ${cx + size * 0.4},${cy + size * 0.7}`;
                     if (wire.dir === 'right') arrowPoly = `${cx - size * 0.4},${cy - size * 0.7} ${cx + size * 0.8},${cy} ${cx - size * 0.4},${cy + size * 0.7}`;
 
+                    const wireColor = getDirectionColor(wire.dir, theme.isLight);
+
                     return (
                       <g
                         key={wire.id}
@@ -867,31 +927,33 @@ export default function ArrowPuzzle({
                         onClick={() => handleWireTap(wire)}
                         style={{
                           cursor: 'pointer',
-                          filter: boardSize > 16 ? 'none' : 'drop-shadow(0 2px 3px rgba(0,0,0,0.15))'
+                          filter: boardSize > 16 ? 'none' : (theme.isLight ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))')
                         }}
                       >
                         <path
                           d={getPathD(wire)}
                           fill="none"
-                          stroke={wire.color}
+                          stroke={wireColor}
                           strokeWidth={strokeWidth}
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           style={{
                             strokeDasharray: `${L_orig} 10000`,
                             strokeDashoffset: wire.flying ? -L_exit : 0,
-                            transition: wire.flying ? 'stroke-dashoffset 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none'
+                            transition: wire.flying ? 'stroke-dashoffset 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none',
+                            filter: theme.isLight ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
                           }}
                         />
                         <polygon
                           points={arrowPoly}
-                          fill={wire.color}
-                          stroke={wire.color}
-                          strokeWidth="1"
+                          fill={wireColor}
+                          stroke={theme.isLight ? '#ffffff' : '#0f172a'}
+                          strokeWidth="1.5"
                           strokeLinejoin="round"
                           style={{
                             transform: wire.flying ? `translate(${dir.dc * L_exit}px, ${dir.dr * L_exit}px)` : 'none',
-                            transition: wire.flying ? 'transform 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none'
+                            transition: wire.flying ? 'transform 0.8s cubic-bezier(0.5, -0.3, 0.1, 1.2)' : 'none',
+                            filter: theme.isLight ? 'drop-shadow(0 1px 3px rgba(0,0,0,0.25))' : 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))'
                           }}
                         />
                       </g>
@@ -903,6 +965,7 @@ export default function ArrowPuzzle({
                   {/* Static Arrows for scattered / dense modes */}
                   {grid.map((row, r) => row.map((arrow, c) => {
                     if (!arrow) return null;
+                    const arrowColor = getDirectionColor(arrow.dir, theme.isLight);
                     return (
                       <div
                         key={arrow.id}
@@ -919,8 +982,8 @@ export default function ArrowPuzzle({
                       >
                         <span style={{
                           fontSize: `${fontSize}px`,
-                          color: arrow.color,
-                          filter: `drop-shadow(0 0 5px ${arrow.color}88)`,
+                          color: arrowColor,
+                          filter: theme.isLight ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
                           pointerEvents: 'none'
                         }}>
                           {arrow.symbol}
@@ -935,6 +998,7 @@ export default function ArrowPuzzle({
                     const travelDist = boardSize * CELL_SIZE * 1.5;
                     const destX = arrow.c * CELL_SIZE + dir.dc * travelDist;
                     const destY = arrow.r * CELL_SIZE + dir.dr * travelDist;
+                    const flyColor = getDirectionColor(arrow.dir, theme.isLight);
                     return (
                       <div
                         key={arrow.id}
@@ -950,8 +1014,8 @@ export default function ArrowPuzzle({
                       >
                         <span style={{
                           fontSize: `${fontSize}px`,
-                          color: arrow.color,
-                          filter: `drop-shadow(0 0 10px ${arrow.color})`
+                          color: flyColor,
+                          filter: theme.isLight ? 'drop-shadow(0 1px 3px rgba(0,0,0,0.3))' : 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))'
                         }}>
                           {arrow.symbol}
                         </span>

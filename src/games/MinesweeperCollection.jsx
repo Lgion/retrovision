@@ -19,7 +19,7 @@ const categories = [
     items: [
       { id: 'classic', name: 'Classique Windows', icon: '💻' },
       { id: 'dark', name: 'Opération Nocturne', icon: '🌑' },
-      { id: 'neon', name: 'Cyberspace', icon: '🌌' },
+      { id: 'slate', name: 'Ardoise Mate', icon: '🪨' },
       { id: 'retro_green', name: 'Terminal Vert', icon: '📟' },
       { id: 'glassmorphism', name: 'Verre Dépoli', icon: '🧊' }
     ]

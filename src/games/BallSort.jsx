@@ -10,6 +10,7 @@ import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
 import { shuffleInPlace } from '../utils/commonUtils';
+import { generatePuzzle } from './sort/sortLogic';
 
 const BallSortIntro = ({ onComplete }) => {
   const canvasRef = useRef(null);
@@ -206,6 +207,7 @@ export default function BallSort({
   const confirm = useConfirm();
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
+  const baseTubesCountRef = useRef(0);
   // Game state
   const [showIntro, setShowIntro] = useState(true);
   const [tubes, setTubes] = useState([]);
@@ -271,29 +273,10 @@ export default function BallSort({
     } else {
       numFilled = parseInt(overrideDiff || customizations.difficulty) || 5;
     }
-    lastNumFilledRef.current = numFilled;
-    const numEmpty = numFilled >= 7 ? 2 : 1;
-    const activeColorsKeys = ['R', 'B', 'G', 'Y', 'P', 'O', 'W', 'D', 'M'].slice(0, numFilled);
+    const puzzle = generatePuzzle(numFilled, defaultCap);
+    baseTubesCountRef.current = puzzle.baseTubesCount;
 
-    const ballPool = [];
-    activeColorsKeys.forEach(col => {
-      for (let i = 0; i < defaultCap; i++) {
-        ballPool.push(col);
-      }
-    });
-
-    shuffleInPlace(ballPool);
-
-    const initialTubes = [];
-    for (let i = 0; i < numFilled; i++) {
-      initialTubes.push(ballPool.slice(i * defaultCap, i * defaultCap + defaultCap));
-    }
-
-    for (let i = 0; i < numEmpty; i++) {
-      initialTubes.push([]);
-    }
-
-    setTubes(initialTubes);
+    setTubes(puzzle.tubes);
     setSelectedTube(null);
     setHistory([]);
     setVictoryPhase(0);
@@ -597,7 +580,7 @@ export default function BallSort({
     const prevTubes = JSON.parse(prev);
     setTubes(prevTubes);
 
-    if (prevTubes.length === 11) {
+    if (prevTubes.length === baseTubesCountRef.current) {
       setExtraTubesCount(0);
     }
 

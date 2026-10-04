@@ -3,6 +3,26 @@ import { resolveGameId } from './gamesConfig';
 import { storage } from './storage';
 import { randomChoice } from './commonUtils';
 
+export const THEME_MIGRATIONS = {
+  bubblecool: { neon: 'midnight' },
+  sudoku: { neon: 'slate_dark', cyber: 'graphite' },
+  mines: { neon: 'slate' },
+  arrows: { neon: 'midnight', cyberpunk: 'navy' },
+  '2048': { neon: 'midnight' },
+  hangman: { neon: 'night_ink' },
+  blockfantasy: { cyber: 'graphite' },
+  impossible13: { neon: 'night_pebbles' }
+};
+
+export function migrateTheme(gameKey, themeId) {
+  if (!gameKey || !themeId) return themeId;
+  const gameMigrations = THEME_MIGRATIONS[gameKey];
+  if (gameMigrations && gameMigrations[themeId]) {
+    return gameMigrations[themeId];
+  }
+  return themeId;
+}
+
 export const GAME_THEME_DETAILS = {
   mahjong: [
     { id: 'classic', name: 'Classique', icon: '🀄', desc: 'Symboles traditionnels & ivoire' },
@@ -14,14 +34,14 @@ export const GAME_THEME_DETAILS = {
   ],
   bubblecool: [
     { id: 'candy', name: 'Bonbon Sucré', icon: '🍬', desc: 'Pastels gourmands & reflets' },
-    { id: 'neon', name: 'Néon Cyber', icon: '⚡', desc: 'Bulles fluorescentes lumineuses' },
+    { id: 'midnight', name: 'Nuit Veloutée', icon: '🌙', desc: 'Bleu nuit profond & bulles mates' },
     { id: 'gemstone', name: 'Pierres Précieuses', icon: '💎', desc: 'Rubis, saphirs & émeraudes' }
   ],
   sudoku: [
     { id: 'classic', name: 'Classique', icon: '📝', desc: 'Papier blanc épuré & bleu ardoise' },
-    { id: 'neon', name: 'Néon Zen', icon: '🌌', desc: 'Fond cosmique violet & cyan' },
+    { id: 'slate_dark', name: 'Ardoise Nocturne', icon: '🌑', desc: 'Fond ardoise doux & chiffres ivoire' },
     { id: 'paper', name: 'Parchemin', icon: '📜', desc: 'Kraft chaud & encre sépia' },
-    { id: 'cyber', name: 'Cyberpunk', icon: '⚡', desc: 'Noir profond & jaune laser' },
+    { id: 'graphite', name: 'Graphite Zen', icon: '✒️', desc: 'Anthracite mat & contraste reposant' },
     { id: 'forest', name: 'Forêt Zen', icon: '🌲', desc: 'Vert mousse apaisant & sauge' },
     { id: 'sunset', name: 'Coucher de Soleil', icon: '🌅', desc: 'Dégradé pourpre & or couchant' }
   ],
@@ -50,18 +70,19 @@ export const GAME_THEME_DETAILS = {
   mines: [
     { id: 'classic', name: 'Métal 3D', icon: '💣', desc: 'Gris ardoise en relief biseauté' },
     { id: 'dark', name: 'Nuit Sombre', icon: '🌑', desc: 'Noir bleuté nocturne discret' },
-    { id: 'neon', name: 'Cyber Néon', icon: '⚡', desc: 'Lignes cyan & magenta néon' },
+    { id: 'slate', name: 'Ardoise Mate', icon: '🪨', desc: 'Gris ardoise mat et contrasté' },
     { id: 'retro_green', name: 'Terminal Vert', icon: '📟', desc: 'Moniteur phosphore rétro' },
     { id: 'glassmorphism', name: 'Verre Dépoli', icon: '🧊', desc: 'Effet verre givré translucide' }
   ],
   arrows: [
     { id: 'classic', name: 'Minimaliste', icon: '🏹', desc: 'Bleu ardoise & blanc net' },
-    { id: 'neon', name: 'Néon Électrique', icon: '⚡', desc: 'Flèches luminescentes' },
+    { id: 'light', name: 'Clair Épuré', icon: '☀️', desc: 'Fond clair doux & contraste élevé' },
+    { id: 'midnight', name: 'Nuit Mate', icon: '🌙', desc: 'Tons bleu nuit & flèches douces' },
     { id: 'nature', name: 'Bambou Zen', icon: '🎋', desc: 'Tons verts organiques' },
-    { id: 'cyberpunk', name: 'Cyber Matrix', icon: '🔮', desc: 'High-tech cyan & magenta' }
+    { id: 'navy', name: 'Encre Bleue', icon: '🖋️', desc: 'Bleu marine profond épuré' }
   ],
   '2048': [
-    { id: 'neon', name: 'Néon Original', icon: '🌌', desc: 'Ambiance cyberpunk néon cyan' },
+    { id: 'midnight', name: 'Nuit Mate', icon: '🌙', desc: 'Bleu nuit apaisant & tuiles mates' },
     { id: 'dark', name: 'Sombre Épuré', icon: '🌑', desc: 'Noir minimaliste & contraste net' },
     { id: 'light', name: 'Clair Lumineux', icon: '☀️', desc: 'Fond clair doux & épuré' }
   ],
@@ -72,17 +93,18 @@ export const GAME_THEME_DETAILS = {
     { id: 'royal', name: 'Bleu Saphir', icon: '💎', desc: 'Velours bleu roi de prestige' }
   ],
   hangman: [
-    { id: 'classic', name: 'Craie & Ardoise', icon: '✏️', desc: 'Tableau noir & craie blanche' },
-    { id: 'neon', name: 'Néon Nuit', icon: '💡', desc: 'Lignes néon violettes' },
-    { id: 'vintage', name: 'Vieux Parchemin', icon: '📜', desc: 'Papier vieilli & encre brune' }
+    { id: 'chalk', name: 'Tableau Noir', icon: '🖍️', desc: 'Ardoise mate & craie douce' },
+    { id: 'paper', name: 'Cahier d’écolier', icon: '📝', desc: 'Papier ligné & encre bleue' },
+    { id: 'night_ink', name: 'Encre de Nuit', icon: '🖋️', desc: 'Fond sombre mat & encre argentée' },
+    { id: 'parchment', name: 'Parchemin Ancien', icon: '📜', desc: 'Kraft chaud & typographie sépia' }
   ],
   blockfantasy: [
     { id: 'fantasy', name: 'Gemmes Célestes', icon: '💎', desc: 'Bleu nuit & gemmes vives' },
-    { id: 'cyber', name: 'Cyber Laser', icon: '⚡', desc: 'Grille futuriste néon cyan' },
+    { id: 'graphite', name: 'Graphite', icon: '✒️', desc: 'Fond ardoise mat & gemmes subtiles' },
     { id: 'sunset', name: 'Crépuscule', icon: '🌇', desc: 'Ciel orangé & blocs pourpres' }
   ],
   impossible13: [
-    { id: 'neon', name: 'Néon Fantasy', icon: '✨', desc: 'Disques fluorescents lumineux' },
+    { id: 'night_pebbles', name: 'Galets Nocturnes', icon: '🌙', desc: 'Disques mats et doux sur fond sombre' },
     { id: 'wood', name: 'Bois Cosy', icon: '🪵', desc: 'Ambiance boisée & chaleureuse' },
     { id: 'jewel', name: 'Gemmes Translucides', icon: '💎', desc: 'Éclat cristal & reflets précieux' }
   ],
@@ -90,6 +112,13 @@ export const GAME_THEME_DETAILS = {
     { id: 'forest', name: 'Forêt Magique', icon: '🌲', desc: 'Sous-bois verdoyant' },
     { id: 'cat', name: 'Chat Félin', icon: '🐱', desc: 'Ami félin espiègle' },
     { id: 'sunset', name: 'Crépuscule Doré', icon: '🌅', desc: 'Ciel couchant flamboyant' }
+  ],
+  memory: [
+    { id: 'japanese_paper', name: 'Papier Japonais', icon: '🎴', desc: 'Washi crème & vagues indigo seigaiha' },
+    { id: 'natural_wood', name: 'Bois Naturel', icon: '🪵', desc: 'Cartes en bois chaleureux & gravure' },
+    { id: 'watercolor', name: 'Aquarelle', icon: '🎨', desc: 'Tons pastel lavés & douceur' },
+    { id: 'herbarium', name: 'Herbier Zen', icon: '🌿', desc: 'Papier kraft & silhouettes végétales' },
+    { id: 'minimal', name: 'Épuré', icon: '⬜', desc: 'Design blanc contemporain sobre' }
   ]
 };
 

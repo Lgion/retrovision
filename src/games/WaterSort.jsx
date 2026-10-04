@@ -10,6 +10,7 @@ import IntermissionProposal from '../components/IntermissionProposal';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
 import { shuffleInPlace } from '../utils/commonUtils';
+import { generatePuzzle } from './sort/sortLogic';
 
 export default function WaterSort({
   onBack,
@@ -31,6 +32,7 @@ export default function WaterSort({
   const [showIntro, setShowIntro] = useState(true);
   const containerRef = useRef(null);
   const lastNumFilledRef = useRef(0);
+  const baseTubesCountRef = useRef(0);
   const [tubes, setTubes] = useState([]);
   const [selectedTube, setSelectedTube] = useState(null);
   const [history, setHistory] = useState([]);
@@ -109,26 +111,11 @@ export default function WaterSort({
       numFilled = parseInt(overrideDiff || customizations.difficulty) || 5;
     }
     lastNumFilledRef.current = numFilled;
-    const numEmpty = numFilled >= 7 ? 2 : 1;
-    const activeColorsKeys = ['R', 'B', 'G', 'Y', 'P', 'O', 'W', 'D', 'M'].slice(0, numFilled);
 
-    const liquidPool = [];
-    activeColorsKeys.forEach(col => {
-      for (let i = 0; i < defaultCap; i++) liquidPool.push(col);
-    });
+    const puzzle = generatePuzzle(numFilled, defaultCap);
+    baseTubesCountRef.current = puzzle.baseTubesCount;
 
-    shuffleInPlace(liquidPool);
-
-    const initialTubes = [];
-    for (let i = 0; i < numFilled; i++) {
-      initialTubes.push(liquidPool.slice(i * defaultCap, i * defaultCap + defaultCap));
-    }
-
-    for (let i = 0; i < numEmpty; i++) {
-      initialTubes.push([]);
-    }
-
-    setTubes(initialTubes);
+    setTubes(puzzle.tubes);
     setSelectedTube(null);
     setHistory([]);
     setVictoryPhase(0);
@@ -388,7 +375,7 @@ export default function WaterSort({
     const prev = history[history.length - 1];
     const prevTubes = JSON.parse(prev);
     setTubes(prevTubes);
-    if (prevTubes.length === 11) setExtraTubesCount(0);
+    if (prevTubes.length === baseTubesCountRef.current) setExtraTubesCount(0);
     setHistory(history.slice(0, -1));
     setSelectedTube(null);
     setHintTubes(null);

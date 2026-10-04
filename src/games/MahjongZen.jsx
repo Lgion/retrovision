@@ -1848,11 +1848,9 @@ export default function MahjongZen({
         @keyframes play-arrow-pulse {
           0%, 100% {
             transform: scale(1) translateX(0);
-            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
           }
           50% {
-            transform: scale(1.22) translateX(4px);
-            filter: drop-shadow(0 0 8px #6ee7b7) drop-shadow(0 0 16px #10b981);
+            transform: scale(1.15) translateX(3px);
           }
         }
         .primary-play-icon {
@@ -2334,7 +2332,7 @@ export default function MahjongZen({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         style={{
-                          filter: 'drop-shadow(0 0 3px #06b6d4) drop-shadow(0 0 8px #22d3ee)',
+                          opacity: 0.95
                         }}
                       />
                     );

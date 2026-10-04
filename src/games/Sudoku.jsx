@@ -5,7 +5,7 @@ import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
-import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
+import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme, migrateTheme } from '../utils/themeManager';
 import { updateGameConfig } from '../utils/config';
 import { useConfirm } from '../components/ConfirmContext';
 import { shuffle, shuffleInPlace } from '../utils/commonUtils';
@@ -189,37 +189,69 @@ const THEMES = {
     keypadDisabledText: '#94a3b8',
     particleColors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
   },
-  neon: {
-    id: 'neon',
-    name: 'Néon Zen',
-    price: 1500,
-    icon: '🌌',
+  slate_dark: {
+    id: 'slate_dark',
+    name: 'Ardoise Nocturne',
+    price: 0,
+    icon: '🌑',
     bgClass: 'sudoku-zen-bg',
-    panelBg: 'rgba(15, 23, 42, 0.65)',
+    panelBg: 'rgba(15, 23, 42, 0.75)',
     panelText: '#ffffff',
     gridBg: '#0f172a',
     cellBg: '#1e293b',
-    borderThick: '3px solid #7c3aed',
-    borderThin: '1px solid rgba(139, 92, 246, 0.15)',
-    selBg: 'rgba(139, 92, 246, 0.45)',
-    sameBg: 'rgba(139, 92, 246, 0.3)',
-    sameOutline: 'inset 0 0 0 2px rgba(167, 139, 250, 0.8)',
+    borderThick: '3px solid #64748b',
+    borderThin: '1px solid rgba(148, 163, 184, 0.2)',
+    selBg: 'rgba(59, 130, 246, 0.35)',
+    sameBg: 'rgba(59, 130, 246, 0.2)',
+    sameOutline: 'inset 0 0 0 2px rgba(96, 165, 250, 0.8)',
     highEmptyBg: 'rgba(13, 148, 136, 0.08)',
-    highDigitBg: 'rgba(139, 92, 246, 0.2)',
+    highDigitBg: 'rgba(59, 130, 246, 0.15)',
     completedBg: 'rgba(16, 185, 129, 0.12)',
     completedOutline: 'inset 0 0 0 1px rgba(16, 185, 129, 0.4)',
     textOriginal: '#f8fafc',
-    textPlayer: '#c084fc',
+    textPlayer: '#93c5fd',
     textError: '#f87171',
-    textShadow: '0 0 8px rgba(248, 113, 113, 0.6)',
-    keypadNormalBorder: '2px solid #8b5cf6',
+    textShadow: 'none',
+    keypadNormalBorder: '2px solid #475569',
     keypadNormalBg: 'rgba(30, 41, 59, 0.8)',
-    keypadNormalText: '#a78bfa',
-    keypadNormalShadow: '0 4px 10px rgba(139, 92, 246, 0.15)',
+    keypadNormalText: '#e2e8f0',
+    keypadNormalShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
     keypadDisabledBorder: '2px solid #334155',
     keypadDisabledBg: 'rgba(15, 23, 42, 0.3)',
     keypadDisabledText: '#475569',
-    particleColors: ['#a78bfa', '#8b5cf6', '#60a5fa', '#34d399', '#fbbf24']
+    particleColors: ['#60a5fa', '#34d399', '#f8fafc', '#94a3b8']
+  },
+  neon: {
+    id: 'slate_dark',
+    name: 'Ardoise Nocturne',
+    price: 0,
+    icon: '🌑',
+    bgClass: 'sudoku-zen-bg',
+    panelBg: 'rgba(15, 23, 42, 0.75)',
+    panelText: '#ffffff',
+    gridBg: '#0f172a',
+    cellBg: '#1e293b',
+    borderThick: '3px solid #64748b',
+    borderThin: '1px solid rgba(148, 163, 184, 0.2)',
+    selBg: 'rgba(59, 130, 246, 0.35)',
+    sameBg: 'rgba(59, 130, 246, 0.2)',
+    sameOutline: 'inset 0 0 0 2px rgba(96, 165, 250, 0.8)',
+    highEmptyBg: 'rgba(13, 148, 136, 0.08)',
+    highDigitBg: 'rgba(59, 130, 246, 0.15)',
+    completedBg: 'rgba(16, 185, 129, 0.12)',
+    completedOutline: 'inset 0 0 0 1px rgba(16, 185, 129, 0.4)',
+    textOriginal: '#f8fafc',
+    textPlayer: '#93c5fd',
+    textError: '#f87171',
+    textShadow: 'none',
+    keypadNormalBorder: '2px solid #475569',
+    keypadNormalBg: 'rgba(30, 41, 59, 0.8)',
+    keypadNormalText: '#e2e8f0',
+    keypadNormalShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+    keypadDisabledBorder: '2px solid #334155',
+    keypadDisabledBg: 'rgba(15, 23, 42, 0.3)',
+    keypadDisabledText: '#475569',
+    particleColors: ['#60a5fa', '#34d399', '#f8fafc', '#94a3b8']
   },
   wood: {
     id: 'wood',
@@ -325,7 +357,8 @@ export default function Sudoku({
     if (isRandomThemeEnabled('sudoku')) {
       return pickRandomTheme('sudoku');
     }
-    return storage.getItem('retrovision_sudoku_theme', 'neon') || 'neon';
+    const saved = storage.getItem('retrovision_sudoku_theme', 'classic') || 'classic';
+    return migrateTheme('sudoku', saved);
   });
   
   const randomThemeActive = useRandomTheme('sudoku');

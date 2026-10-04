@@ -2,22 +2,23 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import SymbolIcon from '../components/SymbolIcon';
 import { sound } from '../utils/sound';
 import { storage } from '../utils/storage';
 import { shuffle, randomChoice } from '../utils/commonUtils';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
 
-// Bibliothèque de symboles zen à haute lisibilité visuelle
+// Bibliothèque de symboles zen à haute lisibilité visuelle (SVG)
 const SYMBOLS = [
-  { id: 'lotus', icon: '🪷', name: 'Lotus', color: '#f472b6', bg: 'rgba(244, 114, 182, 0.12)', border: '#f472b6' },
-  { id: 'leaf', icon: '🍃', name: 'Feuille Zen', color: '#34d399', bg: 'rgba(52, 211, 153, 0.12)', border: '#34d399' },
-  { id: 'moon', icon: '🌙', name: 'Croissant de Lune', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.12)', border: '#fbbf24' },
-  { id: 'crystal', icon: '💎', name: 'Cristal Céleste', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.12)', border: '#38bdf8' },
-  { id: 'sakura', icon: '🌸', name: 'Fleur de Cerisier', color: '#fb7185', bg: 'rgba(251, 113, 133, 0.12)', border: '#fb7185' },
-  { id: 'star', icon: '⭐', name: 'Étoile Céleste', color: '#facc15', bg: 'rgba(250, 204, 21, 0.12)', border: '#facc15' },
-  { id: 'bamboo', icon: '🎋', name: 'Bambou', color: '#4ade80', bg: 'rgba(74, 222, 128, 0.12)', border: '#4ade80' },
-  { id: 'stone', icon: '🪨', name: 'Galet Zen', color: '#cbd5e1', bg: 'rgba(203, 213, 225, 0.12)', border: '#cbd5e1' }
+  { id: 'lotus', name: 'Lotus', color: '#f472b6', bg: 'rgba(244, 114, 182, 0.15)', border: '#f472b6' },
+  { id: 'leaf', name: 'Feuille Zen', color: '#34d399', bg: 'rgba(52, 211, 153, 0.15)', border: '#34d399' },
+  { id: 'moon', name: 'Croissant de Lune', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)', border: '#fbbf24' },
+  { id: 'crystal', name: 'Cristal Céleste', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)', border: '#38bdf8' },
+  { id: 'sakura', name: 'Fleur de Cerisier', color: '#fb7185', bg: 'rgba(251, 113, 133, 0.15)', border: '#fb7185' },
+  { id: 'star', name: 'Étoile Céleste', color: '#facc15', bg: 'rgba(250, 204, 21, 0.15)', border: '#facc15' },
+  { id: 'bamboo', name: 'Bambou', color: '#4ade80', bg: 'rgba(74, 222, 128, 0.15)', border: '#4ade80' },
+  { id: 'stone', name: 'Galet Zen', color: '#cbd5e1', bg: 'rgba(203, 213, 225, 0.15)', border: '#cbd5e1' }
 ];
 
 // Mots doux de félicitations spécifiques au balayage visuel
@@ -304,22 +305,22 @@ export default function SymbolQuest({
     >
       <style>{`
         @keyframes left-guide-pulse {
-          0%, 100% { opacity: 0.35; box-shadow: 0 0 8px #10b981; }
-          50% { opacity: 1; box-shadow: 0 0 22px #10b981, inset 0 0 10px #10b981; }
+          0%, 100% { opacity: 0.35; }
+          50% { opacity: 1; }
         }
         @keyframes hint-glow {
-          0%, 100% { transform: scale(1); box-shadow: 0 0 12px #fbbf24; border-color: #fbbf24; }
-          50% { transform: scale(1.08); box-shadow: 0 0 26px #fbbf24; border-color: #fef08a; }
+          0%, 100% { transform: scale(1); border-color: #fbbf24; }
+          50% { transform: scale(1.06); border-color: #fef08a; }
         }
         @keyframes found-pop {
           0% { transform: scale(0.85); opacity: 0.5; }
-          50% { transform: scale(1.15); }
+          50% { transform: scale(1.1); }
           100% { transform: scale(1); opacity: 1; }
         }
         .symbol-cell {
           position: relative;
           background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.09);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: 14px;
           display: flex;
           align-items: center;
@@ -335,9 +336,9 @@ export default function SymbolQuest({
           background: rgba(255, 255, 255, 0.1);
         }
         .symbol-cell-found {
-          background: rgba(16, 185, 129, 0.15) !important;
+          background: rgba(16, 185, 129, 0.18) !important;
           border: 2px solid #10b981 !important;
-          box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
           animation: found-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .symbol-cell-hint {
@@ -477,7 +478,7 @@ export default function SymbolQuest({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
+                    gap: '6px',
                     padding: '4px 10px',
                     borderRadius: '12px',
                     background: s.bg,
@@ -487,7 +488,7 @@ export default function SymbolQuest({
                     fontSize: '0.95rem'
                   }}
                 >
-                  <span style={{ fontSize: '1.25rem' }}>{s.icon}</span>
+                  <SymbolIcon name={s.id} size={20} color={s.color} />
                   <span>{s.name}</span>
                 </div>
               ))}
@@ -535,16 +536,21 @@ export default function SymbolQuest({
                 role="button"
                 aria-label={isFound ? `${cell.symbol.name} trouvé` : cell.symbol.name}
               >
-                <span
+                <div
                   style={{
-                    fontSize: rows > 4 ? '1.5rem' : '1.8rem',
-                    filter: isFound ? 'drop-shadow(0 0 8px #10b981)' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     transition: 'transform 0.2s ease',
                     opacity: isFound ? 1 : 0.85
                   }}
                 >
-                  {cell.symbol.icon}
-                </span>
+                  <SymbolIcon
+                    name={cell.symbol.id}
+                    size={rows > 4 ? 26 : 30}
+                    color={cell.symbol.color}
+                  />
+                </div>
 
                 {/* Coche verte de validation sur les cibles trouvées */}
                 {isFound && (

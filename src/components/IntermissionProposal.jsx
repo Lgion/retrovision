@@ -1,30 +1,10 @@
 import { useState, useMemo } from 'react';
 import { sound } from '../utils/sound';
+import { storage } from '../utils/storage';
+import { GAMES_CONFIG } from '../utils/gamesConfig';
+import { updateIntermissionGame } from '../utils/intermissionConfig';
 import GameMiniature from './GameMiniature';
 
-const FALLBACK_INTERMISSION_GAMES = [
-  { key: 'water', name: "Tri de l'Eau", icon: '💧', subtitle: 'Tri de couleurs' },
-  { key: 'ball', name: 'Tri de Billes', icon: '🔮', subtitle: 'Tri chromatique' },
-  { key: '2048', name: 'Neon 2048', icon: '🔢', subtitle: 'Fusion numérique' },
-  { key: 'jigsaw', name: 'Puzzle Magique', icon: '🧩', subtitle: 'Reconstitution' },
-  { key: 'freecell', name: 'FreeCell', icon: '🃏', subtitle: 'Cartes & patience' },
-  { key: 'mines', name: 'Démineur', icon: '💣', subtitle: 'Déminage tactique' },
-  { key: 'arrows', name: 'Flèches', icon: '🏹', subtitle: 'Labyrinthe' },
-  { key: 'hangman', name: 'Le Pendu', icon: '🎈', subtitle: 'Mots & déduction' },
-  { key: 'sudoku', name: 'Sudoku', icon: '🔢', subtitle: 'Logique & chiffres' },
-  { key: 'blockfantasy', name: 'Block Fantasy', icon: '🧱', subtitle: 'Lignes de blocs' },
-  { key: 'impossible13', name: 'Impossible 13', icon: '1️⃣3️⃣', subtitle: 'Addition' },
-  { key: 'bubblecool', name: 'Bubble Cool', icon: '🫧', subtitle: 'Tir de bulles' },
-  { key: 'fireflies', name: 'Jardin Lucioles', icon: '✨', subtitle: 'Lumière zen' },
-  { key: 'zenflow', name: 'Flux Zen', icon: '🌊', subtitle: 'Lignes & harmonie' },
-  { key: 'symbolquest', name: 'Quête Symboles', icon: '🔍', subtitle: 'Symboles zen' },
-];
-
-/**
- * Composant standardisé d'entracte affiché sur les écrans de fin de niveau/victoire.
- * Offre la sélection tactile des mini-jeux d'entracte avec prévisualisation,
- * un CTA principal émeraude, un CTA aléatoire bleu et un bouton de continuation.
- */
 export default function IntermissionProposal({
   onIntermissionRequest,
   upcomingIntermission = 'water',
@@ -51,7 +31,15 @@ export default function IntermissionProposal({
   const gamesPool = useMemo(() => {
     const pool = (intermissionGames && intermissionGames.length > 0)
       ? intermissionGames
-      : FALLBACK_INTERMISSION_GAMES;
+      : Object.values(GAMES_CONFIG)
+          .filter((g) => g.supportsIntermission)
+          .map((g) => ({
+            key: g.id,
+            name: g.name,
+            icon: g.settingsIcon || g.icon,
+            subtitle: g.subtitle || "Mini-jeu d'entracte",
+            intermission: g.intermission
+          }));
     if (!excludeGameKey) return pool;
     return pool.filter((g) => g.key !== excludeGameKey);
   }, [intermissionGames, excludeGameKey]);
@@ -108,6 +96,19 @@ export default function IntermissionProposal({
       onIntermissionRequest(nextKey);
     }
   };
+
+  const handleUpdateGameConfig = (gameKey, updates) => {
+    sound.playClick();
+    updateIntermissionGame(gameKey, updates);
+  };
+
+  const activeDef = activeIntermissionGame?.key ? GAMES_CONFIG[activeIntermissionGame.key] : null;
+  const activeMeta = activeDef?.intermission || activeIntermissionGame?.intermission || { category: 'oneshot' };
+  const activeCategory = activeMeta.category || 'oneshot';
+  const activeConf = intermissionConfig[activeIntermissionGame?.key] || {};
+  const currentDiff = activeConf.difficulty || 'facile';
+  const currentRounds = activeConf.roundsCount || activeMeta.defaultRounds || 5;
+  const currentTarget = activeConf.target || activeMeta.defaultTarget || (activeMeta.targetOptions ? activeMeta.targetOptions[1] : null);
 
   return (
     <>
@@ -304,6 +305,90 @@ export default function IntermissionProposal({
               })}
             </div>
 
+            {/* Options du jeu sélectionné (Difficulté & Manches) */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              background: 'rgba(15, 23, 42, 0.4)',
+              padding: '8px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.08)'
+            }}>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {['facile', 'moyen', 'difficile'].map((lvl) => {
+                  const isSel = currentDiff === lvl;
+                  const cColor = lvl === 'facile' ? '#10B981' : lvl === 'moyen' ? '#F59E0B' : '#EF4444';
+                  return (
+                    <button
+                      key={lvl}
+                      onClick={() => handleUpdateGameConfig(activeIntermissionGame.key, { difficulty: lvl })}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        textTransform: 'capitalize',
+                        borderRadius: '6px',
+                        border: `1px solid ${isSel ? cColor : 'rgba(255,255,255,0.1)'}`,
+                        background: isSel ? `${cColor}22` : 'transparent',
+                        color: isSel ? cColor : '#64748B',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {lvl}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {activeCategory === 'rounds' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '12px' }}>
+                  <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '600' }}>Manches:</span>
+                  <select
+                    value={currentRounds}
+                    onChange={(e) => handleUpdateGameConfig(activeIntermissionGame.key, { roundsCount: Number(e.target.value) })}
+                    style={{
+                      background: 'rgba(0,0,0,0.3)',
+                      color: '#38BDF8',
+                      border: '1px solid rgba(56,189,248,0.4)',
+                      borderRadius: '6px',
+                      padding: '2px 4px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {(activeMeta.roundsOptions || [1, 3, 5, 7]).map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {activeCategory === 'score' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '12px' }}>
+                  <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '600' }}>{activeMeta.targetLabel || 'Cible'}:</span>
+                  <select
+                    value={currentTarget}
+                    onChange={(e) => handleUpdateGameConfig(activeIntermissionGame.key, { target: Number(e.target.value) || e.target.value })}
+                    style={{
+                      background: 'rgba(0,0,0,0.3)',
+                      color: '#F59E0B',
+                      border: '1px solid rgba(245,158,11,0.4)',
+                      borderRadius: '6px',
+                      padding: '2px 4px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {(activeMeta.targetOptions || [100, 250, 500]).map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+
             {/* 1. CTA PRINCIPAL : Bouton émeraude éclatant */}
             <button
               onClick={() => handleLaunch(effectiveSelectedUpcoming)}
@@ -362,17 +447,6 @@ export default function IntermissionProposal({
                 }}>
                   <span>{activeIntermissionGame.icon}</span>
                   <span>{activeIntermissionGame.name}</span>
-                </span>
-                <span style={{
-                  fontSize: '12px',
-                  color: '#6EE7B7',
-                  background: 'rgba(0, 0, 0, 0.25)',
-                  padding: '2px 7px',
-                  borderRadius: '6px',
-                  fontWeight: '800',
-                  textTransform: 'capitalize'
-                }}>
-                  ({intermissionConfig[activeIntermissionGame.key]?.difficulty || 'facile'})
                 </span>
               </div>
             </button>

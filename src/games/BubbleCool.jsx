@@ -640,20 +640,19 @@ export default function BubbleCool({
       ctx.fillText('❄️', 0, 1);
 
     } else {
-      // STANDARD COLOR BUBBLES
-      if (activeTheme === 'neon') {
+      if (activeTheme === 'midnight' || activeTheme === 'neon') {
         ctx.beginPath();
         ctx.arc(0, 0, r - 1, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillStyle = palette.main;
         ctx.fill();
 
-        ctx.strokeStyle = palette.main;
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
-        ctx.fillStyle = palette.top;
+        ctx.arc(-r * 0.3, -r * 0.3, r * 0.25, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.fill();
 
       } else if (activeTheme === 'gemstone') {
@@ -1647,7 +1646,7 @@ export default function BubbleCool({
             icon: '🎨',
             items: [
               { id: 'candy', name: 'Bonbon Cristal', icon: '🍬' },
-              { id: 'neon', name: 'Néon Cyber', icon: '⚡' },
+              { id: 'midnight', name: 'Nuit Veloutée', icon: '🌙' },
               { id: 'gemstone', name: 'Gemmes Royales', icon: '💎' }
             ]
           }

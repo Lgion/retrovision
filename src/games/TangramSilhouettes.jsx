@@ -145,18 +145,14 @@ export default function TangramSilhouettes({
 
   const handleBackWithConfirm = async () => {
     if (placedSlotIds.length > 0 && !isWon) {
-      if (confirm) {
-        const ok = await confirm({
-          title: 'Quitter le Tangram ?',
-          message: 'Voulez-vous vraiment quitter la figure en cours ?',
-          confirmText: 'Oui, quitter',
-          cancelText: 'Continuer à jouer',
-          confirmVariant: 'danger'
-        });
-        if (ok) onBack();
-      } else {
-        onBack();
-      }
+      const ok = await confirm({
+        title: 'Quitter le Tangram ?',
+        message: 'Voulez-vous vraiment quitter la figure en cours ?',
+        confirmText: 'Oui, quitter',
+        cancelText: 'Continuer à jouer',
+        confirmVariant: 'danger'
+      });
+      if (ok) onBack();
     } else {
       onBack();
     }

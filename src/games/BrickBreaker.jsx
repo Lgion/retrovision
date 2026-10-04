@@ -652,9 +652,8 @@ export default function BrickBreaker({ onBack, onScoreSave, onLaunchIntermission
       ctx.font = 'bold 20px Orbitron';
       ctx.fillStyle = '#00f0ff';
       ctx.textAlign = 'center';
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#00f0ff';
-      ctx.fillText('BRICK BREAKER NEON', w / 2, h / 2 - 30);
+      ctx.shadowBlur = 0;
+      ctx.fillText('CASSE-BRIQUES ZEN', w / 2, h / 2 - 30);
       
       ctx.font = '13px Inter';
       ctx.fillStyle = '#ffffff';
@@ -670,15 +669,15 @@ export default function BrickBreaker({ onBack, onScoreSave, onLaunchIntermission
   return (
     <>
       {showIntro && <GameIntro 
-        gameName="BRICK BREAKER" 
+        gameName="CASSE-BRIQUES" 
         icon="🧱" 
-        colors={['#ff007f', '#00f0ff', '#9d00ff']} 
+        colors={['#0284c7', '#38bdf8', '#0ea5e9']} 
         particleType="bricks" 
         onComplete={() => setShowIntro(false)} 
       />}
-      <div className="game-container neon-border" style={containerStyle}>
+      <div className="game-container" style={containerStyle}>
       <GameHeader
-        title="BREAKER NEON"
+        title="CASSE-BRIQUES"
         gameId="brickbreaker"
         onBack={onBack}
         onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}

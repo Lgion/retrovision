@@ -48,7 +48,8 @@ function defineGame(def) {
     storageKey: def.storageKey || `retrovision_${def.id}_highscore`,
     binaryScore: Boolean(def.binaryScore),
     supportsIntermission: def.supportsIntermission !== undefined ? Boolean(def.supportsIntermission) : true,
-    supportsIntro: Boolean(def.supportsIntro)
+    supportsIntro: Boolean(def.supportsIntro),
+    intermission: def.intermission || { category: 'oneshot' }
   };
 }
 
@@ -92,12 +93,18 @@ export const GAMES_CONFIG = {
   '2048': defineGame({
     id: '2048',
     component: Grid2048,
-    name: 'Neon 2048',
-    aliases: ['Neon 2048', '2048', 'grid2048'],
+    name: '2048 Zen',
+    aliases: ['2048 Zen', 'Neon 2048', '2048', 'grid2048'],
     icon: '🔢',
     settingsIcon: '✨',
-    subtitle: 'Fusion numérique',
-    color: '#00f0ff'
+    subtitle: 'Fusion numérique zen',
+    color: '#0ea5e9',
+    intermission: {
+      category: 'score',
+      targetLabel: 'Tuile',
+      targetOptions: [256, 512, 1024],
+      defaultTarget: 512
+    }
   }),
   jigsaw: defineGame({
     id: 'jigsaw',
@@ -176,7 +183,13 @@ export const GAMES_CONFIG = {
     aliases: ['blockfantasy', 'block'],
     icon: '🧱',
     subtitle: 'Lignes de blocs',
-    color: '#39FF14'
+    color: '#10b981',
+    intermission: {
+      category: 'score',
+      targetLabel: 'Points',
+      targetOptions: [500, 1000, 2000],
+      defaultTarget: 1000
+    }
   }),
   impossible13: defineGame({
     id: 'impossible13',
@@ -185,7 +198,13 @@ export const GAMES_CONFIG = {
     aliases: ['Impossible 13', 'Impossible13', 'impossible13', 'impossible'],
     icon: '1️⃣3️⃣',
     subtitle: 'Addition stratégique',
-    color: '#EAB308'
+    color: '#EAB308',
+    intermission: {
+      category: 'score',
+      targetLabel: 'Nombre',
+      targetOptions: [9, 11, 13],
+      defaultTarget: 11
+    }
   }),
   bubblecool: defineGame({
     id: 'bubblecool',
@@ -193,7 +212,7 @@ export const GAMES_CONFIG = {
     name: 'Bubble Cool',
     aliases: ['Bubble Cool', 'BubbleCool', 'bubblecool', 'bubble'],
     icon: '🫧',
-    subtitle: 'Tir de bulles arcade',
+    subtitle: 'Tir de bulles relaxant',
     color: '#38BDF8',
     supportsIntro: true
   }),
@@ -204,7 +223,13 @@ export const GAMES_CONFIG = {
     aliases: ['Jardin des Lucioles', 'Jardin Lucioles', 'Lucioles', 'fireflies'],
     icon: '✨',
     subtitle: 'Poésie & lumière zen',
-    color: '#38BDF8'
+    color: '#38BDF8',
+    intermission: {
+      category: 'score',
+      targetLabel: 'Lucioles',
+      targetOptions: [15, 30, 50],
+      defaultTarget: 30
+    }
   }),
   zenflow: defineGame({
     id: 'zenflow',
@@ -213,7 +238,13 @@ export const GAMES_CONFIG = {
     aliases: ['Flux Zen', 'Zen Flow', 'Tracé Lumineux', 'zenflow', 'flow'],
     icon: '🌊',
     subtitle: 'Lignes & harmonie',
-    color: '#06B6D4'
+    color: '#06B6D4',
+    supportsIntro: true,
+    intermission: {
+      category: 'rounds',
+      roundsOptions: [1, 3, 5, 7],
+      defaultRounds: 5
+    }
   }),
   symbolquest: defineGame({
     id: 'symbolquest',
@@ -227,14 +258,19 @@ export const GAMES_CONFIG = {
   morpion: defineGame({
     id: 'morpion',
     component: Morpion,
-    name: 'Morpion Néon',
+    name: 'Morpion',
     aliases: ['Morpion', 'Morpion Néon', 'TicTacToe', 'Tic Tac Toe', 'morpion', 'tictactoe'],
     icon: '❌⭕',
     settingsIcon: '❌',
     subtitle: 'Alignement & stratégie',
-    color: '#00F0FF',
+    color: '#0284c7',
     binaryScore: true,
-    supportsIntro: true
+    supportsIntro: true,
+    intermission: {
+      category: 'rounds',
+      roundsOptions: [1, 3, 5, 7],
+      defaultRounds: 5
+    }
   }),
   memory: defineGame({
     id: 'memory',

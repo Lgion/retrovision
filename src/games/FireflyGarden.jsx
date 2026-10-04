@@ -112,7 +112,9 @@ export default function FireflyGarden({
   const lastMatchTimeRef = useRef(Date.now());
 
   const currentConstellation = CONSTELLATIONS[constellationIdx % CONSTELLATIONS.length];
-  const targetCount = isIntermission ? 8 : currentConstellation.target;
+  const targetCount = isIntermission
+    ? Number(intermissionConfig?.fireflies?.target || (intermissionDifficulty === 'difficile' ? 50 : intermissionDifficulty === 'moyen' ? 30 : 15))
+    : currentConstellation.target;
 
   // Types de lucioles distincts avec couleur, icône/symbole et nom descriptif
   const FIREFLY_TYPES = useMemo(() => [
@@ -482,7 +484,7 @@ export default function FireflyGarden({
                     borderRadius: '50%',
                     background: 'rgba(15, 23, 42, 0.95)',
                     border: `2px solid ${targetFireflyType.color}`,
-                    boxShadow: `0 0 15px ${targetFireflyType.aura}, inset 0 0 8px ${targetFireflyType.color}55`,
+                    boxShadow: `0 0 8px ${targetFireflyType.color}, inset 0 0 6px ${targetFireflyType.color}44`,
                     marginRight: '6px'
                   }}
                   title={`Luciole cible : ${targetFireflyType.color}`}
@@ -493,7 +495,7 @@ export default function FireflyGarden({
                       height: '30px',
                       borderRadius: '50%',
                       backgroundColor: targetFireflyType.color,
-                      boxShadow: `0 0 14px ${targetFireflyType.color}`,
+                      boxShadow: `0 0 8px ${targetFireflyType.color}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -541,7 +543,7 @@ export default function FireflyGarden({
                     borderRadius: '50%',
                     background: 'rgba(15, 23, 42, 0.95)',
                     border: `2.5px solid ${targetFireflyType.color}`,
-                    boxShadow: `0 0 20px ${targetFireflyType.aura}, 0 0 35px ${targetFireflyType.color}44, inset 0 0 12px ${targetFireflyType.color}55`,
+                    boxShadow: `0 0 12px ${targetFireflyType.color}, inset 0 0 8px ${targetFireflyType.color}44`,
                     transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
                   }}
                   title={`Luciole cible : ${targetFireflyType.color}`}
@@ -553,7 +555,7 @@ export default function FireflyGarden({
                       height: '36px',
                       borderRadius: '50%',
                       backgroundColor: targetFireflyType.color,
-                      boxShadow: `0 0 18px ${targetFireflyType.color}, 0 0 30px ${targetFireflyType.color}`,
+                      boxShadow: `0 0 12px ${targetFireflyType.color}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -650,7 +652,7 @@ export default function FireflyGarden({
       {/* ANCRE VISUELLE GAUCHE (Spéciale Hémi-évi) */}
       <div className={`left-anchor-bar ${hasLeftFirefly ? 'left-anchor-active' : ''}`} />
 
-      {/* Espace de jeu interactif avec contour dynamique de la couleur de la luciole cible */}
+      {/* Espace de jeu interactif avec contour dynamique et fond teinté de la couleur de la luciole cible */}
       <div
         className="firefly-play-grid"
         style={{
@@ -663,11 +665,31 @@ export default function FireflyGarden({
             ? `3px solid ${targetFireflyType.color}`
             : '2px solid rgba(56, 189, 248, 0.3)',
           boxShadow: targetFireflyType
-            ? `inset 0 0 25px ${targetFireflyType.color}33, 0 0 20px ${targetFireflyType.color}44`
+            ? `inset 0 0 20px ${targetFireflyType.color}22, 0 4px 16px rgba(0, 0, 0, 0.4)`
             : 'none',
-          transition: 'border-color 0.4s ease, box-shadow 0.4s ease'
+          backgroundColor: targetFireflyType
+            ? `${targetFireflyType.color}18`
+            : 'rgba(5, 8, 17, 0.4)',
+          background: targetFireflyType
+            ? `radial-gradient(ellipse at 50% 40%, ${targetFireflyType.color}33 0%, ${targetFireflyType.color}16 55%, rgba(5, 8, 17, 0.75) 100%)`
+            : 'radial-gradient(ellipse at 50% 40%, rgba(56, 189, 248, 0.08) 0%, rgba(5, 8, 17, 0.75) 100%)',
+          transition: 'border-color 0.5s ease, box-shadow 0.5s ease, background 0.5s ease, background-color 0.5s ease'
         }}
       >
+        {/* Voile d'ambiance teinté dynamique pour renforcer visuellement la couleur cible */}
+        {targetFireflyType && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              background: `radial-gradient(ellipse at 50% 35%, ${targetFireflyType.color}2e 0%, ${targetFireflyType.color}14 65%, transparent 100%)`,
+              mixBlendMode: 'screen',
+              transition: 'background 0.5s ease',
+              zIndex: 1
+            }}
+          />
+        )}
         {/* Fond d'étoiles scintillantes apaisantes */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           {[
@@ -859,7 +881,7 @@ export default function FireflyGarden({
                 height: `${f.size}px`,
                 backgroundColor: f.color,
                 color: f.color,
-                boxShadow: `0 0 18px ${f.color}, 0 0 35px ${f.color}`
+                boxShadow: `0 0 10px ${f.color}, 0 2px 6px rgba(0,0,0,0.5)`
               }}
             >
               {/* Noyau lumineux interne */}
@@ -892,7 +914,7 @@ export default function FireflyGarden({
               color: '#f8fafc',
               fontSize: '1rem',
               fontWeight: 'bold',
-              boxShadow: `0 0 25px ${targetFireflyType ? targetFireflyType.color : 'rgba(56, 189, 248, 0.5)'}`,
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
               backdropFilter: 'blur(8px)',
               animation: 'cm-fade-in 0.2s ease-out'
             }}
