@@ -53,7 +53,7 @@ export default function KindWordsBanner({ style = {} }) {
         transition: 'all 0.25s ease',
         userSelect: 'none',
         touchAction: 'manipulation',
-        maxWidth: '720px',
+        // maxWidth: '720px',
         margin: '0 auto 16px auto',
         width: '100%',
         boxSizing: 'border-box',
@@ -107,7 +107,7 @@ export default function KindWordsBanner({ style = {} }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
         <span
           style={{
-            fontSize: '1.6rem',
+            fontSize: '2.6rem',
             lineHeight: 1,
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
           }}
@@ -117,6 +117,7 @@ export default function KindWordsBanner({ style = {} }) {
         <div
           className="kw-text"
           style={{
+            fontSize: '2rem',
             opacity: isFading ? 0 : 1
           }}
         >

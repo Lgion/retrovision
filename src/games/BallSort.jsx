@@ -7,6 +7,7 @@ import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
 import { shuffleInPlace } from '../utils/commonUtils';
@@ -541,36 +542,16 @@ export default function BallSort({
     });
 
     if (isWon && victoryPhase === 0) {
-      if (isIntermission && onIntermissionComplete) {
-        if (replaySameIntermission) {
-          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-          setTimeout(() => initGame(), 1000);
-          return;
-        }
-        setTimeout(() => onIntermissionComplete(), 1000);
+      sound.stopBGM?.();
+      if (isIntermission && replaySameIntermission) {
+        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+        setTimeout(() => initGame(), 1000);
         return;
       }
-      setVictoryPhase(-1);
-
-      setTimeout(() => {
-        setVictoryPhase(1);
-        sound.stopBGM();
-
-        // Stage 1 -> Stage 2
-        setTimeout(() => {
-          setVictoryPhase(2);
-          sound.playExplosion(); // Fireworks sound
-        }, 2000);
-
-        // Stage 2 -> Stage 3 (Final)
-        setTimeout(() => {
-          setVictoryPhase(3);
-          sound.playScore();
-          if (onScoreSave) {
-            onScoreSave('Tri Billes', Math.max(1000 - moves * 10, 100));
-          }
-        }, 4500);
-      }, 1500);
+      setVictoryPhase(3);
+      if (onScoreSave) {
+        onScoreSave('Tri Billes', Math.max(1000 - moves * 10, 100));
+      }
     }
   };
 
@@ -848,186 +829,36 @@ export default function BallSort({
               );
             })()}
           </div>
-
-
         </div>
 
-        {/* Transition Phase */}
-        {victoryPhase === -1 && <WinLossTransition type="win" />}
+        {/* Unified Victory Overlay */}
+        <GameVictoryOverlay
+          isOpen={victoryPhase === 3}
+          gameKey="ball"
+          score={Math.max(1000 - moves * 10, 100)}
+          title="MAÎTRE TRIEUR !"
+          badgeIcon="👑"
+          subtitle="Toutes les billes chromatiques ont été triées avec brio !"
+          stats={[
+            { label: 'Coups', value: moves, color: '#f59e0b' }
+          ]}
+          onRestart={initGame}
+          restartText="🔄 Rejouer"
+          onContinue={initGame}
+          continueText="Niveau Suivant"
+          onBack={onBack}
+          backText="← Retour au Hub"
+          isIntermission={isIntermission}
+          onIntermissionComplete={onIntermissionComplete}
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
 
-        {/* Victory Overlays */}
-        {victoryPhase > 0 && (
-          <div style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.4)',
-            backdropFilter: 'blur(10px)',
-            zIndex: 100,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            animation: 'fadeIn 0.5s',
-            overflow: 'hidden'
-          }}>
-            {/* Dynamic Confetti Particles */}
-            {victoryPhase >= 2 && (
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-                {Array.from({ length: 40 }, (_, i) => {
-                  const confettiColors = ['#FFD700', '#FF3366', '#33CCFF', '#39FF14', '#FF00FF', '#FF8800', '#00FFCC'];
-                  const color = confettiColors[i % confettiColors.length];
-                  const left = Math.random() * 100;
-                  const delay = Math.random() * 3;
-                  const duration = 2 + Math.random() * 3;
-                  const size = 6 + Math.random() * 8;
-                  const rotation = Math.random() * 360;
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        position: 'absolute',
-                        left: `${left}%`,
-                        top: '-20px',
-                        width: `${size}px`,
-                        height: `${size * 0.6}px`,
-                        background: color,
-                        borderRadius: i % 3 === 0 ? '50%' : '2px',
-                        animation: `confettiFall ${duration}s linear ${delay}s infinite`,
-                        transform: `rotate(${rotation}deg)`,
-                        opacity: 0.8
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Stage 1: Initial WOW */}
-            {victoryPhase === 1 && (
-              <div style={{ animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
-                <h2 style={{
-                  fontSize: '4rem',
-                  color: '#FFD700',
-                  textShadow: '0 0 20px rgba(255,215,0,0.8), 2px 2px 0px white',
-                  margin: 0,
-                  transform: 'rotate(-5deg)'
-                }}>PARFAIT !</h2>
-                <div style={{ fontSize: '6rem', textAlign: 'center', animation: 'bounce 1s infinite' }}>⭐</div>
-              </div>
-            )}
-
-            {/* Stage 2: Stats */}
-            {victoryPhase === 2 && (
-              <div style={{
-                animation: 'slideUpFade 0.6s ease-out',
-                background: 'rgba(255,255,255,0.9)',
-                padding: '40px',
-                borderRadius: '30px',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
-                textAlign: 'center',
-                zIndex: 10
-              }}>
-                <h3 style={{ fontSize: '2.5rem', color: '#33CCFF', margin: '0 0 20px 0' }}>Analyse des billes...</h3>
-                <div style={{ fontSize: '1.8rem', color: '#666', margin: '10px 0' }}>
-                  Coups : <strong style={{ color: '#FF3366' }}>{moves}</strong>
-                </div>
-              </div>
-            )}
-
-            {/* Stage 3: Final Master Screen */}
-            {victoryPhase === 3 && (
-              <div style={{
-                textAlign: 'center',
-                animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                zIndex: 10
-              }}>
-                <div style={{ fontSize: '5rem', marginBottom: '10px' }}>👑</div>
-                <h2 style={{
-                  fontSize: '3.5rem',
-                  background: 'linear-gradient(45deg, #FFD700, #FF8C00, #FF1493)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  margin: '0 0 30px 0',
-                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
-                }}>MAÎTRE TRIEUR</h2>
-
-                {isIntermission ? (
-                  <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                    <button
-                      onClick={() => onIntermissionComplete && onIntermissionComplete()}
-                      style={{
-                        background: 'linear-gradient(135deg, #33FF77, #009933)',
-                        border: '4px solid white',
-                        color: 'white',
-                        padding: '15px 40px',
-                        borderRadius: '40px',
-                        fontSize: '1.5rem',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        boxShadow: '0 10px 20px rgba(51,255,119,0.4)',
-                        transition: 'transform 0.2s'
-                      }}
-                      onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                      onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
-                    >
-                      Terminer l'Entracte 🏁
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ width: '100%', maxWidth: '440px', margin: '0 auto' }}>
-                    <IntermissionProposal
-                      onIntermissionRequest={onIntermissionRequest}
-                      upcomingIntermission={upcomingIntermission}
-                      onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                      onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                      intermissionConfig={intermissionConfig}
-                      intermissionGames={intermissionGames}
-                      excludeGameKey="ball"
-                      onContinue={initGame}
-                      continueText="Niveau Suivant"
-                      showDirectContinue={true}
-                      customStyle={{ marginBottom: '16px' }}
-                    />
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                      <button
-                        onClick={initGame}
-                        className="retro-btn"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          borderColor: 'rgba(255, 255, 255, 0.15)',
-                          color: '#e0f2fe',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          padding: '10px 20px',
-                          borderRadius: '12px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🔄 Rejouer
-                      </button>
-                      <button
-                        onClick={onBack}
-                        className="retro-btn"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          borderColor: 'rgba(255, 255, 255, 0.15)',
-                          color: '#e0f2fe',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          padding: '10px 20px',
-                          borderRadius: '12px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🏠 Quitter
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}      <style dangerouslySetInnerHTML={{
+        <style dangerouslySetInnerHTML={{
           __html: `
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }

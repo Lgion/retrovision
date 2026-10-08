@@ -9,6 +9,7 @@ import {
   findGameConfig,
   getGameName,
   getGameIcon,
+  resolveGameId,
 } from './utils/gamesConfig';
 import { recordPlay, recordTime, recordScore } from './utils/stats';
 import { storage } from './utils/storage';
@@ -27,7 +28,7 @@ function App() {
   const [view, setView] = useState(() => {
     try {
       const p = new URLSearchParams(window.location.search).get('game');
-      return p || 'dashboard';
+      return resolveGameId(p) || p || 'dashboard';
     } catch {
       return 'dashboard';
     }

@@ -331,6 +331,51 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       unlocked: (highScores.tangram || 0) > 0,
       color: '#c2410c',
       textColor: '#9a3412'
+    },
+    {
+      id: 'breaker_master',
+      title: 'Maître Casse-Briques',
+      desc: 'Défier les rebonds sur Casse-Briques',
+      icon: '🧱',
+      unlocked: (highScores.brickbreaker || 0) > 0,
+      color: '#0284c7',
+      textColor: '#0369a1'
+    },
+    {
+      id: 'flappy_master',
+      title: 'Aviateur Céleste',
+      desc: 'Franchir les portes sur Flappy Zen',
+      icon: '🚀',
+      unlocked: (highScores.flappyneon || 0) > 0,
+      color: '#0ea5e9',
+      textColor: '#0284c7'
+    },
+    {
+      id: 'snake_master',
+      title: 'Onde Lumineuse',
+      desc: 'Guider le serpent avec calme sur Snake Wave',
+      icon: '🐍',
+      unlocked: (highScores.snakewave || 0) > 0,
+      color: '#10b981',
+      textColor: '#047857'
+    },
+    {
+      id: 'charlie_master',
+      title: 'Œil de Lynx',
+      desc: 'Triompher d’une manche dans Trouvez Charlie !',
+      icon: '🕵️‍♂️',
+      unlocked: (highScores.findcharlie || highScores.symbolquest || 0) > 0,
+      color: '#ef4444',
+      textColor: '#991b1b'
+    },
+    {
+      id: 'wordmaster_champion',
+      title: 'Plume d’Or',
+      desc: 'Composer une phrase complète dans L’Atelier des Mots',
+      icon: '✍️',
+      unlocked: (highScores.wordmaster || 0) > 0,
+      color: '#8b5cf6',
+      textColor: '#5b21b6'
     }
   ];
 
@@ -480,13 +525,22 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       icon: '🌊'
     },
     {
-      id: 'symbolquest',
-      title: 'QUÊTE DES SYMBOLES',
-      desc: 'Repérez les symboles cibles cachés dans le jardin zen. Stimule le balayage visuel méthodique et l’attention gauche.',
-      highscore: highScores.symbolquest,
-      color: '#10B981',
-      textColor: '#059669',
-      icon: '🔍'
+      id: 'findcharlie',
+      title: 'TROUVEZ CHARLIE !',
+      desc: 'Repérez Charlie et ses compagnons d’aventure au fil des manches chronométrées. Dépassez le score requis pour triompher !',
+      highscore: highScores.findcharlie || highScores.symbolquest || 0,
+      color: '#ef4444',
+      textColor: '#b91c1c',
+      icon: '🕵️‍♂️'
+    },
+    {
+      id: 'wordmaster',
+      title: 'L’ATELIER DES MOTS',
+      desc: 'Ortho-vocabulaire & syntaxe : orthographe, synonymes, antonymes et reconstitution de phrases en glisser-déposer.',
+      highscore: highScores.wordmaster || 0,
+      color: '#8b5cf6',
+      textColor: '#6d28d9',
+      icon: '✍️'
     },
     {
       id: 'morpion',
@@ -532,6 +586,33 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       color: '#c2410c',
       textColor: '#9a3412',
       icon: '🧩'
+    },
+    {
+      id: 'brickbreaker',
+      title: 'CASSE-BRIQUES NÉON',
+      desc: 'Détruisez les briques rétro avec votre raquette et rebonds dynamiques. Agilité motrice et réflexes visuels.',
+      highscore: highScores.brickbreaker || 0,
+      color: '#ef4444',
+      textColor: '#b91c1c',
+      icon: '🧱'
+    },
+    {
+      id: 'flappyneon',
+      title: 'FLAPPY NÉON',
+      desc: 'Faites planer votre avatar néon entre les obstacles lumineux. Rythme, coordination oculo-manuelle et concentration.',
+      highscore: highScores.flappyneon || 0,
+      color: '#ec4899',
+      textColor: '#be185d',
+      icon: '🚀'
+    },
+    {
+      id: 'snakewave',
+      title: 'SNAKE SYNTHWAVE',
+      desc: 'Guidez le serpent néon pour collecter les orbes lumineux sans toucher les bords. Anticipation spatiale et réflexes.',
+      highscore: highScores.snakewave || 0,
+      color: '#10b981',
+      textColor: '#047857',
+      icon: '🐍'
     }
   ];
 
@@ -604,14 +685,14 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
           <button onClick={toggleMuted} className="retro-btn" style={muteBtnStyle}>
             {muted ? '🔇 AUDIO : SOURDINE' : '🔊 AUDIO : ZEN'}
           </button>
-          <button 
+          <button
             onClick={() => {
               if (onOpenIntermissionSettings) {
                 sound.playClick();
                 onOpenIntermissionSettings();
               }
-            }} 
-            className="retro-btn" 
+            }}
+            className="retro-btn"
             style={{
               padding: '10px 18px',
               fontSize: '14px',
@@ -628,8 +709,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
 
       {/* Dropdown de statistiques */}
       <div style={statsDropdownWrapperStyle}>
-        <button 
-          onClick={() => { setIsStatsOpen(!isStatsOpen); sound.playClick(); }} 
+        <button
+          onClick={() => { setIsStatsOpen(!isStatsOpen); sound.playClick(); }}
           style={{
             ...statsDropdownHeaderStyle,
             borderColor: isStatsOpen ? 'var(--secondary)' : 'var(--primary)',
@@ -718,12 +799,12 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
 
       {/* Bouton de recommandation intelligent */}
       <div style={recBtnContainerStyle}>
-        <button 
+        <button
           onClick={handleRequestRecommendation}
           className="retro-btn"
           style={recommendationBtnStyle}
         >
-          🚀 Lancer un jeu conseillé par l'I.A.
+          🚀 Lancer un jeu conseillé par vos stats.
         </button>
       </div>
 
@@ -750,22 +831,22 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
               </div>
             </div>
             <div style={recModalFooterStyle}>
-              <button 
+              <button
                 onClick={() => {
                   sound.playClick();
                   setRecommendation(null);
-                }} 
+                }}
                 className="retro-btn"
                 style={recCancelBtnStyle}
               >
                 Fermer
               </button>
-              <button 
+              <button
                 onClick={() => {
                   sound.playClick();
                   onSelectGame(recommendation.gameId);
                   setRecommendation(null);
-                }} 
+                }}
                 className="retro-btn"
                 style={recConfirmBtnStyle}
               >
@@ -779,8 +860,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
       {/* Game Cards Grid */}
       <div style={gridStyle}>
         {sortedGames.map((game) => (
-          <div 
-            key={game.id} 
+          <div
+            key={game.id}
             className="game-card neon-card"
             style={{
               ...cardStyle,
@@ -801,11 +882,11 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
               <div style={cardScoreStyle}>
                 SUCCÈS: <span style={{ color: game.textColor, fontWeight: 'bold' }}>{game.highscore > 0 ? 'RÉUSSI' : 'À JOUER'}</span>
               </div>
-              <button 
+              <button
                 className="retro-btn"
-                style={{ 
-                  ...playBtnStyle, 
-                  borderColor: game.color, 
+                style={{
+                  ...playBtnStyle,
+                  borderColor: game.color,
                   color: game.textColor,
                   backgroundColor: 'transparent',
                   fontWeight: '800'
@@ -838,8 +919,8 @@ export default function Dashboard({ onSelectGame, statsUpdated, onOpenIntermissi
 
       <div style={achievementsGridStyle} className="neon-border-subtle">
         {achievementsList.map((ach) => (
-          <div 
-            key={ach.id} 
+          <div
+            key={ach.id}
             style={{
               ...achievementCardStyle,
               opacity: ach.unlocked ? 1 : 0.4,

@@ -2,10 +2,13 @@ import { useState, useCallback } from 'react';
 import GameHeader from '../components/GameHeader';
 import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { sound } from '../utils/sound';
 import { haptic } from '../utils/haptics';
 import { randomChoice } from '../utils/commonUtils';
 import { useConfirm } from '../components/ConfirmContext';
+import { getGameConfig, updateGameConfig } from '../utils/config';
+import TangramSilhouettesCollection from './TangramSilhouettesCollection';
 
 // Silhouettes géométriques adaptées à la rééducation constructive
 const SILHOUETTES = [
@@ -63,10 +66,17 @@ export default function TangramSilhouettes({
   onIntermissionRequest,
   replaySameIntermission,
   onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames,
   skipIntro = false
 }) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(!skipIntro && !isIntermission);
+  const [showCollection, setShowCollection] = useState(false);
+  const [themeId, setThemeId] = useState(() => getGameConfig('tangram', 'theme', 'wood'));
   const [currentSilhouetteIndex, setCurrentSilhouetteIndex] = useState(() => {
     return Math.floor(Math.random() * SILHOUETTES.length);
   });
@@ -127,13 +137,9 @@ export default function TangramSilhouettes({
         setEncouragement(randomChoice(ENCOURAGEMENTS));
         if (onScoreSave) onScoreSave('tangram', 100);
 
-        if (isIntermission && onIntermissionComplete) {
-          if (replaySameIntermission) {
-            if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-            setTimeout(() => initGame(currentSilhouetteIndex), 1500);
-          } else {
-            setTimeout(() => onIntermissionComplete(true), 1200);
-          }
+        if (isIntermission && replaySameIntermission) {
+          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+          setTimeout(() => initGame(currentSilhouetteIndex), 1000);
         }
       }
     } else {
@@ -202,6 +208,23 @@ export default function TangramSilhouettes({
       />
 
       <div style={{ width: '100%', maxWidth: '640px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {showCollection && (
+          <TangramSilhouettesCollection
+            currentSelections={{
+              silhouette: currentSilhouetteIndex,
+              theme: themeId
+            }}
+            onSelect={(catKey, itemId) => {
+              if (catKey === 'silhouette') {
+                initGame(Number(itemId));
+              } else if (catKey === 'theme') {
+                setThemeId(itemId);
+                updateGameConfig('tangram', 'theme', itemId);
+              }
+            }}
+            onClose={() => setShowCollection(false)}
+          />
+        )}
         {/* En-tête : Intermission ou Standard */}
         {isIntermission ? (
           <IntermissionHeader
@@ -219,7 +242,8 @@ export default function TangramSilhouettes({
             subtitle="Assemblage spatial & motricité zen"
             onBack={handleBackWithConfirm}
             onRestart={() => initGame(currentSilhouetteIndex)}
-            showShop={false}
+            onShop={() => setShowCollection(true)}
+            showShop={true}
             onLaunchIntermission={onLaunchIntermission}
           />
         )}
@@ -359,26 +383,33 @@ export default function TangramSilhouettes({
           </div>
         </div>
 
-        {/* Message de victoire bienveillant */}
-        {isWon && (
-          <div
-            style={{
-              padding: '16px 20px',
-              borderRadius: '12px',
-              background: '#f0fdf4',
-              border: '2px solid #86efac',
-              color: '#166534',
-              fontSize: '15px',
-              fontWeight: '700',
-              textAlign: 'center',
-              marginBottom: '20px',
-              width: '100%',
-              boxSizing: 'border-box'
-            }}
-          >
-            🌸 {encouragement || "Félicitations ! Vous avez reconstruit la silhouette avec une belle précision."}
-          </div>
-        )}
+        {/* Unified Victory Overlay */}
+        <GameVictoryOverlay
+          isOpen={isWon}
+          gameKey="tangram"
+          score={100}
+          title={activeSilhouette.name.toUpperCase()}
+          badgeIcon={activeSilhouette.icon}
+          subtitle={encouragement || "Félicitations ! Vous avez reconstruit la silhouette avec une belle précision."}
+          stats={[
+            { label: 'Pièces', value: `${placedSlotIds.length}/${activeSilhouette.slots.length}`, color: '#10b981' },
+            { label: 'Score', value: 100, color: '#38bdf8' }
+          ]}
+          onRestart={() => initGame(currentSilhouetteIndex)}
+          restartText="🔄 Rejouer"
+          onContinue={() => initGame()}
+          continueText="Autre Silhouette ➔"
+          onBack={onBack}
+          backText="← Retour au Hub"
+          isIntermission={isIntermission}
+          onIntermissionComplete={onIntermissionComplete}
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
 
         {/* Bouton de changement de silhouette */}
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', width: '100%' }}>

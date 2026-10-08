@@ -3,11 +3,13 @@ import GameHeader from '../components/GameHeader';
 import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { sound } from '../utils/sound';
 import { storage } from '../utils/storage';
-import { haptic } from '../utils/haptics';
+import { getGameConfig, updateGameConfig } from '../utils/config';
 import { useConfirm } from '../components/ConfirmContext';
 import { ZEN_FLOW_LEVELS } from './zenflowLevels';
+import ZenFlowCollection from './ZenFlowCollection';
 
 // Mots doux de félicitations spécifiques
 const ENCOURAGING_WORDS = [
@@ -39,6 +41,8 @@ export default function ZenFlow({
   skipIntro = false
 }) {
   const confirm = useConfirm();
+  const [showCollection, setShowCollection] = useState(false);
+  const [themeId, setThemeId] = useState(() => getGameConfig('zenflow', 'theme', 'cyan'));
 
   // Écran d'intro avec animation et bouton "JOUER"
   const [showIntro, setShowIntro] = useState(!skipIntro && !isIntermission);
@@ -186,9 +190,6 @@ export default function ZenFlow({
 
         if (nextSolved >= targetIntermissionRounds) {
           setLevelWon(true);
-          if (onIntermissionComplete) {
-            setTimeout(() => onIntermissionComplete(true), 2400);
-          }
         } else {
           // Passer fluidement au niveau aléatoire suivant
           setTimeout(() => {
@@ -539,6 +540,26 @@ export default function ZenFlow({
         }
       `}</style>
 
+      {showCollection && (
+        <ZenFlowCollection
+          currentSelections={{
+            theme: themeId,
+            level: levelIndex >= 10 ? 10 : levelIndex >= 5 ? 5 : 0
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'theme') {
+              setThemeId(itemId);
+              updateGameConfig('zenflow', 'theme', itemId);
+            } else if (catKey === 'level') {
+              setLevelIndex(Number(itemId));
+              setPaths({});
+              setHistory([]);
+              setActiveColor(null);
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
       {/* Animation d'Intro avec bouton "JOUER" */}
       {showIntro && !isIntermission && (
         <GameIntro
@@ -576,7 +597,8 @@ export default function ZenFlow({
           gameId="zenflow"
           onBack={handleBackWithConfirm}
           onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
-          showShop={false}
+          onShop={() => setShowCollection(true)}
+          showShop={true}
           centerContent={
             <div
               style={{
@@ -849,123 +871,32 @@ export default function ZenFlow({
         </div>
       </main>
 
-      {/* Écran de Victoire / Niveau Complété */}
-      {levelWon && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            backgroundColor: 'rgba(5, 9, 20, 0.92)',
-            backdropFilter: 'blur(12px)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            animation: 'success-pop 0.3s ease-out forwards'
-          }}
-        >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: '380px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '18px'
-            }}
-          >
-            <div style={{ fontSize: '3.5rem', filter: 'drop-shadow(0 0 20px #06b6d4)' }}>
-              🌊
-            </div>
-
-            <h2
-              style={{
-                fontFamily: 'Orbitron, sans-serif',
-                fontSize: '1.6rem',
-                fontWeight: '900',
-                color: '#06b6d4',
-                margin: 0,
-                letterSpacing: '1px'
-              }}
-            >
-              {isIntermission ? 'Entracte Réussi !' : `Niveau ${levelIndex + 1} Réussi !`}
-            </h2>
-
-            <div
-              style={{
-                padding: '8px 16px',
-                borderRadius: '20px',
-                background: 'rgba(16, 185, 129, 0.15)',
-                border: '1px solid #10b981',
-                color: '#34d399',
-                fontSize: '0.95rem',
-                fontWeight: '700'
-              }}
-            >
-              {isIntermission
-                ? `✨ Les 5 parcours zen ont été reliés avec succès`
-                : '✨ Tous les flux sont harmonieusement reliés'}
-            </div>
-
-            <p
-              style={{
-                fontSize: '1.05rem',
-                lineHeight: '1.5',
-                color: '#e2e8f0',
-                margin: '8px 0',
-                fontWeight: '500'
-              }}
-            >
-              {encouragingMessage}
-            </p>
-
-            {!isIntermission && (
-              <div style={{ width: '100%', marginTop: '10px' }}>
-                <IntermissionProposal
-                  onIntermissionRequest={onIntermissionRequest}
-                  upcomingIntermission={upcomingIntermission}
-                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                  intermissionConfig={intermissionConfig}
-                  intermissionGames={intermissionGames}
-                  excludeGameKey="zenflow"
-                  onContinue={handleNextLevel}
-                  continueText="Niveau Suivant"
-                  showDirectContinue={true}
-                  customStyle={{ marginBottom: '12px' }}
-                />
-              </div>
-            )}
-
-            <button
-              onClick={() => {
-                if (isIntermission) {
-                  if (onIntermissionComplete) onIntermissionComplete(true);
-                } else {
-                  handleNextLevel();
-                }
-              }}
-              className="retro-btn"
-              style={{
-                marginTop: '12px',
-                width: '100%',
-                minHeight: '52px',
-                background: 'linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)',
-                color: '#ffffff',
-                border: '2px solid #67e8f9',
-                borderRadius: '16px',
-                fontSize: '16px',
-                fontWeight: '800'
-              }}
-            >
-              {isIntermission ? 'Retourner au jeu principal ➔' : 'Niveau Suivant ➔'}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Unified Victory Overlay */}
+      <GameVictoryOverlay
+        isOpen={levelWon}
+        gameKey="zenflow"
+        score={((levelIndex + 1) * 150)}
+        title={isIntermission ? "ENTRACTE RÉUSSI !" : `NIVEAU ${levelIndex + 1} RÉUSSI !`}
+        badgeIcon="🌊"
+        subtitle={isIntermission ? "Les 5 parcours zen ont été reliés avec succès." : "Tous les flux d'énergie ont été harmonieusement reliés."}
+        stats={[
+          { label: 'Niveau', value: `${levelIndex + 1}/${ZEN_FLOW_LEVELS.length}`, color: '#38bdf8' }
+        ]}
+        onRestart={() => { setLevelWon(false); setPaths({}); }}
+        restartText="🔄 Rejouer"
+        onContinue={handleNextLevel}
+        continueText="Niveau Suivant ➔"
+        onBack={onBack}
+        backText="← Retour au Hub"
+        isIntermission={isIntermission}
+        onIntermissionComplete={onIntermissionComplete}
+        onIntermissionRequest={onIntermissionRequest}
+        upcomingIntermission={upcomingIntermission}
+        onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+        onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+        intermissionConfig={intermissionConfig}
+        intermissionGames={intermissionGames}
+      />
     </div>
   );
 }

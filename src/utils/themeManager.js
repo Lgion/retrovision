@@ -119,6 +119,92 @@ export const GAME_THEME_DETAILS = {
     { id: 'watercolor', name: 'Aquarelle', icon: '🎨', desc: 'Tons pastel lavés & douceur' },
     { id: 'herbarium', name: 'Herbier Zen', icon: '🌿', desc: 'Papier kraft & silhouettes végétales' },
     { id: 'minimal', name: 'Épuré', icon: '⬜', desc: 'Design blanc contemporain sobre' }
+  ],
+  unblock: [
+    { id: 'wood', name: 'Bois Noble', icon: '🪵', desc: 'Chêne chaleureux & veinures douces' },
+    { id: 'neon', name: 'Obsidienne & Néon', icon: '🌌', desc: 'Nuit profonde & lueurs vibrantes' },
+    { id: 'pastel', name: 'Pastel Zen', icon: '🧁', desc: 'Lavande, menthe & corail apaisants' },
+    { id: 'marble', name: 'Marbre Royal', icon: '🏛️', desc: 'Ardoise noble & gemmes polies' }
+  ],
+  fireflies: [
+    { id: 'azure', name: 'Nuit Étoilée Azur', icon: '🌌', desc: 'Bleu nuit céleste & reflets azur' },
+    { id: 'emerald', name: 'Forêt Mystique', icon: '🌲', desc: 'Sous-bois d’émeraude & mousses' },
+    { id: 'aurora', name: 'Aurore Boréale', icon: '✨', desc: 'Voiles polaires & lueurs boréales' },
+    { id: 'amber', name: 'Crépuscule Ambré', icon: '🌅', desc: 'Ciel couchant & or incandescent' }
+  ],
+  zenflow: [
+    { id: 'cyan', name: 'Flux Cyan', icon: '🌊', desc: 'Ondes bleutées & énergie limpide' },
+    { id: 'sakura', name: 'Sakura Zen', icon: '🌸', desc: 'Pétales poudrés & reflets rosés' },
+    { id: 'emerald', name: 'Forêt d’Émeraude', icon: '🍃', desc: 'Feuillage zen & chemins végétaux' },
+    { id: 'gold', name: 'Or Céleste', icon: '✨', desc: 'Lignes dorées & harmonie solaire' }
+  ],
+  findcharlie: [
+    { id: 'beach', name: 'La Grande Plage', icon: '🏖️', desc: 'Parasols, châteaux de sable & baigneurs joyeux' },
+    { id: 'carnival', name: 'Le Carnaval de Rue', icon: '🎭', desc: 'Confettis, masques festifs & défilé animé' },
+    { id: 'fair', name: 'La Fête Foraine', icon: '🎡', desc: 'Grande roue, stands de tir & gourmandises' },
+    { id: 'market', name: 'Le Marché Médiéval', icon: '🏰', desc: 'Échoppes d’antan, chevaliers & saltimbanques' },
+    { id: 'park', name: 'Le Parc Champêtre', icon: '🌿', desc: 'Pelouse verdoyante, étang paisible & allées fleuries' },
+    { id: 'winter', name: 'La Station Enneigée', icon: '❄️', desc: 'Chalets en bois, sapins givrés & blancheur hivernale' }
+  ],
+  symbolquest: [
+    { id: 'beach', name: 'La Grande Plage', icon: '🏖️', desc: 'Parasols, châteaux de sable & baigneurs joyeux' },
+    { id: 'carnival', name: 'Le Carnaval de Rue', icon: '🎭', desc: 'Confettis, masques festifs & défilé animé' },
+    { id: 'fair', name: 'La Fête Foraine', icon: '🎡', desc: 'Grande roue, stands de tir & gourmandises' },
+    { id: 'market', name: 'Le Marché Médiéval', icon: '🏰', desc: 'Échoppes d’antan, chevaliers & saltimbanques' },
+    { id: 'park', name: 'Le Parc Champêtre', icon: '🌿', desc: 'Pelouse verdoyante, étang paisible & allées fleuries' },
+    { id: 'winter', name: 'La Station Enneigée', icon: '❄️', desc: 'Chalets en bois, sapins givrés & blancheur hivernale' }
+  ],
+  wordmaster: [
+    { id: 'parchment', name: 'Parchemin Doré', icon: '📜', desc: 'Papier ancien velouté & dorures raffinées' },
+    { id: 'library', name: 'Bibliothèque Royale', icon: '🏛️', desc: 'Boiseries nobles & velours vert sauge' },
+    { id: 'ink_night', name: 'Nuit d’Encre', icon: '🌌', desc: 'Bleu nuit profond & plumes d’or étincelantes' },
+    { id: 'minimal_ivory', name: 'Ivoire Épuré', icon: '🕊️', desc: 'Style contemporain sobre & haute clarté' },
+    { id: 'velvet_lounge', name: 'Salon Littéraire', icon: '🛋️', desc: 'Velours bordeaux impérial & lueurs tamisées' },
+    { id: 'botanical', name: 'Herbier Poétique', icon: '🌿', desc: 'Papier kraft végétal, flore délicate & vert sauge' },
+    { id: 'cafe_poetes', name: 'Café des Auteurs', icon: '☕', desc: 'Boiseries bistrot parisien, tons noisette & zinc' },
+    { id: 'aurore', name: 'Aurore d’Écrivain', icon: '🌅', desc: 'Teintes poudrées pêche, lumière matinale douce' }
+  ],
+  morpion: [
+    { id: 'cyber', name: 'Néon Cyber', icon: '❌⭕', desc: 'Néon cyan & magenta futuriste' },
+    { id: 'pebbles', name: 'Galets & Bambou', icon: '🪨🎋', desc: 'Galets polis & pousses de bambou' },
+    { id: 'celestial', name: 'Soleil & Lune', icon: '☀️🌙', desc: 'Astre du jour & croissant nocturne' },
+    { id: 'sakura', name: 'Sakura & Étoile', icon: '🌸⭐', desc: 'Cerisier en fleur & éclat céleste' }
+  ],
+  carillon: [
+    { id: 'celestial', name: 'Carillons Célestes', icon: '🔔', desc: 'Harmoniques pures & azur nocturne' },
+    { id: 'temple', name: 'Temple Zen', icon: '🎋', desc: 'Cuivre tibétain & bambous apaisants' },
+    { id: 'crystals', name: 'Cristaux Boréaux', icon: '💎', desc: 'Résonance de quartz & reflets polaires' },
+    { id: 'musicbox', name: 'Boîte à Musique', icon: '🎶', desc: 'Mécanisme d’or & mélodie d’antan' }
+  ],
+  motsflottants: [
+    { id: 'washi', name: 'Papier Washi', icon: '📜', desc: 'Fibres naturelles & encre douce' },
+    { id: 'emerald', name: 'Jardin d’Émeraude', icon: '🍃', desc: 'Sous-bois paisible & vert sauge' },
+    { id: 'slate', name: 'Ardoise Nocturne', icon: '🌑', desc: 'Pierre sombre & lettres lumineuses' },
+    { id: 'sunset', name: 'Coucher de Soleil', icon: '🌅', desc: 'Nuances ambrées & ciel couchant' }
+  ],
+  tangram: [
+    { id: 'wood', name: 'Bois Noble & Érable', icon: '🪵', desc: 'Essences précieuses & veinures douces' },
+    { id: 'glass', name: 'Verre Dépoli & Gemmes', icon: '💎', desc: 'Effet givré translucide & facettes' },
+    { id: 'origami', name: 'Origami Pastel', icon: '📜', desc: 'Plis géométriques & teintes poudrées' },
+    { id: 'stained_glass', name: 'Vitrail Solaire', icon: '🎨', desc: 'Verre teinté & liserés de plomb' }
+  ],
+  brickbreaker: [
+    { id: 'cyber', name: 'Néon Cyber', icon: '🌌', desc: 'Lignes laser & briques fluorescentes' },
+    { id: 'pastel', name: 'Pastel Zen', icon: '🌸', desc: 'Teintes douces & rebonds apaisants' },
+    { id: 'arcade', name: 'Rétro Arcade', icon: '🕹️', desc: 'Pixel art vibrant & nostalgie rétro' },
+    { id: 'luxury', name: 'Or & Saphir', icon: '👑', desc: 'Joyaux étincelants & raquette dorée' }
+  ],
+  flappyneon: [
+    { id: 'synthwave', name: 'Néon Synthwave', icon: '🌆', desc: 'Crépuscule cyberpunk & reflets pourpres' },
+    { id: 'deepspace', name: 'Espace Profond', icon: '🌌', desc: 'Nébuleuses stellaires & néant azur' },
+    { id: 'forest', name: 'Forêt Émeraude', icon: '🌲', desc: 'Brumes végétales & branches lumineuses' },
+    { id: 'aurora', name: 'Aurore Boréale', icon: '❄️', desc: 'Givres polaires & lueurs célestes' }
+  ],
+  snakewave: [
+    { id: 'neon', name: 'Onde Néon', icon: '🐍', desc: 'Ligne laser émeraude & fruits cyber' },
+    { id: 'dragon', name: 'Dragon d’Azur', icon: '🐉', desc: 'Créature céleste & perles d’orient' },
+    { id: 'pastel', name: 'Chenille Pastel', icon: '🐛', desc: 'Anneaux doux & fleurs à cueillir' },
+    { id: 'gold', name: 'Fil d’Or', icon: '✨', desc: 'Traînée solaire scintillante & cristaux' }
   ]
 };
 

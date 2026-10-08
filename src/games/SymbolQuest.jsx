@@ -2,12 +2,15 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import SymbolIcon from '../components/SymbolIcon';
 import { sound } from '../utils/sound';
 import { storage } from '../utils/storage';
 import { shuffle, randomChoice } from '../utils/commonUtils';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
+import { getGameConfig, updateGameConfig } from '../utils/config';
+import SymbolQuestCollection from './SymbolQuestCollection';
 
 // Bibliothèque de symboles zen à haute lisibilité visuelle (SVG)
 const SYMBOLS = [
@@ -73,6 +76,8 @@ export default function SymbolQuest({
   intermissionGames
 }) {
   const confirm = useConfirm();
+  const [showCollection, setShowCollection] = useState(false);
+  const [themeId, setThemeId] = useState(() => getGameConfig('symbolquest', 'theme', 'zen_garden'));
 
   // Niveau sélectionné
   const [levelIndex, setLevelIndex] = useState(() => {
@@ -226,10 +231,6 @@ export default function SymbolQuest({
         const nextHigh = Math.max(levelIndex + 1, storage.getNumber('retrovision_symbolquest_highscore', 0));
         storage.setItem('retrovision_symbolquest_highscore', nextHigh.toString());
         if (onScoreSave) onScoreSave('symbolquest', nextHigh);
-
-        if (isIntermission && onIntermissionComplete) {
-          setTimeout(() => onIntermissionComplete(true), 2400);
-        }
       }
     } else {
       // Distracteur touché : son feutré sans pénalité (esprit bienveillant)
@@ -362,6 +363,25 @@ export default function SymbolQuest({
         }
       `}</style>
 
+      {showCollection && (
+        <SymbolQuestCollection
+          currentSelections={{
+            pack: levelIndex >= 10 ? 10 : levelIndex >= 5 ? 5 : 0,
+            theme: themeId
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'theme') {
+              setThemeId(itemId);
+              updateGameConfig('symbolquest', 'theme', itemId);
+            } else if (catKey === 'pack') {
+              setLevelIndex(Number(itemId));
+              setLevelWon(false);
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
+
       {/* Header Unifié ou Header Entracte */}
       {isIntermission ? (
         <div style={{ width: '100%', marginBottom: '6px', zIndex: 10, flexShrink: 0, padding: '0 8px', boxSizing: 'border-box' }}>
@@ -385,7 +405,8 @@ export default function SymbolQuest({
           gameId="symbolquest"
           onBack={handleBackWithConfirm}
           onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
-          showShop={false}
+          onShop={() => setShowCollection(true)}
+          showShop={true}
           centerContent={
             <div
               style={{
@@ -623,115 +644,30 @@ export default function SymbolQuest({
         </div>
       </main>
 
-      {/* Écran de Victoire / Tableau Complété */}
-      {levelWon && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            backgroundColor: 'rgba(5, 12, 22, 0.93)',
-            backdropFilter: 'blur(12px)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            animation: 'cm-fade-in 0.3s ease-out forwards'
-          }}
-        >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: '380px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '18px'
-            }}
-          >
-            <div style={{ fontSize: '3.5rem', filter: 'drop-shadow(0 0 20px #10b981)' }}>
-              🌸
-            </div>
-
-            <h2
-              style={{
-                fontFamily: 'Orbitron, sans-serif',
-                fontSize: '1.6rem',
-                fontWeight: '900',
-                color: '#10b981',
-                margin: 0,
-                letterSpacing: '1px'
-              }}
-            >
-              Tableau {levelIndex + 1} Complété !
-            </h2>
-
-            <div
-              style={{
-                padding: '8px 16px',
-                borderRadius: '20px',
-                background: 'rgba(16, 185, 129, 0.15)',
-                border: '1px solid #10b981',
-                color: '#34d399',
-                fontSize: '0.95rem',
-                fontWeight: '700'
-              }}
-            >
-              ✨ Tous les symboles cibles ont été découverts
-            </div>
-
-            <p
-              style={{
-                fontSize: '1.05rem',
-                lineHeight: '1.5',
-                color: '#e2e8f0',
-                margin: '8px 0',
-                fontWeight: '500'
-              }}
-            >
-              {encouragingMessage}
-            </p>
-
-            {!isIntermission && (
-              <div style={{ width: '100%', marginTop: '10px' }}>
-                <IntermissionProposal
-                  onIntermissionRequest={onIntermissionRequest}
-                  upcomingIntermission={upcomingIntermission}
-                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                  intermissionConfig={intermissionConfig}
-                  intermissionGames={intermissionGames}
-                  excludeGameKey="symbolquest"
-                  onContinue={handleNextLevel}
-                  continueText="Tableau Suivant"
-                  showDirectContinue={true}
-                  customStyle={{ marginBottom: '12px' }}
-                />
-              </div>
-            )}
-
-            <button
-              onClick={handleNextLevel}
-              className="retro-btn"
-              style={{
-                marginTop: '12px',
-                width: '100%',
-                minHeight: '52px',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: '#ffffff',
-                border: '2px solid #6ee7b7',
-                borderRadius: '16px',
-                fontSize: '16px',
-                fontWeight: '800'
-              }}
-            >
-              Tableau Suivant ➔
-            </button>
-          </div>
-        </div>
-      )}
+      {/* UNIFIED GAME VICTORY OVERLAY */}
+      <GameVictoryOverlay
+        isOpen={levelWon}
+        gameKey="symbolquest"
+        title="TABLEAU COMPLÉTÉ !"
+        subtitle={`Tableau ${levelIndex + 1} (${pack}) terminé avec succès !`}
+        stats={[
+          { label: 'Symboles trouvés', value: targetCount, icon: '🎯' },
+          { label: 'Pack', value: pack, icon: '🌸' }
+        ]}
+        onRestart={handleNextLevel}
+        restartText="Tableau Suivant ➔"
+        onContinue={handleNextLevel}
+        continueText="Tableau Suivant ➔"
+        onBack={onBack}
+        isIntermission={isIntermission}
+        onIntermissionComplete={onIntermissionComplete}
+        onIntermissionRequest={onIntermissionRequest}
+        upcomingIntermission={upcomingIntermission}
+        onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+        onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+        intermissionConfig={intermissionConfig}
+        intermissionGames={intermissionGames}
+      />
     </div>
   );
 }

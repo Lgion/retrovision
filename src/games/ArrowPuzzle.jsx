@@ -6,6 +6,7 @@ import GameHeader from '../components/GameHeader';
 import ArrowPuzzleCollection from './ArrowPuzzleCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useRandomTheme } from '../hooks/useRandomTheme';
 import { useConfirm } from '../components/ConfirmContext';
@@ -558,35 +559,17 @@ export default function ArrowPuzzle({
   };
 
   const handleVictory = () => {
-    if (isIntermission && onIntermissionComplete) {
-      if (replaySameIntermission) {
-        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-        const settings = getDifficultySettings(intermissionDifficulty || 'facile', 'wire');
-        setTimeout(() => startGame(settings.size, settings.arrows, 'wire'), 1000);
-        return;
-      }
-      setTimeout(() => onIntermissionComplete(), 1000);
+    sound.stopBGM();
+    if (isIntermission && replaySameIntermission) {
+      if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+      const settings = getDifficultySettings(intermissionDifficulty || 'facile', 'wire');
+      setTimeout(() => startGame(settings.size, settings.arrows, 'wire'), 1000);
       return;
     }
-    setVictoryPhase(-1);
-    setTimeout(() => {
-      sound.stopBGM();
-      setVictoryPhase(1);
-      sound.playPowerup();
-
-      setTimeout(() => {
-        setVictoryPhase(2);
-        sound.playExplosion();
-      }, 1500);
-
-      setTimeout(() => {
-        setVictoryPhase(3);
-        sound.playScore();
-        if (onScoreSave) {
-          onScoreSave('Flèches', Math.max(1000 - moves * 5, 100));
-        }
-      }, 3500);
-    }, 1500);
+    setVictoryPhase(3);
+    if (onScoreSave) {
+      onScoreSave('Flèches', Math.max(1000 - moves * 5, 100));
+    }
   };
 
   const useHint = () => {
@@ -1051,150 +1034,96 @@ export default function ArrowPuzzle({
           </div>
         )}
 
-        {/* Victory Overlays */}
-        {(victoryPhase > 0 || victoryPhase === -2) && (
+        {/* Game Over Overlay */}
+        {victoryPhase === -2 && (
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.7)',
+            background: 'rgba(0, 0, 0, 0.75)',
             backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', flexDirection: 'column',
             justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.5s'
           }}>
-            {/* Removed old missing confettiFall element */}
-
-            {victoryPhase === -2 && (
-              <div style={{
-                animation: 'dropInHeavy 0.8s cubic-bezier(0.25, 1, 0.5, 1) both', textAlign: 'center', background: 'white', padding: '50px',
-                borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #ef4444', zIndex: 10
-              }}>
-                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>💀</div>
-                <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Game Over !</h2>
-                <div style={{ fontSize: '1.2rem', color: '#666', marginBottom: '30px' }}>
-                  Plus de vies restantes.
-                </div>
-                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => {
-                      if (isIntermission) {
-                        const settings = getDifficultySettings(intermissionDifficulty || 'facile', 'wire');
-                        startGame(settings.size, settings.arrows, 'wire');
-                      } else {
-                        startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250));
-                      }
-                    }}
-                    className="retro-btn pulse-glow"
-                    style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#f59e0b', color: '#f59e0b' }}
-                  >
-                    Recommencer
-                  </button>
-                  {isIntermission ? (
-                    <button
-                      onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
-                      className="retro-btn"
-                      style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#ef4444', color: '#ef4444' }}
-                    >
-                      Passer l'entracte ⏭
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
-                      className="retro-btn"
-                      style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#ef4444', color: '#ef4444' }}
-                    >
-                      Menu
-                    </button>
-                  )}
-                </div>
+            <div style={{
+              animation: 'dropInHeavy 0.8s cubic-bezier(0.25, 1, 0.5, 1) both', textAlign: 'center', background: 'white', padding: '50px',
+              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #ef4444', zIndex: 10
+            }}>
+              <div style={{ fontSize: '4rem', marginBottom: '10px' }}>💀</div>
+              <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Game Over !</h2>
+              <div style={{ fontSize: '1.2rem', color: '#666', marginBottom: '30px' }}>
+                Plus de vies restantes.
               </div>
-            )}
-
-            {victoryPhase === 1 && (
-              <h2 style={{ fontSize: '4rem', color: '#3b82f6', margin: 0, animation: 'textPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>ÉPURÉ !</h2>
-            )}
-
-            {victoryPhase === 3 && (
-              <div style={{
-                animation: 'popInBouncy 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both', textAlign: 'center', background: 'white', padding: '50px',
-                borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #3b82f6', zIndex: 10
-              }}>
-                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🎯</div>
-                <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Grille Vidée !</h2>
-                <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
-                  Score: <strong style={{ color: '#3b82f6', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
-                </div>
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    if (isIntermission) {
+                      const settings = getDifficultySettings(intermissionDifficulty || 'facile', 'wire');
+                      startGame(settings.size, settings.arrows, 'wire');
+                    } else {
+                      startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250));
+                    }
+                  }}
+                  className="retro-btn pulse-glow"
+                  style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#f59e0b', color: '#f59e0b' }}
+                >
+                  Recommencer
+                </button>
                 {isIntermission ? (
-                  <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                    <button
-                      onClick={() => onIntermissionComplete && onIntermissionComplete()}
-                      className="retro-btn pulse-glow"
-                      style={{ fontSize: '1.2rem', padding: '12px 30px', borderColor: '#3b82f6', color: '#3b82f6' }}
-                    >
-                      Terminer l'Entracte 🏁
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => { if (onIntermissionComplete) onIntermissionComplete(false); }}
+                    className="retro-btn"
+                    style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#ef4444', color: '#ef4444' }}
+                  >
+                    Passer l'entracte ⏭
+                  </button>
                 ) : (
-                  <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
-                    <IntermissionProposal
-                      onIntermissionRequest={onIntermissionRequest}
-                      upcomingIntermission={upcomingIntermission}
-                      onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                      onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                      intermissionConfig={intermissionConfig}
-                      intermissionGames={intermissionGames}
-                      excludeGameKey="arrows"
-                      onContinue={() => {
-                        setVictoryPhase(0);
-                        startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250));
-                      }}
-                      continueText="Nouveau Défi"
-                      showDirectContinue={true}
-                      customStyle={{ marginBottom: '16px' }}
-                    />
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                      <button
-                        onClick={() => {
-                          setVictoryPhase(0);
-                          startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250));
-                        }}
-                        className="retro-btn"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          borderColor: 'rgba(255, 255, 255, 0.15)',
-                          color: '#333',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          padding: '10px 20px',
-                          borderRadius: '12px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🔄 Recommencer
-                      </button>
-                      <button
-                        onClick={() => {
-                          setVictoryPhase(0);
-                          setGameState('menu');
-                        }}
-                        className="retro-btn"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          borderColor: 'rgba(255, 255, 255, 0.15)',
-                          color: '#333',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          padding: '10px 20px',
-                          borderRadius: '12px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🏠 Menu
-                      </button>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => { setVictoryPhase(0); setGameState('menu'); }}
+                    className="retro-btn"
+                    style={{ fontSize: '1.2rem', padding: '10px 20px', borderColor: '#ef4444', color: '#ef4444' }}
+                  >
+                    Menu
+                  </button>
                 )}
               </div>
-            )}
+            </div>
           </div>
         )}
+
+        {/* Unified Victory Overlay */}
+        <GameVictoryOverlay
+          isOpen={victoryPhase === 3}
+          gameKey="arrows"
+          score={Math.max(1000 - moves * 5, 100)}
+          title="GRILLE VIDÉE !"
+          badgeIcon="🎯"
+          subtitle="Toutes les flèches ont été dénouées avec succès !"
+          stats={[
+            { label: 'Coups', value: moves },
+            { label: 'Vies restantes', value: lives }
+          ]}
+          onRestart={() => {
+            setVictoryPhase(0);
+            startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250));
+          }}
+          restartText="🔄 Recommencer"
+          onContinue={() => {
+            setVictoryPhase(0);
+            startGame(boardSize, mode === 'wire' ? (boardSize === 16 ? 75 : 300) : (boardSize === 16 ? 85 : 250));
+          }}
+          continueText="Nouveau Défi"
+          onBack={() => {
+            setVictoryPhase(0);
+            setGameState('menu');
+          }}
+          backText="🏠 Menu"
+          isIntermission={isIntermission}
+          onIntermissionComplete={onIntermissionComplete}
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
 
         <style dangerouslySetInnerHTML={{
           __html: `

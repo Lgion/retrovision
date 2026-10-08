@@ -6,6 +6,7 @@ import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { CHAPTERS, getChapter, calculateStars, SPECIAL_TYPES, generateDynamicChapterGrid } from './bubblecool/chapterData';
 
@@ -1459,15 +1460,6 @@ export default function BubbleCool({
         localStorage.setItem('retrovision_bubblecool_ch_scores', JSON.stringify(next));
         return next;
       });
-
-      if (onIntermissionComplete) {
-        if (replaySameIntermission) {
-          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-          setTimeout(initGame, 1800);
-        } else {
-          setTimeout(onIntermissionComplete, 1800);
-        }
-      }
     } else if (gameMode === 'chapter') {
       const stars = calculateStars(currentChapterId, score);
       setVictoryStars(stars);
@@ -1719,106 +1711,7 @@ export default function BubbleCool({
         </div>
       )}
 
-      {/* CHAPTER VICTORY MODAL */}
-      {showChapterVictoryModal && (
-        <div style={modalOverlayStyle}>
-          <div style={modalCardStyle}>
-            <div style={{ fontSize: '20px', color: '#10B981', fontFamily: 'Orbitron, sans-serif', fontWeight: 'bold', marginBottom: '6px' }}>
-              CHAPITRE RÉUSSI !
-            </div>
-            <div style={{ fontSize: '18px', color: '#fff', fontWeight: 'bold', marginBottom: '14px' }}>
-              {activeChapter.title}
-            </div>
 
-            {/* Stars Animation */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', margin: '14px 0 20px' }}>
-              {[1, 2, 3].map((starIdx) => (
-                <div
-                  key={starIdx}
-                  style={{
-                    fontSize: '42px',
-                    filter: starIdx <= victoryStars ? 'drop-shadow(0 0 12px #FACC15)' : 'grayscale(1)',
-                    transform: starIdx <= victoryStars ? 'scale(1.15)' : 'scale(0.9)',
-                    transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                  }}
-                >
-                  ⭐
-                </div>
-              ))}
-            </div>
-
-            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '12px', color: '#94a3b8' }}>SCORE FINAL</div>
-              <div style={{ fontSize: '24px', color: '#38BDF8', fontWeight: 'bold', fontFamily: 'Orbitron, sans-serif' }}>
-                {score}
-              </div>
-              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                Tirs effectués : {shotsFired}
-              </div>
-            </div>
-
-            {!isIntermission && (
-              <div style={{ width: '100%', marginBottom: '12px' }}>
-                <IntermissionProposal
-                  onIntermissionRequest={onIntermissionRequest}
-                  upcomingIntermission={upcomingIntermission}
-                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                  intermissionConfig={intermissionConfig}
-                  intermissionGames={intermissionGames}
-                  excludeGameKey="bubblecool"
-                  onContinue={() => {
-                    setShowChapterVictoryModal(false);
-                    if (currentChapterId < 10) {
-                      startChapter(currentChapterId + 1);
-                    } else {
-                      initGame();
-                    }
-                  }}
-                  continueText={currentChapterId < 10 ? "Chapitre Suivant" : "Rejouer"}
-                  showDirectContinue={true}
-                  customStyle={{ marginBottom: '10px' }}
-                />
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-              {currentChapterId < 10 && (
-                <button
-                  onClick={() => {
-                    setShowChapterVictoryModal(false);
-                    startChapter(currentChapterId + 1);
-                  }}
-                  className="retro-btn pulse-glow"
-                  style={{ ...overlayBtnStyle, borderColor: '#10B981', color: '#10B981', width: '100%' }}
-                >
-                  Chapitre Suivant 🚀
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  setShowChapterVictoryModal(false);
-                  initGame();
-                }}
-                className="retro-btn"
-                style={{ ...overlayBtnStyle, borderColor: '#38BDF8', color: '#38BDF8', width: '100%' }}
-              >
-                Rejouer ce Chapitre 🔄
-              </button>
-              <button
-                onClick={() => {
-                  setShowChapterVictoryModal(false);
-                  setShowChapterSelect(true);
-                }}
-                className="retro-btn"
-                style={{ ...overlayBtnStyle, borderColor: '#94a3b8', color: '#94a3b8', width: '100%' }}
-              >
-                Carte des Chapitres 🗺️
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* CHAPTER SELECT MAP MODAL */}
       {showChapterSelect && (
@@ -2048,42 +1941,77 @@ export default function BubbleCool({
             </div>
           )}
 
-          {/* Victory Overlay (Arcade Mode ou Entracte Aventure) */}
-          {victory && (gameMode === 'arcade' || isIntermission) && (
-            <div style={overlayStyle}>
-              <div style={{ ...titleStyle, color: '#10B981', textShadow: '0 0 12px #10B981' }}>
-                VICTOIRE ÉCLATANTE !
-              </div>
-              <div style={{ color: '#94a3b8', marginBottom: '16px' }}>
-                {isIntermission
-                  ? `Chapitre ${activeChapter.id} réussi ! Retour imminent...`
-                  : 'Vous avez entièrement vidé la grille !'}
-              </div>
-              <div style={{ fontSize: '24px', color: '#10B981', fontWeight: 'bold', marginBottom: '20px' }}>
-                Score: {score}
-              </div>
-              {!isIntermission && (
-                <div style={{ width: '100%', maxWidth: '380px', margin: '0 auto' }}>
-                  <IntermissionProposal
-                    onIntermissionRequest={onIntermissionRequest}
-                    upcomingIntermission={upcomingIntermission}
-                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                    intermissionConfig={intermissionConfig}
-                    intermissionGames={intermissionGames}
-                    excludeGameKey="bubblecool"
-                    onContinue={initGame}
-                    continueText="Nouvelle Partie"
-                    showDirectContinue={true}
-                    customStyle={{ marginBottom: '12px' }}
-                  />
-                  <button onClick={initGame} className="retro-btn pulse-glow" style={overlayBtnStyle}>
-                    Nouvelle Partie 🎮
-                  </button>
+          {/* UNIFIED GAME VICTORY OVERLAY */}
+          <GameVictoryOverlay
+            isOpen={victory || showChapterVictoryModal}
+            gameKey="bubblecool"
+            title={gameMode === 'chapter' ? "CHAPITRE RÉUSSI !" : "VICTOIRE ÉCLATANTE !"}
+            score={score}
+            subtitle={
+              gameMode === 'chapter'
+                ? activeChapter.title
+                : isIntermission
+                ? `Chapitre ${activeChapter.id} réussi !`
+                : 'Vous avez entièrement vidé la grille !'
+            }
+            stats={[
+              { label: 'Tirs effectués', value: shotsFired, icon: '🎯' },
+              ...(gameMode === 'chapter' ? [{ label: 'Étoiles', value: `${victoryStars} / 3 ⭐`, color: '#facc15' }] : [])
+            ]}
+            detailsNode={
+              gameMode === 'chapter' ? (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', margin: '4px 0 10px' }}>
+                  {[1, 2, 3].map((starIdx) => (
+                    <div
+                      key={starIdx}
+                      style={{
+                        fontSize: '36px',
+                        filter: starIdx <= victoryStars ? 'drop-shadow(0 0 12px #FACC15)' : 'grayscale(1)',
+                        transform: starIdx <= victoryStars ? 'scale(1.15)' : 'scale(0.9)',
+                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                      }}
+                    >
+                      ⭐
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          )}
+              ) : null
+            }
+            onRestart={() => {
+              setShowChapterVictoryModal(false);
+              setVictory(false);
+              initGame();
+            }}
+            restartText={gameMode === 'chapter' ? "Rejouer ce Chapitre 🔄" : "Nouvelle Partie 🔄"}
+            onContinue={
+              gameMode === 'chapter' && currentChapterId < 10
+                ? () => {
+                    setShowChapterVictoryModal(false);
+                    setVictory(false);
+                    startChapter(currentChapterId + 1);
+                  }
+                : null
+            }
+            continueText="Chapitre Suivant 🚀"
+            onBack={() => {
+              setShowChapterVictoryModal(false);
+              setVictory(false);
+              if (gameMode === 'chapter') {
+                setShowChapterSelect(true);
+              } else if (onBack) {
+                onBack();
+              }
+            }}
+            backText={gameMode === 'chapter' ? "Carte des Chapitres 🗺️" : (onBack ? "← Retour au Hub" : null)}
+            isIntermission={isIntermission}
+            onIntermissionComplete={onIntermissionComplete}
+            onIntermissionRequest={onIntermissionRequest}
+            upcomingIntermission={upcomingIntermission}
+            onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+            onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+            intermissionConfig={intermissionConfig}
+            intermissionGames={intermissionGames}
+          />
         </div>
 
         {/* Rescue Power-Ups Bar (Astuces & Aides Anti-Blocage) - Collé au bas */}

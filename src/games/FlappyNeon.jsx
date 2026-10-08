@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { sound } from '../utils/sound';
+import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import FlappyNeonCollection from './FlappyNeonCollection';
 
 export default function FlappyNeon({ onBack, onScoreSave, onLaunchIntermission, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
+  const [showCollection, setShowCollection] = useState(false);
+  const [birdSkin, setBirdSkin] = useState(() => getGameConfig('flappyneon', 'bird', 'rocket'));
+  const [themeId, setThemeId] = useState(() => getGameConfig('flappyneon', 'theme', 'synthwave'));
   const canvasRef = useRef(null);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
@@ -410,11 +415,31 @@ export default function FlappyNeon({ onBack, onScoreSave, onLaunchIntermission, 
         onComplete={() => setShowIntro(false)} 
       />}
       <div className="game-container" style={containerStyle}>
+      {showCollection && (
+        <FlappyNeonCollection
+          currentSelections={{
+            bird: birdSkin,
+            theme: themeId
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'bird') {
+              setBirdSkin(itemId);
+              updateGameConfig('flappyneon', 'bird', itemId);
+            } else if (catKey === 'theme') {
+              setThemeId(itemId);
+              updateGameConfig('flappyneon', 'theme', itemId);
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
       <GameHeader
         title="FLAPPY ZEN"
         gameId="flappyneon"
         onBack={onBack}
         onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
+        onShop={() => setShowCollection(true)}
+        showShop={true}
         showBgmToggle={false} // BGM handled globally
         centerContent={
           <div style={scoreBoardStyle}>

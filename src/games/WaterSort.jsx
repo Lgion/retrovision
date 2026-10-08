@@ -7,6 +7,7 @@ import WinLossTransition from '../components/WinLossTransition';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useConfirm } from '../components/ConfirmContext';
 import { shuffleInPlace } from '../utils/commonUtils';
@@ -332,41 +333,22 @@ export default function WaterSort({
     });
 
     if (isWon && victoryPhase === 0) {
-      if (isIntermission && onIntermissionComplete) {
-        if (replaySameIntermission) {
-          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-          setTimeout(() => initGame(), 1000);
-          return;
-        }
-        setTimeout(() => onIntermissionComplete(), 1000);
+      sound.stopBGM?.();
+      if (isIntermission && replaySameIntermission) {
+        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+        setTimeout(() => initGame(), 1000);
         return;
       }
-      setVictoryPhase(-1);
-
-      setTimeout(() => {
-        setVictoryPhase(1);
-
-        // Stage 1 -> Stage 2
-        setTimeout(() => {
-          setVictoryPhase(2);
-          sound.playExplosion(); // Bubble burst/fireworks
-        }, 2000);
-
-        // Stage 2 -> Stage 3 (Final)
-        setTimeout(() => {
-          setVictoryPhase(3);
-          sound.playScore();
-          if (onScoreSave) {
-            onScoreSave({
-              game: 'watersort',
-              score: Math.max(1000 - moves * 10, 100),
-              date: new Date().toISOString(),
-              moves: moves + 1,
-              timeMs: Date.now() - startTime
-            });
-          }
-        }, 4500);
-      }, 1500);
+      setVictoryPhase(3);
+      if (onScoreSave) {
+        onScoreSave({
+          game: 'watersort',
+          score: Math.max(1000 - moves * 10, 100),
+          date: new Date().toISOString(),
+          moves: moves + 1,
+          timeMs: Date.now() - startTime
+        });
+      }
     }
   };
 
@@ -666,164 +648,33 @@ export default function WaterSort({
 
         </div>
 
-        {/* Transition Phase */}
-        {victoryPhase === -1 && <WinLossTransition type="win" />}
-
-        {/* Victory Overlay Stages */}
-        {victoryPhase > 0 && (
-          <div style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.4)',
-            backdropFilter: 'blur(10px)',
-            zIndex: 100,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            animation: 'fadeIn 0.5s',
-            overflow: 'hidden'
-          }}>
-            {/* Confetti & Fireworks Backgrounds */}
-            {victoryPhase >= 2 && (
-              <div style={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0, bottom: 0,
-                background: 'url("https://cdn.pixabay.com/photo/2017/12/26/16/06/confetti-3040854_1280.png") center/cover',
-                opacity: 0.5,
-                animation: 'slideDown 10s linear infinite'
-              }} />
-            )}
-
-            {/* Stage 1: Initial WOW */}
-            {victoryPhase === 1 && (
-              <div style={{ animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
-                <h2 style={{
-                  fontSize: '4rem',
-                  color: '#33CCFF',
-                  textShadow: '0 0 20px rgba(51,204,255,0.8), 2px 2px 0px white',
-                  margin: 0,
-                  transform: 'rotate(5deg)'
-                }}>EAU PURE !</h2>
-                <div style={{ fontSize: '6rem', textAlign: 'center', animation: 'bounce 1s infinite' }}>💧</div>
-              </div>
-            )}
-
-            {/* Stage 2: Stats & Fireworks */}
-            {victoryPhase === 2 && (
-              <div style={{
-                animation: 'slideUpFade 0.6s ease-out',
-                background: 'rgba(255,255,255,0.9)',
-                padding: '40px',
-                borderRadius: '30px',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
-                textAlign: 'center',
-                zIndex: 10
-              }}>
-                <h3 style={{ fontSize: '2.5rem', color: '#FF3366', margin: '0 0 20px 0' }}>Analyse du flux...</h3>
-                <div style={{ fontSize: '1.8rem', color: '#666', margin: '10px 0' }}>
-                  Temps : <strong style={{ color: '#FF9933' }}>{Math.floor((Date.now() - startTime) / 1000)}s</strong>
-                </div>
-                <div style={{ fontSize: '1.8rem', color: '#666', margin: '10px 0', animation: 'popIn 0.5s 0.5s backwards' }}>
-                  Transvasements : <strong style={{ color: '#33CCFF' }}>{moves}</strong>
-                </div>
-              </div>
-            )}
-
-            {/* Stage 3: Final Master Screen */}
-            {victoryPhase === 3 && (
-              <div style={{
-                textAlign: 'center',
-                animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                zIndex: 10
-              }}>
-                <div style={{ fontSize: '5rem', marginBottom: '10px' }}>🌸</div>
-                <h2 style={{
-                  fontSize: '3.5rem',
-                  background: 'linear-gradient(45deg, #33CCFF, #FF3366, #FFD700)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  margin: '0 0 30px 0',
-                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
-                }}>MAÎTRE ZEN</h2>
-
-                {isIntermission ? (
-                  <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                    <button
-                      onClick={() => onIntermissionComplete && onIntermissionComplete()}
-                      style={{
-                        background: 'linear-gradient(135deg, #33FF77, #009933)',
-                        border: '4px solid white',
-                        color: 'white',
-                        padding: '15px 40px',
-                        borderRadius: '40px',
-                        fontSize: '1.5rem',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        boxShadow: '0 10px 20px rgba(51,255,119,0.4)',
-                        transition: 'transform 0.2s'
-                      }}
-                      onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                      onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
-                    >
-                      Terminer l'Entracte 🏁
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ width: '100%', maxWidth: '440px', margin: '0 auto' }}>
-                    <IntermissionProposal
-                      onIntermissionRequest={onIntermissionRequest}
-                      upcomingIntermission={upcomingIntermission}
-                      onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                      onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                      intermissionConfig={intermissionConfig}
-                      intermissionGames={intermissionGames}
-                      excludeGameKey="water"
-                      onContinue={initGame}
-                      continueText="Niveau Suivant"
-                      showDirectContinue={true}
-                      customStyle={{ marginBottom: '16px' }}
-                    />
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                      <button
-                        onClick={initGame}
-                        className="retro-btn"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          borderColor: 'rgba(255, 255, 255, 0.15)',
-                          color: '#e0f2fe',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          padding: '10px 20px',
-                          borderRadius: '12px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🔄 Rejouer
-                      </button>
-                      <button
-                        onClick={onBack}
-                        className="retro-btn"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          borderColor: 'rgba(255, 255, 255, 0.15)',
-                          color: '#e0f2fe',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          padding: '10px 20px',
-                          borderRadius: '12px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🏠 Quitter
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        {/* Unified Victory Overlay */}
+        <GameVictoryOverlay
+          isOpen={victoryPhase === 3}
+          gameKey="water"
+          score={Math.max(1000 - moves * 10, 100)}
+          title="MAÎTRE ZEN !"
+          badgeIcon="🌸"
+          subtitle="Toutes les fioles ont été harmonieusement séparées !"
+          stats={[
+            { label: 'Transvasements', value: moves, color: '#38bdf8' },
+            { label: 'Temps', value: `${Math.floor((Date.now() - startTime) / 1000)}s`, color: '#10b981' }
+          ]}
+          onRestart={initGame}
+          restartText="🔄 Rejouer"
+          onContinue={initGame}
+          continueText="Niveau Suivant"
+          onBack={onBack}
+          backText="← Retour au Hub"
+          isIntermission={isIntermission}
+          onIntermissionComplete={onIntermissionComplete}
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
         <style dangerouslySetInnerHTML={{
           __html: `
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

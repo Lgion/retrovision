@@ -1,10 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { sound } from '../utils/sound';
+import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import SnakeWaveCollection from './SnakeWaveCollection';
 
 export default function SnakeWave({ onBack, onScoreSave, onLaunchIntermission, onIntermissionRequest }) {
   const [showIntro, setShowIntro] = useState(true);
+  const [showCollection, setShowCollection] = useState(false);
+  const [themeId, setThemeId] = useState(() => getGameConfig('snakewave', 'theme', 'neon'));
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
@@ -12,7 +16,7 @@ export default function SnakeWave({ onBack, onScoreSave, onLaunchIntermission, o
   });
   const [gameOver, setGameOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
-  const [speedLevel, setSpeedLevel] = useState(1);
+  const [speedLevel, setSpeedLevel] = useState(() => getGameConfig('snakewave', 'speed', 1));
 
   const stateRef = useRef({
     gameStarted: false,
@@ -348,11 +352,31 @@ export default function SnakeWave({ onBack, onScoreSave, onLaunchIntermission, o
         onComplete={() => setShowIntro(false)} 
       />}
       <div className="game-container" style={containerStyle}>
+      {showCollection && (
+        <SnakeWaveCollection
+          currentSelections={{
+            theme: themeId,
+            speed: speedLevel
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'theme') {
+              setThemeId(itemId);
+              updateGameConfig('snakewave', 'theme', itemId);
+            } else if (catKey === 'speed') {
+              setSpeedLevel(Number(itemId));
+              updateGameConfig('snakewave', 'speed', Number(itemId));
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
       <GameHeader
         title="SNAKE WAVE"
         gameId="snakewave"
         onBack={onBack}
         onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
+        onShop={() => setShowCollection(true)}
+        showShop={true}
         showBgmToggle={false} // BGM handled globally
         centerContent={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', fontFamily: 'Orbitron, sans-serif' }}>

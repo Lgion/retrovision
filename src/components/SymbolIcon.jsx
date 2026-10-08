@@ -148,6 +148,57 @@ export default function SymbolIcon({
           </g>
         );
 
+      case 'sun':
+        return (
+          // Radiant solar disc with stylized rays
+          <g fill="currentColor">
+            <circle cx="16" cy="16" r="6" />
+            <path d="M16 3L16 7M16 25L16 29M3 16L7 16M25 16L29 16M6.8 6.8L9.6 9.6M22.4 22.4L25.2 25.2M6.8 25.2L9.6 22.4M22.4 9.6L25.2 6.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </g>
+        );
+
+      case 'wave':
+        return (
+          // Japanese ocean wave crest
+          <g fill="currentColor">
+            <path d="M4 24C8 24 10 20 14 20C18 20 20 24 24 24C28 24 30 20 30 20C30 22 26 26 24 26C20 26 18 22 14 22C10 22 8 26 4 26Z" opacity="0.9" />
+            <path d="M2 18C6 18 8 14 12 14C16 14 18 18 22 18C26 18 28 14 28 14C28 16 24 20 22 20C18 20 16 16 12 16C8 16 6 20 2 20Z" opacity="0.8" />
+            <path d="M6 12C10 12 12 8 16 8C20 8 22 12 26 12C26 10 22 6 18 6C14 6 12 10 8 10C6 10 4 12 6 12Z" opacity="0.95" />
+          </g>
+        );
+
+      case 'bonsai':
+        return (
+          // Elegant miniature zen bonsai tree
+          <g fill="currentColor">
+            {/* Pot */}
+            <path d="M8 26H24L22 28H10L8 26Z" opacity="0.9" />
+            {/* Trunk */}
+            <path d="M16 26C15 22 13 18 15 15C17 12 18 10 17 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+            {/* Foliage clouds */}
+            <ellipse cx="14" cy="9" rx="5" ry="3" opacity="0.85" />
+            <ellipse cx="19" cy="11" rx="4.5" ry="2.8" opacity="0.85" />
+            <ellipse cx="11" cy="14" rx="4" ry="2.5" opacity="0.85" />
+          </g>
+        );
+
+      case 'lantern':
+        return (
+          // Japanese hanging temple lantern
+          <g fill="currentColor">
+            {/* Roof / cap */}
+            <path d="M10 8H22L24 11H8L10 8Z" opacity="0.95" />
+            {/* Lantern body */}
+            <rect x="10" y="11" width="12" height="12" rx="2" opacity="0.75" />
+            {/* Slits */}
+            <line x1="16" y1="12" x2="16" y2="22" stroke="#fff" strokeWidth="1.5" opacity="0.7" />
+            {/* Bottom ring */}
+            <path d="M12 23H20L19 25H13L12 23Z" opacity="0.95" />
+            {/* Hanging cord */}
+            <line x1="16" y1="3" x2="16" y2="8" stroke="currentColor" strokeWidth="1.5" />
+          </g>
+        );
+
       default:
         return (
           <circle cx="16" cy="16" r="10" fill="currentColor" opacity="0.8" />

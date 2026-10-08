@@ -1,10 +1,28 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { sound } from '../utils/sound';
+import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
+import BrickBreakerCollection from './BrickBreakerCollection';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 
-export default function BrickBreaker({ onBack, onScoreSave, onLaunchIntermission, onIntermissionRequest }) {
+export default function BrickBreaker({
+  onBack,
+  onScoreSave,
+  onLaunchIntermission,
+  onIntermissionRequest,
+  isIntermission = false,
+  onIntermissionComplete,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionConfig,
+  intermissionGames
+}) {
   const [showIntro, setShowIntro] = useState(true);
+  const [showCollection, setShowCollection] = useState(false);
+  const [themeId, setThemeId] = useState(() => getGameConfig('brickbreaker', 'theme', 'cyber'));
+  const [speedSetting, setSpeedSetting] = useState(() => getGameConfig('brickbreaker', 'speed', 'normale'));
   const canvasRef = useRef(null);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
@@ -676,11 +694,31 @@ export default function BrickBreaker({ onBack, onScoreSave, onLaunchIntermission
         onComplete={() => setShowIntro(false)} 
       />}
       <div className="game-container" style={containerStyle}>
+      {showCollection && (
+        <BrickBreakerCollection
+          currentSelections={{
+            theme: themeId,
+            speed: speedSetting
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'theme') {
+              setThemeId(itemId);
+              updateGameConfig('brickbreaker', 'theme', itemId);
+            } else if (catKey === 'speed') {
+              setSpeedSetting(itemId);
+              updateGameConfig('brickbreaker', 'speed', itemId);
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
       <GameHeader
         title="CASSE-BRIQUES"
         gameId="brickbreaker"
         onBack={onBack}
         onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
+        onShop={() => setShowCollection(true)}
+        showShop={true}
         showBgmToggle={false} // BGM handled globally
         centerContent={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -727,15 +765,33 @@ export default function BrickBreaker({ onBack, onScoreSave, onLaunchIntermission
           </div>
         )}
 
-        {victory && (
-          <div style={{ ...overlayStyle, animation: 'delayFadeIn 2s forwards' }}>
-            <div style={victoryTitleStyle}>NIVEAU COMPLÉTÉ</div>
-            <div style={gameOverStatsStyle}>Félicitations ! Score : {score}</div>
-            <button onClick={resetGame} className="retro-btn pulse-glow" style={restartBtnStyle}>
-              Rejouer
-            </button>
-          </div>
-        )}
+        {/* Unified Victory Overlay */}
+        <GameVictoryOverlay
+          isOpen={victory}
+          gameKey="brickbreaker"
+          score={score}
+          title="NIVEAU COMPLÉTÉ !"
+          badgeIcon="🧱"
+          subtitle="Toutes les briques ont été pulvérisées avec précision !"
+          stats={[
+            { label: 'Score', value: score, color: '#38bdf8' },
+            { label: 'Vies restantes', value: `${lives}/3`, color: '#10b981' }
+          ]}
+          onRestart={resetGame}
+          restartText="🔄 Rejouer"
+          onContinue={resetGame}
+          continueText="Niveau Suivant ➔"
+          onBack={onBack}
+          backText="← Retour au Hub"
+          isIntermission={isIntermission}
+          onIntermissionComplete={onIntermissionComplete}
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
       </div>
 
       <div style={footerHelpStyle}>

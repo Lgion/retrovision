@@ -11,6 +11,7 @@ import { isRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import GameMiniature from '../components/GameMiniature';
 import { useConfirm } from '../components/ConfirmContext';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { shuffle, shuffleInPlace } from '../utils/commonUtils';
 
 
@@ -197,7 +198,8 @@ const INTERMISSION_MINI_GAMES = [
   { key: 'impossible13', name: 'Impossible 13', icon: '1️⃣3️⃣', subtitle: 'Addition stratégique', bg: 'impossible13_bg.webp' },
   { key: 'fireflies', name: 'Jardin des Lucioles', icon: '✨', subtitle: 'Poésie & lumière zen', bg: 'fireflies_bg.webp' },
   { key: 'zenflow', name: 'Flux Zen', icon: '🌊', subtitle: 'Lignes & harmonie', bg: 'zenflow_bg.webp' },
-  { key: 'symbolquest', name: 'Quête des Symboles', icon: '🔍', subtitle: 'Balayage & symboles zen', bg: 'symbolquest_bg.webp' }
+  { key: 'findcharlie', name: 'Trouvez Charlie', icon: '🕵️‍♂️', subtitle: 'Observation & manches', bg: 'findcharlie_bg.webp' },
+  { key: 'wordmaster', name: "L'Atelier des Mots", icon: '✍️', subtitle: 'Ortho & syntaxe', bg: 'wordmaster_bg.webp' }
 ];
 
 const getGameBgUrl = (bgFile) => {
@@ -2522,123 +2524,26 @@ export default function MahjongZen({
 
 
 
-        {won && <WinLossTransition type="win" />}
-        {won && (
-          <div style={{
-            ...overlayStyle,
-            animation: 'delayFadeIn 2s forwards',
-            background: 'rgba(8, 60, 84, 0.95)',
-            backdropFilter: 'blur(10px)',
-            border: '4px solid #38bdf8',
-            boxShadow: '0 0 40px rgba(56, 189, 248, 0.6), inset 0 0 20px rgba(56, 189, 248, 0.3)',
-            color: '#ffffff',
-            borderRadius: '24px',
-            overflow: 'hidden'
-          }}>
-            {/* Confetti pieces falling */}
-            {confetti.map(c => (
-              <div
-                key={c.id}
-                style={{
-                  position: 'absolute',
-                  left: `${c.x}%`,
-                  top: `${c.y}px`,
-                  width: `${c.size}px`,
-                  height: `${c.size * 1.5}px`,
-                  backgroundColor: c.color,
-                  borderRadius: '2px',
-                  zIndex: 999,
-                  animation: `confetti-fall ${c.duration}s linear ${c.delay}s infinite`,
-                  transform: `rotate(${c.rotation}deg)`,
-                  pointerEvents: 'none',
-                }}
-              />
-            ))}
-
-            {/* Animated Trophy / Crown Icon */}
-            <div className="victory-crown" style={{ fontSize: '48px', marginBottom: '8px', animation: 'victory-bounce 1s infinite alternate', zIndex: 10 }}>
-              🏆
-            </div>
-
-            <div style={{
-              fontFamily: 'var(--font-main)',
-              fontSize: '26px',
-              color: '#38bdf8',
-              fontWeight: '900',
-              textShadow: '0 0 15px rgba(56, 189, 248, 0.8)',
-              marginBottom: '4px',
-              letterSpacing: '1px',
-              animation: 'victory-glow 1.5s ease-in-out infinite alternate',
-              zIndex: 10
-            }}>
-              FÉLICITATIONS !
-            </div>
-
-            <div style={{
-              color: '#e0f2fe',
-              fontSize: '13.5px',
-              fontWeight: '600',
-              marginBottom: '14px',
-              maxWidth: '360px',
-              lineHeight: '1.4',
-              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-              zIndex: 10
-            }}>
-              Plateau complété avec un score de <strong style={{ color: '#f59e0b' }}>{score}</strong> points !
-            </div>
-
-            <IntermissionProposal
-              onIntermissionRequest={onIntermissionRequest}
-              upcomingIntermission={upcomingIntermission}
-              onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-              onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-              intermissionConfig={intermissionConfig}
-              intermissionGames={intermissionGames}
-              excludeGameKey="mahjong"
-              onContinue={initGame}
-              continueText="Nouveau Niveau"
-              customStyle={{ marginBottom: '16px' }}
-            />
-
-            {/* Secondary actions: Rejouer ce plateau & Retour au Hub */}
-            <div style={{ display: 'flex', gap: '10px', width: '100%', maxWidth: '360px', zIndex: 10 }}>
-              <button
-                onClick={initGame}
-                className="retro-btn"
-                style={{
-                  ...restartBtnStyle,
-                  flex: 1,
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  borderColor: 'rgba(255, 255, 255, 0.15)',
-                  color: '#e0f2fe',
-                  fontWeight: '600',
-                  fontSize: '13px',
-                  padding: '9px 0',
-                  borderRadius: '12px'
-                }}
-              >
-                🔄 Rejouer
-              </button>
-              <button
-                onClick={onBack}
-                className="retro-btn"
-                style={{
-                  ...restartBtnStyle,
-                  flex: 1,
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  borderColor: 'rgba(255, 255, 255, 0.15)',
-                  color: '#e0f2fe',
-                  fontWeight: '600',
-                  fontSize: '13px',
-                  padding: '9px 0',
-                  borderRadius: '12px'
-                }}
-              >
-                ← Retour au Hub
-              </button>
-            </div>
-          </div>
-        )}
+        <GameVictoryOverlay
+          isOpen={won}
+          gameKey="mahjong"
+          score={score}
+          title="FÉLICITATIONS !"
+          badgeIcon="🏆"
+          subtitle={<>Plateau complété avec un score de <strong style={{ color: '#f59e0b' }}>{score}</strong> points !</>}
+          onRestart={initGame}
+          restartText="🔄 Rejouer"
+          onContinue={initGame}
+          continueText="Nouveau Niveau"
+          onBack={onBack}
+          backText="← Retour au Hub"
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
 
         {/* 'lost' overlay removed as user cannot 'lose' anymore, only shuffle. */}
 

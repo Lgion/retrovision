@@ -5,7 +5,9 @@ import GameIntro from '../components/GameIntro';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { useConfirm } from '../components/ConfirmContext';
+import JigsawPuzzleCollection from './JigsawPuzzleCollection';
 
 export default function JigsawPuzzle({
   onBack,
@@ -25,6 +27,7 @@ export default function JigsawPuzzle({
 }) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(true);
+  const [showCollection, setShowCollection] = useState(false);
   const [gameState, setGameState] = useState('menu'); // 'menu' | 'playing'
   const [gridSize, setGridSize] = useState(() => getGameConfig('jigsaw', 'difficulty', 3)); // 3x3, 4x4
   const [selectedImage, setSelectedImage] = useState(null);
@@ -156,35 +159,17 @@ export default function JigsawPuzzle({
     const totalPieces = gridSize * gridSize;
     if (Object.keys(currentPlaced).length === totalPieces) {
       if (victoryPhase === 0) {
-        setVictoryPhase(-1);
-        sound.playPowerup();
-
-        setTimeout(() => {
-          setVictoryPhase(1);
-          sound.stopBGM();
-
-          setTimeout(() => {
-            setVictoryPhase(2);
-            sound.playExplosion();
-          }, 2000);
-
-          setTimeout(() => {
-            setVictoryPhase(3);
-            sound.playScore();
-            if (isIntermission && onIntermissionComplete) {
-              if (replaySameIntermission) {
-                if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-                setTimeout(() => startGame(selectedImage || images[0], gridSize), 1500);
-              } else {
-                setTimeout(() => onIntermissionComplete(), 1500);
-              }
-            }
-            if (onScoreSave) {
-              const score = Math.max(1000 - moves * 5, 100);
-              onScoreSave('Puzzle Magique', score);
-            }
-          }, 4500);
-        }, 1500);
+        sound.stopBGM();
+        if (isIntermission && replaySameIntermission) {
+          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+          setTimeout(() => startGame(selectedImage || images[0], gridSize), 1000);
+          return;
+        }
+        setVictoryPhase(1);
+        if (onScoreSave) {
+          const score = Math.max(1000 - moves * 5, 100);
+          onScoreSave('Puzzle Magique', score);
+        }
       }
     }
   };
@@ -203,6 +188,26 @@ export default function JigsawPuzzle({
         onComplete={() => setShowIntro(false)} 
       />}
       <div style={containerStyle}>
+      {showCollection && (
+        <JigsawPuzzleCollection
+          currentSelections={{
+            image: selectedImage?.id || images[0].id,
+            difficulty: gridSize
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'image') {
+              const found = images.find((img) => img.id === itemId);
+              if (found) {
+                startGame(found, gridSize);
+              }
+            } else if (catKey === 'difficulty') {
+              updateGameConfig('jigsaw', 'difficulty', itemId);
+              startGame(selectedImage || images[0], itemId);
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
       {!isIntermission && (
         <GameHeader
           title="PUZZLE MAGIQUE"
@@ -210,6 +215,8 @@ export default function JigsawPuzzle({
           onBack={handleBackWithConfirm}
           onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
           onRestart={gameState === 'playing' ? () => setGameState('menu') : undefined}
+          onShop={() => setShowCollection(true)}
+          showShop={true}
           showBgmToggle={false} // bgm global
           centerContent={
             gameState === 'playing' ? (
@@ -380,130 +387,38 @@ export default function JigsawPuzzle({
       )}
 
       {/* Victory Overlays */}
-      {victoryPhase > 0 && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.6)',
-          backdropFilter: 'blur(10px)',
-          zIndex: 100, display: 'flex', flexDirection: 'column',
-          justifyContent: 'center', alignItems: 'center',
-          animation: 'fadeIn 0.5s', overflow: 'hidden'
-        }}>
-          {/* Confetti Particles */}
-          {victoryPhase >= 2 && (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-              {Array.from({ length: 40 }, (_, i) => {
-                const confettiColors = ['#FFD700', '#FF3366', '#33CCFF', '#39FF14', '#FF00FF', '#FF8800', '#00FFCC'];
-                const color = confettiColors[i % confettiColors.length];
-                const left = Math.random() * 100;
-                const delay = Math.random() * 3;
-                const duration = 2 + Math.random() * 3;
-                const size = 6 + Math.random() * 8;
-                const rotation = Math.random() * 360;
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      position: 'absolute', left: `${left}%`, top: '-20px',
-                      width: `${size}px`, height: `${size * 0.6}px`,
-                      background: color, borderRadius: i % 3 === 0 ? '50%' : '2px',
-                      animation: `confettiFall ${duration}s linear ${delay}s infinite`,
-                      transform: `rotate(${rotation}deg)`, opacity: 0.8
-                    }}
-                  />
-                );
-              })}
-            </div>
-          )}
-
-          {/* Stage 1: Initial WOW */}
-          {victoryPhase === 1 && (
-            <div style={{ animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
-              <h2 style={{ fontSize: '4rem', color: '#FFD700', textShadow: '0 0 20px rgba(255,215,0,0.8), 2px 2px 0px white', margin: 0, transform: 'rotate(-5deg)' }}>MAGNIFIQUE !</h2>
-            </div>
-          )}
-
-          {/* Stage 2: Stats */}
-          {victoryPhase === 2 && (
-            <div style={{
-              animation: 'slideUpFade 0.6s ease-out',
-              background: 'rgba(255,255,255,0.9)', padding: '40px',
-              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
-              textAlign: 'center', zIndex: 10
-            }}>
-              <h3 style={{ fontSize: '2.5rem', color: '#33CCFF', margin: '0 0 20px 0' }}>Analyse de la création...</h3>
-              <div style={{ fontSize: '1.8rem', color: '#666', margin: '10px 0' }}>
-                Coups : <strong style={{ color: '#FF3366' }}>{moves}</strong>
-              </div>
-            </div>
-          )}
-
-          {/* Stage 3: Final Master Screen */}
-          {victoryPhase === 3 && (
-            <div style={{
-              animation: 'popIn 0.5s', textAlign: 'center',
-              background: 'white', padding: '50px',
-              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
-              border: '4px solid #39FF14', zIndex: 10
-            }}>
-              <div style={{ fontSize: '5rem', marginBottom: '10px' }}>🖼️</div>
-              <h2 style={{ fontSize: '3rem', color: '#333', margin: '0 0 20px 0' }}>Œuvre Complétée !</h2>
-              <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
-                Score: <strong style={{ color: '#00F0FF', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
-              </div>
-              {isIntermission ? (
-                <button
-                  onClick={() => onIntermissionComplete && onIntermissionComplete()}
-                  className="retro-btn pulse-glow"
-                  style={{ fontSize: '1.5rem', padding: '15px 40px', borderRadius: '50px', borderColor: '#39FF14', color: '#39FF14', background: 'transparent' }}
-                >
-                  Terminer l'Entracte 🏁
-                </button>
-              ) : (
-                <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
-                  <IntermissionProposal
-                    onIntermissionRequest={onIntermissionRequest}
-                    upcomingIntermission={upcomingIntermission}
-                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                    intermissionConfig={intermissionConfig}
-                    intermissionGames={intermissionGames}
-                    excludeGameKey="jigsaw"
-                    onContinue={() => {
-                      setVictoryPhase(0);
-                      setGameState('menu');
-                    }}
-                    continueText="Autre Puzzle"
-                    showDirectContinue={true}
-                    customStyle={{ marginBottom: '16px' }}
-                  />
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                    <button
-                      onClick={() => {
-                        setVictoryPhase(0);
-                        setGameState('menu');
-                      }}
-                      className="retro-btn"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        borderColor: 'rgba(0, 0, 0, 0.15)',
-                        color: '#333',
-                        fontWeight: '600',
-                        fontSize: '14px',
-                        padding: '10px 20px',
-                        borderRadius: '12px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      🏠 Changer de Puzzle
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Unified Victory Overlay */}
+      <GameVictoryOverlay
+        isOpen={victoryPhase > 0}
+        gameKey="jigsaw"
+        score={Math.max(1000 - moves * 5, 100)}
+        title="ŒUVRE COMPLÉTÉE !"
+        badgeIcon="🖼️"
+        subtitle="Magnifique ! Toutes les pièces du puzzle ont été assemblées avec perfection !"
+        stats={[
+          { label: 'Coups', value: moves, color: '#f59e0b' }
+        ]}
+        onRestart={() => startGame(selectedImage || images[0], gridSize)}
+        restartText="🔄 Rejouer"
+        onContinue={() => {
+          setVictoryPhase(0);
+          setGameState('menu');
+        }}
+        continueText="Autre Puzzle"
+        onBack={onBack || (() => {
+          setVictoryPhase(0);
+          setGameState('menu');
+        })}
+        backText="← Retour au Hub"
+        isIntermission={isIntermission}
+        onIntermissionComplete={onIntermissionComplete}
+        onIntermissionRequest={onIntermissionRequest}
+        upcomingIntermission={upcomingIntermission}
+        onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+        onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+        intermissionConfig={intermissionConfig}
+        intermissionGames={intermissionGames}
+      />
 
       {/* Global CSS for Animations */}
       <style dangerouslySetInnerHTML={{__html: `

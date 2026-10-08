@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { sound } from '../utils/sound';
 import { haptic } from '../utils/haptics';
 import { storage } from '../utils/storage';
+import { getGameConfig, updateGameConfig } from '../utils/config';
 import { randomChoice } from '../utils/commonUtils';
 import GameHeader from '../components/GameHeader';
 import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { useConfirm } from '../components/ConfirmContext';
+import MorpionCollection from './MorpionCollection';
 
 const WINNING_COMBOS = [
   // Lignes
@@ -147,12 +150,26 @@ export default function Morpion({
   onLaunchIntermission
 }) {
   const confirm = useConfirm();
+  const [showCollection, setShowCollection] = useState(false);
+  const [themeId, setThemeId] = useState(() => getGameConfig('morpion', 'theme', 'cyber'));
+
+  const currentSymbols = useMemo(() => {
+    switch (themeId) {
+      case 'pebbles': return { X: '🪨', O: '🎋' };
+      case 'celestial': return { X: '☀️', O: '🌙' };
+      case 'sakura': return { X: '🌸', O: '⭐' };
+      case 'cyber':
+      default: return { X: '✕', O: '○' };
+    }
+  }, [themeId]);
 
   // Écran d'intro avec animation et bouton "JOUER"
   const [showIntro, setShowIntro] = useState(!skipIntro && !isIntermission);
 
-  // Mode de jeu : 'ai' (solo contre IA) ou 'pvp' (2 joueurs en local)
-  const [gameMode, setGameMode] = useState(() => (isIntermission ? 'ai' : 'ai'));
+  // Mode de jeu : 'ai' (solo contre IA) ou 'pvp' (2 joueurs en local) - accessible en normal et entracte
+  const [gameMode, setGameMode] = useState(() => {
+    return storage.getItem('retrovision_morpion_mode', 'ai') || 'ai';
+  });
 
   // Niveau d'IA
   const [difficulty, setDifficulty] = useState(() => {
@@ -175,6 +192,7 @@ export default function Morpion({
 
   // Fin de partie
   const [result, setResult] = useState(null); // { winner: 'X'|'O'|'draw', line: number[]|null }
+  const [showVictory, setShowVictory] = useState(false);
   // Tour de l'IA calculé automatiquement (sans setState dans l'effet)
   const isAiThinking = gameMode === 'ai' && turn === 'O' && !result;
 
@@ -188,6 +206,7 @@ export default function Morpion({
     setBoard(Array(9).fill(null));
     setTurn('X');
     setResult(null);
+    setShowVictory(false);
   }, []);
 
   // Changement de difficulté (hors entracte)
@@ -198,9 +217,10 @@ export default function Morpion({
     resetRound();
   };
 
-  // Changement de mode Solo / Duo
+  // Changement de mode Solo / Duo (accessible en normal et en entracte)
   const handleToggleGameMode = (newMode) => {
     setGameMode(newMode);
+    storage.setItem('retrovision_morpion_mode', newMode);
     sound.playClick();
     resetRound();
   };
@@ -259,44 +279,52 @@ export default function Morpion({
             const nextWon = intermissionWonRounds + 1;
             setIntermissionWonRounds(nextWon);
             if (intermissionRound >= targetIntermissionRounds) {
-              if (onIntermissionComplete) {
-                if (replaySameIntermission) {
-                  if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-                  setTimeout(() => {
-                    setIntermissionRound(1);
-                    setIntermissionWonRounds(0);
-                    resetRound();
-                  }, 1200);
-                  return;
-                }
-                setTimeout(() => onIntermissionComplete(true), 1200);
+              if (replaySameIntermission) {
+                if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+                setTimeout(() => {
+                  setIntermissionRound(1);
+                  setIntermissionWonRounds(0);
+                  resetRound();
+                }, 1200);
+                return;
               }
+              setShowVictory(true);
             } else {
               setTimeout(() => {
                 setIntermissionRound((r) => r + 1);
                 resetRound();
               }, 1200);
             }
+          } else {
+            setShowVictory(true);
           }
         } else if (gameEnd.winner === 'O') {
-          sound.playExplosion?.();
+          if (gameMode === 'pvp') {
+            sound.playPowerup?.();
+            haptic.success();
+          } else {
+            sound.playExplosion?.();
+          }
           setScores((prev) => {
             const next = { ...prev, ai: prev.ai + 1 };
             storage.setJSON('retrovision_morpion_scores', next);
             return next;
           });
-          // Si en entracte et défaite de la manche, on passe à la manche suivante (ou fin de l'entracte si 5ème manche)
+          // Si en entracte
           if (isIntermission) {
+            if (gameMode === 'pvp') {
+              setIntermissionWonRounds((w) => w + 1);
+            }
             if (intermissionRound >= targetIntermissionRounds) {
-              if (onIntermissionComplete) {
-                setTimeout(() => onIntermissionComplete(true), 1500);
-              }
+              setShowVictory(true);
             } else {
               setTimeout(() => {
                 setIntermissionRound((r) => r + 1);
                 resetRound();
               }, 1400);
             }
+          } else if (gameMode === 'pvp') {
+            setShowVictory(true);
           }
         } else {
           // Égalité (Match nul)
@@ -309,9 +337,7 @@ export default function Morpion({
           // En entracte : match nul compte comme manche jouée
           if (isIntermission) {
             if (intermissionRound >= targetIntermissionRounds) {
-              if (onIntermissionComplete) {
-                setTimeout(() => onIntermissionComplete(true), 1400);
-              }
+              setShowVictory(true);
             } else {
               setTimeout(() => {
                 setIntermissionRound((r) => r + 1);
@@ -440,6 +466,30 @@ export default function Morpion({
         }
       `}</style>
 
+      {showCollection && (
+        <MorpionCollection
+          currentSelections={{
+            theme: themeId,
+            mode: gameMode === 'pvp' ? 'pvp' : `ai_${difficulty}`
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'theme') {
+              setThemeId(itemId);
+              updateGameConfig('morpion', 'theme', itemId);
+            } else if (catKey === 'mode') {
+              if (itemId === 'pvp') {
+                handleSelectGameMode('pvp');
+              } else if (typeof itemId === 'string' && itemId.startsWith('ai_')) {
+                const diff = itemId.replace('ai_', '');
+                handleSelectGameMode('ai');
+                handleSelectDifficulty(diff);
+              }
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
+
       {/* Animation d'Intro avec bouton "JOUER" */}
       {showIntro && !isIntermission && (
         <GameIntro
@@ -473,7 +523,8 @@ export default function Morpion({
             title="MORPION NÉON"
             onBack={handleBackWithConfirm}
             onRestart={resetRound}
-            showShop={false}
+            onShop={() => setShowCollection(true)}
+            showShop={true}
             onLaunchIntermission={onLaunchIntermission}
             centerContent={
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -496,83 +547,97 @@ export default function Morpion({
         </div>
       )}
 
-      {/* Panneau de configuration (Hors Entracte) */}
-      {!isIntermission && (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '8px',
-            width: '100%',
-            marginBottom: '14px',
-            background: 'rgba(15, 23, 42, 0.65)',
-            padding: '8px 12px',
-            borderRadius: '14px',
-            border: '1px solid rgba(255, 255, 255, 0.08)'
-          }}
-        >
-          {/* Mode de Jeu */}
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              onClick={() => handleToggleGameMode('ai')}
-              className="retro-btn"
-              style={{
-                minHeight: '44px',
-                padding: '6px 12px',
-                fontSize: '12px',
-                borderRadius: '10px',
-                background: gameMode === 'ai' ? 'rgba(0, 240, 255, 0.2)' : 'transparent',
-                borderColor: gameMode === 'ai' ? '#00f0ff' : 'rgba(255,255,255,0.15)',
-                color: gameMode === 'ai' ? '#00f0ff' : '#94a3b8'
-              }}
-            >
-              🤖 Solo IA
-            </button>
-            <button
-              onClick={() => handleToggleGameMode('pvp')}
-              className="retro-btn"
-              style={{
-                minHeight: '44px',
-                padding: '6px 12px',
-                fontSize: '12px',
-                borderRadius: '10px',
-                background: gameMode === 'pvp' ? 'rgba(255, 0, 127, 0.2)' : 'transparent',
-                borderColor: gameMode === 'pvp' ? '#ff007f' : 'rgba(255,255,255,0.15)',
-                color: gameMode === 'pvp' ? '#ff007f' : '#94a3b8'
-              }}
-            >
-              👥 2 Joueurs
-            </button>
-          </div>
-
-          {/* Difficulté IA (si mode solo) */}
-          {gameMode === 'ai' && (
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {['facile', 'moyen', 'difficile'].map((lvl) => (
-                <button
-                  key={lvl}
-                  onClick={() => handleSelectDifficulty(lvl)}
-                  className="retro-btn"
-                  style={{
-                    minHeight: '44px',
-                    padding: '6px 10px',
-                    fontSize: '11px',
-                    borderRadius: '8px',
-                    textTransform: 'capitalize',
-                    background: difficulty === lvl ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    borderColor: difficulty === lvl ? '#f59e0b' : 'rgba(255,255,255,0.1)',
-                    color: difficulty === lvl ? '#f59e0b' : '#64748b'
-                  }}
-                >
-                  {lvl === 'difficile' ? 'Expert' : lvl}
-                </button>
-              ))}
-            </div>
-          )}
+      {/* Panneau de configuration (Solo / 2 Joueurs & Difficulté) */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          width: '100%',
+          marginBottom: '14px',
+          background: 'rgba(15, 23, 42, 0.65)',
+          padding: '8px 12px',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.08)'
+        }}
+      >
+        {/* Mode de Jeu : accessible en normal ET en entracte */}
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button
+            onClick={() => handleToggleGameMode('ai')}
+            className="retro-btn"
+            style={{
+              minHeight: '40px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              borderRadius: '10px',
+              background: gameMode === 'ai' ? 'rgba(0, 240, 255, 0.2)' : 'transparent',
+              borderColor: gameMode === 'ai' ? '#00f0ff' : 'rgba(255,255,255,0.15)',
+              color: gameMode === 'ai' ? '#00f0ff' : '#94a3b8'
+            }}
+          >
+            🤖 Solo IA
+          </button>
+          <button
+            onClick={() => handleToggleGameMode('pvp')}
+            className="retro-btn"
+            style={{
+              minHeight: '40px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              borderRadius: '10px',
+              background: gameMode === 'pvp' ? 'rgba(255, 0, 127, 0.2)' : 'transparent',
+              borderColor: gameMode === 'pvp' ? '#ff007f' : 'rgba(255,255,255,0.15)',
+              color: gameMode === 'pvp' ? '#ff007f' : '#94a3b8'
+            }}
+          >
+            👥 2 Joueurs
+          </button>
         </div>
-      )}
+
+        {/* Difficulté IA (en mode solo normal) ou Badge entracte */}
+        {!isIntermission && gameMode === 'ai' && (
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {['facile', 'moyen', 'difficile'].map((lvl) => (
+              <button
+                key={lvl}
+                onClick={() => handleSelectDifficulty(lvl)}
+                className="retro-btn"
+                style={{
+                  minHeight: '40px',
+                  padding: '6px 10px',
+                  fontSize: '11px',
+                  borderRadius: '8px',
+                  textTransform: 'capitalize',
+                  background: difficulty === lvl ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  borderColor: difficulty === lvl ? '#f59e0b' : 'rgba(255,255,255,0.1)',
+                  color: difficulty === lvl ? '#f59e0b' : '#64748b'
+                }}
+              >
+                {lvl === 'difficile' ? 'Expert' : lvl}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isIntermission && (
+          <span
+            style={{
+              fontSize: '0.8rem',
+              fontWeight: '700',
+              color: gameMode === 'pvp' ? '#ff79c6' : '#38bdf8',
+              background: gameMode === 'pvp' ? 'rgba(255, 0, 127, 0.12)' : 'rgba(56, 189, 248, 0.12)',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              border: `1px solid ${gameMode === 'pvp' ? 'rgba(255, 0, 127, 0.3)' : 'rgba(56, 189, 248, 0.3)'}`
+            }}
+          >
+            {gameMode === 'pvp' ? '👥 Défi 2 Joueurs' : `🤖 IA • ${difficulty.toUpperCase()}`}
+          </span>
+        )}
+      </div>
 
       {/* Tableau des Scores */}
       <div
@@ -603,7 +668,7 @@ export default function Morpion({
             {isIntermission ? `Manche ${intermissionRound}/${targetIntermissionRounds}` : 'Nuls'}
           </div>
           <div style={{ fontSize: '1.1rem', color: '#cbd5e1', fontWeight: '800' }}>
-            {isIntermission ? `${intermissionWonRounds} vic.` : scores.draws}
+            {isIntermission ? (gameMode === 'pvp' ? `Nuls: ${scores.draws}` : `${intermissionWonRounds} vic.`) : scores.draws}
           </div>
         </div>
 
@@ -639,9 +704,13 @@ export default function Morpion({
         {result ? (
           <span style={{ fontSize: '0.92rem', fontWeight: '800', color: '#f59e0b' }}>
             {result.winner === 'X'
-              ? '🎉 Victoire de ✕ !'
+              ? gameMode === 'pvp'
+                ? '🎉 Victoire du Joueur 1 (✕) !'
+                : '🎉 Victoire de ✕ !'
               : result.winner === 'O'
-              ? '✨ Victoire de ○ !'
+              ? gameMode === 'pvp'
+                ? '✨ Victoire du Joueur 2 (○) !'
+                : '✨ Victoire de l’IA (○) !'
               : '🤝 Match Nul !'}
           </span>
         ) : (
@@ -702,8 +771,8 @@ export default function Morpion({
               }}
               aria-label={`Case ${idx + 1}`}
             >
-              {cellValue === 'X' && <span className="symbol-x">✕</span>}
-              {cellValue === 'O' && <span className="symbol-o">○</span>}
+              {cellValue === 'X' && <span className="symbol-x">{currentSymbols.X}</span>}
+              {cellValue === 'O' && <span className="symbol-o">{currentSymbols.O}</span>}
             </button>
           );
         })}
@@ -758,74 +827,34 @@ export default function Morpion({
         )}
       </div>
 
-      {/* Écran de Victoire Standard avec Proposition d'Entracte */}
-      {!isIntermission && result?.winner === 'X' && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(10, 8, 19, 0.85)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 100,
-            padding: '20px'
-          }}
-        >
-          <div
-            style={{
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-              border: '2px solid #00f0ff',
-              borderRadius: '24px',
-              padding: '28px 24px',
-              maxWidth: '380px',
-              width: '100%',
-              textAlign: 'center',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)'
-            }}
-          >
-            <div style={{ fontSize: '3rem', marginBottom: '8px' }}>🏆</div>
-            <h2 style={{ color: '#00f0ff', margin: '0 0 8px 0', fontSize: '1.6rem', fontWeight: '900' }}>
-              VICTOIRE !
-            </h2>
-            <p style={{ color: '#cbd5e1', fontSize: '0.95rem', margin: '0 0 20px 0' }}>
-              Magnifique alignement ! Vous remportez la manche.
-            </p>
-
-            <IntermissionProposal
-              onIntermissionRequest={onIntermissionRequest}
-              upcomingIntermission={upcomingIntermission}
-              onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-              onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-              intermissionConfig={intermissionConfig}
-              intermissionGames={intermissionGames}
-              excludeGameKey="morpion"
-              onContinue={resetRound}
-              continueText="Nouvelle Partie"
-              showDirectContinue={true}
-              customStyle={{ marginBottom: '14px' }}
-            />
-
-            <button
-              onClick={resetRound}
-              className="retro-btn"
-              style={{
-                width: '100%',
-                minHeight: '48px',
-                borderRadius: '14px',
-                borderColor: '#00f0ff',
-                color: '#00f0ff',
-                fontSize: '15px',
-                fontWeight: '800'
-              }}
-            >
-              Rejouer
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Unified Victory Overlay */}
+      <GameVictoryOverlay
+        isOpen={showVictory}
+        gameKey="morpion"
+        score={scores.player * 100}
+        title="ALIGNEMENT PARFAIT !"
+        badgeIcon="🏆"
+        subtitle={isIntermission ? `Entracte Morpion réussi (${intermissionWonRounds}/${targetIntermissionRounds} manches gagnées) !` : "Magnifique alignement ! Vous remportez la manche avec brio !"}
+        stats={[
+          { label: 'Victoires', value: scores.player, color: '#10b981' },
+          { label: 'Défaites', value: scores.ai, color: '#ef4444' },
+          { label: 'Nuls', value: scores.draws, color: '#f59e0b' }
+        ]}
+        onRestart={resetRound}
+        restartText="🔄 Rejouer"
+        onContinue={resetRound}
+        continueText="Nouvelle Manche ➔"
+        onBack={onBack}
+        backText="← Retour au Hub"
+        isIntermission={isIntermission}
+        onIntermissionComplete={onIntermissionComplete}
+        onIntermissionRequest={onIntermissionRequest}
+        upcomingIntermission={upcomingIntermission}
+        onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+        onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+        intermissionConfig={intermissionConfig}
+        intermissionGames={intermissionGames}
+      />
     </div>
   );
 }

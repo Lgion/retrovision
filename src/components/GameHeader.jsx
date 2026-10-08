@@ -18,6 +18,7 @@ export default function GameHeader({
   onShuffle,
   shuffleDisabled = false,
   onShop,
+  onOpenShop,
   showShop = false,
   showBgmToggle = false,
   bgmOn,
@@ -30,6 +31,7 @@ export default function GameHeader({
   onLaunchIntermission,
   onIntermissionRequest
 }) {
+  const handleShop = onShop || onOpenShop;
   const triggerIntermission = onLaunchIntermission || (onIntermissionRequest ? () => onIntermissionRequest() : null);
 
   return (
@@ -423,11 +425,11 @@ export default function GameHeader({
                 </button>
               )}
 
-              {(showShop || onShop) && (
+              {(showShop || handleShop) && (
                 <button
                   onClick={() => {
-                    if (onShop) {
-                      onShop();
+                    if (handleShop) {
+                      handleShop();
                     } else {
                       alert("Boutique bientôt disponible pour ce jeu !");
                     }

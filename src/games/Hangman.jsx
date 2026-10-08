@@ -7,6 +7,7 @@ import HangmanCollection from './HangmanCollection';
 import hangmanData from '../utils/hangmanData.json';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { useConfirm } from '../components/ConfirmContext';
 import { shuffle, randomChoice } from '../utils/commonUtils';
 
@@ -160,13 +161,10 @@ export default function Hangman({
       updateGameConfig('hangman', 'coins', nc);
       return nc;
     });
-    if (isIntermission && onIntermissionComplete) {
-      if (replaySameIntermission) {
-        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-        setTimeout(() => resetLevel(), 1500);
-      } else {
-        setTimeout(() => onIntermissionComplete(), 1500);
-      }
+    if (isIntermission && replaySameIntermission) {
+      if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+      setTimeout(() => resetLevel(), 1000);
+      return;
     }
     if (onScoreSave) onScoreSave('Le Pendu', 100 + (lives * 10));
   };
@@ -701,52 +699,33 @@ export default function Hangman({
         </div>
 
         {/* Overlays for Win/Loss only */}
-        {gameState === 'won' && (
-          <div style={{ ...overlayStyle, animation: 'delayFadeIn 1.5s forwards' }}>
-            <div style={{ fontSize: '50px', marginBottom: '5px' }}>🎉</div>
-            <div style={victoryTitleStyle}>Gagné !</div>
-            <div style={{ color: '#1e293b', fontSize: '22px', marginBottom: '20px', textAlign: 'center', fontWeight: 'bold' }}>
-              Le mot était bien <br />
-              <span style={{ color: '#10b981', fontSize: '30px', letterSpacing: '2px' }}>{targetWord}</span>
-            </div>
-            {isIntermission ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '85%', maxWidth: '300px' }}>
-                <button onClick={forceNextQuestion} className="retro-btn" style={{ ...nextLevelBtnStyle, fontSize: '20px', padding: '12px 20px', cursor: 'pointer' }}>
-                  Devinette Suivante ⏭
-                </button>
-                {onIntermissionComplete && (
-                  <button onClick={onIntermissionComplete} className="retro-btn" style={{ ...nextLevelBtnStyle, background: '#3b82f6', fontSize: '18px', padding: '10px 18px', cursor: 'pointer' }}>
-                    Terminer l'entracte 🏁
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
-                <IntermissionProposal
-                  onIntermissionRequest={onIntermissionRequest}
-                  upcomingIntermission={upcomingIntermission}
-                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                  intermissionConfig={intermissionConfig}
-                  intermissionGames={intermissionGames}
-                  excludeGameKey="hangman"
-                  onContinue={forceNextQuestion}
-                  continueText="Devinette Suivante"
-                  showDirectContinue={true}
-                  customStyle={{ marginBottom: '16px' }}
-                />
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                  <button onClick={forceNextQuestion} className="retro-btn" style={{ ...nextLevelBtnStyle, fontSize: '15px', padding: '10px 18px', cursor: 'pointer' }}>
-                    Mot Suivant ⏭
-                  </button>
-                  <button onClick={resetLevel} className="retro-btn" style={{ ...nextLevelBtnStyle, background: '#64748b', fontSize: '15px', padding: '10px 18px', cursor: 'pointer' }}>
-                    🔄 Rejouer
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Unified Victory Overlay */}
+        <GameVictoryOverlay
+          isOpen={gameState === 'won'}
+          gameKey="hangman"
+          score={100 + (lives * 10)}
+          title="GAGNÉ !"
+          badgeIcon="🎉"
+          subtitle={`Le mot secret était : "${targetWord}"`}
+          stats={[
+            { label: 'Vies restantes', value: `${lives}/6`, color: '#10b981' },
+            { label: 'Score', value: 100 + (lives * 10), color: '#f59e0b' }
+          ]}
+          onRestart={resetLevel}
+          restartText="🔄 Rejouer"
+          onContinue={forceNextQuestion}
+          continueText="Mot Suivant ⏭"
+          onBack={onBack}
+          backText="← Retour au Hub"
+          isIntermission={isIntermission}
+          onIntermissionComplete={onIntermissionComplete}
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
 
         {gameState === 'lost' && (
           <div style={overlayStyle}>

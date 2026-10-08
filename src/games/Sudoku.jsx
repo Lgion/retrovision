@@ -5,6 +5,7 @@ import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme, migrateTheme } from '../utils/themeManager';
 import { updateGameConfig } from '../utils/config';
 import { useConfirm } from '../components/ConfirmContext';
@@ -532,32 +533,24 @@ export default function Sudoku({
 
   const handleVictory = useCallback(() => {
     sound.stopBGM();
-    setVictory(true);
-    sound.playScore();
-
-    if (isIntermission && onIntermissionComplete) {
-      if (replaySameIntermission) {
-        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-        setTimeout(() => {
-          startGame(difficulty);
-        }, 1500);
-        return;
-      }
+    if (isIntermission && replaySameIntermission) {
+      if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
       setTimeout(() => {
-        onIntermissionComplete(true);
-      }, 2000);
-    } else if (onScoreSave) {
+        startGame(difficulty);
+      }, 1500);
+      return;
+    }
+    setVictory(true);
+
+    if (onScoreSave) {
       const difficultyMultiplier = gridSize === 4 ? 1 : gridSize === 6 ? 3 : 10;
       const basePoints = 500 * difficultyMultiplier;
       const timePenalty = Math.min(time * 2, basePoints * 0.5);
       const mistakePenalty = Math.min(mistakes * 50, basePoints * 0.3);
       const finalScore = Math.max(basePoints - timePenalty - mistakePenalty, 100);
-
-      setTimeout(() => {
-        onScoreSave('Sudoku', Math.round(finalScore));
-      }, 1500);
+      onScoreSave('Sudoku', Math.round(finalScore));
     }
-  }, [isIntermission, onIntermissionComplete, replaySameIntermission, onToggleReplaySameIntermission, startGame, difficulty, onScoreSave, gridSize, time, mistakes]);
+  }, [isIntermission, replaySameIntermission, onToggleReplaySameIntermission, startGame, difficulty, onScoreSave, gridSize, time, mistakes]);
 
   const checkWin = useCallback((currentBoard) => {
     let solved = true;
@@ -1194,108 +1187,42 @@ export default function Sudoku({
           </div>
         )}
 
-        {/* Victory Screen */}
-        {victory && !isIntermission && (
-          <div style={overlayStyle}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-              {CONFETTI_PARTICLES.map(p => (
-                <div
-                  key={p.id}
-                  style={{
-                    position: 'absolute',
-                    left: p.left,
-                    top: '-20px',
-                    width: '10px',
-                    height: '10px',
-                    background: p.color,
-                    borderRadius: '50%',
-                    animation: `confettiFall ${p.duration} linear ${p.delay} infinite`,
-                    opacity: 0.8
-                  }}
-                />
-              ))}
-            </div>
-
-            <div style={victoryCardStyle}>
-              <div style={{ fontSize: '4.5rem', marginBottom: '10px' }}>🏆</div>
-              <h2 style={{ fontSize: '2.4rem', color: '#1e1b4b', margin: '0 0 10px 0', fontWeight: '800' }}>Grille Résolue !</h2>
-              <p style={{ color: '#4f46e5', fontWeight: '600', fontSize: '1.1rem', margin: '0 0 24px 0' }}>Votre esprit est affûté.</p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '30px', textAlign: 'left', background: '#f8fafc', padding: '16px', borderRadius: '16px' }}>
-                <div style={{ fontSize: '1.05rem', color: '#475569' }}>
-                  ⏱️ Temps : <strong style={{ color: '#0f172a' }}>{formatTime(time)}</strong>
-                </div>
-                <div style={{ fontSize: '1.05rem', color: '#475569' }}>
-                  ⚠️ Erreurs : <strong style={{ color: '#0f172a' }}>{mistakes}</strong>
-                </div>
-                <div style={{ fontSize: '1.05rem', color: '#475569' }}>
-                  Score : <strong style={{ color: '#8b5cf6', fontSize: '1.25rem' }}>
-                    {Math.round(Math.max((gridSize === 4 ? 500 : gridSize === 6 ? 1500 : 5000) - time * 2 - mistakes * 50, 100))}
-                  </strong>
-                </div>
-              </div>
-
-              <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
-                <IntermissionProposal
-                  onIntermissionRequest={onIntermissionRequest}
-                  upcomingIntermission={upcomingIntermission}
-                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                  intermissionConfig={intermissionConfig}
-                  intermissionGames={intermissionGames}
-                  excludeGameKey="sudoku"
-                  onContinue={() => {
-                    setVictory(false);
-                    startGame(difficulty);
-                  }}
-                  continueText="Nouveau Sudoku"
-                  showDirectContinue={true}
-                  customStyle={{ marginBottom: '16px' }}
-                />
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => {
-                      setVictory(false);
-                      startGame(difficulty);
-                    }}
-                    className="retro-btn"
-                    style={{
-                      background: 'rgba(15, 23, 42, 0.06)',
-                      borderColor: '#8b5cf6',
-                      color: '#6d28d9',
-                      fontWeight: '700',
-                      fontSize: '14px',
-                      padding: '10px 20px',
-                      borderRadius: '12px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    🔄 Rejouer
-                  </button>
-                  <button
-                    onClick={() => {
-                      setVictory(false);
-                      setGameState('menu');
-                    }}
-                    className="retro-btn"
-                    style={{
-                      background: 'rgba(15, 23, 42, 0.06)',
-                      borderColor: '#cbd5e1',
-                      color: '#475569',
-                      fontWeight: '700',
-                      fontSize: '14px',
-                      padding: '10px 20px',
-                      borderRadius: '12px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    🏠 Menu
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Unified Victory Screen */}
+        <GameVictoryOverlay
+          isOpen={victory}
+          gameKey="sudoku"
+          score={Math.round(Math.max((gridSize === 4 ? 500 : gridSize === 6 ? 1500 : 5000) - time * 2 - mistakes * 50, 100))}
+          title="GRILLE RÉSOLUE !"
+          badgeIcon="🏆"
+          subtitle="Votre esprit est affûté."
+          stats={[
+            { label: '⏱️ Temps', value: formatTime(time) },
+            { label: '⚠️ Erreurs', value: mistakes }
+          ]}
+          onRestart={() => {
+            setVictory(false);
+            startGame(difficulty);
+          }}
+          restartText="🔄 Rejouer"
+          onContinue={() => {
+            setVictory(false);
+            startGame(difficulty);
+          }}
+          continueText="Nouveau Sudoku"
+          onBack={() => {
+            setVictory(false);
+            setGameState('menu');
+          }}
+          backText="🏠 Menu"
+          isIntermission={isIntermission}
+          onIntermissionComplete={onIntermissionComplete}
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
       </div>
 
       <style>{`

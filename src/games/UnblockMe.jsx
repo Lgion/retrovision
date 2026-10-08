@@ -6,7 +6,40 @@ import LEVELS from '../utils/unblockLevels.json';
 import GameHeader from '../components/GameHeader';
 import GameIntro from '../components/GameIntro';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { useConfirm } from '../components/ConfirmContext';
+import UnblockMeCollection from './UnblockMeCollection';
+
+const THEME_PALETTES = {
+  wood: {
+    boardBg: '#451a03',
+    gridLine: 'rgba(255,255,255,0.05)',
+    target: '#E53E3E',
+    horizontal: '#3B82F6',
+    vertical: '#F59E0B'
+  },
+  neon: {
+    boardBg: '#0f172a',
+    gridLine: 'rgba(56, 189, 248, 0.15)',
+    target: '#f43f5e',
+    horizontal: '#06b6d4',
+    vertical: '#eab308'
+  },
+  pastel: {
+    boardBg: '#2d2238',
+    gridLine: 'rgba(255,255,255,0.08)',
+    target: '#fb7185',
+    horizontal: '#6ee7b7',
+    vertical: '#fdba74'
+  },
+  marble: {
+    boardBg: '#1e293b',
+    gridLine: 'rgba(255,255,255,0.1)',
+    target: '#dc2626',
+    horizontal: '#38bdf8',
+    vertical: '#10b981'
+  }
+};
 
 export default function UnblockMe({
   onBack,
@@ -23,6 +56,9 @@ export default function UnblockMe({
 }) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(!isIntermission);
+  const [showCollection, setShowCollection] = useState(false);
+  const [themeId, setThemeId] = useState(() => getGameConfig('unblock', 'theme', 'wood'));
+  const currentPalette = THEME_PALETTES[themeId] || THEME_PALETTES.wood;
   const [gameState, setGameState] = useState('playing'); // Démarrage direct dans le jeu
   const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(() => {
     return getGameConfig('unblock', 'levelProgress', 0);
@@ -191,32 +227,17 @@ export default function UnblockMe({
   }, [selectedBlockId, victoryPhase, blocks]);
 
   const handleVictory = () => {
-    setVictoryPhase(-1);
     haptic.success();
-    setTimeout(() => {
-      sound.stopBGM();
-      setVictoryPhase(1);
-      sound.playPowerup();
-
-      if (currentLevelIdx >= maxUnlockedLevel) {
-        const nextLevel = Math.min(currentLevelIdx + 1, LEVELS.length - 1);
-        setMaxUnlockedLevel(nextLevel);
-        updateGameConfig('unblock', 'levelProgress', nextLevel);
-      }
-
-      setTimeout(() => {
-        setVictoryPhase(2);
-        sound.playExplosion();
-      }, 1500);
-
-      setTimeout(() => {
-        setVictoryPhase(3);
-        sound.playScore();
-        if (onScoreSave) {
-          onScoreSave('Débloque-Moi', Math.max(1000 - moves * 10, 100));
-        }
-      }, 3500);
-    }, 1500);
+    sound.stopBGM();
+    if (currentLevelIdx >= maxUnlockedLevel) {
+      const nextLevel = Math.min(currentLevelIdx + 1, LEVELS.length - 1);
+      setMaxUnlockedLevel(nextLevel);
+      updateGameConfig('unblock', 'levelProgress', nextLevel);
+    }
+    setVictoryPhase(1);
+    if (onScoreSave) {
+      onScoreSave('Débloque-Moi', Math.max(1000 - moves * 10, 100));
+    }
   };
 
   const renderBlock = (b) => {
@@ -247,7 +268,7 @@ export default function UnblockMe({
         <div style={{
           width: '100%',
           height: '100%',
-          backgroundColor: isTarget ? '#E53E3E' : (b.orientation === 'h' ? '#3B82F6' : '#F59E0B'),
+          backgroundColor: isTarget ? currentPalette.target : (b.orientation === 'h' ? currentPalette.horizontal : currentPalette.vertical),
           borderRadius: '8px',
           boxShadow: isSelected ? '0 0 15px rgba(255,255,255,0.6), inset 0 0 10px rgba(0,0,0,0.3)' : '0 4px 6px rgba(0,0,0,0.3), inset 0 0 8px rgba(0,0,0,0.2)',
           border: isSelected ? '2px solid white' : '2px solid rgba(255,255,255,0.2)',
@@ -300,6 +321,27 @@ export default function UnblockMe({
 
   return (
     <div style={containerStyle}>
+      {showCollection && (
+        <UnblockMeCollection
+          currentSelections={{
+            theme: themeId,
+            level: currentLevelIdx
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'theme') {
+              setThemeId(itemId);
+              updateGameConfig('unblock', 'theme', itemId);
+            } else if (catKey === 'level') {
+              if (itemId === 'random') {
+                loadRandomLevel();
+              } else {
+                loadLevel(Number(itemId));
+              }
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
       {showIntro && !isIntermission && (
         <GameIntro
           gameName="DÉBLOQUE-MOI"
@@ -319,6 +361,8 @@ export default function UnblockMe({
         restartTitle="Nouveau défi aléatoire"
         onUndo={undoMove}
         undoDisabled={history.length === 0}
+        onShop={() => setShowCollection(true)}
+        showShop={true}
         showBgmToggle={false}
         centerContent={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', fontFamily: 'Orbitron, sans-serif' }}>
@@ -339,8 +383,8 @@ export default function UnblockMe({
           <div style={{
             position: 'absolute', right: '-15px', top: `${2 * CELL_PX + 5}px`,
             width: '15px', height: `${CELL_PX - 10}px`,
-            background: '#E53E3E', borderRadius: '0 8px 8px 0',
-            boxShadow: '0 0 10px rgba(229, 62, 62, 0.6)',
+            background: currentPalette.target, borderRadius: '0 8px 8px 0',
+            boxShadow: `0 0 10px ${currentPalette.target}99`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold'
           }}>
             ▶
@@ -350,11 +394,11 @@ export default function UnblockMe({
           <div style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
             display: 'grid', gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
-            background: '#451a03', // dark wood color
+            background: currentPalette.boardBg,
             borderRadius: '8px', zIndex: 0
           }}>
             {Array.from({length: GRID_SIZE * GRID_SIZE}).map((_, i) => (
-              <div key={i} style={{ border: '1px solid rgba(255,255,255,0.05)' }} />
+              <div key={i} style={{ border: `1px solid ${currentPalette.gridLine}` }} />
             ))}
           </div>
 
@@ -555,85 +599,35 @@ export default function UnblockMe({
         </div>
       </div>
 
-      {/* Victory Overlays */}
-      {victoryPhase > 0 && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', flexDirection: 'column',
-          justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.5s'
-        }}>
-          {victoryPhase >= 2 && (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-              {Array.from({ length: 30 }, (_, i) => (
-                <div key={i} style={{
-                  position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
-                  width: '10px', height: '10px', background: ['#E53E3E', '#3B82F6', '#F59E0B'][i%3],
-                  borderRadius: '2px', animation: `confettiFall ${2 + Math.random()*3}s linear ${Math.random()*2}s infinite`,
-                  transform: `rotate(${Math.random()*360}deg)`, opacity: 0.8
-                }} />
-              ))}
-            </div>
-          )}
-
-          {victoryPhase === 1 && (
-            <h2 style={{ fontSize: '4rem', color: '#39FF14', margin: 0, animation: 'popIn 0.8s' }}>DÉBLOQUÉ !</h2>
-          )}
-
-          {victoryPhase === 3 && (
-            <div style={{
-              animation: 'popIn 0.5s', textAlign: 'center', background: 'white', padding: '40px 24px',
-              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #E53E3E', zIndex: 10,
-              maxWidth: '380px', width: '90%'
-            }}>
-              <div style={{ fontSize: '3.5rem', marginBottom: '8px' }}>🧠</div>
-              <h2 style={{ fontSize: '2rem', color: '#333', margin: '0 0 12px 0' }}>Logique Imparable !</h2>
-              <div style={{ fontSize: '1.3rem', color: '#666', marginBottom: '24px' }}>
-                Score: <strong style={{ color: '#E53E3E', fontSize: '1.8rem' }}>{Math.max(1000 - moves * 10, 100)}</strong>
-              </div>
-              {isIntermission ? (
-                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => onIntermissionComplete && onIntermissionComplete()}
-                    className="retro-btn pulse-glow"
-                    style={{ fontSize: '1.1rem', padding: '12px 26px', borderColor: '#E53E3E', color: '#E53E3E' }}
-                  >
-                    Terminer l'Entracte 🏁
-                  </button>
-                </div>
-              ) : (
-                <div style={{ width: '100%', maxWidth: '340px', margin: '0 auto' }}>
-                  <IntermissionProposal
-                    onIntermissionRequest={onIntermissionRequest}
-                    upcomingIntermission={upcomingIntermission}
-                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                    intermissionConfig={intermissionConfig}
-                    intermissionGames={intermissionGames}
-                    excludeGameKey="unblock"
-                    onContinue={() => {
-                      setVictoryPhase(0);
-                      loadRandomLevel();
-                    }}
-                    continueText="Nouveau Défi Aléatoire 🎲"
-                    showDirectContinue={true}
-                    customStyle={{ marginBottom: '16px' }}
-                  />
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                    <button
-                      onClick={() => { setVictoryPhase(0); loadRandomLevel(); }}
-                      className="retro-btn pulse-glow"
-                      style={{ fontSize: '15px', padding: '12px 24px', borderColor: '#E53E3E', color: '#E53E3E', fontWeight: 'bold' }}
-                    >
-                      Nouveau Défi Aléatoire 🎲 ➔
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Unified Victory Overlay */}
+      <GameVictoryOverlay
+        isOpen={victoryPhase > 0}
+        gameKey="unblock"
+        score={Math.max(1000 - moves * 10, 100)}
+        title="DÉBLOQUÉ !"
+        badgeIcon="🧠"
+        subtitle="Logique imparable ! Le bloc cible a trouvé la sortie !"
+        stats={[
+          { label: 'Coups', value: moves, color: '#f59e0b' }
+        ]}
+        onRestart={() => loadLevel(currentLevelIdx)}
+        restartText="🔄 Rejouer"
+        onContinue={() => {
+          setVictoryPhase(0);
+          loadRandomLevel();
+        }}
+        continueText="Nouveau Défi Aléatoire 🎲"
+        onBack={onBack}
+        backText="← Retour au Hub"
+        isIntermission={isIntermission}
+        onIntermissionComplete={onIntermissionComplete}
+        onIntermissionRequest={onIntermissionRequest}
+        upcomingIntermission={upcomingIntermission}
+        onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+        onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+        intermissionConfig={intermissionConfig}
+        intermissionGames={intermissionGames}
+      />
 
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes pulse-arrow {

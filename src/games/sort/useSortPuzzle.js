@@ -124,18 +124,8 @@ export function useSortPuzzle({
       if (onVictory) {
         onVictory();
       }
-
-      if (isIntermission && onIntermissionComplete) {
-        if (replaySameIntermission) {
-          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-          setTimeout(() => initGame(), 1000);
-          return;
-        }
-        setTimeout(() => onIntermissionComplete(true), 1000);
-        return;
-      }
     }
-  }, [extraTubesCount, defaultCap, victoryPhase, onVictory, isIntermission, onIntermissionComplete, replaySameIntermission, onToggleReplaySameIntermission, initGame]);
+  }, [extraTubesCount, defaultCap, victoryPhase, onVictory, initGame]);
 
   return {
     tubes,

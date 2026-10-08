@@ -6,6 +6,7 @@ import GameHeader from '../components/GameHeader';
 import MinesweeperCollection from './MinesweeperCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useRandomTheme } from '../hooks/useRandomTheme';
 import { useConfirm } from '../components/ConfirmContext';
@@ -293,28 +294,12 @@ export default function Minesweeper({
         setTimeout(() => startGame(boardSize, numMines), 1000);
         return;
       }
-      setTimeout(() => onIntermissionComplete(), 1000);
-      return;
     }
-    setVictoryPhase(-1);
-    setTimeout(() => {
-      sound.stopBGM();
-      setVictoryPhase(1);
-      sound.playPowerup();
-
-      setTimeout(() => {
-        setVictoryPhase(2);
-        sound.playExplosion();
-      }, 1500);
-
-      setTimeout(() => {
-        setVictoryPhase(3);
-        sound.playScore();
-        if (onScoreSave) {
-          onScoreSave('Démineur', Math.max(1000 - moves * 5, 100));
-        }
-      }, 3500);
-    }, 1500);
+    sound.stopBGM();
+    setVictoryPhase(3);
+    if (onScoreSave) {
+      onScoreSave('Démineur', Math.max(1000 - moves * 5, 100));
+    }
   };
 
   const getNumberColor = (num) => {
@@ -629,86 +614,41 @@ export default function Minesweeper({
             <h2 style={{ fontSize: '4rem', color: '#39FF14', margin: 0, animation: 'popIn 0.8s' }}>SÉCURISÉ !</h2>
           )}
 
-          {victoryPhase === 3 && (
-            <div style={{
-              animation: 'popIn 0.5s', textAlign: 'center', background: 'white', padding: '50px',
-              borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #39FF14', zIndex: 10
-            }}>
-              <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🛡️</div>
-              <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Zone Pacifiée</h2>
-              <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
-                Score: <strong style={{ color: '#39FF14', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
-              </div>
-              {isIntermission ? (
-                <button
-                  onClick={() => onIntermissionComplete && onIntermissionComplete()}
-                  className="retro-btn pulse-glow"
-                  style={{ fontSize: '1.2rem', padding: '12px 30px', borderColor: '#39FF14', color: '#39FF14' }}
-                >
-                  Terminer l'Entracte 🏁
-                </button>
-              ) : (
-                <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
-                  <IntermissionProposal
-                    onIntermissionRequest={onIntermissionRequest}
-                    upcomingIntermission={upcomingIntermission}
-                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                    intermissionConfig={intermissionConfig}
-                    intermissionGames={intermissionGames}
-                    excludeGameKey="mines"
-                    onContinue={() => {
-                      setVictoryPhase(0);
-                      startGame(boardSize, numMines);
-                    }}
-                    continueText="Nouvelle Partie"
-                    showDirectContinue={true}
-                    customStyle={{ marginBottom: '16px' }}
-                  />
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                    <button
-                      onClick={() => {
-                        setVictoryPhase(0);
-                        startGame(boardSize, numMines);
-                      }}
-                      className="retro-btn"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        borderColor: 'rgba(255, 255, 255, 0.15)',
-                        color: '#333',
-                        fontWeight: '600',
-                        fontSize: '14px',
-                        padding: '10px 20px',
-                        borderRadius: '12px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      🔄 Rejouer
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVictoryPhase(0);
-                        setGameState('menu');
-                      }}
-                      className="retro-btn"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        borderColor: 'rgba(255, 255, 255, 0.15)',
-                        color: '#333',
-                        fontWeight: '600',
-                        fontSize: '14px',
-                        padding: '10px 20px',
-                        borderRadius: '12px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      🏠 Menu
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Unified Victory Overlay */}
+          <GameVictoryOverlay
+            isOpen={victoryPhase === 3}
+            gameKey="mines"
+            score={Math.max(1000 - moves * 5, 100)}
+            title="ZONE PACIFIÉE !"
+            badgeIcon="🛡️"
+            subtitle="Toutes les mines ont été déjouées avec succès !"
+            stats={[
+              { label: 'Coups', value: moves }
+            ]}
+            onRestart={() => {
+              setVictoryPhase(0);
+              startGame(boardSize, numMines);
+            }}
+            restartText="🔄 Rejouer"
+            onContinue={() => {
+              setVictoryPhase(0);
+              startGame(boardSize, numMines);
+            }}
+            continueText="Nouvelle Partie"
+            onBack={() => {
+              setVictoryPhase(0);
+              setGameState('menu');
+            }}
+            backText="🏠 Menu"
+            isIntermission={isIntermission}
+            onIntermissionComplete={onIntermissionComplete}
+            onIntermissionRequest={onIntermissionRequest}
+            upcomingIntermission={upcomingIntermission}
+            onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+            onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+            intermissionConfig={intermissionConfig}
+            intermissionGames={intermissionGames}
+          />
         </div>
       )}
     </div>

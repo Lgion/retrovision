@@ -2,9 +2,12 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GameHeader from '../components/GameHeader';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { sound } from '../utils/sound';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
+import { getGameConfig, updateGameConfig } from '../utils/config';
+import FireflyGardenCollection from './FireflyGardenCollection';
 
 // Constellations à débloquer
 const CONSTELLATIONS = [
@@ -87,6 +90,8 @@ export default function FireflyGarden({
   const confirm = useConfirm();
 
   // Mode de jeu : 'constellation' (par niveaux) ou 'serenite' (infini)
+  const [showCollection, setShowCollection] = useState(false);
+  const [themeId, setThemeId] = useState(() => getGameConfig('fireflies', 'theme', 'azure'));
   const [gameMode, setGameMode] = useState('constellation');
   const [constellationIdx, setConstellationIdx] = useState(0);
   const [collectedInLevel, setCollectedInLevel] = useState(0);
@@ -306,9 +311,6 @@ export default function FireflyGarden({
           sound.playWin?.();
           haptic.success();
           setLevelVictory(true);
-          if (isIntermission && onIntermissionComplete) {
-            setTimeout(() => onIntermissionComplete(true), 2500);
-          }
         }
       }
     } else {
@@ -457,6 +459,30 @@ export default function FireflyGarden({
         }
       `}</style>
 
+      {showCollection && (
+        <FireflyGardenCollection
+          currentSelections={{
+            theme: themeId,
+            constellation: constellationIdx,
+            tempo: tempo
+          }}
+          onSelect={(catKey, itemId) => {
+            if (catKey === 'theme') {
+              setThemeId(itemId);
+              updateGameConfig('fireflies', 'theme', itemId);
+            } else if (catKey === 'constellation') {
+              setConstellationIdx(Number(itemId));
+              setCollectedInLevel(0);
+              setLevelVictory(false);
+              pickNewTarget();
+            } else if (catKey === 'tempo') {
+              setTempo(itemId);
+            }
+          }}
+          onClose={() => setShowCollection(false)}
+        />
+      )}
+
       {/* Header Unifié ou Header Entracte */}
       {isIntermission ? (
         <div style={{ width: '100%', marginBottom: '6px', zIndex: 10, flexShrink: 0, padding: '0 8px', boxSizing: 'border-box' }}>
@@ -522,7 +548,8 @@ export default function FireflyGarden({
           gameId="fireflies"
           onBack={handleBackWithConfirm}
           onLaunchIntermission={onLaunchIntermission || onIntermissionRequest}
-          showShop={false}
+          onShop={() => setShowCollection(true)}
+          showShop={true}
           centerContent={
             <div
               style={{
@@ -950,148 +977,82 @@ export default function FireflyGarden({
       </div>
 
       {/* ÉCRAN DE VICTOIRE / CONSTELLATION COMPLÉTÉE */}
-      {levelVictory && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            backgroundColor: 'rgba(5, 9, 20, 0.92)',
-            backdropFilter: 'blur(12px)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            animation: 'cm-fade-in 0.3s ease-out forwards'
-          }}
-        >
+      {/* Unified Victory Overlay */}
+      <GameVictoryOverlay
+        isOpen={levelVictory}
+        gameKey="fireflies"
+        score={totalCollected * 50}
+        title={currentConstellation.name.toUpperCase()}
+        badgeIcon={currentConstellation.symbol}
+        subtitle={currentConstellation.message}
+        stats={[
+          { label: 'Lucioles', value: totalCollected, color: '#facc15' },
+          { label: 'Constellation', value: `${constellationIndex + 1}/${CONSTELLATIONS.length}`, color: '#38bdf8' }
+        ]}
+        detailsNode={(
           <div
             style={{
-              width: '100%',
-              maxWidth: '380px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '18px'
+              position: 'relative',
+              width: '240px',
+              height: '140px',
+              margin: '0 auto',
+              borderRadius: '16px',
+              background: 'rgba(56, 189, 248, 0.08)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              overflow: 'hidden'
             }}
           >
-            <div style={{ fontSize: '3.5rem', filter: 'drop-shadow(0 0 20px #38bdf8)' }}>
-              {currentConstellation.symbol}
-            </div>
-
-            <h2
-              style={{
-                fontFamily: 'Orbitron, sans-serif',
-                fontSize: '1.6rem',
-                fontWeight: '900',
-                color: '#38bdf8',
-                margin: 0,
-                letterSpacing: '1px'
-              }}
-            >
-              {currentConstellation.name}
-            </h2>
-
-            {/* Tracé de la constellation */}
-            <div
-              style={{
-                position: 'relative',
-                width: '240px',
-                height: '180px',
-                margin: '10px 0',
-                borderRadius: '16px',
-                background: 'rgba(56, 189, 248, 0.05)',
-                border: '1px solid rgba(56, 189, 248, 0.2)'
-              }}
-            >
-              <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
-                {currentConstellation.lines.map(([i1, i2], idx) => {
-                  const s1 = currentConstellation.stars[i1];
-                  const s2 = currentConstellation.stars[i2];
-                  return (
-                    <line
-                      key={idx}
-                      x1={`${s1.x}%`}
-                      y1={`${s1.y}%`}
-                      x2={`${s2.x}%`}
-                      y2={`${s2.y}%`}
-                      stroke="#38bdf8"
-                      strokeWidth="2"
-                      strokeOpacity="0.8"
-                    />
-                  );
-                })}
-              </svg>
-              {currentConstellation.stars.map((s, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    position: 'absolute',
-                    left: `${s.x}%`,
-                    top: `${s.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: '#ffffff',
-                    boxShadow: '0 0 8px #38bdf8'
-                  }}
-                />
-              ))}
-            </div>
-
-            <p
-              style={{
-                fontSize: '1.05rem',
-                lineHeight: '1.5',
-                color: '#e2e8f0',
-                margin: 0,
-                fontWeight: '500'
-              }}
-            >
-              {currentConstellation.message}
-            </p>
-
-            {!isIntermission && (
-              <div style={{ width: '100%', marginTop: '10px' }}>
-                <IntermissionProposal
-                  onIntermissionRequest={onIntermissionRequest}
-                  upcomingIntermission={upcomingIntermission}
-                  onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                  onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                  intermissionConfig={intermissionConfig}
-                  intermissionGames={intermissionGames}
-                  excludeGameKey="fireflies"
-                  onContinue={handleNextLevel}
-                  continueText="Constellation Suivante"
-                  showDirectContinue={true}
-                  customStyle={{ marginBottom: '12px' }}
-                />
-              </div>
-            )}
-
-            <button
-              onClick={handleNextLevel}
-              className="retro-btn"
-              style={{
-                marginTop: '12px',
-                width: '100%',
-                minHeight: '52px',
-                background: 'linear-gradient(135deg, #38bdf8 0%, #2563eb 100%)',
-                color: '#ffffff',
-                border: '2px solid #7dd3fc',
-                borderRadius: '16px',
-                fontSize: '16px',
-                fontWeight: '800'
-              }}
-            >
-              Constellation Suivante ➔
-            </button>
+            <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+              {currentConstellation.lines.map(([i1, i2], idx) => {
+                const s1 = currentConstellation.stars[i1];
+                const s2 = currentConstellation.stars[i2];
+                return (
+                  <line
+                    key={idx}
+                    x1={`${s1.x}%`}
+                    y1={`${s1.y}%`}
+                    x2={`${s2.x}%`}
+                    y2={`${s2.y}%`}
+                    stroke="#38bdf8"
+                    strokeWidth="2"
+                    strokeOpacity="0.8"
+                  />
+                );
+              })}
+            </svg>
+            {currentConstellation.stars.map((s, idx) => (
+              <div
+                key={idx}
+                style={{
+                  position: 'absolute',
+                  left: `${s.x}%`,
+                  top: `${s.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 0 8px #38bdf8'
+                }}
+              />
+            ))}
           </div>
-        </div>
-      )}
+        )}
+        onRestart={() => { setLevelVictory(false); setCollectedInLevel(0); }}
+        restartText="🔄 Rejouer"
+        onContinue={handleNextLevel}
+        continueText="Constellation Suivante ➔"
+        onBack={onBack}
+        backText="← Retour au Hub"
+        isIntermission={isIntermission}
+        onIntermissionComplete={onIntermissionComplete}
+        onIntermissionRequest={onIntermissionRequest}
+        upcomingIntermission={upcomingIntermission}
+        onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+        onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+        intermissionConfig={intermissionConfig}
+        intermissionGames={intermissionGames}
+      />
     </div>
   );
 }

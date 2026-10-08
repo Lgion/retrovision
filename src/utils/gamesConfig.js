@@ -14,12 +14,16 @@ import Impossible13 from '../games/Impossible13';
 import BubbleCool from '../games/BubbleCool';
 import FireflyGarden from '../games/FireflyGarden';
 import ZenFlow from '../games/ZenFlow';
-import SymbolQuest from '../games/SymbolQuest';
+import FindCharlie from '../games/FindCharlie';
+import WordMaster from '../games/WordMaster';
 import Morpion from '../games/Morpion';
 import MemoryPairs from '../games/MemoryPairs';
 import CarillonCeleste from '../games/CarillonCeleste';
 import MotsFlottants from '../games/MotsFlottants';
 import TangramSilhouettes from '../games/TangramSilhouettes';
+import BrickBreaker from '../games/BrickBreaker';
+import FlappyNeon from '../games/FlappyNeon';
+import SnakeWave from '../games/SnakeWave';
 
 /**
  * Fabrique de configuration de jeu avec valeurs par défaut standardisées (DRY).
@@ -246,14 +250,40 @@ export const GAMES_CONFIG = {
       defaultRounds: 5
     }
   }),
-  symbolquest: defineGame({
-    id: 'symbolquest',
-    component: SymbolQuest,
-    name: 'Quête des Symboles',
-    aliases: ['Quête des Symboles', 'Quête Symboles', 'Symbol Quest', 'symbolquest', 'symbols'],
-    icon: '🔍',
-    subtitle: 'Balayage & symboles zen',
-    color: '#10B981'
+  findcharlie: defineGame({
+    id: 'findcharlie',
+    component: FindCharlie,
+    name: 'Trouvez Charlie',
+    aliases: ['Trouvez Charlie', 'Charlie', 'Find Charlie', 'findcharlie', 'symbolquest', 'Quête des Symboles'],
+    icon: '🕵️‍♂️',
+    settingsIcon: '🕵️‍♂️',
+    subtitle: 'Observation minutieuse & manches d\'exploration',
+    color: '#ef4444',
+    fullscreen: true,
+    supportsIntro: true,
+    intermission: {
+      category: 'rounds',
+      roundsOptions: [1, 2, 3, 5],
+      defaultRounds: 2
+    }
+  }),
+  wordmaster: defineGame({
+    id: 'wordmaster',
+    component: WordMaster,
+    name: "L'Atelier des Mots",
+    aliases: ["L'Atelier des Mots", 'Atelier des Mots', 'Atelier Mots', 'Word Master', 'wordmaster'],
+    icon: '✍️',
+    settingsIcon: '✍️',
+    subtitle: 'Ortho-vocabulaire, syntaxe & glisser-déposer',
+    color: '#8b5cf6',
+    fullscreen: true,
+    supportsIntro: true,
+    intermission: {
+      category: 'score',
+      targetLabel: 'Points',
+      targetOptions: [100, 200, 300, 500],
+      defaultTarget: 200
+    }
   }),
   morpion: defineGame({
     id: 'morpion',
@@ -283,7 +313,15 @@ export const GAMES_CONFIG = {
     color: '#0284c7',
     fullscreen: true,
     binaryScore: true,
-    supportsIntro: true
+    supportsIntro: true,
+    intermission: {
+      category: 'rounds',
+      roundsOptions: [1, 2, 3, 5],
+      defaultRounds: 3,
+      targetLabel: 'Paires',
+      targetOptions: [4, 6, 8],
+      defaultTarget: 6
+    }
   }),
   carillon: defineGame({
     id: 'carillon',
@@ -296,7 +334,13 @@ export const GAMES_CONFIG = {
     color: '#0284c7',
     fullscreen: true,
     binaryScore: true,
-    supportsIntro: true
+    supportsIntro: true,
+    intermission: {
+      category: 'score',
+      targetLabel: 'Points à atteindre',
+      targetOptions: [50, 100, 150, 200],
+      defaultTarget: 100
+    }
   }),
   motsflottants: defineGame({
     id: 'motsflottants',
@@ -309,7 +353,13 @@ export const GAMES_CONFIG = {
     color: '#0d9488',
     fullscreen: true,
     binaryScore: true,
-    supportsIntro: true
+    supportsIntro: true,
+    intermission: {
+      category: 'score',
+      targetLabel: 'Mots à trouver',
+      targetOptions: [1, 2, 3, 5],
+      defaultTarget: 2
+    }
   }),
   tangram: defineGame({
     id: 'tangram',
@@ -323,8 +373,45 @@ export const GAMES_CONFIG = {
     fullscreen: true,
     binaryScore: true,
     supportsIntro: true
+  }),
+  brickbreaker: defineGame({
+    id: 'brickbreaker',
+    component: BrickBreaker,
+    name: 'Casse-Briques',
+    aliases: ['Casse-Briques', 'Casse Briques', 'Brick Breaker', 'brickbreaker', 'breaker'],
+    icon: '🧱',
+    subtitle: 'Rebonds & réflexes',
+    color: '#0284c7',
+    supportsIntro: true
+  }),
+  flappyneon: defineGame({
+    id: 'flappyneon',
+    component: FlappyNeon,
+    name: 'Flappy Zen',
+    aliases: ['Flappy Zen', 'Flappy Neon', 'flappyneon', 'flappy'],
+    icon: '🚀',
+    subtitle: 'Vol céleste & réflexes',
+    color: '#0ea5e9',
+    supportsIntro: true
+  }),
+  snakewave: defineGame({
+    id: 'snakewave',
+    component: SnakeWave,
+    name: 'Snake Wave',
+    aliases: ['Snake Wave', 'Snake Zen', 'snakewave', 'snake'],
+    icon: '🐍',
+    subtitle: 'Onde & fluidité',
+    color: '#10b981',
+    supportsIntro: true
   })
 };
+
+// Alias rétrocompatible transparent: GAMES_CONFIG.symbolquest -> GAMES_CONFIG.findcharlie
+Object.defineProperty(GAMES_CONFIG, 'symbolquest', {
+  get: () => GAMES_CONFIG.findcharlie,
+  enumerable: false,
+  configurable: true
+});
 
 /**
  * Résout un nom, un identifiant ou un objet en identifiant canonique de jeu.

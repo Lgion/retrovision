@@ -6,6 +6,7 @@ import Grid2048Collection from './Grid2048Collection';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme } from '../utils/themeManager';
 import { useRandomTheme } from '../hooks/useRandomTheme';
 import { storage } from '../utils/storage';
@@ -307,14 +308,10 @@ export default function Grid2048({
       const currentTarget = isIntermission ? getIntermissionTarget() : 2048;
       if (!victory && !keepPlaying && finalBoard.some((v) => v >= currentTarget)) {
         setVictory(true);
-        sound.playPowerup();
-        if (isIntermission && onIntermissionComplete) {
-          if (replaySameIntermission) {
-            if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-            setTimeout(() => initGame(), 1500);
-            return;
-          }
-          setTimeout(() => onIntermissionComplete(), 1500);
+        if (isIntermission && replaySameIntermission) {
+          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+          setTimeout(() => initGame(), 1000);
+          return;
         }
       }
 
@@ -609,55 +606,33 @@ export default function Grid2048({
             );
           })}
 
-          {victory && !keepPlaying && (
-            <div style={{ ...overlayStyle, animation: 'delayFadeIn 2s forwards' }}>
-              <div style={victoryTitleStyle}>VICTOIRE !</div>
-              <div style={descStyle}>Vous avez atteint la tuile 2048.</div>
-              {isIntermission ? (
-                <div style={btnRowStyle}>
-                  <button 
-                    onClick={() => onIntermissionComplete && onIntermissionComplete()} 
-                    className="retro-btn pulse-glow"
-                    style={overlayBtnStyle}
-                  >
-                    Terminer l'Entracte 🏁
-                  </button>
-                </div>
-              ) : (
-                <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
-                  <IntermissionProposal
-                    onIntermissionRequest={onIntermissionRequest}
-                    upcomingIntermission={upcomingIntermission}
-                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                    intermissionConfig={intermissionConfig}
-                    intermissionGames={intermissionGames}
-                    excludeGameKey="2048"
-                    onContinue={initGame}
-                    continueText="Recommencer"
-                    showDirectContinue={true}
-                    customStyle={{ marginBottom: '16px' }}
-                  />
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                    <button 
-                      onClick={() => setKeepPlaying(true)} 
-                      className="retro-btn"
-                      style={{ ...overlayBtnStyle, borderColor: '#ff007f', color: '#ff007f' }}
-                    >
-                      Poursuivre en Infini ♾️
-                    </button>
-                    <button 
-                      onClick={initGame} 
-                      className="retro-btn"
-                      style={overlayBtnStyle}
-                    >
-                      🔄 Rejouer
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Unified Victory Overlay */}
+          <GameVictoryOverlay
+            isOpen={victory && !keepPlaying}
+            gameKey="2048"
+            score={score}
+            title="VICTOIRE !"
+            badgeIcon="🏆"
+            subtitle={isIntermission ? `Objectif atteint ! Tuile ${getIntermissionTarget()} fusionnée !` : "Vous avez atteint la mythique tuile 2048 !"}
+            stats={[
+              { label: 'Score', value: score, color: '#38bdf8' },
+              { label: 'Meilleur', value: bestScore, color: '#f59e0b' }
+            ]}
+            onRestart={initGame}
+            restartText="🔄 Rejouer"
+            onContinue={() => setKeepPlaying(true)}
+            continueText="Poursuivre en Infini ♾️"
+            onBack={onBack}
+            backText="← Retour au Hub"
+            isIntermission={isIntermission}
+            onIntermissionComplete={onIntermissionComplete}
+            onIntermissionRequest={onIntermissionRequest}
+            upcomingIntermission={upcomingIntermission}
+            onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+            onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+            intermissionConfig={intermissionConfig}
+            intermissionGames={intermissionGames}
+          />
 
           {gameOver && (
             <div style={overlayStyle}>

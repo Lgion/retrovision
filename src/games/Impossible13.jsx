@@ -6,6 +6,7 @@ import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { isRandomThemeEnabled, setRandomThemeEnabled, pickRandomTheme, GAME_THEME_DETAILS } from '../utils/themeManager';
 import { useRandomTheme } from '../hooks/useRandomTheme';
 import { storage } from '../utils/storage';
@@ -329,13 +330,9 @@ export default function Impossible13({
     if (mergeValue >= targetNumber) {
       sound.playSudokuSuccess();
       setVictory(true);
-      if (isIntermission && onIntermissionComplete) {
-        if (replaySameIntermission) {
-          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-          setTimeout(initGame, 1500);
-        } else {
-          setTimeout(onIntermissionComplete, 1500);
-        }
+      if (isIntermission && replaySameIntermission) {
+        if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+        setTimeout(initGame, 1000);
       }
     }
 
@@ -605,31 +602,33 @@ export default function Impossible13({
               </div>
             )}
             
-            {victory && (
-              <div style={overlayStyle}>
-                <div style={{ ...titleStyle, color: '#EAB308', textShadow: '0 0 12px #EAB308' }}>IMPOSSIBLE 13 !</div>
-                <div style={{ color: '#fff', marginBottom: '20px' }}>Vous avez atteint le nombre d'or !</div>
-                <div style={{ fontSize: '20px', color: '#39FF14', fontWeight: 'bold', marginBottom: '20px' }}>Score: {score}</div>
-                {!isIntermission && (
-                  <div style={{ width: '100%', maxWidth: '380px', margin: '0 auto' }}>
-                    <IntermissionProposal
-                      onIntermissionRequest={onIntermissionRequest}
-                      upcomingIntermission={upcomingIntermission}
-                      onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                      onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                      intermissionConfig={intermissionConfig}
-                      intermissionGames={intermissionGames}
-                      excludeGameKey="impossible13"
-                      onContinue={() => { setVictory(false); initGame(); }}
-                      continueText="Mode Infini"
-                      showDirectContinue={true}
-                      customStyle={{ marginBottom: '12px' }}
-                    />
-                    <button onClick={() => { setVictory(false); initGame(); }} className="retro-btn pulse-glow" style={overlayBtnStyle}>Mode Infini</button>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Unified Victory Overlay */}
+            <GameVictoryOverlay
+              isOpen={victory}
+              gameKey="impossible13"
+              score={score}
+              title="IMPOSSIBLE 13 !"
+              badgeIcon="⭐"
+              subtitle={isIntermission ? `Objectif atteint ! Cercle ${getIntermissionTarget()} fusionné !` : "Incroyable ! Vous avez atteint le mythique nombre 13 !"}
+              stats={[
+                { label: 'Score', value: score, color: '#38bdf8' },
+                { label: 'Cercle max', value: Math.max(...board.flat().map(c => c.val)), color: '#f59e0b' }
+              ]}
+              onRestart={initGame}
+              restartText="🔄 Rejouer"
+              onContinue={() => { setVictory(false); initGame(); }}
+              continueText="Mode Infini ➔"
+              onBack={onBack}
+              backText="← Retour au Hub"
+              isIntermission={isIntermission}
+              onIntermissionComplete={onIntermissionComplete}
+              onIntermissionRequest={onIntermissionRequest}
+              upcomingIntermission={upcomingIntermission}
+              onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+              onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+              intermissionConfig={intermissionConfig}
+              intermissionGames={intermissionGames}
+            />
           </div>
         </div>
 

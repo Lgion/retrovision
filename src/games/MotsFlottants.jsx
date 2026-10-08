@@ -2,11 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import GameHeader from '../components/GameHeader';
 import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { sound } from '../utils/sound';
 import { storage } from '../utils/storage';
+import { getGameConfig, updateGameConfig } from '../utils/config';
 import { haptic } from '../utils/haptics';
 import { randomChoice, shuffle } from '../utils/commonUtils';
 import { useConfirm } from '../components/ConfirmContext';
+import MotsFlottantsCollection from './MotsFlottantsCollection';
 
 // Dictionnaire de mots réconfortants et apaisants
 const VOCABULARY = [
@@ -121,21 +124,33 @@ export default function MotsFlottants({
   onLaunchIntermission,
   isIntermission = false,
   intermissionDifficulty = 'facile',
+  intermissionConfig,
   onIntermissionComplete,
   onIntermissionRequest,
   replaySameIntermission,
   onToggleReplaySameIntermission,
+  upcomingIntermission,
+  onSelectUpcomingIntermission,
+  onShuffleUpcomingIntermission,
+  intermissionGames,
   skipIntro = false
 }) {
   const confirm = useConfirm();
   const [showIntro, setShowIntro] = useState(!skipIntro && !isIntermission);
+  const [showCollection, setShowCollection] = useState(false);
+  const [themeId, setThemeId] = useState(() => getGameConfig('motsflottants', 'theme', 'washi'));
+  const [vocabCategory, setVocabCategory] = useState('tous');
   const [difficulty] = useState(() => {
     if (isIntermission) return intermissionDifficulty || 'facile';
     return storage.getItem('retrovision_mots_diff', 'moyen') || 'moyen';
   });
 
   const gridSize = difficulty === 'facile' ? 5 : 6;
-  const wordsCount = isIntermission ? (difficulty === 'facile' ? 1 : 2) : 3;
+  // En mode entracte (jeu à score), le nombre de mots cibles est configuré via intermissionConfig (défaut 2 mots)
+  const configuredTarget = isIntermission
+    ? Number(intermissionConfig?.motsflottants?.target) || (difficulty === 'facile' ? 2 : 3)
+    : 3;
+  const wordsCount = Math.max(1, Math.min(5, configuredTarget));
 
   const [boardData, setBoardData] = useState(() => {
     const selected = shuffle(VOCABULARY.filter((w) => w.length <= gridSize)).slice(0, wordsCount);
@@ -211,13 +226,9 @@ export default function MotsFlottants({
         setEncouragement(randomChoice(ENCOURAGEMENTS));
         if (onScoreSave) onScoreSave('motsflottants', updatedFound.length * 100);
 
-        if (isIntermission && onIntermissionComplete) {
-          if (replaySameIntermission) {
-            if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-            setTimeout(() => initGame(), 1500);
-          } else {
-            setTimeout(() => onIntermissionComplete(true), 1200);
-          }
+        if (isIntermission && replaySameIntermission) {
+          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+          setTimeout(() => initGame(), 1000);
         }
       }
     } else {
@@ -295,10 +306,28 @@ export default function MotsFlottants({
       />
 
       <div style={{ width: '100%', maxWidth: '640px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {showCollection && (
+          <MotsFlottantsCollection
+            currentSelections={{
+              theme: themeId,
+              category: vocabCategory
+            }}
+            onSelect={(catKey, itemId) => {
+              if (catKey === 'theme') {
+                setThemeId(itemId);
+                updateGameConfig('motsflottants', 'theme', itemId);
+              } else if (catKey === 'category') {
+                setVocabCategory(itemId);
+                initGame();
+              }
+            }}
+            onClose={() => setShowCollection(false)}
+          />
+        )}
         {/* En-tête : Intermission ou Standard */}
         {isIntermission ? (
           <IntermissionHeader
-            instructionText={`Trouvez ${boardData.placedWords.length} mot(s) apaisant(s) pour réussir l'entracte !`}
+            instructionText={`Trouvez les ${boardData.placedWords.length} mots cibles pour réussir l'entracte ! (${foundWords.length}/${boardData.placedWords.length})`}
             onRestart={initGame}
             onOtherGame={onIntermissionRequest}
             onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
@@ -312,50 +341,131 @@ export default function MotsFlottants({
             subtitle="Exploration visuelle & mots doux"
             onBack={handleBackWithConfirm}
             onRestart={initGame}
-            showShop={false}
+            onShop={() => setShowCollection(true)}
+            showShop={true}
             onLaunchIntermission={onLaunchIntermission}
           />
         )}
 
-        {/* Liste des mots à chercher (avec encadrement zen) */}
+        {/* Panneau des Mots Cibles (Stylisé, grand format, contrasté et hautement lisible) */}
         <div
           style={{
             display: 'flex',
-            justifyContent: 'center',
-            gap: '10px',
-            flexWrap: 'wrap',
+            flexDirection: 'column',
+            alignItems: 'center',
             width: '100%',
-            margin: '12px 0 16px 0',
-            padding: '12px 16px',
-            background: '#ffffff',
-            borderRadius: '12px',
-            border: '1px solid #cbd5e1',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
+            maxWidth: '520px',
+            margin: '14px 0 18px 0',
+            padding: '16px 20px',
+            background: 'linear-gradient(145deg, #ffffff 0%, #f0fdfa 100%)',
+            borderRadius: '20px',
+            border: '2px solid #0d9488',
+            boxShadow: '0 8px 24px rgba(13, 148, 136, 0.14), 0 2px 6px rgba(0,0,0,0.04)',
+            boxSizing: 'border-box'
           }}
         >
-          {boardData.placedWords.map((item) => {
-            const isDiscovered = foundWords.includes(item.word);
-
-            return (
+          {/* En-tête du panneau d'objectifs avec titre et compteur */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+              marginBottom: '12px',
+              paddingBottom: '8px',
+              borderBottom: '1px solid rgba(13, 148, 136, 0.18)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '20px' }}>🎯</span>
               <span
-                key={item.word}
                 style={{
-                  padding: '6px 14px',
-                  borderRadius: '20px',
-                  fontSize: '13px',
-                  fontWeight: '800',
-                  letterSpacing: '0.06em',
-                  background: isDiscovered ? '#dcfce7' : '#f1f5f9',
-                  color: isDiscovered ? '#15803d' : '#334155',
-                  border: `1.5px solid ${isDiscovered ? '#86efac' : '#cbd5e1'}`,
-                  textDecoration: isDiscovered ? 'line-through' : 'none',
-                  transition: 'all 0.2s ease'
+                  fontSize: '0.92rem',
+                  fontWeight: '900',
+                  letterSpacing: '0.08em',
+                  color: '#0f766e',
+                  textTransform: 'uppercase'
                 }}
               >
-                {isDiscovered ? `✓ ${item.word}` : item.word}
+                Mots à Découvrir
               </span>
-            );
-          })}
+            </div>
+            <div
+              style={{
+                fontSize: '0.82rem',
+                fontWeight: '900',
+                color: '#0d9488',
+                background: '#ccfbf1',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                border: '1.5px solid #99f6e4',
+                boxShadow: '0 2px 4px rgba(13,148,136,0.1)'
+              }}
+            >
+              {foundWords.length} / {boardData.placedWords.length} trouvés
+            </div>
+          </div>
+
+          {/* Badges des mots cibles : grands, ultra-lisibles et attrayants */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '12px',
+              flexWrap: 'wrap',
+              width: '100%'
+            }}
+          >
+            {boardData.placedWords.map((item) => {
+              const isDiscovered = foundWords.includes(item.word);
+
+              return (
+                <div
+                  key={item.word}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 18px',
+                    borderRadius: '24px',
+                    fontSize: '18px',
+                    fontWeight: '900',
+                    fontFamily: "'Outfit', system-ui, sans-serif",
+                    letterSpacing: '0.12em',
+                    background: isDiscovered
+                      ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                      : 'linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%)',
+                    color: isDiscovered ? '#ffffff' : '#0f766e',
+                    border: `2px solid ${isDiscovered ? '#34d399' : '#14b8a6'}`,
+                    boxShadow: isDiscovered
+                      ? '0 4px 14px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255,255,255,0.4)'
+                      : '0 4px 12px rgba(13, 148, 136, 0.12), inset 0 1px 0 #ffffff',
+                    transform: isDiscovered ? 'scale(1.03)' : 'none',
+                    transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    userSelect: 'none'
+                  }}
+                >
+                  <span style={{ fontSize: '15px' }}>{isDiscovered ? '✓' : '🔍'}</span>
+                  <span style={{ textDecoration: isDiscovered ? 'line-through' : 'none' }}>
+                    {item.word}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Guide visuel d'aide rapide */}
+          <div
+            style={{
+              marginTop: '10px',
+              fontSize: '0.74rem',
+              color: '#64748b',
+              fontWeight: '600',
+              textAlign: 'center'
+            }}
+          >
+            💡 Cliquez sur la 1ère lettre puis sur la dernière lettre du mot dans la grille.
+          </div>
         </div>
 
         {/* Grille de lettres (Style Tuiles claires avec bordure gauche renforcée) */}
@@ -438,26 +548,33 @@ export default function MotsFlottants({
           💡 Touchez la première lettre du mot, puis la dernière lettre pour le valider.
         </div>
 
-        {/* Message de victoire bienveillant */}
-        {isWon && (
-          <div
-            style={{
-              padding: '16px 20px',
-              borderRadius: '12px',
-              background: '#f0fdf4',
-              border: '2px solid #86efac',
-              color: '#166534',
-              fontSize: '15px',
-              fontWeight: '700',
-              textAlign: 'center',
-              marginBottom: '20px',
-              width: '100%',
-              boxSizing: 'border-box'
-            }}
-          >
-            🌸 {encouragement || "Bravo ! Tous les mots ont été retrouvés avec sérénité."}
-          </div>
-        )}
+        {/* Unified Victory Overlay */}
+        <GameVictoryOverlay
+          isOpen={isWon}
+          gameKey="motsflottants"
+          score={foundWords.length * 100}
+          title="MOTS RETROUVÉS !"
+          badgeIcon="🌸"
+          subtitle={encouragement || "Bravo ! Tous les mots cachés ont été retrouvés avec sérénité."}
+          stats={[
+            { label: 'Mots trouvés', value: `${foundWords.length}/${boardData.placedWords.length}`, color: '#10b981' },
+            { label: 'Score', value: foundWords.length * 100, color: '#38bdf8' }
+          ]}
+          onRestart={initGame}
+          restartText="🔄 Rejouer"
+          onContinue={initGame}
+          continueText="Nouvelle Grille ➔"
+          onBack={onBack}
+          backText="← Retour au Hub"
+          isIntermission={isIntermission}
+          onIntermissionComplete={onIntermissionComplete}
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
 
         {/* Bouton de réinitialisation */}
         <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>

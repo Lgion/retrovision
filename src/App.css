@@ -262,13 +262,40 @@ body {
   0% {
     opacity: 0;
   }
-
   75% {
     opacity: 0;
   }
-
   100% {
     opacity: 1;
+  }
+}
+
+@keyframes victory-bounce {
+  0% {
+    transform: translateY(0) scale(0.85);
+  }
+  100% {
+    transform: translateY(-14px) scale(1.08);
+  }
+}
+
+@keyframes victory-glow {
+  from {
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.4);
+  }
+  to {
+    text-shadow: 0 0 22px rgba(56, 189, 248, 1), 0 0 35px rgba(56, 189, 248, 0.7);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(125vh) rotate(720deg);
+    opacity: 0.9;
   }
 }
 

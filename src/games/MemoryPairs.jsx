@@ -3,26 +3,16 @@ import GameHeader from '../components/GameHeader';
 import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
-import MemoryPairsCollection from './MemoryPairsCollection';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
+import MemoryPairsCollection, { MEMORY_BACKGROUNDS, MEMORY_CARDS_DATA } from './MemoryPairsCollection';
 import SymbolIcon from '../components/SymbolIcon';
+import CenteredCardIcon from '../components/CenteredCardIcon';
 import { sound } from '../utils/sound';
 import { storage } from '../utils/storage';
 import { shuffle, randomChoice } from '../utils/commonUtils';
 import { haptic } from '../utils/haptics';
 import { useConfirm } from '../components/ConfirmContext';
 import { useGameCustomizations } from '../hooks/useGameCustomizations';
-
-// Bibliothèque de 8 symboles zen artisanaux (rendus en SVG haute précision)
-const ZEN_SYMBOLS = [
-  { id: 'lotus', name: 'Lotus', color: '#db2777' },
-  { id: 'sakura', name: 'Cerisier', color: '#e11d48' },
-  { id: 'leaf', name: 'Feuille Zen', color: '#059669' },
-  { id: 'bamboo', name: 'Bambou', color: '#16a34a' },
-  { id: 'moon', name: 'Lune Zen', color: '#d97706' },
-  { id: 'crystal', name: 'Cristal', color: '#0284c7' },
-  { id: 'star', name: 'Étoile', color: '#ca8a04' },
-  { id: 'stone', name: 'Galet Zen', color: '#475569' }
-];
 
 // Mots doux de félicitations pour la mémoire de travail et l'attention visuelle
 const ZEN_ENCOURAGEMENTS = [
@@ -35,37 +25,52 @@ const ZEN_ENCOURAGEMENTS = [
   "Un bel équilibre entre observation attentive et patience."
 ];
 
-// Configuration des modes de difficulté
-const DIFFICULTY_CONFIG = {
-  facile: { pairsCount: 4, cols: 4, label: 'Facile (4 paires)' },
-  moyen: { pairsCount: 6, cols: 4, label: 'Moyen (6 paires)' },
-  difficile: { pairsCount: 8, cols: 4, label: 'Difficile (8 paires)' }
+// Configuration des modes de difficulté & paires supportées
+const PAIRS_OPTIONS = [3, 4, 6, 8, 10];
+
+const getGridCols = (count) => {
+  if (count <= 3) return 3;
+  if (count <= 8) return 4;
+  return 5;
 };
 
-// Fonction pure de génération de paquet de cartes
-const generateDeck = (pairsCount, cols) => {
-  const selectedSymbols = shuffle([...ZEN_SYMBOLS]).slice(0, pairsCount);
+// Fonction pure de génération de paquet de cartes avec décalages organiques subtils
+const generateDeck = (pairsCount = 6, layoutMode = 'organic') => {
+  const selectedCards = shuffle([...MEMORY_CARDS_DATA]).slice(0, Math.min(pairsCount, MEMORY_CARDS_DATA.length));
   const deck = [];
-  selectedSymbols.forEach((sym) => {
+  selectedCards.forEach((item) => {
     deck.push({
-      id: `${sym.id}_1`,
-      pairId: sym.id,
-      symbol: sym
+      id: `${item.id}_1`,
+      pairId: item.id,
+      cardData: item,
+      symbol: item
     });
     deck.push({
-      id: `${sym.id}_2`,
-      pairId: sym.id,
-      symbol: sym
+      id: `${item.id}_2`,
+      pairId: item.id,
+      cardData: item,
+      symbol: item
     });
   });
+
+  const cols = getGridCols(pairsCount);
 
   return shuffle(deck).map((card, index) => {
     const r = Math.floor(index / cols);
     const c = index % cols;
+    // Micro-rotations & décalages asymétriques pour un rendu naturel et organique (non figé)
+    const rotation = layoutMode === 'organic' ? (Math.random() * 5.2 - 2.6).toFixed(1) : 0;
+    const tiltX = layoutMode === 'organic' ? (Math.random() * 4 - 2).toFixed(1) : 0;
+    const tiltY = layoutMode === 'organic' ? (Math.random() * 4 - 2).toFixed(1) : 0;
+
     return {
       ...card,
       r,
       c,
+      cols,
+      rotation,
+      tiltX,
+      tiltY,
       isLeftField: c === 0 // Colonne la plus à gauche (héminégligence)
     };
   });
@@ -237,30 +242,57 @@ export default function MemoryPairs({
   // Customisations et thème (Boutique)
   const { custom, updateCustom, activeTheme } = useGameCustomizations('memory', {
     theme: 'japanese_paper',
-    difficulty: 'moyen'
+    background: 'tatami',
+    layout: 'organic',
+    cardStyle: 'full'
   });
 
   const [showCollection, setShowCollection] = useState(false);
   const themeObj = getThemeStyle(activeTheme);
 
+  // Gamme visuelle des cartes : 'full' (Plein Cadre) ou 'centered' (Symbole Centré sur fond transparent)
+  const [cardStyle, setCardStyle] = useState(() => {
+    return custom.cardStyle || storage.getItem('retrovision_memory_card_style', 'full') || 'full';
+  });
+
+  const handleToggleCardStyle = () => {
+    const nextStyle = cardStyle === 'full' ? 'centered' : 'full';
+    setCardStyle(nextStyle);
+    updateCustom('cardStyle', nextStyle);
+    storage.setItem('retrovision_memory_card_style', nextStyle);
+    sound.playClick();
+  };
+
+  // Background personnalisable du plateau
+  const [backgroundId, setBackgroundId] = useState(() => {
+    return custom.background || storage.getItem('retrovision_memory_bg', 'tatami') || 'tatami';
+  });
+  const activeBg = MEMORY_BACKGROUNDS.find((b) => b.id === backgroundId) || MEMORY_BACKGROUNDS[0];
+
+  // Style de disposition des cartes (organic avec micro-rotations ou aligné)
+  const [layoutStyle, setLayoutStyle] = useState(() => {
+    return custom.layout || storage.getItem('retrovision_memory_layout', 'organic') || 'organic';
+  });
+
+  // Nombre de paires paramétrable (3, 4, 6, 8, 10 paires)
+  const [pairsCount, setPairsCount] = useState(() => {
+    if (isIntermission) {
+      return Number(intermissionConfig?.memory?.target) || 6;
+    }
+    return Number(storage.getItem('retrovision_memory_pairs_count', 6)) || 6;
+  });
+
+  // Mode Entracte : Jeu à manches
+  const targetIntermissionRounds = isIntermission
+    ? Number(intermissionConfig?.memory?.roundsCount) || 3
+    : 1;
+  const [intermissionRound, setIntermissionRound] = useState(1);
+
   // Écran d'intro avec animation et bouton "JOUER"
   const [showIntro, setShowIntro] = useState(!skipIntro && !isIntermission);
 
-  // Niveau de difficulté
-  const [difficulty, setDifficulty] = useState(() => {
-    if (isIntermission) {
-      if (intermissionDifficulty === 'difficile') return 'difficile';
-      if (intermissionDifficulty === 'moyen') return 'moyen';
-      return 'facile';
-    }
-    return custom.difficulty || storage.getItem('retrovision_memory_diff', 'moyen') || 'moyen';
-  });
-
-  const currentConfig = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.moyen;
-  const { pairsCount, cols } = currentConfig;
-
-  // Cartes du plateau initialisées paresseusement
-  const [cards, setCards] = useState(() => generateDeck(currentConfig.pairsCount, currentConfig.cols));
+  // Cartes du plateau initialisées paresseusement avec micro-rotations et décalages
+  const [cards, setCards] = useState(() => generateDeck(pairsCount, layoutStyle));
   const [flippedCardIds, setFlippedCardIds] = useState([]);
   const [matchedPairIds, setMatchedPairIds] = useState(() => new Set());
   const [isLocked, setIsLocked] = useState(false);
@@ -275,7 +307,7 @@ export default function MemoryPairs({
 
   // Meilleur score (moins de coups possible)
   const [bestMoves, setBestMoves] = useState(() => {
-    return storage.getNumber(`retrovision_memory_${difficulty}_best`, 0);
+    return storage.getNumber(`retrovision_memory_${pairsCount}p_best`, 0);
   });
 
   const timerRef = useRef(null);
@@ -295,8 +327,8 @@ export default function MemoryPairs({
   }, [isTimerRunning, isGameWon]);
 
   // Initialisation ou réinitialisation du plateau
-  const initBoard = useCallback((targetPairsCount = pairsCount, targetCols = cols) => {
-    setCards(generateDeck(targetPairsCount, targetCols));
+  const initBoard = useCallback((targetPairsCount = pairsCount, targetLayout = layoutStyle) => {
+    setCards(generateDeck(targetPairsCount, targetLayout));
     setFlippedCardIds([]);
     setMatchedPairIds(new Set());
     setIsLocked(false);
@@ -305,7 +337,32 @@ export default function MemoryPairs({
     setElapsedTime(0);
     setIsTimerRunning(false);
     setIsGameWon(false);
-  }, [pairsCount, cols]);
+  }, [pairsCount, layoutStyle]);
+
+  const handleSelectPairsCount = (newCount) => {
+    if (newCount === pairsCount) return;
+    setPairsCount(newCount);
+    storage.setItem('retrovision_memory_pairs_count', newCount.toString());
+    sound.playClick();
+    initBoard(newCount, layoutStyle);
+    setBestMoves(storage.getNumber(`retrovision_memory_${newCount}p_best`, 0));
+  };
+
+  const handleSelectBackground = (bgId) => {
+    setBackgroundId(bgId);
+    updateCustom('background', bgId);
+    storage.setItem('retrovision_memory_bg', bgId);
+    sound.playClick();
+  };
+
+  const handleToggleLayout = () => {
+    const nextLayout = layoutStyle === 'organic' ? 'grid' : 'organic';
+    setLayoutStyle(nextLayout);
+    updateCustom('layout', nextLayout);
+    storage.setItem('retrovision_memory_layout', nextLayout);
+    sound.playClick();
+    initBoard(pairsCount, nextLayout);
+  };
 
   // Clic sur une carte
   const handleCardClick = (card) => {
@@ -368,25 +425,28 @@ export default function MemoryPairs({
   };
 
   const handleGameWin = () => {
-    setIsGameWon(true);
     setIsTimerRunning(false);
-    sound.playChapterVictory();
+    sound.playChapterVictory?.() || sound.playScore?.();
     haptic.success();
     setEncouragement(randomChoice(ZEN_ENCOURAGEMENTS));
 
-    const currentBest = storage.getNumber(`retrovision_memory_${difficulty}_best`, 0);
+    const currentBest = storage.getNumber(`retrovision_memory_${pairsCount}p_best`, 0);
     const newBest = currentBest === 0 ? moves + 1 : Math.min(currentBest, moves + 1);
-    storage.setItem(`retrovision_memory_${difficulty}_best`, newBest);
+    storage.setItem(`retrovision_memory_${pairsCount}p_best`, newBest);
     setBestMoves(newBest);
 
     if (onScoreSave) {
       onScoreSave(100);
     }
 
-    if (isIntermission && onIntermissionComplete) {
+    if (isIntermission && intermissionRound < targetIntermissionRounds) {
+      // Avancer à la manche suivante de l'entracte
       setTimeout(() => {
-        onIntermissionComplete(true);
-      }, 1200);
+        setIntermissionRound((r) => r + 1);
+        initBoard(pairsCount, layoutStyle);
+      }, 1000);
+    } else {
+      setIsGameWon(true);
     }
   };
 
@@ -411,17 +471,6 @@ export default function MemoryPairs({
     }, 1500);
   };
 
-  const handleSelectDifficulty = (newDiff) => {
-    if (newDiff === difficulty) return;
-    setDifficulty(newDiff);
-    updateCustom('difficulty', newDiff);
-    storage.setItem('retrovision_memory_diff', newDiff);
-    sound.playClick();
-    const newCfg = DIFFICULTY_CONFIG[newDiff] || DIFFICULTY_CONFIG.moyen;
-    initBoard(newCfg.pairsCount, newCfg.cols);
-    setBestMoves(storage.getNumber(`retrovision_memory_${newDiff}_best`, 0));
-  };
-
   const handleBackWithConfirm = async () => {
     if (moves > 0 && !isGameWon) {
       const ok = await confirm({
@@ -442,7 +491,11 @@ export default function MemoryPairs({
     return `${mins}:${remainder < 10 ? '0' : ''}${remainder}`;
   };
 
-  const progressRatio = pairsCount > 0 ? matchedPairIds.size / pairsCount : 0;
+  const cols = getGridCols(pairsCount);
+  const roundFraction = pairsCount > 0 ? matchedPairIds.size / pairsCount : 0;
+  const totalIntermissionProgress = isIntermission
+    ? (intermissionRound - 1 + roundFraction) / targetIntermissionRounds
+    : roundFraction;
 
   return (
     <div
@@ -454,8 +507,8 @@ export default function MemoryPairs({
         minHeight: '100vh',
         boxSizing: 'border-box',
         padding: '16px',
-        color: themeObj.textColor,
-        background: themeObj.boardBg,
+        color: activeBg?.textColor || themeObj.textColor,
+        background: activeBg?.boardBg || themeObj.boardBg,
         fontFamily: "'Outfit', system-ui, -apple-system, sans-serif",
         position: 'relative'
       }}
@@ -519,13 +572,17 @@ export default function MemoryPairs({
       {/* En-tête : Intermission ou Standard avec Boutique */}
       {isIntermission ? (
         <IntermissionHeader
-          instructionText="Associez les paires cachées pour réussir l'entracte !"
+          instructionText={
+            targetIntermissionRounds > 1
+              ? `Manche ${intermissionRound} / ${targetIntermissionRounds} : Associez les ${pairsCount} paires !`
+              : `Associez les ${pairsCount} paires cachées pour réussir l'entracte !`
+          }
           onRestart={() => initBoard()}
           onOtherGame={onIntermissionRequest}
           onSkip={() => onIntermissionComplete && onIntermissionComplete(false)}
           replaySame={replaySameIntermission}
           onToggleReplaySame={onToggleReplaySameIntermission}
-          progress={progressRatio}
+          progress={totalIntermissionProgress}
         />
       ) : (
         <GameHeader
@@ -534,6 +591,7 @@ export default function MemoryPairs({
           onBack={handleBackWithConfirm}
           onRestart={() => initBoard()}
           showShop={true}
+          onShop={() => setShowCollection(true)}
           onOpenShop={() => setShowCollection(true)}
           onLaunchIntermission={onLaunchIntermission}
         />
@@ -546,27 +604,27 @@ export default function MemoryPairs({
           justifyContent: 'space-between',
           alignItems: 'center',
           width: '100%',
-          maxWidth: '540px',
+          maxWidth: pairsCount > 6 ? '620px' : '540px',
           flexWrap: 'wrap',
           gap: '10px',
           margin: '12px 0 16px 0',
           padding: '10px 16px',
-          background: themeObj.barBg,
+          background: activeBg?.barBg || themeObj.barBg,
           borderRadius: '14px',
-          border: `1px solid ${themeObj.barBorder}`,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          border: `1.5px solid ${activeBg?.barBorder || themeObj.barBorder}`,
+          boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
         }}
       >
-        {/* Sélecteur de difficulté (hors entracte) */}
+        {/* Sélecteur de paires (hors entracte) ou Badge de manche (entracte) */}
         {!isIntermission ? (
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {['facile', 'moyen', 'difficile'].map((diffKey) => {
-              const isActive = difficulty === diffKey;
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {PAIRS_OPTIONS.map((count) => {
+              const isActive = pairsCount === count;
               return (
                 <button
-                  key={diffKey}
+                  key={count}
                   type="button"
-                  onClick={() => handleSelectDifficulty(diffKey)}
+                  onClick={() => handleSelectPairsCount(count)}
                   style={{
                     padding: '6px 12px',
                     fontSize: '12px',
@@ -574,34 +632,106 @@ export default function MemoryPairs({
                     borderRadius: '8px',
                     fontWeight: '700',
                     cursor: 'pointer',
-                    background: isActive ? '#0284c7' : 'rgba(0,0,0,0.04)',
-                    border: isActive ? '2px solid #0284c7' : '1px solid rgba(0,0,0,0.1)',
-                    color: isActive ? '#ffffff' : themeObj.textColor,
+                    background: isActive ? '#0284c7' : 'rgba(255,255,255,0.3)',
+                    border: isActive ? '2px solid #0284c7' : '1px solid rgba(0,0,0,0.15)',
+                    color: isActive ? '#ffffff' : activeBg?.textColor || themeObj.textColor,
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  {diffKey === 'facile' ? '4 Paires' : diffKey === 'moyen' ? '6 Paires' : '8 Paires'}
+                  {count} Paires
                 </button>
               );
             })}
+            <button
+              type="button"
+              onClick={handleToggleCardStyle}
+              title="Changer le style visuel : Plein Cadre ou Symbole Centré"
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                minHeight: '38px',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                background: 'rgba(255,255,255,0.25)',
+                border: '1px solid rgba(0,0,0,0.15)',
+                color: activeBg?.textColor || themeObj.textColor,
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {cardStyle === 'full' ? '🖼️ Plein Cadre' : '🎴 Symbole Centré'}
+            </button>
+            <button
+              type="button"
+              onClick={handleToggleLayout}
+              title="Alterner disposition organique ou grille stricte"
+              style={{
+                padding: '6px 10px',
+                fontSize: '12px',
+                minHeight: '38px',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                background: 'rgba(255,255,255,0.25)',
+                border: '1px solid rgba(0,0,0,0.15)',
+                color: activeBg?.textColor || themeObj.textColor
+              }}
+            >
+              {layoutStyle === 'organic' ? '🍃 Organique' : '📐 Grille'}
+            </button>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span
               style={{
-                fontSize: '12px',
-                textTransform: 'uppercase',
-                fontWeight: '700',
-                letterSpacing: '0.05em',
+                fontSize: '13px',
+                fontWeight: '800',
+                letterSpacing: '0.04em',
                 color: '#0284c7',
-                background: '#e0f2fe',
+                background: 'rgba(2, 132, 199, 0.12)',
                 padding: '6px 12px',
                 borderRadius: '8px',
-                border: '1px solid #bae6fd'
+                border: '1px solid rgba(2, 132, 199, 0.3)'
               }}
             >
-              Entracte • {DIFFICULTY_CONFIG[difficulty]?.label || difficulty}
+              Manche {intermissionRound} / {targetIntermissionRounds} ({pairsCount} paires)
             </span>
+            <button
+              type="button"
+              onClick={handleToggleCardStyle}
+              title="Alterner style visuel des cartes"
+              style={{
+                padding: '6px 10px',
+                fontSize: '12px',
+                minHeight: '34px',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                background: 'rgba(255,255,255,0.2)',
+                border: '1px solid rgba(0,0,0,0.15)',
+                color: activeBg?.textColor || themeObj.textColor
+              }}
+            >
+              {cardStyle === 'full' ? '🖼️' : '🎴'}
+            </button>
+            <button
+              type="button"
+              onClick={handleToggleLayout}
+              title="Alterner disposition"
+              style={{
+                padding: '6px 10px',
+                fontSize: '12px',
+                minHeight: '34px',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                background: 'rgba(255,255,255,0.2)',
+                border: '1px solid rgba(0,0,0,0.15)',
+                color: activeBg?.textColor || themeObj.textColor
+              }}
+            >
+              {layoutStyle === 'organic' ? '🍃' : '📐'}
+            </button>
           </div>
         )}
 
@@ -647,14 +777,14 @@ export default function MemoryPairs({
         </button>
       </div>
 
-      {/* Grille de cartes 3D avec thème actif */}
+      {/* Grille de cartes 3D avec thème actif & disposition personnalisable */}
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          gap: '12px',
+          gap: pairsCount > 6 ? '10px' : '12px',
           width: '100%',
-          maxWidth: '540px',
+          maxWidth: pairsCount > 6 ? '620px' : '540px',
           margin: '0 auto 20px auto',
           boxSizing: 'border-box'
         }}
@@ -664,6 +794,10 @@ export default function MemoryPairs({
           const isMatched = matchedPairIds.has(card.pairId);
           const isHinted = hintedPairId === card.pairId;
           const isFaceUp = isFlipped || isMatched || isHinted;
+          const cardInfo = card.cardData || card.symbol;
+          const cardTransform = layoutStyle === 'organic' && !isMatched
+            ? `rotate(${card.rotation}deg) translate(${card.tiltX}px, ${card.tiltY}px)`
+            : 'none';
 
           return (
             <div
@@ -672,7 +806,9 @@ export default function MemoryPairs({
               style={{
                 aspectRatio: '1 / 1.25',
                 minHeight: '80px',
-                width: '100%'
+                width: '100%',
+                transform: cardTransform,
+                transition: 'transform 0.25s ease'
               }}
             >
               <div
@@ -682,9 +818,9 @@ export default function MemoryPairs({
                 tabIndex={0}
                 aria-label={
                   isMatched
-                    ? `Carte ${card.symbol.name}, trouvée`
+                    ? `Carte ${cardInfo.name}, trouvée`
                     : isFaceUp
-                    ? `Carte ${card.symbol.name}, découverte`
+                    ? `Carte ${cardInfo.name}, découverte`
                     : `Carte cachée rangée ${card.r + 1}, colonne ${card.c + 1}`
                 }
               >
@@ -709,63 +845,148 @@ export default function MemoryPairs({
                 <div
                   className="card-face card-face-front"
                   style={{
-                    background: isMatched ? themeObj.matchedBg : themeObj.frontBg,
+                    background: cardStyle === 'full'
+                      ? '#0f172a'
+                      : isMatched
+                      ? themeObj.matchedBg
+                      : themeObj.frontBg,
                     border: isMatched
-                      ? `2px solid ${themeObj.matchedBorder}`
-                      : `1.5px solid ${isHinted ? '#eab308' : themeObj.frontBorder}`,
+                      ? `2.5px solid ${themeObj.matchedBorder || '#10b981'}`
+                      : `2px solid ${isHinted ? '#eab308' : cardStyle === 'full' ? 'rgba(212, 175, 55, 0.7)' : themeObj.frontBorder}`,
                     borderLeft: card.isLeftField
                       ? '4px solid #0284c7'
                       : isMatched
-                      ? `2px solid ${themeObj.matchedBorder}`
-                      : `1.5px solid ${isHinted ? '#eab308' : themeObj.frontBorder}`,
+                      ? `2.5px solid ${themeObj.matchedBorder || '#10b981'}`
+                      : `2px solid ${isHinted ? '#eab308' : cardStyle === 'full' ? 'rgba(212, 175, 55, 0.7)' : themeObj.frontBorder}`,
                     boxShadow: isMatched
-                      ? '0 2px 6px rgba(16, 185, 129, 0.2)'
-                      : '0 4px 10px rgba(0, 0, 0, 0.08)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '8px 4px',
-                    position: 'relative'
+                      ? '0 4px 14px rgba(16, 185, 129, 0.35)'
+                      : '0 6px 14px rgba(0, 0, 0, 0.15)',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    userSelect: 'none'
                   }}
                 >
-                  <SymbolIcon
-                    name={card.symbol.id}
-                    size={cols > 4 ? 30 : 36}
-                    color={card.symbol.color}
-                  />
-                  <span
-                    style={{
-                      marginTop: '6px',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      color: isMatched ? '#166534' : card.symbol.color,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em'
-                    }}
-                  >
-                    {card.symbol.name}
-                  </span>
-                  {isMatched && (
-                    <span
+                  {cardStyle === 'full' ? (
+                    /* GAMME 1 : PLEIN CADRE (L'image prend tout l'espace d'une carte) */
+                    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                      <img
+                        src={cardInfo.imageFull}
+                        alt={cardInfo.name}
+                        loading="lazy"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block'
+                        }}
+                      />
+                      {/* Bandeau inférieur transparent sombre avec titre net */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.55) 65%, transparent 100%)',
+                          padding: '12px 4px 5px 4px',
+                          textAlign: 'center'
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: '900',
+                            color: '#ffffff',
+                            textShadow: '0 1px 4px rgba(0,0,0,0.95)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em'
+                          }}
+                        >
+                          {cardInfo.name}
+                        </span>
+                      </div>
+                      {/* Marqueur de paire trouvée */}
+                      {isMatched && (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '6px',
+                            right: '6px',
+                            fontSize: '12px',
+                            fontWeight: '900',
+                            color: '#ffffff',
+                            background: '#16a34a',
+                            borderRadius: '50%',
+                            width: '22px',
+                            height: '22px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+                            border: '1.5px solid #ffffff'
+                          }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    /* GAMME 2 : SYMBOLE CENTRÉ (Grand motif lumineux au centre, fond 100% transparent) */
+                    <div
                       style={{
-                        position: 'absolute',
-                        top: '4px',
-                        right: '6px',
-                        fontSize: '11px',
-                        fontWeight: '900',
-                        color: '#166534',
-                        background: '#dcfce7',
-                        borderRadius: '50%',
-                        width: '18px',
-                        height: '18px',
+                        width: '100%',
+                        height: '100%',
                         display: 'flex',
+                        flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        background: 'transparent',
+                        padding: '8px 4px',
+                        position: 'relative'
                       }}
                     >
-                      ✓
-                    </span>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                        <CenteredCardIcon
+                          name={cardInfo.id}
+                          size={cols > 4 ? 48 : 60}
+                          color={cardInfo.color}
+                        />
+                      </div>
+                      <span
+                        style={{
+                          marginTop: '2px',
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          color: isMatched ? '#166534' : themeObj.textColor,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em'
+                        }}
+                      >
+                        {cardInfo.name}
+                      </span>
+                      {isMatched && (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '6px',
+                            right: '6px',
+                            fontSize: '12px',
+                            fontWeight: '900',
+                            color: '#166534',
+                            background: '#dcfce7',
+                            borderRadius: '50%',
+                            width: '20px',
+                            height: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid #16a34a'
+                          }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -820,141 +1041,62 @@ export default function MemoryPairs({
       {showCollection && (
         <MemoryPairsCollection
           currentSelections={{
-            theme: activeTheme,
-            difficulty: difficulty
+            cardStyle: cardStyle,
+            pairs: String(pairsCount),
+            background: backgroundId,
+            layout: layoutStyle,
+            theme: activeTheme
           }}
           onSelect={(catKey, itemId) => {
-            if (catKey === 'theme') {
+            if (catKey === 'cardStyle') {
+              setCardStyle(itemId);
+              updateCustom('cardStyle', itemId);
+              storage.setItem('retrovision_memory_card_style', itemId);
+            } else if (catKey === 'pairs') {
+              handleSelectPairsCount(Number(itemId));
+            } else if (catKey === 'background') {
+              handleSelectBackground(itemId);
+            } else if (catKey === 'layout') {
+              setLayoutStyle(itemId);
+              updateCustom('layout', itemId);
+              storage.setItem('retrovision_memory_layout', itemId);
+              initBoard(pairsCount, itemId);
+            } else if (catKey === 'theme') {
               updateCustom('theme', itemId);
-            } else if (catKey === 'difficulty') {
-              handleSelectDifficulty(itemId);
             }
           }}
           onClose={() => setShowCollection(false)}
         />
       )}
 
-      {/* Modal de Victoire Standard */}
-      {!isIntermission && isGameWon && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(15, 23, 42, 0.75)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 100,
-            padding: '20px'
-          }}
-        >
-          <div
-            style={{
-              background: '#ffffff',
-              border: '2px solid #0284c7',
-              borderRadius: '20px',
-              padding: '28px 24px',
-              maxWidth: '420px',
-              width: '100%',
-              textAlign: 'center',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-              <SymbolIcon name="lotus" size={48} color="#db2777" />
-            </div>
-            <h2 style={{ color: '#0284c7', margin: '0 0 6px 0', fontSize: '1.6rem', fontWeight: '900' }}>
-              HARMONIE PARFAITE !
-            </h2>
-            <p style={{ color: '#334155', fontSize: '0.95rem', margin: '0 0 16px 0', fontWeight: '500' }}>
-              {encouragement}
-            </p>
-
-            {/* Récapitulatif des performances */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '10px',
-                background: '#f8fafc',
-                borderRadius: '12px',
-                padding: '14px',
-                marginBottom: '18px',
-                border: '1px solid #cbd5e1'
-              }}
-            >
-              <div>
-                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Coups</div>
-                <div style={{ fontSize: '20px', fontWeight: '800', color: '#b45309' }}>{moves}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Temps</div>
-                <div style={{ fontSize: '20px', fontWeight: '800', color: '#15803d' }}>{formatTime(elapsedTime)}</div>
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Record personnel</div>
-                <div style={{ fontSize: '14px', fontWeight: '700', color: '#0284c7' }}>
-                  {bestMoves > 0 ? `${bestMoves} coups` : `${moves} coups`}
-                </div>
-              </div>
-            </div>
-
-            {/* Proposition d'Entracte vers un autre jeu */}
-            <IntermissionProposal
-              onIntermissionRequest={onIntermissionRequest}
-              upcomingIntermission={upcomingIntermission}
-              onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-              onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-              intermissionConfig={intermissionConfig}
-              intermissionGames={intermissionGames}
-              excludeGameKey="memory"
-              onContinue={() => initBoard()}
-              continueText="Nouvelle Partie"
-              showDirectContinue={true}
-              customStyle={{ marginBottom: '14px' }}
-            />
-
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button
-                type="button"
-                onClick={() => initBoard()}
-                style={{
-                  minHeight: '48px',
-                  padding: '12px 24px',
-                  borderRadius: '10px',
-                  fontWeight: '800',
-                  fontSize: '15px',
-                  background: '#0284c7',
-                  color: '#ffffff',
-                  border: '2px solid #0284c7',
-                  flex: 1,
-                  cursor: 'pointer'
-                }}
-              >
-                Rejouer 🔄
-              </button>
-              <button
-                type="button"
-                onClick={onBack}
-                style={{
-                  minHeight: '48px',
-                  padding: '12px 20px',
-                  borderRadius: '10px',
-                  fontWeight: '700',
-                  fontSize: '14px',
-                  border: '1px solid #cbd5e1',
-                  color: '#334155',
-                  background: '#f1f5f9',
-                  cursor: 'pointer'
-                }}
-              >
-                Menu
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Unified Victory Overlay */}
+      <GameVictoryOverlay
+        isOpen={isGameWon}
+        gameKey="memory"
+        score={Math.max(1000 - moves * 10, 100)}
+        title="HARMONIE PARFAITE !"
+        badgeIcon="🌸"
+        subtitle={encouragement || 'Toutes les paires ont été retrouvées avec sérénité.'}
+        stats={[
+          { label: 'Coups', value: moves, color: '#f59e0b' },
+          { label: 'Temps', value: formatTime(elapsedTime), color: '#10b981' },
+          ...(bestMoves > 0 ? [{ label: 'Record', value: `${bestMoves} coups`, color: '#38bdf8' }] : [])
+        ]}
+        onRestart={() => initBoard()}
+        restartText="🔄 Rejouer"
+        onContinue={() => initBoard()}
+        continueText="Nouvelle Partie"
+        onBack={onBack}
+        backText="← Retour au Hub"
+        isIntermission={isIntermission}
+        onIntermissionComplete={onIntermissionComplete}
+        onIntermissionRequest={onIntermissionRequest}
+        upcomingIntermission={upcomingIntermission}
+        onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+        onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+        intermissionConfig={intermissionConfig}
+        intermissionGames={intermissionGames}
+      />
     </div>
   );
 }

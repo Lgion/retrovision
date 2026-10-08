@@ -7,6 +7,7 @@ import GameHeader from '../components/GameHeader';
 import Boutique from '../components/Boutique';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { ADVENTURE_LEVELS, getLevelData, calculateLevelStars } from './blockfantasy/levelsData';
 import { useConfirm } from '../components/ConfirmContext';
 
@@ -781,15 +782,7 @@ export default function BlockFantasy({
             const rect = gridRef.current.getBoundingClientRect();
             addFloatingScore('🎉 SCORE ATTEINT !', rect.width / 2, rect.height / 2, '#39FF14');
           }
-          setTimeout(() => {
-            sound.playSudokuSuccess?.();
-            if (replaySameIntermission) {
-              if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-              initGame();
-            } else if (onIntermissionComplete) {
-              onIntermissionComplete();
-            }
-          }, 1000);
+          setLevelVictory(true);
         }
         return { ...prev, current: nextCur };
       });
@@ -1402,48 +1395,33 @@ export default function BlockFantasy({
               </div>
             )}
 
-            {/* Modal Victoire Chapitre avec Étoiles */}
-            {levelVictory && (
-              <div style={overlayStyle}>
-                <div style={victoryTitleStyle}>CHAPITRE RÉUSSI !</div>
-                <div style={{ fontSize: '30px', margin: '6px 0' }}>
-                  {'⭐'.repeat(victoryStars)}{'☆'.repeat(3 - victoryStars)}
-                </div>
-                <div style={descStyle}>Objectif de niveau accompli avec brio.</div>
-                <div style={statsReportStyle}>Score Final : <span style={{ color: '#39FF14', fontWeight: 'bold' }}>{score}</span></div>
-                <div style={{ width: '100%', maxWidth: '420px', margin: '10px auto 0 auto' }}>
-                  <IntermissionProposal
-                    onIntermissionRequest={onIntermissionRequest}
-                    upcomingIntermission={upcomingIntermission}
-                    onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                    onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                    intermissionConfig={intermissionConfig}
-                    intermissionGames={intermissionGames}
-                    excludeGameKey="blockfantasy"
-                    onContinue={() => { setLevelVictory(false); initGame(); }}
-                    continueText={currentLevelIndex < ADVENTURE_LEVELS.length ? 'Chapitre Suivant ➔' : 'Rejouer'}
-                    showDirectContinue={true}
-                    customStyle={{ marginBottom: '12px' }}
-                  />
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                    <button
-                      onClick={() => { setLevelVictory(false); initGame(); }}
-                      className="retro-btn pulse-glow"
-                      style={overlayBtnStyle}
-                    >
-                      {currentLevelIndex < ADVENTURE_LEVELS.length ? 'Chapitre Suivant ➔' : 'Rejouer'}
-                    </button>
-                    <button
-                      onClick={() => { setLevelVictory(false); setShowLevelSelect(true); }}
-                      className="retro-btn"
-                      style={{ ...overlayBtnStyle, borderColor: '#38BDF8', color: '#38BDF8' }}
-                    >
-                      Carte 🗺️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Unified Victory Overlay */}
+            <GameVictoryOverlay
+              isOpen={levelVictory}
+              gameKey="blockfantasy"
+              score={score}
+              title="CHAPITRE RÉUSSI !"
+              badgeIcon="⭐"
+              subtitle={`Objectif du chapitre ${currentLevelIndex} accompli avec brio (${'⭐'.repeat(victoryStars)}${'☆'.repeat(3 - victoryStars)}) !`}
+              stats={[
+                { label: 'Score Final', value: score, color: '#39FF14' },
+                { label: 'Étoiles', value: `${victoryStars}/3`, color: '#facc15' }
+              ]}
+              onRestart={() => { setLevelVictory(false); initGame(); }}
+              restartText="🔄 Rejouer"
+              onContinue={() => { setLevelVictory(false); initGame(); }}
+              continueText={currentLevelIndex < ADVENTURE_LEVELS.length ? 'Chapitre Suivant ➔' : 'Rejouer'}
+              onBack={onBack || (() => { setLevelVictory(false); setShowLevelSelect(true); })}
+              backText="Carte 🗺️"
+              isIntermission={isIntermission}
+              onIntermissionComplete={onIntermissionComplete}
+              onIntermissionRequest={onIntermissionRequest}
+              upcomingIntermission={upcomingIntermission}
+              onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+              onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+              intermissionConfig={intermissionConfig}
+              intermissionGames={intermissionGames}
+            />
           </div>
         </div>
 

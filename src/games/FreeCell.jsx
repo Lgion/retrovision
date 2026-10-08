@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { sound } from '../utils/sound';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import GameIntro from '../components/GameIntro';
-import WinLossTransition from '../components/WinLossTransition';
+import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import GameHeader from '../components/GameHeader';
 import FreeCellCollection from './FreeCellCollection';
 import IntermissionHeader from '../components/IntermissionHeader';
@@ -376,33 +376,16 @@ export default function FreeCell({
   const checkWin = (currentFoundations) => {
     if (Object.values(currentFoundations).every(v => v === 13)) {
       if (victoryPhase === 0) {
-        setVictoryPhase(-1);
-
-        setTimeout(() => {
-          setVictoryPhase(1);
-          sound.stopBGM();
-
-          setTimeout(() => {
-            setVictoryPhase(2);
-            sound.playExplosion();
-          }, 1500);
-
-          setTimeout(() => {
-            setVictoryPhase(3);
-            sound.playScore();
-            if (isIntermission && onIntermissionComplete) {
-              if (replaySameIntermission) {
-                if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
-                setTimeout(() => startNewGame(), 1500);
-              } else {
-                setTimeout(() => onIntermissionComplete(), 1500);
-              }
-            }
-            if (onScoreSave) {
-              onScoreSave('FreeCell', Math.max(1000 - moves * 5, 100));
-            }
-          }, 3500);
-        }, 1500);
+        sound.stopBGM();
+        if (isIntermission && replaySameIntermission) {
+          if (onToggleReplaySameIntermission) onToggleReplaySameIntermission(false);
+          setTimeout(() => startNewGame(), 1000);
+          return;
+        }
+        setVictoryPhase(1);
+        if (onScoreSave) {
+          onScoreSave('FreeCell', Math.max(1000 - moves * 5, 100));
+        }
       }
     }
   };
@@ -938,116 +921,32 @@ export default function FreeCell({
           </div>
         )}
 
-        {/* Transition Phase */}
-        {victoryPhase === -1 && <WinLossTransition type="win" />}
-
-        {/* Victory Overlays */}
-        {victoryPhase > 0 && (
-          <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            background: victoryPhase === 3 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', flexDirection: 'column',
-            justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.5s'
-          }}>
-            {victoryPhase >= 2 && (
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-                {Array.from({ length: 40 }, (_, i) => (
-                  <div key={i} style={{
-                    position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
-                    width: '15px', height: '20px', background: ['#DC2626', '#1E293B', '#F59E0B', '#39FF14'][i % 4],
-                    borderRadius: '2px', animation: `confettiFall ${2 + Math.random() * 3}s linear ${Math.random() * 2}s infinite`,
-                    transform: `rotate(${Math.random() * 360}deg)`, opacity: 0.8
-                  }} />
-                ))}
-              </div>
-            )}
-
-            {victoryPhase === 1 && (
-              <h2 style={{ fontSize: '4rem', color: '#FFD700', margin: 0, animation: 'popIn 0.8s' }}>ROYAL !</h2>
-            )}
-
-            {victoryPhase === 3 && (
-              <div style={{
-                animation: 'popIn 0.5s', textAlign: 'center', background: 'white', padding: isMobile ? '30px 20px' : '50px',
-                borderRadius: '30px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '4px solid #FFD700', zIndex: 10
-              }}>
-                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>👑</div>
-                <h2 style={{ fontSize: '2.5rem', color: '#333', margin: '0 0 20px 0' }}>Patience Récompensée !</h2>
-                <div style={{ fontSize: '1.5rem', color: '#666', marginBottom: '30px' }}>
-                  Score: <strong style={{ color: '#F59E0B', fontSize: '2rem' }}>{Math.max(1000 - moves * 5, 100)}</strong>
-                </div>
-                {isIntermission ? (
-                  <button
-                    onClick={() => onIntermissionComplete && onIntermissionComplete()}
-                    className="retro-btn pulse-glow"
-                    style={{ fontSize: '1.2rem', padding: '12px 30px', borderColor: '#FFD700', color: '#B45309' }}
-                  >
-                    Terminer l'Entracte 🏁
-                  </button>
-                ) : (
-                  <div style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
-                    <IntermissionProposal
-                      onIntermissionRequest={onIntermissionRequest}
-                      upcomingIntermission={upcomingIntermission}
-                      onSelectUpcomingIntermission={onSelectUpcomingIntermission}
-                      onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
-                      intermissionConfig={intermissionConfig}
-                      intermissionGames={intermissionGames}
-                      excludeGameKey="freecell"
-                      onContinue={() => {
-                        setVictoryPhase(0);
-                        startNewGame();
-                      }}
-                      continueText="Nouvelle Partie"
-                      showDirectContinue={true}
-                      customStyle={{ marginBottom: '16px' }}
-                    />
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                      <button
-                        onClick={() => {
-                          setVictoryPhase(0);
-                          startNewGame();
-                        }}
-                        className="retro-btn"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          borderColor: '#F59E0B',
-                          color: '#B45309',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          padding: '10px 20px',
-                          borderRadius: '12px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🔄 Nouvelle Partie
-                      </button>
-                      <button
-                        onClick={() => {
-                          setVictoryPhase(0);
-                          setGameState('menu');
-                        }}
-                        className="retro-btn"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          borderColor: 'rgba(0, 0, 0, 0.15)',
-                          color: '#333',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          padding: '10px 20px',
-                          borderRadius: '12px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        🏠 Menu
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        {/* Unified Victory Overlay */}
+        <GameVictoryOverlay
+          isOpen={victoryPhase > 0}
+          gameKey="freecell"
+          score={Math.max(1000 - moves * 5, 100)}
+          title="ROYAL !"
+          badgeIcon="👑"
+          subtitle="Patience récompensée ! Toutes les suites sont complétées !"
+          stats={[
+            { label: 'Coups', value: moves, color: '#f59e0b' }
+          ]}
+          onRestart={startNewGame}
+          restartText="🔄 Rejouer"
+          onContinue={startNewGame}
+          continueText="Nouvelle Partie"
+          onBack={onBack || (() => setGameState('menu'))}
+          backText="← Retour au Hub"
+          isIntermission={isIntermission}
+          onIntermissionComplete={onIntermissionComplete}
+          onIntermissionRequest={onIntermissionRequest}
+          upcomingIntermission={upcomingIntermission}
+          onSelectUpcomingIntermission={onSelectUpcomingIntermission}
+          onShuffleUpcomingIntermission={onShuffleUpcomingIntermission}
+          intermissionConfig={intermissionConfig}
+          intermissionGames={intermissionGames}
+        />
       </div>
     </>
   );

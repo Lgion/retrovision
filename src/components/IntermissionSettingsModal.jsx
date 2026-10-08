@@ -50,6 +50,32 @@ export default function IntermissionSettingsModal({ config, onClose, onSave, onC
     });
   };
 
+  const handleTarget = (gameKey, targetValue) => {
+    setTempConfig((prev) => {
+      const next = { ...prev };
+      const current = next[gameKey] || { enabled: true };
+      next[gameKey] = {
+        ...current,
+        target: targetValue,
+      };
+      if (onChange) onChange(next);
+      return next;
+    });
+  };
+
+  const handleGameRounds = (gameKey, roundsValue) => {
+    setTempConfig((prev) => {
+      const next = { ...prev };
+      const current = next[gameKey] || { enabled: true };
+      next[gameKey] = {
+        ...current,
+        roundsCount: roundsValue,
+      };
+      if (onChange) onChange(next);
+      return next;
+    });
+  };
+
   const handleToggleShowIntro = () => {
     setTempConfig((prev) => {
       const next = {
@@ -286,7 +312,8 @@ export default function IntermissionSettingsModal({ config, onClose, onSave, onC
                 </div>
 
                 {gameConf.enabled ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                     <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '3px', borderRadius: '10px' }}>
                       {['low', 'medium', 'high'].map((freq) => {
                         const label = freq === 'low' ? 'Rare' : freq === 'medium' ? 'Normal' : 'Fréquent';
@@ -340,6 +367,104 @@ export default function IntermissionSettingsModal({ config, onClose, onSave, onC
                       })}
                     </div>
                   </div>
+                  {game.intermission && game.intermission.category !== 'oneshot' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end', marginTop: '8px', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '8px' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-main)', width: '100%', textAlign: 'right' }}>
+                        {game.intermission.category === 'score'
+                          ? `Objectif (${game.intermission.targetLabel || 'Score'}) :`
+                          : game.intermission.category === 'survival'
+                          ? `Objectif Survie (${game.intermission.targetLabel || 'Vagues'}) :`
+                          : 'Nombre de manches :'}
+                      </div>
+                      <div style={{ display: 'flex', gap: '4px', background: '#e0e7ff', padding: '3px', borderRadius: '10px' }}>
+                        {(game.intermission.category === 'score' || game.intermission.category === 'survival') &&
+                          game.intermission.targetOptions &&
+                          game.intermission.targetOptions.map((opt) => {
+                            const isSelected = (gameConf.target || game.intermission.defaultTarget) === opt;
+                            return (
+                              <button
+                                key={opt}
+                                onClick={() => handleTarget(gameKey, opt)}
+                                style={{
+                                  border: 'none',
+                                  background: isSelected ? '#4f46e5' : 'transparent',
+                                  color: isSelected ? '#ffffff' : '#3730a3',
+                                  boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
+                                  padding: '4px 10px',
+                                  borderRadius: '8px',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 'bold',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease'
+                                }}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        {game.intermission.category === 'rounds' &&
+                          game.intermission.roundsOptions &&
+                          game.intermission.roundsOptions.map((opt) => {
+                            const isSelected = (gameConf.roundsCount || game.intermission.defaultRounds) === opt;
+                            return (
+                              <button
+                                key={opt}
+                                onClick={() => handleGameRounds(gameKey, opt)}
+                                style={{
+                                  border: 'none',
+                                  background: isSelected ? '#4f46e5' : 'transparent',
+                                  color: isSelected ? '#ffffff' : '#3730a3',
+                                  boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
+                                  padding: '4px 10px',
+                                  borderRadius: '8px',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 'bold',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease'
+                                }}
+                              >
+                                {opt} {opt > 1 ? 'manches' : 'manche'}
+                              </button>
+                            );
+                          })}
+                      </div>
+
+                      {/* Sous-option optionnelle pour les jeux à manches avec objectif cible (ex: Paires Mémoire) */}
+                      {game.intermission.category === 'rounds' && game.intermission.targetOptions && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                          <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '700' }}>
+                            {game.intermission.targetLabel || 'Paires'} :
+                          </span>
+                          <div style={{ display: 'flex', gap: '3px', background: '#f1f5f9', padding: '2px', borderRadius: '8px' }}>
+                            {game.intermission.targetOptions.map((opt) => {
+                              const isSelected = (gameConf.target || game.intermission.defaultTarget) === opt;
+                              return (
+                                <button
+                                  key={opt}
+                                  onClick={() => handleTarget(gameKey, opt)}
+                                  style={{
+                                    border: 'none',
+                                    background: isSelected ? '#0284c7' : 'transparent',
+                                    color: isSelected ? '#ffffff' : '#475569',
+                                    boxShadow: isSelected ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                                    padding: '3px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.68rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease'
+                                  }}
+                                >
+                                  {opt} {opt > 1 ? 'paires' : 'paire'}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 ) : (
                   <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600', paddingRight: '12px' }}>
                     Désactivé

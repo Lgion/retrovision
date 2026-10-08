@@ -767,49 +767,68 @@ export default function GameMiniature({ gameKey, width = '100%', height = '100%'
       );
 
     // ==========================================
-    // 15. QUÊTE DES SYMBOLES : Visual scanning grid
+    // 15. TROUVEZ CHARLIE : Crowd scanning & magnifying glass
     // ==========================================
+    case 'findcharlie':
+    case 'charlie':
     case 'symbolquest':
     case 'quetedessymboles':
       return (
         <svg viewBox="0 0 100 80" width={width} height={height} style={style} fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Background scene */}
+          <rect width="100" height="80" rx="8" fill="#0b1728" />
+
+          {/* Crowd elements (decoys in soft contrast) */}
+          <text x="18" y="24" fontSize="10" opacity="0.4" textAnchor="middle">🚶‍♂️</text>
+          <text x="36" y="22" fontSize="9" opacity="0.4" textAnchor="middle">⛱️</text>
+          <text x="76" y="25" fontSize="10" opacity="0.4" textAnchor="middle">🚴</text>
+          <text x="84" y="48" fontSize="10" opacity="0.4" textAnchor="middle">🎪</text>
+          <text x="22" y="66" fontSize="9" opacity="0.4" textAnchor="middle">🐶</text>
+          <text x="70" y="68" fontSize="10" opacity="0.4" textAnchor="middle">🌴</text>
+
+          {/* Magnifying Glass Lens over Charlie */}
+          <circle cx="50" cy="42" r="19" fill="rgba(239, 68, 68, 0.12)" stroke="#ef4444" strokeWidth="2" />
+          <circle cx="50" cy="42" r="16" fill="rgba(255, 255, 255, 0.08)" stroke="#f87171" strokeWidth="1" strokeDasharray="3 2" />
+          {/* Magnifier Handle */}
+          <line x1="64" y1="56" x2="78" y2="70" stroke="#fca5a5" strokeWidth="3" strokeLinecap="round" />
+
+          {/* Charlie inside the lens */}
+          <text x="50" y="47" fontSize="16" textAnchor="middle">🕵️‍♂️</text>
+
+          {/* Target Header Banner */}
+          <rect x="14" y="6" width="72" height="12" rx="6" fill="rgba(239, 68, 68, 0.25)" stroke="#ef4444" strokeWidth="0.8" />
+          <text x="50" y="15" fill="#fecaca" fontSize="6.5" fontWeight="800" textAnchor="middle">CHARLIE RETROUVÉ !</text>
+        </svg>
+      );
+
+    // ==========================================
+    // 16. L'ATELIER DES MOTS : Grammar, synonyms & word tiles
+    // ==========================================
+    case 'wordmaster':
+    case 'atelierdesmots':
+      return (
+        <svg viewBox="0 0 100 80" width={width} height={height} style={style} fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Background board */}
-          <rect width="100" height="80" rx="8" fill="#060E1A" />
+          <rect width="100" height="80" rx="8" fill="#151226" />
 
-          {/* Target header preview */}
-          <rect x="18" y="8" width="64" height="14" rx="7" fill="rgba(16, 185, 129, 0.15)" stroke="#10B981" strokeWidth="1" />
-          <text x="36" y="19" fill="#F8FAFC" fontSize="8" fontWeight="800">CIBLE :</text>
-          <text x="64" y="20" fill="#34D399" fontSize="12" textAnchor="middle">🪷</text>
+          {/* Header step banner */}
+          <rect x="15" y="6" width="70" height="12" rx="6" fill="rgba(139, 92, 246, 0.25)" stroke="#8b5cf6" strokeWidth="0.8" />
+          <text x="50" y="15" fill="#ddd6fe" fontSize="6.5" fontWeight="800" textAnchor="middle">SYNTAXE & MOTS</text>
 
-          {/* Symbol Cards */}
-          {/* Cell 1: Found Lotus (Left) */}
-          <rect x="14" y="28" width="21" height="21" rx="5" fill="rgba(16, 185, 129, 0.2)" stroke="#10B981" strokeWidth="1.5" />
-          <text x="24.5" y="43" fontSize="11" textAnchor="middle">🪷</text>
-          <circle cx="31" cy="32" r="3" fill="#10B981" />
-          <text x="31" y="34.5" fill="#FFFFFF" fontSize="4.5" fontWeight="900" textAnchor="middle">✓</text>
+          {/* Sentence slot target */}
+          <rect x="10" y="24" width="80" height="18" rx="5" fill="rgba(139, 92, 246, 0.12)" stroke="#a78bfa" strokeWidth="1" strokeDasharray="2 2" />
+          <text x="25" y="36" fill="#a78bfa" fontSize="7" fontWeight="bold">LA ROSE</text>
+          <text x="55" y="36" fill="#c4b5fd" fontSize="7" fontWeight="bold">S'ÉPANOUIT</text>
 
-          {/* Cell 2: Crystal */}
-          <rect x="40" y="28" width="21" height="21" rx="5" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" />
-          <text x="50.5" y="43" fontSize="11" textAnchor="middle">💎</text>
+          {/* Word tiles bank (ready to drag) */}
+          <rect x="12" y="48" width="34" height="16" rx="4" fill="#2e1065" stroke="#8b5cf6" strokeWidth="1" />
+          <text x="29" y="59" fill="#ede9fe" fontSize="6" fontWeight="bold" textAnchor="middle">CALME</text>
 
-          {/* Cell 3: Moon */}
-          <rect x="66" y="28" width="21" height="21" rx="5" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" />
-          <text x="76.5" y="43" fontSize="11" textAnchor="middle">🌙</text>
+          <rect x="52" y="48" width="36" height="16" rx="4" fill="#3b0764" stroke="#c084fc" strokeWidth="1" />
+          <text x="70" y="59" fill="#f5d0fe" fontSize="6" fontWeight="bold" textAnchor="middle">DOUCEUR</text>
 
-          {/* Cell 4: Leaf */}
-          <rect x="14" y="53" width="21" height="21" rx="5" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" />
-          <text x="24.5" y="68" fontSize="11" textAnchor="middle">🍃</text>
-
-          {/* Cell 5: Another Lotus (Target to find) */}
-          <rect x="40" y="53" width="21" height="21" rx="5" fill="rgba(244, 114, 182, 0.15)" stroke="#F472B6" strokeWidth="1.2" strokeDasharray="3,2" />
-          <text x="50.5" y="68" fontSize="11" textAnchor="middle">🪷</text>
-
-          {/* Cell 6: Star */}
-          <rect x="66" y="53" width="21" height="21" rx="5" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" />
-          <text x="76.5" y="68" fontSize="11" textAnchor="middle">⭐</text>
-
-          {/* Left Anchor Guide Pulse */}
-          <rect x="2" y="20" width="3" height="46" rx="1.5" fill="#10B981" filter="drop-shadow(0 0 4px #10B981)" />
+          {/* Quill pen decoration */}
+          <text x="88" y="74" fontSize="11" textAnchor="middle">✍️</text>
         </svg>
       );
 
