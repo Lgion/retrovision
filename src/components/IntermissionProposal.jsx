@@ -68,7 +68,7 @@ export default function IntermissionProposal({
       availableIntermissionGames.find((g) => g.key === effectiveSelectedUpcoming) ||
       availableIntermissionGames[0] ||
       gamesPool[0] ||
-      FALLBACK_INTERMISSION_GAMES[0]
+      { key: 'water', name: 'Water Sort', icon: '🧪' }
     );
   }, [availableIntermissionGames, effectiveSelectedUpcoming, gamesPool]);
 

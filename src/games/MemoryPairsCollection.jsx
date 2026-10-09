@@ -75,17 +75,33 @@ const backgroundItems = MEMORY_BACKGROUNDS.map((bg) => ({
   description: bg.desc
 }));
 
+export const getMemoryAssetUrl = (subpath) => {
+  if (!subpath) return '';
+  if (subpath.startsWith('http://') || subpath.startsWith('https://') || subpath.startsWith('data:')) {
+    return subpath;
+  }
+  const base = import.meta.env.BASE_URL || './';
+  const cleanBase = base.endsWith('/') ? base : `${base}/`;
+  if (subpath.startsWith(cleanBase)) return subpath;
+  if (base !== './' && subpath.startsWith(base)) return subpath;
+  if (subpath.startsWith('./')) {
+    return `${cleanBase}${subpath.slice(2)}`;
+  }
+  const cleanSub = subpath.startsWith('/') ? subpath.slice(1) : subpath;
+  return `${cleanBase}${cleanSub}`;
+};
+
 export const MEMORY_CARDS_DATA = [
-  { id: 'fuji', name: 'Mont Fuji', color: '#0284c7', imageFull: '/assets/memory/full/fuji.jpg', icon: '🗻' },
-  { id: 'pagoda', name: 'Pagode', color: '#dc2626', imageFull: '/assets/memory/full/pagoda.jpg', icon: '⛩️' },
-  { id: 'koi', name: 'Carpe Koï', color: '#ea580c', imageFull: '/assets/memory/full/koi.jpg', icon: '🎏' },
-  { id: 'torii', name: 'Torii Sacré', color: '#e11d48', imageFull: '/assets/memory/full/torii.jpg', icon: '⛩️' },
-  { id: 'bamboo', name: 'Bambou Zen', color: '#16a34a', imageFull: '/assets/memory/full/bamboo.jpg', icon: '🎋' },
-  { id: 'crane', name: 'Grue Royale', color: '#ca8a04', imageFull: '/assets/memory/full/crane.jpg', icon: '🪶' },
-  { id: 'kitsune', name: 'Esprit Renard', color: '#d97706', imageFull: '/assets/memory/full/kitsune.jpg', icon: '🦊' },
-  { id: 'waterfall', name: 'Cascade', color: '#0891b2', imageFull: '/assets/memory/full/waterfall.jpg', icon: '🌊' },
-  { id: 'teahouse', name: 'Pavillon Zen', color: '#8b5cf6', imageFull: '/assets/memory/full/teahouse.jpg', icon: '🏯' },
-  { id: 'moon_bridge', name: 'Pont de Lune', color: '#6366f1', imageFull: '/assets/memory/full/moon_bridge.jpg', icon: '🌉' }
+  { id: 'fuji', name: 'Mont Fuji', color: '#0284c7', imageFull: getMemoryAssetUrl('assets/memory/full/fuji.jpg'), icon: '🗻' },
+  { id: 'pagoda', name: 'Pagode', color: '#dc2626', imageFull: getMemoryAssetUrl('assets/memory/full/pagoda.jpg'), icon: '⛩️' },
+  { id: 'koi', name: 'Carpe Koï', color: '#ea580c', imageFull: getMemoryAssetUrl('assets/memory/full/koi.jpg'), icon: '🎏' },
+  { id: 'torii', name: 'Torii Sacré', color: '#e11d48', imageFull: getMemoryAssetUrl('assets/memory/full/torii.jpg'), icon: '⛩️' },
+  { id: 'bamboo', name: 'Bambou Zen', color: '#16a34a', imageFull: getMemoryAssetUrl('assets/memory/full/bamboo.jpg'), icon: '🎋' },
+  { id: 'crane', name: 'Grue Royale', color: '#ca8a04', imageFull: getMemoryAssetUrl('assets/memory/full/crane.jpg'), icon: '🪶' },
+  { id: 'kitsune', name: 'Esprit Renard', color: '#d97706', imageFull: getMemoryAssetUrl('assets/memory/full/kitsune.jpg'), icon: '🦊' },
+  { id: 'waterfall', name: 'Cascade', color: '#0891b2', imageFull: getMemoryAssetUrl('assets/memory/full/waterfall.jpg'), icon: '🌊' },
+  { id: 'teahouse', name: 'Pavillon Zen', color: '#8b5cf6', imageFull: getMemoryAssetUrl('assets/memory/full/teahouse.jpg'), icon: '🏯' },
+  { id: 'moon_bridge', name: 'Pont de Lune', color: '#6366f1', imageFull: getMemoryAssetUrl('assets/memory/full/moon_bridge.jpg'), icon: '🌉' }
 ];
 
 const cardStyleItems = [
@@ -94,8 +110,12 @@ const cardStyleItems = [
 ];
 
 const layoutItems = [
-  { id: 'organic', name: 'Naturel Organique', icon: '🍃', description: 'Cartes subtilement inclinées & asymétriques' },
-  { id: 'grid', name: 'Grille Parfaite', icon: '📐', description: 'Alignement géométrique rectiligne' }
+  { id: 'random', name: 'Aléatoire (Tirage au sort)', icon: '🎲', description: 'Une forme surprise à chaque manche parmi les 5 configurations' },
+  { id: 'rectangle', name: 'Rectangle (Grille classique)', icon: '📐', description: 'Alignement géométrique rectangulaire ordonné' },
+  { id: 'losange', name: 'Losange (Diamant)', icon: '💎', description: 'Disposition en losange avec sommet et base effilés' },
+  { id: 'triangle', name: 'Triangle (Pyramide)', icon: '🔺', description: 'Disposition en pyramide élargie vers le bas' },
+  { id: 'circle', name: 'Cercle (Harmonie)', icon: '⭕', description: 'Disposition ovale et circulaire équilibrée' },
+  { id: 'abstract', name: 'Forme Abstraite (Constellation)', icon: '🌌', description: 'Disposition asymétrique en archipel organique' }
 ];
 
 const themeItems = (GAME_THEME_DETAILS.memory || []).map((t) => ({

@@ -12,214 +12,14 @@ import { useConfirm } from '../components/ConfirmContext';
 import { useGameCustomizations } from '../hooks/useGameCustomizations';
 import FindCharlieCollection from './FindCharlieCollection';
 import { renderTargetIcon, renderSceneBackground, renderCrowdDecoy } from './charlieAssets';
-
-// Types d'objets cibles à retrouver
-const TARGET_DEFINITIONS = {
-  charlie: {
-    id: 'charlie',
-    name: 'Charlie',
-    icon: '🕵️‍♂️',
-    points: 100,
-    color: '#ef4444',
-    badge: 'Cible principale'
-  },
-  dog: {
-    id: 'dog',
-    name: 'Ouaf le Chien',
-    icon: '🐶',
-    points: 60,
-    color: '#f59e0b',
-    badge: 'Compagnon fidèle'
-  },
-  glasses: {
-    id: 'glasses',
-    name: 'Lunettes',
-    icon: '👓',
-    points: 40,
-    color: '#0284c7',
-    badge: 'Objet égaré'
-  },
-  cane: {
-    id: 'cane',
-    name: 'Canne de marche',
-    icon: '🦯',
-    points: 40,
-    color: '#854d0e',
-    badge: 'Objet égaré'
-  },
-  camera: {
-    id: 'camera',
-    name: 'Appareil photo',
-    icon: '📷',
-    points: 40,
-    color: '#475569',
-    badge: 'Souvenir'
-  },
-  key: {
-    id: 'key',
-    name: 'Clé secrète',
-    icon: '🗝️',
-    points: 40,
-    color: '#eab308',
-    badge: 'Trésor'
-  },
-  beanie: {
-    id: 'beanie',
-    name: 'Bonnet rayé',
-    icon: '🧶',
-    points: 40,
-    color: '#dc2626',
-    badge: 'Vêtement'
-  },
-  compass: {
-    id: 'compass',
-    name: 'Boussole',
-    icon: '🧭',
-    points: 40,
-    color: '#0d9488',
-    badge: 'Navigation'
-  }
-};
-
-// Figurants et leurres de foule vectoriels SVG (dessinés à la main, zéro émoji de téléphone)
-const DECOY_SYMBOLS = [
-  { key: 'decoy_stripes_green', color: '#16a34a', label: 'Promeneur Rayé Vert' },
-  { key: 'decoy_stripes_blue', color: '#2563eb', label: 'Promeneur Rayé Bleu' },
-  { key: 'decoy_casual_red', color: '#dc2626', label: 'Promeneur Rouge' },
-  { key: 'decoy_casual_purple', color: '#9333ea', label: 'Promeneur Violet' },
-  { key: 'decoy_dress_yellow', color: '#eab308', label: 'Promeneuse Robe Jaune' },
-  { key: 'decoy_runner_orange', color: '#f97316', label: 'Coureur Athlétique' },
-  { key: 'decoy_dog', color: '#b45309', label: 'Chien Roux' },
-  { key: 'decoy_cat', color: '#64748b', label: 'Chat Tigré' },
-  { key: 'decoy_umbrella', color: '#ef4444', label: 'Parasol de Plage' },
-  { key: 'decoy_balloon', color: '#dc2626', label: 'Ballon Rouge' },
-  { key: 'decoy_beach_ball', color: '#0ea5e9', label: 'Ballon Gonflable' },
-  { key: 'decoy_icecream', color: '#f43f5e', label: 'Cornet de Glace' },
-  { key: 'decoy_tent', color: '#dc2626', label: 'Tente Rayée' },
-  { key: 'decoy_kite', color: '#a855f7', label: 'Cerf-Volant' },
-  { key: 'decoy_suitcase', color: '#854d0e', label: 'Valise Vintage' },
-  { key: 'decoy_bicycle', color: '#0d9488', label: 'Bicyclette Rétro' }
-];
-
-// Configuration des manches : durée de base, seuil de score et types d'objets
-const ROUNDS_CONFIG = [
-  {
-    round: 1,
-    name: 'Manche 1 : Les Premiers Pas',
-    baseTime: 60,
-    targetScoreToPass: 180,
-    requiredItems: ['charlie', 'dog', 'glasses', 'cane']
-  },
-  {
-    round: 2,
-    name: 'Manche 2 : La Foule s’Anime',
-    baseTime: 55,
-    targetScoreToPass: 240,
-    requiredItems: ['charlie', 'dog', 'camera', 'key', 'beanie']
-  },
-  {
-    round: 3,
-    name: 'Manche 3 : Grand Rassemblement',
-    baseTime: 50,
-    targetScoreToPass: 280,
-    requiredItems: ['charlie', 'glasses', 'cane', 'camera', 'compass', 'key']
-  },
-  {
-    round: 4,
-    name: 'Manche 4 : L’Œil de Lynx',
-    baseTime: 45,
-    targetScoreToPass: 320,
-    requiredItems: ['charlie', 'dog', 'glasses', 'cane', 'camera', 'key', 'beanie']
-  },
-  {
-    round: 5,
-    name: 'Manche 5 : Le Défi Suprême',
-    baseTime: 40,
-    targetScoreToPass: 360,
-    requiredItems: ['charlie', 'dog', 'glasses', 'cane', 'camera', 'key', 'beanie', 'compass']
-  }
-];
-
-// Mots d'encouragement bienveillants
-const ENCOURAGEMENTS = [
-  "Votre regard balaie la foule avec une magnifique finesse.",
-  "Chaque trouvaille aiguise votre perception spatiale et votre concentration.",
-  "Prenez un instant pour savourer cette belle clarté visuelle.",
-  "Bravo ! Vous distinguez les détails les plus subtils avec aisance.",
-  "Votre persévérance et votre calme font toute la différence."
-];
-
-// Génération procédurale d'une foule riche et d'objets bien disséminés
-function generateCrowdScene(roundConfig, sceneType = 'beach') {
-  const elements = [];
-  const occupiedSpots = [];
-
-  // Vérifie si un spot est trop proche d'un autre
-  const isTooClose = (x, y, minDist = 6.5) => {
-    return occupiedSpots.some((p) => {
-      const dx = p.x - x;
-      const dy = p.y - y;
-      return Math.sqrt(dx * dx + dy * dy) < minDist;
-    });
-  };
-
-  const getFreeSpot = (minDist = 6.5) => {
-    let attempts = 0;
-    while (attempts < 150) {
-      const x = Math.floor(Math.random() * 84) + 8; // 8% à 92%
-      const y = Math.floor(Math.random() * 80) + 10; // 10% à 90%
-      if (!isTooClose(x, y, minDist)) {
-        occupiedSpots.push({ x, y });
-        return { x, y };
-      }
-      attempts++;
-    }
-    // Fallback
-    const fx = Math.floor(Math.random() * 84) + 8;
-    const fy = Math.floor(Math.random() * 80) + 10;
-    occupiedSpots.push({ x: fx, y: fy });
-    return { x: fx, y: fy };
-  };
-
-  // 1. Placer les cibles obligatoires de la manche
-  const targets = roundConfig.requiredItems.map((targetKey, index) => {
-    const def = TARGET_DEFINITIONS[targetKey];
-    const spot = getFreeSpot(7.5);
-    return {
-      id: `target_${targetKey}_${index}`,
-      type: 'target',
-      targetKey,
-      name: def.name,
-      icon: def.icon,
-      points: def.points,
-      color: def.color,
-      x: spot.x,
-      y: spot.y,
-      found: false,
-      rotation: (Math.random() * 10 - 5).toFixed(1)
-    };
-  });
-
-  // 2. Placer des leurres de foule (entre 50 et 75 figurants)
-  const decoyCount = 55 + roundConfig.round * 4;
-  for (let i = 0; i < decoyCount; i++) {
-    const decoy = randomChoice(DECOY_SYMBOLS);
-    const spot = getFreeSpot(4.8);
-    elements.push({
-      id: `decoy_${i}`,
-      type: 'decoy',
-      decoyKey: decoy.key,
-      name: decoy.label,
-      color: decoy.color,
-      x: spot.x,
-      y: spot.y,
-      scale: (Math.random() * 0.3 + 0.85).toFixed(2),
-      rotation: (Math.random() * 16 - 8).toFixed(1)
-    });
-  }
-
-  return { targets, elements };
-}
+import {
+  TARGET_DEFINITIONS,
+  ROUNDS_CONFIG,
+  ENCOURAGEMENTS,
+  CHARLIE_SCENES,
+  getCharlieBgUrl
+} from './charlieScenesData';
+import { generateIntelligentScene } from '../utils/charliePlacementEngine';
 
 export default function FindCharlie({
   onBack,
@@ -242,7 +42,7 @@ export default function FindCharlie({
 
   // Customisations
   const { custom, updateCustom } = useGameCustomizations('findcharlie', {
-    scene: 'beach',
+    scene: 'countryside',
     timerMode: 'standard',
     elementSize: 'standard'
   });
@@ -272,7 +72,12 @@ export default function FindCharlie({
   const [intermissionRoundsWon, setIntermissionRoundsWon] = useState(0);
 
   // Génération de la scène
-  const [sceneData, setSceneData] = useState(() => generateCrowdScene(roundConfig, sceneType));
+  const activeScene = useMemo(() => {
+    return CHARLIE_SCENES[sceneType] || CHARLIE_SCENES.countryside;
+  }, [sceneType]);
+
+  // Génération de la scène intelligente
+  const [sceneData, setSceneData] = useState(() => generateIntelligentScene(activeScene, roundConfig, sizeScale));
   const [targets, setTargets] = useState(() => sceneData.targets);
 
   // Chronomètre de la manche
@@ -305,7 +110,8 @@ export default function FindCharlie({
   const initRound = useCallback((roundNum = currentRoundNumber) => {
     if (timerRef.current) clearInterval(timerRef.current);
     const cfg = ROUNDS_CONFIG[(roundNum - 1) % ROUNDS_CONFIG.length];
-    const newScene = generateCrowdScene(cfg, sceneType);
+    const targetScene = CHARLIE_SCENES[sceneType] || CHARLIE_SCENES.countryside;
+    const newScene = generateIntelligentScene(targetScene, cfg, sizeScale);
     setSceneData(newScene);
     setTargets(newScene.targets);
     setRoundScore(0);
@@ -331,6 +137,19 @@ export default function FindCharlie({
       initRound(currentRoundNumber);
     }
   }, [showIntro, initRound, currentRoundNumber]);
+
+  // Synchronisation lors d'un changement de décor ou de zoom
+  useEffect(() => {
+    if (custom.scene && custom.scene !== sceneType) {
+      setSceneType(custom.scene);
+    }
+  }, [custom.scene]);
+
+  useEffect(() => {
+    if (!showIntro) {
+      initRound(currentRoundNumber);
+    }
+  }, [sceneType, sizeScale]);
 
   // Boucle du chronomètre
   useEffect(() => {
@@ -746,8 +565,22 @@ export default function FindCharlie({
           userSelect: 'none'
         }}
       >
-        {/* 1. DÉCOR DE FOND IMMERSIF PANORAMIQUE (Plage, Fête Foraine, etc.) */}
-        {renderSceneBackground(custom.scene || 'beach')}
+        {/* 1. DÉCOR DE FOND IMMERSIF PANORAMIQUE (Image HD ou Fallback SVG) */}
+        {activeScene?.bgImage ? (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url(${getCharlieBgUrl(activeScene.bgImage)})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              pointerEvents: 'none',
+              filter: 'saturate(1.06) contrast(1.02)'
+            }}
+          />
+        ) : (
+          renderSceneBackground(sceneType)
+        )}
 
         {/* 2. CHRONOMÈTRE GÉANT À L'INTÉRIEUR DE LA GRILLE */}
         <div
@@ -791,7 +624,7 @@ export default function FindCharlie({
           </div>
         </div>
 
-        {/* 3. Figurants de foule (Leurres) en graphismes vectoriels SVG HAUTE FIDÉLITÉ */}
+        {/* 3. Figurants de foule & leurres positionnés intelligemment selon le zonage */}
         {sceneData.elements.map((decoy) => (
           <div
             key={decoy.id}
@@ -799,21 +632,32 @@ export default function FindCharlie({
               position: 'absolute',
               left: `${decoy.x}%`,
               top: `${decoy.y}%`,
-              transform: `translate(-50%, -50%) scale(${decoy.scale}) rotate(${decoy.rotation}deg)`,
+              transform: `translate(-50%, -50%) scale(${decoy.scale}) scaleX(${decoy.flipX ? -1 : 1}) rotate(${decoy.rotation}deg)`,
               pointerEvents: 'none',
+              zIndex: decoy.zIndex || Math.round(decoy.y * 10),
               transition: 'transform 0.15s ease',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))'
+              filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.32))',
+              fontSize: `${Math.round(38 * sizeScale)}px`,
+              lineHeight: 1,
+              userSelect: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            {renderCrowdDecoy(decoy.decoyKey, Math.round(44 * sizeScale), decoy.color)}
+            {decoy.emoji ? (
+              <span>{decoy.emoji}</span>
+            ) : (
+              renderCrowdDecoy(decoy.decoyKey, Math.round(44 * sizeScale), decoy.color)
+            )}
           </div>
         ))}
 
-        {/* 4. Cibles réelles avec SVG HAUTE FIDÉLITÉ AGRANDI */}
+        {/* 4. Cibles réelles avec repérage et zone sémantique */}
         {targets.map((target) => {
           const isHinted = hintTargetId === target.id;
-          const baseSize = target.targetKey === 'charlie' ? 72 : target.targetKey === 'dog' ? 64 : 54;
-          const targetSize = Math.round(baseSize * sizeScale);
+          const baseSize = target.targetKey === 'charlie' ? 70 : target.targetKey === 'dog' ? 62 : 52;
+          const targetSize = Math.round(baseSize * (target.scale || 1.0));
 
           return (
             <div
@@ -832,9 +676,9 @@ export default function FindCharlie({
                 padding: '4px',
                 borderRadius: '50%',
                 background: target.found
-                  ? 'rgba(34, 197, 94, 0.3)'
+                  ? 'rgba(34, 197, 94, 0.4)'
                   : isHinted
-                  ? 'rgba(239, 68, 68, 0.4)'
+                  ? 'rgba(239, 68, 68, 0.45)'
                   : 'transparent',
                 border: target.found
                   ? '2.5px solid #22c55e'
@@ -842,10 +686,11 @@ export default function FindCharlie({
                   ? '2.5px dashed #ef4444'
                   : 'none',
                 cursor: target.found ? 'default' : 'pointer',
-                zIndex: target.found ? 10 : 20,
+                zIndex: target.found ? 12 : (target.zIndex ? target.zIndex + 15 : 30),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))',
                 transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}
             >
@@ -1024,7 +869,7 @@ export default function FindCharlie({
       {showCollection && (
         <FindCharlieCollection
           currentSelections={{
-            scene: custom.scene || 'beach',
+            scene: custom.scene || 'countryside',
             timerMode: custom.timerMode || 'standard',
             elementSize: custom.elementSize || 'standard'
           }}

@@ -4,7 +4,8 @@ import GameIntro from '../components/GameIntro';
 import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import GameVictoryOverlay from '../components/GameVictoryOverlay';
-import MemoryPairsCollection, { MEMORY_BACKGROUNDS, MEMORY_CARDS_DATA } from './MemoryPairsCollection';
+import MemoryPairsCollection, { MEMORY_BACKGROUNDS, MEMORY_CARDS_DATA, getMemoryAssetUrl } from './MemoryPairsCollection';
+import { LAYOUT_SHAPES, SHAPE_KEYS, buildShapeBoard } from '../utils/memoryLayoutEngine';
 import SymbolIcon from '../components/SymbolIcon';
 import CenteredCardIcon from '../components/CenteredCardIcon';
 import { sound } from '../utils/sound';
@@ -28,14 +29,17 @@ const ZEN_ENCOURAGEMENTS = [
 // Configuration des modes de difficulté & paires supportées
 const PAIRS_OPTIONS = [3, 4, 6, 8, 10];
 
-const getGridCols = (count) => {
-  if (count <= 3) return 3;
-  if (count <= 8) return 4;
-  return 5;
+export const resolveShapeKey = (setting) => {
+  if (!setting || setting === 'random' || setting === 'aleatoire') {
+    return randomChoice(SHAPE_KEYS);
+  }
+  if (setting === 'grid') return 'rectangle';
+  if (setting === 'organic') return 'abstract';
+  return SHAPE_KEYS.includes(setting) ? setting : 'rectangle';
 };
 
-// Fonction pure de génération de paquet de cartes avec décalages organiques subtils
-const generateDeck = (pairsCount = 6, layoutMode = 'organic') => {
+// Génération d'un plateau sous l'une des 5 géométries (rectangle, losange, triangle, cercle, abstraite)
+export const generateMemoryBoard = (pairsCount = 6, layoutSetting = 'random') => {
   const selectedCards = shuffle([...MEMORY_CARDS_DATA]).slice(0, Math.min(pairsCount, MEMORY_CARDS_DATA.length));
   const deck = [];
   selectedCards.forEach((item) => {
@@ -53,27 +57,20 @@ const generateDeck = (pairsCount = 6, layoutMode = 'organic') => {
     });
   });
 
-  const cols = getGridCols(pairsCount);
+  const activeShape = resolveShapeKey(layoutSetting);
+  const { boardRows, maxCols, shapeKey } = buildShapeBoard(shuffle(deck), activeShape);
 
-  return shuffle(deck).map((card, index) => {
-    const r = Math.floor(index / cols);
-    const c = index % cols;
-    // Micro-rotations & décalages asymétriques pour un rendu naturel et organique (non figé)
-    const rotation = layoutMode === 'organic' ? (Math.random() * 5.2 - 2.6).toFixed(1) : 0;
-    const tiltX = layoutMode === 'organic' ? (Math.random() * 4 - 2).toFixed(1) : 0;
-    const tiltY = layoutMode === 'organic' ? (Math.random() * 4 - 2).toFixed(1) : 0;
-
-    return {
-      ...card,
-      r,
-      c,
-      cols,
-      rotation,
-      tiltX,
-      tiltY,
-      isLeftField: c === 0 // Colonne la plus à gauche (héminégligence)
-    };
+  const flatCards = [];
+  boardRows.forEach((row) => {
+    flatCards.push(...row.cards);
   });
+
+  return {
+    boardRows,
+    maxCols,
+    shapeKey,
+    flatCards
+  };
 };
 
 function getThemeStyle(themeId) {
@@ -243,7 +240,7 @@ export default function MemoryPairs({
   const { custom, updateCustom, activeTheme } = useGameCustomizations('memory', {
     theme: 'japanese_paper',
     background: 'tatami',
-    layout: 'organic',
+    layout: 'random',
     cardStyle: 'full'
   });
 
@@ -269,9 +266,9 @@ export default function MemoryPairs({
   });
   const activeBg = MEMORY_BACKGROUNDS.find((b) => b.id === backgroundId) || MEMORY_BACKGROUNDS[0];
 
-  // Style de disposition des cartes (organic avec micro-rotations ou aligné)
+  // Style de disposition des cartes (random par défaut ou 5 formes : rectangle, losange, triangle, circle, abstract)
   const [layoutStyle, setLayoutStyle] = useState(() => {
-    return custom.layout || storage.getItem('retrovision_memory_layout', 'organic') || 'organic';
+    return custom.layout || storage.getItem('retrovision_memory_layout', 'random') || 'random';
   });
 
   // Nombre de paires paramétrable (3, 4, 6, 8, 10 paires)
@@ -291,8 +288,10 @@ export default function MemoryPairs({
   // Écran d'intro avec animation et bouton "JOUER"
   const [showIntro, setShowIntro] = useState(!skipIntro && !isIntermission);
 
-  // Cartes du plateau initialisées paresseusement avec micro-rotations et décalages
-  const [cards, setCards] = useState(() => generateDeck(pairsCount, layoutStyle));
+  // Plateau géométrique avec découpage par rangées (5 formes)
+  const [boardData, setBoardData] = useState(() => generateMemoryBoard(pairsCount, layoutStyle));
+  const [cards, setCards] = useState(() => boardData.flatCards);
+  const [activeShapeKey, setActiveShapeKey] = useState(() => boardData.shapeKey);
   const [flippedCardIds, setFlippedCardIds] = useState([]);
   const [matchedPairIds, setMatchedPairIds] = useState(() => new Set());
   const [isLocked, setIsLocked] = useState(false);
@@ -328,7 +327,10 @@ export default function MemoryPairs({
 
   // Initialisation ou réinitialisation du plateau
   const initBoard = useCallback((targetPairsCount = pairsCount, targetLayout = layoutStyle) => {
-    setCards(generateDeck(targetPairsCount, targetLayout));
+    const newBoard = generateMemoryBoard(targetPairsCount, targetLayout);
+    setBoardData(newBoard);
+    setCards(newBoard.flatCards);
+    setActiveShapeKey(newBoard.shapeKey);
     setFlippedCardIds([]);
     setMatchedPairIds(new Set());
     setIsLocked(false);
@@ -355,8 +357,11 @@ export default function MemoryPairs({
     sound.playClick();
   };
 
-  const handleToggleLayout = () => {
-    const nextLayout = layoutStyle === 'organic' ? 'grid' : 'organic';
+  // Passer à la forme géométrique suivante
+  const handleCycleLayout = () => {
+    const cycleList = ['random', 'rectangle', 'losange', 'triangle', 'circle', 'abstract'];
+    const currentIndex = cycleList.indexOf(layoutStyle);
+    const nextLayout = cycleList[(currentIndex + 1) % cycleList.length];
     setLayoutStyle(nextLayout);
     updateCustom('layout', nextLayout);
     storage.setItem('retrovision_memory_layout', nextLayout);
@@ -491,7 +496,7 @@ export default function MemoryPairs({
     return `${mins}:${remainder < 10 ? '0' : ''}${remainder}`;
   };
 
-  const cols = getGridCols(pairsCount);
+  const cols = boardData?.maxCols || 4;
   const roundFraction = pairsCount > 0 ? matchedPairIds.size / pairsCount : 0;
   const totalIntermissionProgress = isIntermission
     ? (intermissionRound - 1 + roundFraction) / targetIntermissionRounds
@@ -663,10 +668,10 @@ export default function MemoryPairs({
             </button>
             <button
               type="button"
-              onClick={handleToggleLayout}
-              title="Alterner disposition organique ou grille stricte"
+              onClick={handleCycleLayout}
+              title="Changer la forme géométrique du plateau (5 formes : Rectangle, Losange, Triangle, Cercle, Abstraite)"
               style={{
-                padding: '6px 10px',
+                padding: '6px 12px',
                 fontSize: '12px',
                 minHeight: '38px',
                 borderRadius: '8px',
@@ -674,10 +679,14 @@ export default function MemoryPairs({
                 cursor: 'pointer',
                 background: 'rgba(255,255,255,0.25)',
                 border: '1px solid rgba(0,0,0,0.15)',
-                color: activeBg?.textColor || themeObj.textColor
+                color: activeBg?.textColor || themeObj.textColor,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
-              {layoutStyle === 'organic' ? '🍃 Organique' : '📐 Grille'}
+              <span>{layoutStyle === 'random' ? '🎲' : LAYOUT_SHAPES[activeShapeKey]?.icon || '📐'}</span>
+              <span>{layoutStyle === 'random' ? `Aléatoire (${LAYOUT_SHAPES[activeShapeKey]?.badge || ''})` : LAYOUT_SHAPES[activeShapeKey]?.name || 'Forme'}</span>
             </button>
           </div>
         ) : (
@@ -716,8 +725,8 @@ export default function MemoryPairs({
             </button>
             <button
               type="button"
-              onClick={handleToggleLayout}
-              title="Alterner disposition"
+              onClick={handleCycleLayout}
+              title="Changer la forme géométrique"
               style={{
                 padding: '6px 10px',
                 fontSize: '12px',
@@ -727,10 +736,13 @@ export default function MemoryPairs({
                 cursor: 'pointer',
                 background: 'rgba(255,255,255,0.2)',
                 border: '1px solid rgba(0,0,0,0.15)',
-                color: activeBg?.textColor || themeObj.textColor
+                color: activeBg?.textColor || themeObj.textColor,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
               }}
             >
-              {layoutStyle === 'organic' ? '🍃' : '📐'}
+              <span>{layoutStyle === 'random' ? '🎲' : LAYOUT_SHAPES[activeShapeKey]?.icon || '📐'}</span>
             </button>
           </div>
         )}
@@ -777,222 +789,256 @@ export default function MemoryPairs({
         </button>
       </div>
 
-      {/* Grille de cartes 3D avec thème actif & disposition personnalisable */}
+      {/* Plateau de cartes 3D sous les 5 formes géométriques (Rectangle, Losange, Triangle, Cercle, Forme Abstraite) */}
       <div
+        className="memory-board-container"
         style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           gap: pairsCount > 6 ? '10px' : '12px',
           width: '100%',
-          maxWidth: pairsCount > 6 ? '620px' : '540px',
+          maxWidth: pairsCount > 6 ? (boardData?.maxCols > 5 ? '680px' : '620px') : '540px',
           margin: '0 auto 20px auto',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          padding: '0 8px'
         }}
       >
-        {cards.map((card) => {
-          const isFlipped = flippedCardIds.includes(card.id);
-          const isMatched = matchedPairIds.has(card.pairId);
-          const isHinted = hintedPairId === card.pairId;
-          const isFaceUp = isFlipped || isMatched || isHinted;
-          const cardInfo = card.cardData || card.symbol;
-          const cardTransform = layoutStyle === 'organic' && !isMatched
-            ? `rotate(${card.rotation}deg) translate(${card.tiltX}px, ${card.tiltY}px)`
-            : 'none';
+        {(boardData?.boardRows || []).map((row) => (
+          <div
+            key={`row-${row.rowIndex}`}
+            className="memory-board-row"
+            style={{
+              display: 'flex',
+              justifyContent: row.align || 'center',
+              alignItems: 'center',
+              gap: pairsCount > 6 ? '10px' : '12px',
+              width: '100%',
+              transform: row.shiftX ? `translateX(${row.shiftX}px)` : 'none',
+              transition: 'transform 0.3s ease'
+            }}
+          >
+            {row.cards.map((card) => {
+              const isFlipped = flippedCardIds.includes(card.id);
+              const isMatched = matchedPairIds.has(card.pairId);
+              const isHinted = hintedPairId === card.pairId;
+              const isFaceUp = isFlipped || isMatched || isHinted;
+              const cardInfo = card.cardData || card.symbol;
+              const cardTransform = activeShapeKey === 'abstract' && !isMatched
+                ? `rotate(${card.rotation}deg) translate(${card.tiltX}px, ${card.tiltY}px)`
+                : !isMatched && card.rotation
+                ? `rotate(${card.rotation * 0.4}deg)`
+                : 'none';
 
-          return (
-            <div
-              key={card.id}
-              className="memory-card-scene"
-              style={{
-                aspectRatio: '1 / 1.25',
-                minHeight: '80px',
-                width: '100%',
-                transform: cardTransform,
-                transition: 'transform 0.25s ease'
-              }}
-            >
-              <div
-                className={`memory-card-flipper ${isFaceUp ? 'is-flipped' : ''}`}
-                onClick={() => handleCardClick(card)}
-                role="button"
-                tabIndex={0}
-                aria-label={
-                  isMatched
-                    ? `Carte ${cardInfo.name}, trouvée`
-                    : isFaceUp
-                    ? `Carte ${cardInfo.name}, découverte`
-                    : `Carte cachée rangée ${card.r + 1}, colonne ${card.c + 1}`
-                }
-              >
-                {/* DOS DE LA CARTE (Affiché par défaut) */}
+              const maxColsCount = Math.max(boardData?.maxCols || 4, 3);
+              const gapVal = pairsCount > 6 ? 10 : 12;
+              const cardWidth = `calc((100% - ${(maxColsCount - 1) * gapVal}px) / ${maxColsCount})`;
+
+              return (
                 <div
-                  className="card-face card-face-back"
+                  key={card.id}
+                  className="memory-card-scene"
                   style={{
-                    background: themeObj.backBg,
-                    border: `1.5px solid ${themeObj.backBorder}`,
-                    borderLeft: card.isLeftField ? '4px solid #0284c7' : `1.5px solid ${themeObj.backBorder}`,
-                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.12)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: isMatched ? 'default' : 'pointer'
+                    width: cardWidth,
+                    maxWidth: pairsCount > 6 ? (boardData?.maxCols > 5 ? '92px' : '105px') : '120px',
+                    aspectRatio: '1 / 1.25',
+                    minHeight: '75px',
+                    flexShrink: 0,
+                    transform: cardTransform,
+                    transition: 'transform 0.25s ease'
                   }}
                 >
-                  <CardBackPattern theme={themeObj} isLeftField={card.isLeftField} />
-                </div>
-
-                {/* FACE DE LA CARTE (Affichée retournée ou trouvée) */}
-                <div
-                  className="card-face card-face-front"
-                  style={{
-                    background: cardStyle === 'full'
-                      ? '#0f172a'
-                      : isMatched
-                      ? themeObj.matchedBg
-                      : themeObj.frontBg,
-                    border: isMatched
-                      ? `2.5px solid ${themeObj.matchedBorder || '#10b981'}`
-                      : `2px solid ${isHinted ? '#eab308' : cardStyle === 'full' ? 'rgba(212, 175, 55, 0.7)' : themeObj.frontBorder}`,
-                    borderLeft: card.isLeftField
-                      ? '4px solid #0284c7'
-                      : isMatched
-                      ? `2.5px solid ${themeObj.matchedBorder || '#10b981'}`
-                      : `2px solid ${isHinted ? '#eab308' : cardStyle === 'full' ? 'rgba(212, 175, 55, 0.7)' : themeObj.frontBorder}`,
-                    boxShadow: isMatched
-                      ? '0 4px 14px rgba(16, 185, 129, 0.35)'
-                      : '0 6px 14px rgba(0, 0, 0, 0.15)',
-                    overflow: 'hidden',
-                    position: 'relative',
-                    userSelect: 'none'
-                  }}
-                >
-                  {cardStyle === 'full' ? (
-                    /* GAMME 1 : PLEIN CADRE (L'image prend tout l'espace d'une carte) */
-                    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                      <img
-                        src={cardInfo.imageFull}
-                        alt={cardInfo.name}
-                        loading="lazy"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          display: 'block'
-                        }}
-                      />
-                      {/* Bandeau inférieur transparent sombre avec titre net */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.55) 65%, transparent 100%)',
-                          padding: '12px 4px 5px 4px',
-                          textAlign: 'center'
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: '900',
-                            color: '#ffffff',
-                            textShadow: '0 1px 4px rgba(0,0,0,0.95)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.04em'
-                          }}
-                        >
-                          {cardInfo.name}
-                        </span>
-                      </div>
-                      {/* Marqueur de paire trouvée */}
-                      {isMatched && (
-                        <span
-                          style={{
-                            position: 'absolute',
-                            top: '6px',
-                            right: '6px',
-                            fontSize: '12px',
-                            fontWeight: '900',
-                            color: '#ffffff',
-                            background: '#16a34a',
-                            borderRadius: '50%',
-                            width: '22px',
-                            height: '22px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
-                            border: '1.5px solid #ffffff'
-                          }}
-                        >
-                          ✓
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    /* GAMME 2 : SYMBOLE CENTRÉ (Grand motif lumineux au centre, fond 100% transparent) */
+                  <div
+                    className={`memory-card-flipper ${isFaceUp ? 'is-flipped' : ''}`}
+                    onClick={() => handleCardClick(card)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={
+                      isMatched
+                        ? `Carte ${cardInfo.name}, trouvée`
+                        : isFaceUp
+                        ? `Carte ${cardInfo.name}, découverte`
+                        : `Carte cachée rangée ${card.r + 1}, colonne ${card.c + 1}`
+                    }
+                  >
+                    {/* DOS DE LA CARTE (Affiché par défaut) */}
                     <div
+                      className="card-face card-face-back"
                       style={{
-                        width: '100%',
-                        height: '100%',
+                        background: themeObj.backBg,
+                        border: `1.5px solid ${themeObj.backBorder}`,
+                        borderLeft: card.isLeftField ? '4px solid #0284c7' : `1.5px solid ${themeObj.backBorder}`,
+                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.12)',
                         display: 'flex',
-                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'transparent',
-                        padding: '8px 4px',
-                        position: 'relative'
+                        cursor: isMatched ? 'default' : 'pointer'
                       }}
                     >
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                        <CenteredCardIcon
-                          name={cardInfo.id}
-                          size={cols > 4 ? 48 : 60}
-                          color={cardInfo.color}
-                        />
-                      </div>
-                      <span
-                        style={{
-                          marginTop: '2px',
-                          fontSize: '11px',
-                          fontWeight: '800',
-                          color: isMatched ? '#166534' : themeObj.textColor,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em'
-                        }}
-                      >
-                        {cardInfo.name}
-                      </span>
-                      {isMatched && (
-                        <span
+                      <CardBackPattern theme={themeObj} isLeftField={card.isLeftField} />
+                    </div>
+
+                    {/* FACE DE LA CARTE (Affichée retournée ou trouvée) */}
+                    <div
+                      className="card-face card-face-front"
+                      style={{
+                        background: cardStyle === 'full'
+                          ? '#0f172a'
+                          : isMatched
+                          ? themeObj.matchedBg
+                          : themeObj.frontBg,
+                        border: isMatched
+                          ? `2.5px solid ${themeObj.matchedBorder || '#10b981'}`
+                          : `2px solid ${isHinted ? '#eab308' : cardStyle === 'full' ? 'rgba(212, 175, 55, 0.7)' : themeObj.frontBorder}`,
+                        borderLeft: card.isLeftField
+                          ? '4px solid #0284c7'
+                          : isMatched
+                          ? `2.5px solid ${themeObj.matchedBorder || '#10b981'}`
+                          : `2px solid ${isHinted ? '#eab308' : cardStyle === 'full' ? 'rgba(212, 175, 55, 0.7)' : themeObj.frontBorder}`,
+                        boxShadow: isMatched
+                          ? '0 4px 14px rgba(16, 185, 129, 0.35)'
+                          : '0 6px 14px rgba(0, 0, 0, 0.15)',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        userSelect: 'none'
+                      }}
+                    >
+                      {cardStyle === 'full' ? (
+                        /* GAMME 1 : PLEIN CADRE (L'image prend tout l'espace d'une carte) */
+                        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                          <img
+                            src={getMemoryAssetUrl(cardInfo.imageFull)}
+                            alt={cardInfo.name}
+                            loading="lazy"
+                            onError={(e) => {
+                              // Fallback élégant en cas de souci réseau
+                              e.currentTarget.style.display = 'none';
+                              if (e.currentTarget.parentElement) {
+                                e.currentTarget.parentElement.style.background = cardInfo.color || '#0284c7';
+                              }
+                            }}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block'
+                            }}
+                          />
+                          {/* Bandeau inférieur transparent sombre avec titre net */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              background: 'linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.55) 65%, transparent 100%)',
+                              padding: '12px 4px 5px 4px',
+                              textAlign: 'center'
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: '900',
+                                color: '#ffffff',
+                                textShadow: '0 1px 4px rgba(0,0,0,0.95)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.04em'
+                              }}
+                            >
+                              {cardInfo.name}
+                            </span>
+                          </div>
+                          {/* Marqueur de paire trouvée */}
+                          {isMatched && (
+                            <span
+                              style={{
+                                position: 'absolute',
+                                top: '6px',
+                                right: '6px',
+                                fontSize: '12px',
+                                fontWeight: '900',
+                                color: '#ffffff',
+                                background: '#16a34a',
+                                borderRadius: '50%',
+                                width: '22px',
+                                height: '22px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+                                border: '1.5px solid #ffffff'
+                              }}
+                            >
+                              ✓
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        /* GAMME 2 : SYMBOLE CENTRÉ (Grand motif lumineux au centre, fond 100% transparent) */
+                        <div
                           style={{
-                            position: 'absolute',
-                            top: '6px',
-                            right: '6px',
-                            fontSize: '12px',
-                            fontWeight: '900',
-                            color: '#166534',
-                            background: '#dcfce7',
-                            borderRadius: '50%',
-                            width: '20px',
-                            height: '20px',
+                            width: '100%',
+                            height: '100%',
                             display: 'flex',
+                            flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            border: '1px solid #16a34a'
+                            background: 'transparent',
+                            padding: '8px 4px',
+                            position: 'relative'
                           }}
                         >
-                          ✓
-                        </span>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                            <CenteredCardIcon
+                              name={cardInfo.id}
+                              size={(boardData?.maxCols || 4) > 4 ? 42 : 56}
+                              color={cardInfo.color}
+                            />
+                          </div>
+                          <span
+                            style={{
+                              marginTop: '2px',
+                              fontSize: (boardData?.maxCols || 4) > 5 ? '10px' : '11px',
+                              fontWeight: '800',
+                              color: isMatched ? '#166534' : themeObj.textColor,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.04em'
+                            }}
+                          >
+                            {cardInfo.name}
+                          </span>
+                          {isMatched && (
+                            <span
+                              style={{
+                                position: 'absolute',
+                                top: '6px',
+                                right: '6px',
+                                fontSize: '12px',
+                                fontWeight: '900',
+                                color: '#166534',
+                                background: '#dcfce7',
+                                borderRadius: '50%',
+                                width: '20px',
+                                height: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '1px solid #16a34a'
+                              }}
+                            >
+                              ✓
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       {/* Boutons d'action */}

@@ -2,6 +2,8 @@ import React from 'react';
 import Boutique from '../components/Boutique';
 
 const sceneItems = [
+  { id: 'countryside', name: 'La Vallée Champêtre (HD)', icon: '🌄', description: 'Prairies verdoyantes, route sinueuse, animaux & sentier' },
+  { id: 'city', name: 'L’Avenue Urbaine (HD)', icon: '🏙️', description: 'Grand boulevard, piste cyclable rouge & terrasses' },
   { id: 'beach', name: 'La Grande Plage', icon: '🏖️', description: 'Parasols, châteaux de sable & baigneurs joyeux' },
   { id: 'fair', name: 'La Fête Foraine', icon: '🎡', description: 'Grande roue, stands de tir & gourmandises' },
   { id: 'carnival', name: 'Le Carnaval de Rue', icon: '🎭', description: 'Confettis, masques festifs & défilé animé' },

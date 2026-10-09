@@ -987,7 +987,7 @@ export default function FireflyGarden({
         subtitle={currentConstellation.message}
         stats={[
           { label: 'Lucioles', value: totalCollected, color: '#facc15' },
-          { label: 'Constellation', value: `${constellationIndex + 1}/${CONSTELLATIONS.length}`, color: '#38bdf8' }
+          { label: 'Constellation', value: `${constellationIdx + 1}/${CONSTELLATIONS.length}`, color: '#38bdf8' }
         ]}
         detailsNode={(
           <div

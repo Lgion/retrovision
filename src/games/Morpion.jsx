@@ -478,10 +478,10 @@ export default function Morpion({
               updateGameConfig('morpion', 'theme', itemId);
             } else if (catKey === 'mode') {
               if (itemId === 'pvp') {
-                handleSelectGameMode('pvp');
+                handleToggleGameMode('pvp');
               } else if (typeof itemId === 'string' && itemId.startsWith('ai_')) {
                 const diff = itemId.replace('ai_', '');
-                handleSelectGameMode('ai');
+                handleToggleGameMode('ai');
                 handleSelectDifficulty(diff);
               }
             }

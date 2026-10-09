@@ -616,7 +616,7 @@ export default function Grid2048({
             subtitle={isIntermission ? `Objectif atteint ! Tuile ${getIntermissionTarget()} fusionnée !` : "Vous avez atteint la mythique tuile 2048 !"}
             stats={[
               { label: 'Score', value: score, color: '#38bdf8' },
-              { label: 'Meilleur', value: bestScore, color: '#f59e0b' }
+              { label: 'Meilleur', value: highScore, color: '#f59e0b' }
             ]}
             onRestart={initGame}
             restartText="🔄 Rejouer"

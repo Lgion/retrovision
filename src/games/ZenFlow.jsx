@@ -5,6 +5,7 @@ import IntermissionHeader from '../components/IntermissionHeader';
 import IntermissionProposal from '../components/IntermissionProposal';
 import GameVictoryOverlay from '../components/GameVictoryOverlay';
 import { sound } from '../utils/sound';
+import { haptic } from '../utils/haptics';
 import { storage } from '../utils/storage';
 import { getGameConfig, updateGameConfig } from '../utils/config';
 import { useConfirm } from '../components/ConfirmContext';
